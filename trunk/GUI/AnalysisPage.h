@@ -62,6 +62,7 @@ class AnalysisPage : public QWidget
   void updatePage();
   void runThread();
   void abortThread();
+  void autoScroll();
 
  protected:
   void closeEvent(QCloseEvent *event);
@@ -74,6 +75,7 @@ class AnalysisPage : public QWidget
   ConfigTree *configTree;
   Log *statusLog;
   QTextEdit *statusText;
+  int lastMax;
   PollThread pollThread;
   bool isUntitled;
   GraphFace* graph;

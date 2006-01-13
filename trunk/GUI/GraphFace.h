@@ -83,7 +83,6 @@ private:
    QDateTime first;                     // Time of first data point
    QDialog* key;
    QString graphTitle;
-   bool ONDropSonde;
    int graph_width;
    int graph_height;
    bool imageAltered;
@@ -140,7 +139,7 @@ private:
    float scaleDPressure(float unscaled_dPressure);
    float scaleDRmw(float unscaled_dRmw);
    float getSTDMultiplier(VortexData p, float z);
-   int pointAt(const QPointF & position);
+   int pointAt(const QPointF & position, bool& ONDropSonde);
    void setColors();
    void autoSave();
 
@@ -163,6 +162,7 @@ private:
    static const float Z2 = .95;
 
    void updateImage();
+   void altUpdateImage();
 
 private slots:
 

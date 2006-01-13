@@ -33,6 +33,19 @@ void Log::setWorkingDir(const QString& newDir)
 
 }
 
+void Log::setLogFileName(const QString& newName) 
+{
+  newFile = new QFile(workingDir+newName);
+  if(newFile->exists())
+    {
+      newFile->remove();
+    }
+  logFile.copy(workingDir+newName);
+  logFileName = newName;
+  logFile = new QFile(workingDir+logFileName);
+  
+}
+
 bool Log::saveLogFile()
 {
  QString saveName=QFileDialog::getSaveFileName(this, QString(tr("Save Status Log File as...")), workingDir, QString(tr("Text Files *.txt")));

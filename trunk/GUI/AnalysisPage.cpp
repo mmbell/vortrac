@@ -111,7 +111,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   
   statusText = new QTextEdit;
   statusText->setReadOnly(true);
-  statusText->setFixedHeight(100); 
+  statusText->setFixedHeight(100);
 
   QLabel *hLine = new QLabel;
   hLine->setFrameStyle(QFrame::HLine);
@@ -160,6 +160,9 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 
   connect(statusLog, SIGNAL(newProgressEntry(int)),
 	  progressBar, SLOT(setValue(int)));
+
+  connect(statusText, SIGNAL(textChanged()),
+	  this, SLOT(autoScroll()));
   
   statusLog->catchLog(Message("VORTRAC Status Log for "+
 			    QDateTime::currentDateTime().toUTC().toString()
@@ -328,4 +331,15 @@ void AnalysisPage::saveLog()
 void AnalysisPage::catchLog(const Message& message)
 {
   emit log(message);
+}
+
+void AnalysisPage::autoScroll()
+{
+  int pos = statusText->verticalScrollBar()->value();
+  if(pos = lastMax) {
+    lastMax = statusText->verticalScrollBar()->maximum();
+    statusText->verticalScrollBar()->setValue(lastMax);
+  }
+  else
+    lastMax = statusText->verticalScrollBar()->maximum();
 }

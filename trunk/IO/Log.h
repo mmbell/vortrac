@@ -27,6 +27,7 @@ class Log : public QWidget
 
  public slots:
   void setWorkingDir(const QString& newDir);
+  void setLogFileName(const QString& newName);
 
 
   void catchLog(const Message& logEntry);
