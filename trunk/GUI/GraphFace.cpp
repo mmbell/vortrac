@@ -49,6 +49,8 @@ GraphFace::GraphFace(QString& title, QWidget *parent)
   
   graph_height = GRAPH_HEIGHT;
   graph_width = GRAPH_WIDTH;
+  z1 = 0.67;
+  z2 = 0.95;
   VortexDataList = new QList<VortexData>;
   dropList = new QList<VortexData>;
   setColors();
@@ -300,9 +302,9 @@ void GraphFace::makeKey()
   QFont labelFont("Times",12,QFont::Bold);
   
   QString *confidence1 = new QString;
-  *confidence1 = confidence1->setNum(Z1*100);
+  *confidence1 = confidence1->setNum(z1*100);
   QString *confidence2 = new QString;
-  *confidence2 = confidence2->setNum(Z2*100);
+  *confidence2 = confidence2->setNum(z2*100);
       
   QLabel* dropSondeLabel = new QLabel(tr("Dropwindsonde Central Pressure Estimate"));
   dropSondeLabel->setFont(labelFont);

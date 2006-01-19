@@ -35,12 +35,12 @@ void Log::setWorkingDir(const QString& newDir)
 
 void Log::setLogFileName(const QString& newName) 
 {
-  newFile = new QFile(workingDir+newName);
+  QFile *newFile = new QFile(workingDir+newName);
   if(newFile->exists())
     {
       newFile->remove();
     }
-  logFile.copy(workingDir+newName);
+  logFile->copy(workingDir+newName);
   logFileName = newName;
   logFile = new QFile(workingDir+logFileName);
   

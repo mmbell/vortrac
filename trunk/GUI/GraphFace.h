@@ -85,6 +85,7 @@ private:
    QString graphTitle;
    int graph_width;
    int graph_height;
+   float z1, z2;
    bool imageAltered;
    bool autoAxes;
 
@@ -157,7 +158,8 @@ private:
    static const int RIGHT_MARGIN_WIDTH = 50;
    static const int BOTTOM_MARGIN_HEIGHT = 40;
    static const int TOP_MARGIN_HEIGHT =30;
-   
+
+   // These constants define the percentiles of the error bars   
    static const float Z1 = .67;
    static const float Z2 = .95;
 
