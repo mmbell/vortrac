@@ -614,7 +614,7 @@ bool RadarQC::VAD(float* &vel, Sweep* &currentSweep,
   int numRays = currentSweep->getNumRays();
   int start = currentSweep->getFirstRay();
   float nyqVel = currentSweep->getNyquist_vel();
-  int N = numCoEff/2;
+  // could be implemented for more than 3 coefficeints  int N = numCoEff/2;
  
   if((nyqVel == 0)||(fabs(nyqVel)>90)) {
     emit log(Message("Nyquist Velocity Not Defined - Dealiasing Not Possible"));
@@ -688,8 +688,10 @@ bool RadarQC::GVAD(float* &vel, Sweep* &currentSweep,
   int numRays = currentSweep->getNumRays();
   int start = currentSweep->getFirstRay();
   float nyqVel = currentSweep->getNyquist_vel();
-  int N = numCoEff/2;
-  float *gvr, *gve, *weight;
+
+  //could be added for more than 3 numCoefficients  int N = numCoEff/2;
+ 
+  float *gvr, *gve;
   gvr = new float[numRays];
   gve = new float[numRays];
   for( int r = 0; r < numRays; r++) {
@@ -894,7 +896,7 @@ float RadarQC::getStart(Ray *currentRay)
     for(int v = 0; (v < numVBins) && (!hasDopplerData); v++) {
       if(velGates[v] != velNull) {
 	hasDopplerData = true;
-	dataHeight = floor(findHeight(currentRay, v)+.5);
+	dataHeight = int(floor(findHeight(currentRay, v)+.5));
 	if(dataHeight = 0) {
 	  dataHeight++;
 	}
@@ -1262,7 +1264,7 @@ bool RadarQC::reduceRow(float **A, int M, int N)
    * Single implementation of gaussian jordan elimination
    * Architecture designed by Paul Harasti
    */
-  float nearZero = 0.0001;
+
   //  printMatrix(A, M, N);
   float X, W;
   bool *allZero = new bool[N];

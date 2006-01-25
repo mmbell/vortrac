@@ -70,6 +70,7 @@ signals:
        void configChanged();
        void stateChange(const QString& name, const bool);
        void changeGraphicsParameter(const QString& name, const float);
+
 };
 
 #endif

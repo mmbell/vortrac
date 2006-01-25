@@ -15,6 +15,7 @@
 #include <QObject>
 #include <QString>
 #include <QFile>
+#include <QDomElement>
 #include "Message.h"
 
 class Log : public QWidget
@@ -23,25 +24,30 @@ class Log : public QWidget
 
  public:
   Log(QWidget *parent = 0);
+  ~Log();
   bool saveLogFile();
+  bool saveLogFile(const QString& fileName);
+  QString getLogFileName() { return logFileName; }
 
  public slots:
-  void setWorkingDir(const QString& newDir);
+  void setWorkingDirectory(const QString& newDir);
   void setLogFileName(const QString& newName);
-
-
   void catchLog(const Message& logEntry);
+
     
  signals:
   void newLogEntry(const QString & logEntry);
   void newProgressEntry(int progress);
+  void log(const Message& message);
 
  private:
   QString logFileName;
   QFile *logFile;
-  QString workingDir;
+  QString workingDirectory;
   int absoluteProgress;
   bool displayLocation;
+
+  bool writeToFile(const QString& message);
 
 };
 

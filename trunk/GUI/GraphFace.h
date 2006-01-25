@@ -27,26 +27,29 @@ class GraphFace:public QWidget
 Q_OBJECT
 
 public:
-  GraphFace (QString& title = 0,QWidget *parent = 0);
+   GraphFace(QString& title = 0, QWidget *parent = 0);
        // The constructor takes a parent and returns a GraphFace object
        // it also preforms several initialization for the object
    ~GraphFace();
-   //QImage image;
-
+   QString* getImageFileName();
+   void setWorkingDirectory(QString newDir);
+   QString getWorkingDirectory() { return workingDirectory;}
+   void doesNothing();
 
  
 public slots:
-  void newInfo(QList<VortexData> *VortexPointer);
-  void makeKey();
-  void newDropSonde(QList<VortexData> *dropPointer);
+   void newInfo(QList<VortexData> *VortexPointer);
+   void makeKey();
+   void newDropSonde(QList<VortexData> *dropPointer);
        // This slot recieves a pointer to the dropSonde list when
        // changes to the list occur
        // this modifies nessecary ranges
-  void updateTitle(const QString& new_Label);
-  void saveImage();
-  void manualAxes(const QString& name, const bool change);
-  void manualParameter(const QString& name, const float num);
-  void catchLog(const Message& message);
+   void updateTitle(const QString& new_Label);
+   void saveImage();
+   void saveImage(QString fileName);
+   void manualAxes(const QString& name, const bool change);
+   void manualParameter(const QString& name, const float num);
+   void catchLog(const Message& message);
 
 protected:
    void paintEvent (QPaintEvent *event);
@@ -76,7 +79,7 @@ protected:
  
 private:
    QImage *image;
-   QString saveImageName;
+   QString *autoImageName;
    QString workingDirectory;
    QList<VortexData>* VortexDataList;      
    QList<VortexData>*  dropList;         
@@ -142,7 +145,7 @@ private:
    float getSTDMultiplier(VortexData p, float z);
    int pointAt(const QPointF & position, bool& ONDropSonde);
    void setColors();
-   void autoSave();
+   void autoSave(QString name);
 
    // this function checks to see if the ranges need to be update
    // it will also update ranges when necessary
@@ -169,7 +172,7 @@ private:
 private slots:
 
 signals:
-   void log(const Message& message);
+   void log(const Message& message); 
 
 };
 

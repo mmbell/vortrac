@@ -16,6 +16,7 @@
 #include<QHelpEvent>
 #include<QToolTip>
 #include<QImage>
+#include<math.h>
 
 #include "GraphFace.h"
 
@@ -23,7 +24,6 @@ GraphFace::GraphFace(QString& title, QWidget *parent)
   : QWidget(parent)
   //constructor to create the GraphFace object
 { 
-
   setMouseTracking(true);
 
   graphTitle = QString(title);
@@ -58,14 +58,30 @@ GraphFace::GraphFace(QString& title, QWidget *parent)
 
   imageAltered = true;
 
-  saveImageName = QString("autoImage");
   workingDirectory = QString("workingDirs/");
-  autoAxes = true;
+  autoImageName =new QString("autoImage");
+
+  QFile *imageFile = new QFile(workingDirectory+*autoImageName+".png");
+  int i = 1;
+  QString newName(*autoImageName);
+  while(imageFile->exists())
+    {
+      i++;
+      newName = *autoImageName+QString().setNum(i);
+      imageFile = new QFile(workingDirectory+newName+".png");
+    }
+
+  autoImageName = new QString(newName + ".png");
+
+  autoAxes = true; 
 
 }
 
 GraphFace::~GraphFace()
 {
+  QFile autoImage(workingDirectory+*autoImageName);
+  autoImage.remove();
+
   delete VortexDataList;
   delete dropList;
   
@@ -81,18 +97,21 @@ void GraphFace::paintEvent(QPaintEvent *event)
   // and any time update is called
 
 {
+
   if (imageAltered) {
     imageAltered = false;
     updateImage();
   }
   
-  QImage displayImage = *image;
+  QImage displayImage(*image);
   
   QPainter *painter = new QPainter(this);
   painter->drawImage(QRect(QPoint(0,0),size()), displayImage);
 
   if (painter->isActive())
     painter->end();
+  
+  event->accept();
 
 }
 
@@ -192,7 +211,10 @@ void GraphFace::saveImage()
   }
 }
 
-
+void GraphFace::saveImage(QString fileName)
+{
+  autoSave(fileName);
+}
 
 //***********************--newInfo (SLOT) --************************************
 
@@ -356,7 +378,6 @@ void GraphFace::makeKey()
   connect(rmwPicture, SIGNAL(log(const Message&)),
 	  this, SLOT(catchLog(const Message&)));
   
-  QLabel *space = new QLabel;
   QVBoxLayout *layout = new QVBoxLayout;
   QHBoxLayout *dropLayout = new QHBoxLayout;
   QVBoxLayout *dropLabelLayout = new QVBoxLayout;
@@ -412,8 +433,37 @@ void GraphFace::makeKey()
   update();
 }
 
+//************************--setWorkingDirectory--*****************************
 
-//************************--converters and QPointF constructors--***************
+void GraphFace::setWorkingDirectory(QString newDir)
+{ 
+  QString newImageName("autoImage.png");
+  QFile* newImageFile = new QFile(newDir+newImageName);
+
+  if(newImageFile->exists()) {
+    newImageFile->remove();
+  }
+  
+  QString* next = new QString("not the right one");
+  Message::toScreen(*next);
+  *next = *autoImageName;
+  Message::toScreen(*next);
+
+  //saveImage(newDir+newImageName);
+
+  //QString oldFileName = getImageFileName();
+  //oldFileName = workingDirectory+oldFileName;
+  //QFile* prevImageFile = new QFile(oldFileName);
+  //prevImageFile->copy(newDir+newImageName);
+  //prevImageFile->remove();
+  
+  //workingDirectory = newDir;
+  //autoImageName = new QString(newImageName);
+  
+  Message::toScreen("Made it");
+}
+
+//************************--converters and QPointF constructors--*************
 
 void GraphFace::checkRanges()
    // this function checks to see if the ranges need to be update
@@ -516,7 +566,9 @@ float GraphFace::scaleTime(QDateTime unscaled_time)
 QDateTime GraphFace::unScaleTime(float x)
 {
   int seconds;
-  seconds = ((x - LEFT_MARGIN_WIDTH)*((timeRange+120)/graph_width)-60);
+  double exactTime;
+  exactTime =((x - LEFT_MARGIN_WIDTH)*((timeRange+120)/graph_width)-60);
+  seconds = int(floor(exactTime+.5));
   if (seconds < 0)
     return first;
   return first.addSecs(seconds);
@@ -1129,14 +1181,14 @@ void GraphFace::updateImage()
   if (painter->isActive())
     painter->end();
   image = temp;
-  autoSave();
+  autoSave(workingDirectory+*autoImageName);
 }
 
 
-void GraphFace::autoSave()
+void GraphFace::autoSave(QString name)
 {
   QImage visibleImage(*image);
-  if(!visibleImage.save(workingDirectory+saveImageName,"PNG"))
+  if(!visibleImage.save(name,"PNG"))
     emit log(Message(tr("Failed to Auto-Save Graph Image")));
 }
 
@@ -1625,6 +1677,19 @@ void GraphFace::altUpdateImage()
   if (painter->isActive())
     painter->end();
   image = temp;
-  autoSave();
+  autoSave(workingDirectory+*autoImageName);
 }
 
+QString* GraphFace::getImageFileName()
+{
+
+  Message::toScreen(*autoImageName);
+  return(autoImageName);
+
+
+}
+
+void GraphFace::doesNothing()
+{
+  Message::toScreen(*autoImageName);
+}

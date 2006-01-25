@@ -49,7 +49,7 @@ bool ConfigTree::read()
   }
 
   connect(this, SIGNAL(itemChanged(QTreeWidgetItem *, int)),
-	  this, SLOT(updateDomElement(QTreeWidgetItem *, int)));
+  	  this, SLOT(updateDomElement(QTreeWidgetItem *, int)));
   
   return true;
 }
@@ -57,19 +57,17 @@ bool ConfigTree::read()
 
 void ConfigTree::updateDomElement(QTreeWidgetItem *item, int column)
 {
-  QTreeWidgetItem *parentItem = item->parent();
+  //QTreeWidgetItem *parentItem = item->parent();
   QDomElement element = domElementForItem[item];
   QDomElement configSection = element.parentNode().toElement();
   QString oldValue = element.text();
-  //emit log(Message(element.tagName()+" "+configSection.tagName()));
-  emit newParam(configSection, element.tagName(),item->text(column));
-
-  QString test = configData->getParam(configSection, element.tagName());
-
-  domElementForItem.insert(item, configSection.firstChildElement(element.tagName()));
-  if (element.tagName() == QString("maxwavenumber"));
-  //      updateDataGaps(element, parentItem, oldValue);
- 
+  if(oldValue!=item->text(column)) {
+    emit newParam(configSection, element.tagName(),item->text(column));
+    domElementForItem.insert(item,configSection.firstChildElement(element.tagName()));
+    if (element.tagName() == QString("maxwavenumber")) {
+      //      updateDataGaps(element, parentItem, oldValue);
+    }
+  }
 }
 
 void ConfigTree::parseDomElement(const QDomElement &element,
@@ -120,7 +118,8 @@ QTreeWidgetItem *ConfigTree::createItem(const QDomElement &element,
 
 void ConfigTree::reread()
 {
-
+  /*
+  emit log(Message("In ConfigTree ReRead"));
   QList<QTreeWidgetItem *> items = domElementForItem.keys();
   for(int i = 0; i < items.count(); i++)
     {
@@ -147,7 +146,8 @@ void ConfigTree::reread()
 	    }
 	}
     }
-      //read();
+  */
+ read();
 }
 
 void ConfigTree::updateDataGaps(QDomElement element, 

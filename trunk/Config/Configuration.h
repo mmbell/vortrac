@@ -52,6 +52,7 @@ class Configuration:public QWidget
   QHash<QString, int> indexForTagName;
   bool isModified;
 
+
  signals:
   void log(const Message& message);
   void configChanged();

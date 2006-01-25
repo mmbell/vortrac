@@ -31,6 +31,8 @@ class AnalysisPage : public QWidget
 
  public:
   AnalysisPage(QWidget *parent = 0);
+  ~AnalysisPage();
+
   void newFile();
   bool loadFile(const QString &fileName);
   bool save();
@@ -42,6 +44,7 @@ class AnalysisPage : public QWidget
   void setVortexLabel();
   bool maybeSave();
   void saveDisplay();
+  
 
   GraphFace *getGraph() {return graph;}
   Log* getStatusLog(){ return statusLog;} 
@@ -56,19 +59,20 @@ class AnalysisPage : public QWidget
  signals:
     void tabLabelChanged(const QString& new_Label);
     void log(const Message& message);
+    void saveGraphImage(const QString& name);
   
   
  private slots:
-  void updatePage();
-  void runThread();
-  void abortThread();
-  void autoScroll();
+    void updatePage();
+    void runThread();
+    void abortThread();
+    void autoScroll();
+    void prepareToClose();
 
  protected:
   void closeEvent(QCloseEvent *event);
 
  private:
-  QFile *logFile;
   QString vortexLabel;
   QString configFileName;
   Configuration *configData;

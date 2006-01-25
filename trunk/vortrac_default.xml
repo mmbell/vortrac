@@ -4,6 +4,7 @@
      <name>New Hurricane</name>
      <lat>0.00</lat>
      <lon>0.00</lon>
+     <dir>workingDirs/</dir>
   </vortex>
   <radar>
      <name>WSR-88D</name>

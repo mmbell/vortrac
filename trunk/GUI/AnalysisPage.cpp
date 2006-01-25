@@ -25,23 +25,22 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   // Create a new configuration instance
   configData = new Configuration;
   connect(configData, SIGNAL(log(const Message&)), 
-	  statusLog, SLOT(catchLog(const Message&))); 
-  
+	  this, SLOT(catchLog(const Message&)));
+
   // Define all the widgets
 
   configDialog = new ConfigurationDialog(configData);
   connect(configDialog, SIGNAL(log(const Message&)),
-	  statusLog, SLOT(catchLog(const Message&)));
-  connect(configDialog, SIGNAL(configChanged()), this, SLOT(updatePage()));
+	  this, SLOT(catchLog(const Message&)));
   
   configTree = new ConfigTree(window(), configData);
   configTree->setFixedWidth(300);
   connect(configTree, SIGNAL(log(const Message&)),
-  	  statusLog, SLOT(catchLog(const Message&)));
+  	  this, SLOT(catchLog(const Message&)));
 
   GraphFace *graph = new GraphFace(vortexLabel);
   connect(graph, SIGNAL(log(const Message&)), 
-	  statusLog, SLOT(catchLog(const Message&)));
+	  this, SLOT(catchLog(const Message&)));
 
 
   // Connect signals and slots that update the configuration
@@ -102,8 +101,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   connect(configDialog, 
 	  SIGNAL(changeGraphicsParameter(const QString&, const float)),
 	  graph,SLOT(manualParameter(const QString&,const float)));
-  connect(configDialog, SIGNAL(log(const Message&)),
-	  statusLog, SLOT(catchLog(const Message&)));
+
   QVBoxLayout *layout = new QVBoxLayout(pressureGraph);
   layout->addWidget(graph, 100);
   layout->addLayout(subLayout);
@@ -169,8 +167,16 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 			    + " UTC"));
   
   connect(&pollThread, SIGNAL(log(const Message&)),
-	  statusLog, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+
+  connect(this, SIGNAL(saveGraphImage(const QString&)),
+	   graph, SLOT(saveImage(const QString&)));
   
+}
+
+AnalysisPage::~AnalysisPage()
+{
+  prepareToClose();
 }
 
 void AnalysisPage::newFile()
@@ -198,7 +204,9 @@ bool AnalysisPage::loadFile(const QString &fileName)
 
   // Set the filename
   configFileName = fileName;
-  
+  workingDirectory = configData->getParam(configData->getConfig("vortex"),
+					  "dir");
+ 
   return true;
 }
 
@@ -221,17 +229,31 @@ bool AnalysisPage::saveAs()
   if (fileName.isEmpty())
     return false;
 
-  return saveFile(fileName);
 
+  return saveFile(fileName);
+  
 }
 
 bool AnalysisPage::saveFile(const QString &fileName)
 {
-
+  
   if (!configData->write(fileName)) {
     emit log(Message("Couldn't save configuration file")); 
     return false;
   } 
+  
+  QString noExtensionFileName = fileName;
+  
+  if (noExtensionFileName.contains('.')) {
+    int dotIndex = noExtensionFileName.indexOf('.');
+    int drop = noExtensionFileName.count()-dotIndex+1;
+    noExtensionFileName.remove(dotIndex,drop);
+  }
+
+  statusLog->saveLogFile(noExtensionFileName+".log");
+  emit saveGraphImage(noExtensionFileName+".png");
+
+
 
   return true;
 
@@ -252,8 +274,13 @@ void AnalysisPage::setVortexLabel()
 
 void AnalysisPage::closeEvent(QCloseEvent *event)
 {
+  Message::toScreen("closeEvent");
   if (maybeSave()) 
     {
+      Message::toScreen("Do We Get To Close Event?");
+      QString autoLogName = statusLog->getLogFileName();
+      QFile autoLog(workingDirectory+autoLogName);
+      autoLog.remove();
       event->accept();
     } 
   else 
@@ -286,7 +313,15 @@ void AnalysisPage::updatePage()
   setVortexLabel();
   QString temp = getVortexLabel();
   emit(tabLabelChanged(temp));
-
+  if(workingDirectory != configData->getParam(configData->getConfig("vortex"), 
+					      "dir"))
+    {
+      workingDirectory = configData->getParam(configData->getConfig("vortex"),
+					      "dir");
+      statusLog->setWorkingDirectory(workingDirectory);
+      //graph->setWorkingDirectory(workingDirectory);
+      
+    }
 }
 
 void AnalysisPage::runThread()
@@ -336,10 +371,20 @@ void AnalysisPage::catchLog(const Message& message)
 void AnalysisPage::autoScroll()
 {
   int pos = statusText->verticalScrollBar()->value();
-  if(pos = lastMax) {
+  if(pos == lastMax) {
     lastMax = statusText->verticalScrollBar()->maximum();
     statusText->verticalScrollBar()->setValue(lastMax);
   }
   else
     lastMax = statusText->verticalScrollBar()->maximum();
+}
+
+void AnalysisPage::prepareToClose()
+{
+  QString autoLogName = statusLog->getLogFileName();
+  QFile autoLog(workingDirectory+autoLogName);
+  autoLog.remove();
+
+  // autoImage is deleted in the GraphFace destructor
+
 }

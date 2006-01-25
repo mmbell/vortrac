@@ -295,9 +295,9 @@ bool MainWindow::closeActiveAnalysis()
 	  delete tabWidget->currentWidget();
 	  tabWidget->setCurrentIndex(newActiveIndex);
 	}
-      else
+      else {
 	delete tabWidget->currentWidget();
-    
+      }
     }
   updateMenus();
   return true;

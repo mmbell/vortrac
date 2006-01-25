@@ -45,12 +45,22 @@ VortexPanel::VortexPanel()
   QHBoxLayout *longitude = new QHBoxLayout;
   longitude->addWidget(longLabel);
   longitude->addWidget(longBox);
+
+  QLabel *workingDirLabel = new QLabel(tr("Working Directory"));
+  dir = new QLineEdit();
+  browse = new QPushButton("Browse..");
+  connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
+  QGridLayout *dirLayout = new QGridLayout();
+  dirLayout->addWidget(workingDirLabel, 0, 0);
+  dirLayout->addWidget(dir, 1, 0, 1, 3);
+  dirLayout->addWidget(browse, 1, 3);
   
   QVBoxLayout *layout = new QVBoxLayout();
   layout->addLayout(name);
   layout->addWidget(stormType);
   layout->addLayout(lat);
   layout->addLayout(longitude);
+  layout->addLayout(dirLayout);
   layout->addStretch(1);
   setLayout(layout);
   
@@ -59,6 +69,8 @@ VortexPanel::VortexPanel()
   connect(latBox, SIGNAL(valueChanged(const QString&)), 
 	  this, SLOT(valueChanged(const QString&)));
   connect(longBox, SIGNAL(valueChanged(const QString&)), 
+	  this, SLOT(valueChanged(const QString&)));
+  connect(dir, SIGNAL(textChanged(const QString&)),
 	  this, SLOT(valueChanged(const QString&)));
 
   setPanelChanged(false);
@@ -84,6 +96,10 @@ void VortexPanel::updatePanel(const QDomElement panelElement)
 	latBox->setValue(parameter.toDouble()); }
       if (name == "lon") {
 	longBox->setValue(parameter.toDouble()); }
+      if(name == "dir")  {
+	dir->clear();
+	dir->insert(parameter); }
+      
       child = child.nextSiblingElement();
     }
   setPanelChanged(false);
@@ -110,6 +126,9 @@ bool VortexPanel::updateConfig()
 	 !=longBox->value()) {
 	emit changeDom(element, QString("lon"), 
 		       QString().setNum(longBox->value()));
+      }
+      if(element.firstChildElement("dir").text()!=dir->text()) {
+	emit changeDom(element, QString("dir"), dir->text());
       }
       
     }
@@ -246,8 +265,6 @@ void RadarPanel::updatePanel(const QDomElement panelElement)
 
 bool RadarPanel::updateConfig()
 {
-
-  emit log(Message("Something has changed in the radar panel"));
   // If any the Panel's members have been changed these values will be
   // writen to the corresponding location within the Configuration
 
@@ -1168,8 +1185,11 @@ bool VTDPanel::updateConfig()
       if(element.firstChildElement("closure").text()
 	 !=closureBox->currentText())
 	{
-	  if(closureBox->currentText()==QString("Original"))
-	    emit changeDom(element, QString("closure"), QString("original"));
+	  if(closureBox->currentText()==QString("Original")) {
+	    if(element.firstChildElement("closure").text()
+	       != QString("original"))
+	      emit changeDom(element, QString("closure"), QString("original"));
+	  }
 	  else 
 	    emit changeDom(element, QString("closure"), 
 			   closureBox->currentText());

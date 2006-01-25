@@ -19,7 +19,7 @@ Configuration::Configuration(QWidget *parent, const QString &filename)
       // Create a new configuration from scratch
       QDomDocument domDoc("CurrConfig");
       /* if(!read("vortrac_default.xml")) {
-	 emit log(Message("Error reading configueration file (default)"));
+	 emit log(Message("Error reading configuration file (default)"));
 	 } */
     }
   else
@@ -139,6 +139,10 @@ void Configuration::setParam(const QDomElement &element,
 
   // Note that we modified the dom tree
   isModified = true;
+  
+  QString message("Configuration Changed: ");
+  message+=(element.tagName()+": "+paramName+" = "+paramValue);
+  emit log(Message(message));
   emit configChanged();
 
 }
@@ -178,3 +182,4 @@ void Configuration::catchLog(const Message& message)
 {
   emit log(message);
 }
+
