@@ -19,7 +19,6 @@
 #include <QHash>
 #include "Radar/RadarData.h"
 #include "Radar/LevelII.h"
-#include "Radar/radarh.h"
 #include "IO/Message.h"
 
 class RadarFactory : public QObject

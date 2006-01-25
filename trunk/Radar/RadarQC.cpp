@@ -897,7 +897,7 @@ float RadarQC::getStart(Ray *currentRay)
       if(velGates[v] != velNull) {
 	hasDopplerData = true;
 	dataHeight = int(floor(findHeight(currentRay, v)+.5));
-	if(dataHeight = 0) {
+	if(dataHeight == 0) {
 	  dataHeight++;
 	}
       }
