@@ -12,7 +12,8 @@
 #define RADARDATA_H
 
 #include <QString>
-#include "Radar/radarh.h"
+#include <QFile>
+#include <QDateTime>
 #include "Sweep.h"
 #include "Ray.h"
 
@@ -20,7 +21,8 @@ class RadarData
 {
 
  public:
-  RadarData(VolumeInfo *volInfo);
+
+  RadarData(QString radarname, float lat, float lon, QString filename);
   virtual ~RadarData();
   virtual bool readVolume() = 0;
   Sweep* getSweep(int index);
@@ -34,8 +36,13 @@ class RadarData
   float* getRadarLon();
   float radarBeamHeight(float &distance, float elevation);
 
+
  protected:
-  VolumeInfo *volumeInfo;
+  QString radarName;
+  float radarLat;
+  float radarLon;
+  QDateTime radarDateTime;
+  QFile radarFile;
   Sweep* Sweeps;
   Ray* Rays;
   int numSweeps;

@@ -13,6 +13,7 @@
 
 #include "Radar/RadarData.h"
 #include <QDomElement>
+#include <QStringList>
 
 class GriddedData
 {
@@ -53,7 +54,9 @@ class GriddedData
   float Pi;
   float deg2rad;
   float rad2deg;
-
+  float numFields;
+  QStringList fieldNames;
+  
   enum coordSystems {
     cartesian,
     cylindrical,

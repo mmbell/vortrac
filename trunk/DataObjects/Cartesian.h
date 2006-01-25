@@ -12,6 +12,7 @@
 #define CARTESIAN_H
 
 #include <QDomElement>
+#include <QFile>
 #include "Radar/RadarData.h"
 #include "DataObjects/GriddedData.h"
 
@@ -23,18 +24,47 @@ class CartesianData : public GriddedData
   ~CartesianData();
   void gridData(RadarData *radarData, QDomElement cappiConfig,
 		float *vortexLat, float *vortexLon);
-  void BarnesInterpolation(RadarData *radarData);
+  void BarnesInterpolation();
   float bilinear(const float &x, const float &y,
 		 const float &z, const int &param);
-
+  void writeAsi();
+  
  private:
   float xmin, xmax;
   float ymin, ymax;
   float zmin, zmax;
   float cartGrid[3][256][256][20];
-  char* outfile;
+  float latReference, lonReference;
+  QString outFileName;
   float* relDist;
+  
+  class goodRef {
+   public:
+    float refValue;
+    float x;
+    float y;
+    float z;
+	float rg;
+	float az;
+	float el;
+  };
+  class goodVel {
+   public:
+    float velValue;
+    float swValue;
+    float x;
+    float y;
+    float z;
+	float rg;
+	float az;
+	float el;
+  };
 
+  goodRef refValues[20000];
+  goodVel velValues[60000];
+  int maxRefIndex;
+  int maxVelIndex;
+  
 };
                
 

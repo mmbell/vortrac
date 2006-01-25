@@ -11,7 +11,8 @@
 #include "LevelII.h"
 #include "RadarQC.h"
 
-LevelII::LevelII(VolumeInfo *volInfo) : RadarData(volInfo)
+LevelII::LevelII(const QString &radarname, const float &lat, const float &lon, const QString &filename) 
+	: RadarData(radarname, lat, lon, filename)
 {
 
   numSweeps = 0;
@@ -21,7 +22,8 @@ LevelII::LevelII(VolumeInfo *volInfo) : RadarData(volInfo)
   msgHeader = new nexrad_message_header;
   Sweeps = new Sweep[20];
   Rays = new Ray[7500];
-
+  swap_bytes = false;
+  
 }
 
 bool LevelII::readVolume()
@@ -36,11 +38,11 @@ bool LevelII::readVolume()
   }
 
   // Open the QFile object from the header
-  if(!volumeInfo->radarFile.open(QIODevice::ReadOnly)) {
+  if(!radarFile.open(QIODevice::ReadOnly)) {
     Message::report("Can't open radar volume");
   }
 
-  QDataStream dataIn(&volumeInfo->radarFile);
+  QDataStream dataIn(&radarFile);
   
   // Get volume header
   dataIn.readRawData((char *)volHeader, sizeof(nexrad_vol_scan_title));
@@ -74,6 +76,13 @@ bool LevelII::readVolume()
 	// Beginning of volume
 	volumeTime = radarHeader->milliseconds_past_midnight;
 	volumeDate = radarHeader->julian_date;
+	QDate initDate(1970,1,1);
+	radarDateTime.setDate(initDate);
+	radarDateTime.setTimeSpec(Qt::UTC);
+	radarDateTime = radarDateTime.addDays(volumeDate - 1);
+	radarDateTime = radarDateTime.addMSecs((qint64)volumeTime);
+	
+	// First sweep and ray
 	*Sweeps = addSweep();
 	Sweeps[0].setFirstRay(0);
 
@@ -123,7 +132,7 @@ bool LevelII::readVolume()
   Sweeps[numSweeps-1].setLastRay(numRays-1);
 
   // Should have all the data stored into memory now
-  volumeInfo->radarFile.close();
+  radarFile.close();
 
   isDealiased(false);
 

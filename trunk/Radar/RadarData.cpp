@@ -11,11 +11,13 @@
 #include "RadarData.h"
 #include <math.h>
 
-RadarData::RadarData(VolumeInfo *volInfo)
+RadarData::RadarData(QString radarname, float lat, float lon, QString filename)
 {
 
-  volumeInfo = volInfo;
-  
+	radarName = radarname;
+	radarLat = lat;
+	radarLon = lon;
+	radarFile.setFileName(filename);
 }
 
 RadarData::~RadarData()
@@ -62,21 +64,21 @@ int RadarData::getNumRays()
 QString RadarData::getDateTimeString()
 {
 
-  return volumeInfo->radarDateTime.toString(Qt::ISODate);
+  return radarDateTime.toString(Qt::ISODate);
 	
 }
 
 float* RadarData::getRadarLat()
 {
 
-  return &volumeInfo->radarLat;
+  return &radarLat;
 
 }
 
 float* RadarData::getRadarLon()
 {
 
-  return &volumeInfo->radarLon;
+  return &radarLon;
 
 }
 

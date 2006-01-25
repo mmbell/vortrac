@@ -12,7 +12,6 @@
 #define LEVELII_H
 
 #include "nexh.h"
-#include "radarh.h"
 #include "RadarData.h"
 #include "Sweep.h"
 #include "Ray.h"
@@ -22,7 +21,7 @@ class LevelII : public RadarData
 {
 
  public:
-  LevelII(VolumeInfo *volInfo);
+  LevelII(const QString &radarname, const float &lat, const float &lon, const QString &filename);
   bool readVolume();
   Sweep addSweep();
   Ray addRay();

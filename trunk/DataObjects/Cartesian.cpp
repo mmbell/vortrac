@@ -9,7 +9,10 @@
  */
 
 #include "Cartesian.h"
+#include "Message.h"
 #include <math.h>
+#include <QTextStream>
+#include <QFile>
 
 CartesianData::CartesianData() : GriddedData()
 {
@@ -18,7 +21,6 @@ CartesianData::CartesianData() : GriddedData()
   xDim = yDim = zDim = 0;
   xGridsp = yGridsp = zGridsp = 0.0;
 
-  
 }
 
 CartesianData::~CartesianData()
@@ -33,8 +35,8 @@ void CartesianData::gridData(RadarData *radarData, QDomElement cappiConfig,
   // Set the output file
   QString cappiPath = cappiConfig.firstChildElement("dir").text();
   QString cappiFile = radarData->getDateTimeString();
-  cappiFile += ".asi";
-  cappiPath += cappiFile;
+  cappiFile.replace(QString(":"),QString("_"));
+  outFileName = cappiPath + "/" + cappiFile;
   
   // Get the dimensions from the configuration
   xDim = cappiConfig.firstChildElement("xdim").text().toFloat();
@@ -48,59 +50,18 @@ void CartesianData::gridData(RadarData *radarData, QDomElement cappiConfig,
   relDist = new float[2];
   relDist = relLocation(radarData->getRadarLat(), radarData->getRadarLon(),
 			vortexLat, vortexLon);
-  xmin = relDist[0] - (xDim/2)*xGridsp;
-  xmax = relDist[0] + (xDim/2)*xGridsp;
-  ymin = relDist[1] - (yDim/2)*xGridsp;
-  ymax = relDist[1] + (yDim/2)*yGridsp;
+  xmin = nearbyintf(relDist[0] - (xDim/2)*xGridsp);
+  xmax = nearbyintf(relDist[0] + (xDim/2)*xGridsp);
+  ymin = nearbyintf(relDist[1] - (yDim/2)*xGridsp);
+  ymax = nearbyintf(relDist[1] + (yDim/2)*yGridsp);
+  latReference = *vortexLat;
+  lonReference = *vortexLon;
   float distance = sqrt(relDist[0] * relDist[0] + relDist[1] * relDist[1]);
   float beamHeight = radarData->radarBeamHeight(distance, radarData->getSweep(0)->getElevation());
   zmin = (float(int(beamHeight/zGridsp)))*zGridsp;
   zmax = zmin + zDim*zGridsp;
-
-  // Interpolate the data depending on method chosen
-  QString interpolation = cappiConfig.firstChildElement("interpolation").text();
-  if (interpolation == "barnes") {
-    BarnesInterpolation(radarData);
-  } /* else if (interpolation == "bilinear") {
-    doBilinear(&radarData);
-    } */
-
-   
-   // Do something with the cappi arrays
-   int stop = 0;
-   
-
-}
-
-void CartesianData::BarnesInterpolation(RadarData *radarData)
-{
-
-  // Barnes Interpolation (see Koch et al, 1983 for details)
-
-  float falloff_x = 5.052*pow((4* xGridsp / Pi),2);
-  float falloff_y = 5.052*pow((4* yGridsp / Pi),2);
-  float falloff_z = 5.052*pow((4* zGridsp / Pi),2);
-  float smoother = 0.3;
-
+  
   // Find good values
-  class goodRef {
-   public:
-    float refValue;
-    float x;
-    float y;
-    float z;
-  };
-  class goodVel {
-   public:
-    float velValue;
-    float swValue;
-    float x;
-    float y;
-    float z;
-  };
-
-  goodRef refValues[20000];
-  goodVel velValues[60000];
   int r = 0;
   int v = 0;
   
@@ -113,23 +74,26 @@ void CartesianData::BarnesInterpolation(RadarData *radarData)
 
       float* refData = currentRay->getRefData();
       for (int g = 0; g <= (currentRay->getRef_numgates()-1); g++) {
-	if (refData[g] == -999.) { continue; }
-	float range = (currentRay->getFirst_ref_gate() +
-	  (g * currentRay->getRef_gatesp()))/1000.;
-	float x = range*sin(phi)*cos(theta);
-	if ((x < (xmin - xGridsp)) or x > (xmax + xGridsp)) { continue; }
-	float y = range*sin(phi)*sin(theta);
-	if ((y < (ymin - yGridsp)) or y > (ymax + yGridsp)) { continue; }
-	float z = radarData->radarBeamHeight(range,
+		if (refData[g] == -999.) { continue; }
+		float range = (currentRay->getFirst_ref_gate() +
+					  (g * currentRay->getRef_gatesp()))/1000.;
+		float x = range*sin(phi)*cos(theta);
+		if ((x < (xmin - xGridsp)) or x > (xmax + xGridsp)) { continue; }
+		float y = range*sin(phi)*sin(theta);
+		if ((y < (ymin - yGridsp)) or y > (ymax + yGridsp)) { continue; }
+		float z = radarData->radarBeamHeight(range,
 					     currentRay->getElevation() );
-	if ((z < (zmin - zGridsp)) or z > (zmax + zGridsp)) { continue; }
+		if ((z < (zmin - zGridsp)) or z > (zmax + zGridsp)) { continue; }
 
-	// Looks like a good point
-	refValues[r].refValue = refData[g];
-	refValues[r].x = x;
-	refValues[r].y = y;
-	refValues[r].z = z;
-	r++;
+		// Looks like a good point
+		refValues[r].refValue = refData[g];
+		refValues[r].x = x;
+		refValues[r].y = y;
+		refValues[r].z = z;
+		refValues[r].rg = range;
+		refValues[r].az = phi;
+		refValues[r].el = theta;
+		r++;
       }
 
     }
@@ -138,37 +102,64 @@ void CartesianData::BarnesInterpolation(RadarData *radarData)
       float* velData = currentRay->getVelData();
       float* swData = currentRay->getSwData();
       for (int g = 0; g <= (currentRay->getVel_numgates()-1); g++) {
-	if (velData[g] == -999.) { continue; }
-	float range = (currentRay->getFirst_vel_gate() +
-	  (g * currentRay->getVel_gatesp()))/1000.;
-	float x = range*sin(phi)*cos(theta);
-	if ((x < (xmin - xGridsp)) or x > (xmax + xGridsp)) { continue; }
-	float y = range*sin(phi)*sin(theta);
-	if ((y < (ymin - yGridsp)) or y > (ymax + yGridsp)) { continue; }
-	float z = radarData->radarBeamHeight(range,
+		if (velData[g] == -999.) { continue; }
+		float range = (currentRay->getFirst_vel_gate() +
+					  (g * currentRay->getVel_gatesp()))/1000.;
+		float x = range*sin(phi)*cos(theta);
+		if ((x < (xmin - xGridsp)) or x > (xmax + xGridsp)) { continue; }
+		float y = range*sin(phi)*sin(theta);
+		if ((y < (ymin - yGridsp)) or y > (ymax + yGridsp)) { continue; }
+		float z = radarData->radarBeamHeight(range,
 					     currentRay->getElevation() );
-	if ((z < (zmin - zGridsp)) or z > (zmax + zGridsp)) { continue; }
+		if ((z < (zmin - zGridsp)) or z > (zmax + zGridsp)) { continue; }
 
-	// Looks like a good point
-	velValues[v].velValue = velData[g];
-	velValues[v].swValue = swData[g];
-	velValues[v].x = x;
-	velValues[v].y = y;
-	velValues[v].z = z;
-	v++;
+		// Looks like a good point
+		velValues[v].velValue = velData[g];
+		velValues[v].swValue = swData[g];
+		velValues[v].x = x;
+		velValues[v].y = y;
+		velValues[v].z = z;
+		velValues[r].rg = range;
+		velValues[r].az = phi;
+		velValues[r].el = theta;
+		v++;
       }
+	  
     }
-
 
   }
 
-  // Subtract off one from the count
-  r--;
-  v--;
+  // Subtract off one from the count for iterative purposes
+  maxRefIndex = r - 1;
+  maxVelIndex = v - 1;
 
-  for (int k = 0; k <= int(zDim-1); k++) { 
-    for (int j = 0; j <= int(yDim-1); j++) {
-      for (int i = 0; i <= int(xDim-1); i++) {
+  // Interpolate the data depending on method chosen
+  QString interpolation = cappiConfig.firstChildElement("interpolation").text();
+  if (interpolation == "barnes") {
+    BarnesInterpolation();
+  } /* else if (interpolation == "bilinear") {
+    doBilinear(&radarData);
+    } */
+
+  // Set the initial field names
+  fieldNames << "DZ" << "VE" << "SW";
+
+}
+
+void CartesianData::BarnesInterpolation()
+{
+
+  // Barnes Interpolation (see Koch et al, 1983 for details)
+
+  float falloff_x = 5.052*pow((4* xGridsp / Pi),2);
+  float falloff_y = 5.052*pow((4* yGridsp / Pi),2);
+  float falloff_z = 5.052*pow((4* zGridsp / Pi),2);
+  float smoother = 0.3;
+
+
+  for (int k = 0; k < int(zDim); k++) { 
+    for (int j = 0; j < int(yDim); j++) {
+      for (int i = 0; i < int(xDim); i++) {
 
 	cartGrid[0][i][j][k] = -999.;
 	cartGrid[1][i][j][k] = -999.;
@@ -180,7 +171,7 @@ void CartesianData::BarnesInterpolation(RadarData *radarData)
 	float refWeight = 0;
 	float velWeight = 0;
 
-	for (int n = 0; n <= r; n++) {
+	for (int n = 0; n <= maxRefIndex; n++) {
 	  float dx = refValues[n].x - (xmin + i*xGridsp);
 	  if (fabs(dx) > sqrt(20 * falloff_x)) { continue; }
 
@@ -199,7 +190,7 @@ void CartesianData::BarnesInterpolation(RadarData *radarData)
 
 	}
 
-	for (int n = 0; n <= v; n++) {
+	for (int n = 0; n <= maxVelIndex; n++) {
 	  float dx = velValues[n].x - (xmin + i*xGridsp);
 	  if (fabs(dx) > sqrt(20 * falloff_x)) { continue; }
 
@@ -230,9 +221,9 @@ void CartesianData::BarnesInterpolation(RadarData *radarData)
     }
   }
 
-  for (int k = 0; k <= int(zDim-1); k++) {
-    for (int j = 0; j <= int(yDim-1); j++) {
-      for (int i = 0; i <= int(xDim-1); i++) {
+  for (int k = 0; k < int(zDim); k++) {
+    for (int j = 0; j < int(yDim); j++) {
+      for (int i = 0; i < int(xDim); i++) {
 
 	float sumRef = 0;
 	float sumVel = 0;
@@ -240,7 +231,7 @@ void CartesianData::BarnesInterpolation(RadarData *radarData)
 	float refWeight = 0;
 	float velWeight = 0;
 
-	for (int n = 0; n <= r; n++) {
+	for (int n = 0; n <= maxRefIndex; n++) {
 
 	  float dx = refValues[n].x - (xmin + i*xGridsp);
 	  if (fabs(dx) > sqrt(20 * falloff_x)) { continue; }
@@ -261,7 +252,7 @@ void CartesianData::BarnesInterpolation(RadarData *radarData)
 	  sumRef += weight*(refValues[n].refValue - interpRef);
 	  
 	}
-	for (int n = 0; n <= v; n++) {
+	for (int n = 0; n <= maxVelIndex; n++) {
 	  float dx = velValues[n].x - (xmin + i*xGridsp);
 	  if (fabs(dx) > sqrt(20 * falloff_x)) { continue; }
 
@@ -374,3 +365,123 @@ float CartesianData::bilinear(const float &x, const float &y,
 
   return interpValue;
 }
+
+void CartesianData::writeAsi()
+{
+
+	// Write out the CAPPI to an asi file
+	
+	// Initialize header
+	int id[511];
+	for (int n = 1; n <= 510; n++) {
+		id[n]=-999;
+	}
+
+	// Calculate headers
+	id[175] = fieldNames.size();
+    for(int n = 0; n < id[175]; n++) {
+		QString name_1 = fieldNames.at(n).left(1);
+        QString name_2 = fieldNames.at(n).mid(1,1);
+		int int_1 = *name_1.toAscii().data();
+		int int_2 = *name_2.toAscii().data();
+		id[176 + (5 * n)] = (int_1 * 256) + int_2;
+		id[177 + (5 * n)] = 8224;
+		id[178 + (5 * n)] = 8224;
+		id[179 + (5 * n)] = 8224;
+		id[180 + (5 * n)] = 1;
+	}
+
+	// Cartesian file
+	id[16] = 17217;
+	id[17] = 21076;
+  
+	// Lat and Lon
+	id[33] = (int)latReference;
+	id[34] = (int)((latReference - (float)id[33]) * 60.);
+	id[35] = (int)((((latReference - (float)id[33]) * 60.) - (float)id[34]) * 60.) * 100;
+	if (lonReference < 0) {
+		lonReference += 360.;
+	}
+	id[36] = (int)lonReference;
+	id[37] = (int)((lonReference - (float)id[36]) * 60.);
+	id[38] = (int)((((lonReference - (float)id[36]) * 60.) - (float)id[37]) * 60.) * 100;
+	id[40] = 90;
+
+	// Scale factors
+	id[68] = 100;
+	id[69] = 64;
+
+	// X Header
+	id[160] = (int)(xmin * xGridsp * 100);
+	id[161] = (int)(xmax * xGridsp * 100);
+	id[162] = (int)xDim;
+	id[163] = (int)xGridsp * 1000;
+	id[164] = 1;
+  
+	// Y Header
+	id[165] = (int)(ymin * yGridsp * 100);
+	id[166] = (int)(ymax * yGridsp * 100);
+	id[167] = (int)yDim;
+	id[168] = (int)yGridsp * 1000;
+	id[169] = 2;
+  
+	// Z Header
+	id[170] = (int)(zmin * zGridsp * 1000);
+	id[171] = (int)(zmax * zGridsp * 1000);
+	id[172] = (int)zDim;
+	id[173] = (int)zGridsp * 1000;
+	id[174] = 3;
+
+	// Number of radars
+	id[303] = 1;
+  
+	// Index of center
+	id[309] = (int)((1 - xmin) * 100);
+	id[310] = (int)((1 - ymin) * 100);
+	id[311] = 0;
+	
+	// Write ascii file for grid2ps
+	outFileName += ".asi";
+	QFile asiFile(outFileName);
+	if(!asiFile.open(QIODevice::WriteOnly)) {
+		Message::report("Can't open CAPPI file for writing");
+	}
+
+	QTextStream out(&asiFile);
+	
+	// Write header
+    int line = 0;
+	for (int n = 1; n <= 510; n++) {
+		line++;
+		out << qSetFieldWidth(8) << id[n];
+		if (line == 10) {
+			out << endl;
+            line = 0;
+		}
+	}
+
+	// Write data
+	for(int k = 0; k < int(zDim); k++) {
+		out << reset << "level" << qSetFieldWidth(2) << k+1 << endl;
+		for(int j = 0; j < int(yDim); j++) {
+			out << reset << "azimuth" << qSetFieldWidth(3) << j+1 << endl;
+
+			for(int n = 0; n < fieldNames.size(); n++) {
+				out << reset << left << fieldNames.at(n) << endl;
+				int line = 0;
+				for (int i = 0; i < int(xDim);  i++){
+				    out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << cartGrid[n][i][j][k];
+					line++;
+					if (line == 8) {
+						out << endl;
+						line = 0;
+					}
+				}
+				if (line != 0) {
+					out << endl;
+				}
+			}
+		}
+	}	
+
+}	

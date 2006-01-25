@@ -19,9 +19,9 @@ RadarFactory::RadarFactory(QDomElement radarConfig, QObject *parent)
   radarQueue = new QQueue<QString>;
 
   // Get relevant configuration info
-  volumeInfo.radarName = radarConfig.firstChildElement("name").text();
-  volumeInfo.radarLat = radarConfig.firstChildElement("lat").text().toFloat();
-  volumeInfo.radarLon = radarConfig.firstChildElement("lon").text().toFloat();
+  radarName = radarConfig.firstChildElement("name").text();
+  radarLat = radarConfig.firstChildElement("lat").text().toFloat();
+  radarLon = radarConfig.firstChildElement("lon").text().toFloat();
 
   QDate startDate = QDate::fromString(radarConfig.firstChildElement("startdate").text(),
 				      Qt::ISODate);
@@ -39,7 +39,7 @@ RadarFactory::RadarFactory(QDomElement radarConfig, QObject *parent)
 
   QString format = radarConfig.firstChildElement("format").text();
   if (format == "LEVELII") {
-    volumeInfo.radarFormat = levelII;
+    radarFormat = levelII;
   } else {
     // Will implement more later but give error for now
     emit log(Message("Data format not supported"));
@@ -66,14 +66,11 @@ RadarData* RadarFactory::getUnprocessedData()
   QString fileName = dataPath.filePath(radarQueue->dequeue());
   // Mark it as processed
   fileAnalyzed[fileName] = true;
-  
-  // Make a file object
-  volumeInfo.radarFile.setFileName(fileName);
-  
+    
   // Now make a new radar object from that file and send it back
-  switch(volumeInfo.radarFormat) {
+  switch(radarFormat) {
   case levelII :
-    LevelII *radarData = new LevelII(&volumeInfo);
+    LevelII *radarData = new LevelII(radarName, radarLat, radarLon, fileName);
     return radarData;
     break;
   case dorade:
@@ -100,10 +97,10 @@ bool RadarFactory::hasUnprocessedData()
 
   // Otherwise, check the directory for appropriate files
 
-  switch(volumeInfo.radarFormat) {
+  switch(radarFormat) {
   case levelII:
     // Should have filenames starting with radar ID
-    dataPath.setNameFilters(QStringList(volumeInfo.radarName + "*"));
+    dataPath.setNameFilters(QStringList(radarName + "*"));
     dataPath.setFilter(QDir::Files);
     dataPath.setSorting(QDir::Time);
     QStringList filenames = dataPath.entryList();
@@ -113,18 +110,18 @@ bool RadarFactory::hasUnprocessedData()
       QString file = filenames.at(i);
       QString timepart = file;
       // Replace the radarname so we just have timestamps
-      timepart.replace(volumeInfo.radarName, "");
+      timepart.replace(radarName, "");
       QStringList timestamp = timepart.split("_");
       QDate fileDate = QDate::fromString(timestamp.at(0), "yyyyMMdd");
       QTime fileTime = QTime::fromString(timestamp.at(1), "hhmmss");
       QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
       
       if (fileDateTime >= startDateTime && fileDateTime <= endDateTime) {	
-	// Valid time and radar name, check to see if it has been processed
-	if (!fileAnalyzed[dataPath.filePath(file)]) {
-	  // File has not been analyzed, add it to the queue
-	  radarQueue->enqueue(file);
-	}
+		// Valid time and radar name, check to see if it has been processed
+		if (!fileAnalyzed[dataPath.filePath(file)]) {
+		// File has not been analyzed, add it to the queue
+		radarQueue->enqueue(file);
+		}
       }
     }
     break;

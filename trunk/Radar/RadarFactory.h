@@ -14,7 +14,6 @@
 
 #include <QString>
 #include <QDir>
-#include <QFile>
 #include <QDomElement>
 #include <QQueue>
 #include <QHash>
@@ -33,7 +32,7 @@ class RadarFactory : public QObject
   ~RadarFactory();
   RadarData* getUnprocessedData();
   bool hasUnprocessedData();
-  
+
  public slots:
    void catchLog(const Message& message);
 
@@ -41,12 +40,22 @@ class RadarFactory : public QObject
    void log(const Message& message);
 
  private:
+  enum dataFormat {
+	levelII,
+	dorade,
+	netcdf
+  };
+
   QDir dataPath;
-  VolumeInfo volumeInfo;
+  QString radarName;
+  float radarLat;
+  float radarLon;
+  dataFormat radarFormat;
   QQueue<QString> *radarQueue;
   QDateTime startDateTime;
   QDateTime endDateTime;
   QHash<QString, bool> fileAnalyzed;
+  QDateTime radarDateTime;
 
 };
   

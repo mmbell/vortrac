@@ -116,14 +116,15 @@ void AnalysisThread::run()
 		//connect(cartData, SIGNAL(log(const Message&)),
 		//	this, SLOT(catchLog(const Message&)));
 
-		//cartData->gridData(radarVolume,
-		//		   configData->getConfig("cappi"),
-		//		   &vortexLat, &vortexLon);
-		/*
+		cartData->gridData(radarVolume,
+				configData->getConfig("cappi"),
+				&vortexLat, &vortexLon);
+		
 
 		// Output Radar data to check if dealias worked
-		// cartData->write();
+		cartData->writeAsi();
 
+		/*
 		// Create vortexdata instance
 		VortexData *vortexdata = new VortexData(); 
 		
@@ -158,6 +159,10 @@ void AnalysisThread::run()
 		} else {
 			// Store the resulting analysis in the vortex list
 			archiveAnalysis();
+			
+			// Complete the progress bar and log that we're done
+			emit log(Message("Analysis complete!",100));
+
 			// Let the poller know we're done
 			emit(doneProcessing());
 		}
