@@ -102,18 +102,18 @@ bool LevelII::readVolume()
 
       // Read ray of data
       if (radarHeader->ref_ptr) {
-	char* const ref_buffer = readPtr + radarHeader->ref_ptr;
+	char* const ref_buffer = readPtr + sizeof(nexrad_message_header) + radarHeader->ref_ptr;
 	ref_data = decode_ref(ref_buffer,
 			      radarHeader->ref_num_gates);
       }
       if (radarHeader->vel_ptr) {
-	char* const vel_buffer = readPtr + radarHeader->vel_ptr;
+	char* const vel_buffer = readPtr + sizeof(nexrad_message_header) + radarHeader->vel_ptr;
 	vel_data = decode_vel(vel_buffer,
 			      radarHeader->vel_num_gates,
 			      radarHeader->velocity_resolution);
       }
       if (radarHeader->sw_ptr) {
-	char* const sw_buffer = readPtr + radarHeader->sw_ptr;
+	char* const sw_buffer = readPtr + sizeof(nexrad_message_header) + radarHeader->sw_ptr;
 	sw_data = decode_sw(sw_buffer,
 			    radarHeader->vel_num_gates);
       }

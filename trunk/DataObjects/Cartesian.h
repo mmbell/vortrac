@@ -25,6 +25,7 @@ class CartesianData : public GriddedData
   void gridData(RadarData *radarData, QDomElement cappiConfig,
 		float *vortexLat, float *vortexLon);
   void BarnesInterpolation();
+  void CressmanInterpolation();
   float bilinear(const float &x, const float &y,
 		 const float &z, const int &param);
   void writeAsi();

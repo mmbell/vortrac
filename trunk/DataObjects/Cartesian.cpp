@@ -52,7 +52,7 @@ void CartesianData::gridData(RadarData *radarData, QDomElement cappiConfig,
 			vortexLat, vortexLon);
   xmin = nearbyintf(relDist[0] - (xDim/2)*xGridsp);
   xmax = nearbyintf(relDist[0] + (xDim/2)*xGridsp);
-  ymin = nearbyintf(relDist[1] - (yDim/2)*xGridsp);
+  ymin = nearbyintf(relDist[1] - (yDim/2)*yGridsp);
   ymax = nearbyintf(relDist[1] + (yDim/2)*yGridsp);
   latReference = *vortexLat;
   lonReference = *vortexLon;
@@ -67,7 +67,7 @@ void CartesianData::gridData(RadarData *radarData, QDomElement cappiConfig,
   
   for (int n = 0; n <= radarData->getNumRays(); n++) {
     Ray* currentRay = radarData->getRay(n);
-    float theta = deg2rad * (currentRay->getAzimuth());
+    float theta = deg2rad * fmodf((450. - currentRay->getAzimuth()),360.);
     float phi = deg2rad * (90. - (currentRay->getElevation()));
     
     if (currentRay->getRef_numgates() > 0) {
@@ -75,7 +75,7 @@ void CartesianData::gridData(RadarData *radarData, QDomElement cappiConfig,
       float* refData = currentRay->getRefData();
       for (int g = 0; g <= (currentRay->getRef_numgates()-1); g++) {
 		if (refData[g] == -999.) { continue; }
-		float range = (currentRay->getFirst_ref_gate() +
+		float range = float(currentRay->getFirst_ref_gate() +
 					  (g * currentRay->getRef_gatesp()))/1000.;
 		float x = range*sin(phi)*cos(theta);
 		if ((x < (xmin - xGridsp)) or x > (xmax + xGridsp)) { continue; }
@@ -91,8 +91,8 @@ void CartesianData::gridData(RadarData *radarData, QDomElement cappiConfig,
 		refValues[r].y = y;
 		refValues[r].z = z;
 		refValues[r].rg = range;
-		refValues[r].az = phi;
-		refValues[r].el = theta;
+		refValues[r].az = currentRay->getAzimuth();
+		refValues[r].el = currentRay->getElevation();
 		r++;
       }
 
@@ -103,7 +103,7 @@ void CartesianData::gridData(RadarData *radarData, QDomElement cappiConfig,
       float* swData = currentRay->getSwData();
       for (int g = 0; g <= (currentRay->getVel_numgates()-1); g++) {
 		if (velData[g] == -999.) { continue; }
-		float range = (currentRay->getFirst_vel_gate() +
+		float range = float(currentRay->getFirst_vel_gate() +
 					  (g * currentRay->getVel_gatesp()))/1000.;
 		float x = range*sin(phi)*cos(theta);
 		if ((x < (xmin - xGridsp)) or x > (xmax + xGridsp)) { continue; }
@@ -120,8 +120,8 @@ void CartesianData::gridData(RadarData *radarData, QDomElement cappiConfig,
 		velValues[v].y = y;
 		velValues[v].z = z;
 		velValues[r].rg = range;
-		velValues[r].az = phi;
-		velValues[r].el = theta;
+		velValues[r].az = currentRay->getAzimuth();
+		velValues[r].el = currentRay->getElevation();
 		v++;
       }
 	  
@@ -137,13 +137,78 @@ void CartesianData::gridData(RadarData *radarData, QDomElement cappiConfig,
   QString interpolation = cappiConfig.firstChildElement("interpolation").text();
   if (interpolation == "barnes") {
     BarnesInterpolation();
-  } /* else if (interpolation == "bilinear") {
-    doBilinear(&radarData);
-    } */
+  } else if (interpolation == "cressman") {
+    CressmanInterpolation();
+  }
 
   // Set the initial field names
   fieldNames << "DZ" << "VE" << "SW";
 
+}
+void CartesianData::CressmanInterpolation()
+{
+
+  // Cressman Interpolation
+  
+  // Calculate radius of influence 
+  float xRadius = (xGridsp * xGridsp) * 2.25;
+  float yRadius = (yGridsp * yGridsp) * 2.25;
+  float zRadius = (zGridsp * zGridsp) * 2.25;
+  float RSquare = xRadius + yRadius + zRadius;
+
+  for (int k = 0; k < int(zDim); k++) { 
+    for (int j = 0; j < int(yDim); j++) {
+      for (int i = 0; i < int(xDim); i++) {
+
+	cartGrid[0][i][j][k] = -999.;
+	cartGrid[1][i][j][k] = -999.;
+	cartGrid[2][i][j][k] = -999.;
+
+	float sumRef = 0;
+	float sumVel = 0;
+	float sumSw = 0;
+	float refWeight = 0;
+	float velWeight = 0;
+
+	for (int n = 0; n <= maxRefIndex; n++) {
+	  float dx = refValues[n].x - (xmin + i*xGridsp);
+	  float dy = refValues[n].y - (ymin + j*yGridsp);
+	  float dz = refValues[n].z - (zmin + k*zGridsp);
+	  float rSquare = (dx*dx) + (dy*dy) + (dz*dz);
+	  if (rSquare > RSquare) { continue; }
+	  
+	  float weight = (RSquare - rSquare) / (RSquare + rSquare);
+
+	  refWeight += weight;
+	  sumRef += weight*refValues[n].refValue;
+
+	}
+
+	for (int n = 0; n <= maxVelIndex; n++) {
+	  float dx = velValues[n].x - (xmin + i*xGridsp);
+	  float dy = velValues[n].y - (ymin + j*yGridsp);
+	  float dz = velValues[n].z - (zmin + k*xGridsp);
+	  float rSquare = (dx*dx) + (dy*dy) + (dz*dz);
+	  if (rSquare > RSquare) { continue; }
+	  
+	  float weight = (RSquare - rSquare) / (RSquare + rSquare);
+
+	  velWeight += weight;
+	  sumVel += weight*velValues[n].velValue;
+	  sumSw += weight*velValues[n].swValue;
+
+	}
+
+	if (refWeight > 0) {
+	  cartGrid[0][i][j][k] = sumRef/refWeight;
+	}
+	if (velWeight > 0) {
+	  cartGrid[1][i][j][k] = sumVel/velWeight;
+	  cartGrid[2][i][j][k] = sumSw/velWeight;
+	}	  
+      }
+    }
+  }
 }
 
 void CartesianData::BarnesInterpolation()

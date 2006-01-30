@@ -100,7 +100,7 @@ void AnalysisThread::run()
 		}
 		else
 		  emit log(Message("RadarVolume is Dealiased"));
-
+		  
 		// Check the vortex list for a current center
 		if (!vortexList->isEmpty()) {
 		  vortexLat = vortexList->last().getLat();
