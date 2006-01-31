@@ -13,9 +13,9 @@
      <dir>/path/to/radar/data</dir>
      <format>LEVELII</format>
      <startdate>2005-1-1</startdate>
-     <enddate>2005-1-1</enddate>
+     <enddate>2005-1-2</enddate>
      <starttime>00:00:00</starttime>
-     <endtime>24:00:00</endtime>
+     <endtime>00:00:00</endtime>
   </radar>
   <cappi>
      <dir>/path/to/cappi/output</dir>

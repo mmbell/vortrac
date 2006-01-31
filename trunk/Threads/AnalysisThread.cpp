@@ -113,12 +113,12 @@ void AnalysisThread::run()
 		// Create CAPPI
 		emit log(Message("Create CAPPI"));
 		CartesianData *cartData = new CartesianData();
-		//connect(cartData, SIGNAL(log(const Message&)),
-		//	this, SLOT(catchLog(const Message&)));
+		//connect(cartData, SIGNAL(log(const Message&)),this,
+		//SLOT(catchLog(const Message&)), Qt::DirectConnection);
 
 		cartData->gridData(radarVolume,
-				configData->getConfig("cappi"),
-				&vortexLat, &vortexLon);
+				   configData->getConfig("cappi"),
+				   &vortexLat, &vortexLon);
 		
 
 		// Output Radar data to check if dealias worked

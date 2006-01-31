@@ -59,19 +59,19 @@ GraphFace::GraphFace(QString& title, QWidget *parent)
   imageAltered = true;
 
   workingDirectory = QString("workingDirs/");
-  autoImageName =new QString("autoImage");
+  autoImageName = QString("autoImage");
 
-  QFile *imageFile = new QFile(workingDirectory+*autoImageName+".png");
+  QFile *imageFile = new QFile(workingDirectory+autoImageName+".png");
   int i = 1;
-  QString newName(*autoImageName);
+  QString newName = autoImageName;
   while(imageFile->exists())
     {
       i++;
-      newName = *autoImageName+QString().setNum(i);
+      newName = autoImageName+QString().setNum(i);
       imageFile = new QFile(workingDirectory+newName+".png");
     }
 
-  autoImageName = new QString(newName + ".png");
+  autoImageName = newName + ".png";
 
   autoAxes = true; 
 
@@ -79,7 +79,7 @@ GraphFace::GraphFace(QString& title, QWidget *parent)
 
 GraphFace::~GraphFace()
 {
-  QFile autoImage(workingDirectory+*autoImageName);
+  QFile autoImage(workingDirectory+autoImageName);
   autoImage.remove();
 
   delete VortexDataList;
@@ -231,7 +231,8 @@ void GraphFace::newInfo(QList<VortexData>* gList)
   // set time range as the number of seconds between the time of the first 
   // point and the time of this point
   
-  timeRange = first.secsTo(new_point->getTime());
+  if(first.secsTo(new_point->getTime())> timeRange)
+    timeRange = first.secsTo(new_point->getTime());
   VortexDataList = gList;
   imageAltered = true;
   emit update(); 
@@ -435,7 +436,7 @@ void GraphFace::makeKey()
 
 //************************--setWorkingDirectory--*****************************
 
-void GraphFace::setWorkingDirectory(QString newDir)
+void GraphFace::setWorkingDirectory(QString newDir, QString oldName)
 { 
   QString newImageName("autoImage.png");
   QFile* newImageFile = new QFile(newDir+newImageName);
@@ -443,24 +444,37 @@ void GraphFace::setWorkingDirectory(QString newDir)
   if(newImageFile->exists()) {
     newImageFile->remove();
   }
-  
-  QString* next = new QString("not the right one");
-  Message::toScreen(*next);
-  *next = *autoImageName;
-  Message::toScreen(*next);
 
-  //saveImage(newDir+newImageName);
+  saveImage(newDir+newImageName);
 
-  //QString oldFileName = getImageFileName();
-  //oldFileName = workingDirectory+oldFileName;
-  //QFile* prevImageFile = new QFile(oldFileName);
-  //prevImageFile->copy(newDir+newImageName);
-  //prevImageFile->remove();
+  oldName = workingDirectory+oldName;
+  QFile* prevImageFile = new QFile(oldName);
+  prevImageFile->remove();
   
-  //workingDirectory = newDir;
-  //autoImageName = new QString(newImageName);
+  workingDirectory = newDir;
+  autoImageName = newImageName;
   
   Message::toScreen("Made it");
+}
+
+void GraphFace::changeWorkDir(QString newDir)
+{
+  QString newImageName("autoImage.png");
+  QFile newFile(newDir+newImageName);
+  if(newFile.exists())
+    newFile.remove();
+  
+  saveImage(newDir+newImageName);
+  
+  QFile oldFile(workingDirectory+autoImageName);
+  oldFile.remove();
+  
+  workingDirectory = newDir;
+  autoImageName = newImageName;
+
+  Message::toScreen("Crazy Luck");
+
+
 }
 
 //************************--converters and QPointF constructors--*************
@@ -1181,7 +1195,7 @@ void GraphFace::updateImage()
   if (painter->isActive())
     painter->end();
   image = temp;
-  autoSave(workingDirectory+*autoImageName);
+  autoSave(workingDirectory+autoImageName);
 }
 
 
@@ -1677,19 +1691,15 @@ void GraphFace::altUpdateImage()
   if (painter->isActive())
     painter->end();
   image = temp;
-  autoSave(workingDirectory+*autoImageName);
+  autoSave(workingDirectory+autoImageName);
 }
 
-QString* GraphFace::getImageFileName()
+QString GraphFace::getImageFileName()
 {
-
-  Message::toScreen(*autoImageName);
   return(autoImageName);
-
-
 }
 
-void GraphFace::doesNothing()
+void GraphFace::setImageFileName(QString newName)
 {
-  Message::toScreen(*autoImageName);
+  autoImageName = newName;
 }

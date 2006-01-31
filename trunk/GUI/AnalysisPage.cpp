@@ -20,7 +20,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   statusLog = new Log();
   
   connect(this, SIGNAL(log(const Message&)),
-	  statusLog, SLOT(catchLog(const Message&)));
+	  statusLog, SLOT(catchLog(const Message&)), Qt::DirectConnection);
 
   // Create a new configuration instance
   configData = new Configuration;
@@ -41,6 +41,8 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   GraphFace *graph = new GraphFace(vortexLabel);
   connect(graph, SIGNAL(log(const Message&)), 
 	  this, SLOT(catchLog(const Message&)));
+
+  imageFileName = graph->getImageFileName();
 
 
   // Connect signals and slots that update the configuration
@@ -319,7 +321,7 @@ void AnalysisPage::updatePage()
       workingDirectory = configData->getParam(configData->getConfig("vortex"),
 					      "dir");
       statusLog->setWorkingDirectory(workingDirectory);
-      //graph->setWorkingDirectory(workingDirectory);
+      //graph->changeWorkDir(workingDirectory);
       
     }
 }
@@ -327,7 +329,7 @@ void AnalysisPage::updatePage()
 void AnalysisPage::runThread()
 {
   // Start a processing thread using the current configuration
-
+  
   pollThread.setConfig(configData);
   pollThread.start();
 

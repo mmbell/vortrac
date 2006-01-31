@@ -17,6 +17,7 @@
 #include<QPainter>
 #include<QEvent>
 #include<QImage>
+#include<QMatrix>
 
 #include "DataObjects/VortexData.h"
 #include "KeyPicture.h"
@@ -31,10 +32,13 @@ public:
        // The constructor takes a parent and returns a GraphFace object
        // it also preforms several initialization for the object
    ~GraphFace();
-   QString* getImageFileName();
-   void setWorkingDirectory(QString newDir);
+   void setImageFileName(QString newName);
+   QString getImageFileName();
+   void setWorkingDirectory(QString newDir, QString oldName);
    QString getWorkingDirectory() { return workingDirectory;}
-   void doesNothing();
+
+   void changeWorkDir(QString newDir);
+
 
  
 public slots:
@@ -59,6 +63,9 @@ protected:
         // and any time update is called
    bool event(QEvent *event);
    void resizeEvent(QResizeEvent * /* event */);
+
+   QString autoImageName;
+   QString workingDirectory;
  
 
    // all these members are related to the color and size of marks on the graph
@@ -79,11 +86,9 @@ protected:
  
 private:
    QImage *image;
-   QString *autoImageName;
-   QString workingDirectory;
    QList<VortexData>* VortexDataList;      
    QList<VortexData>*  dropList;         
-   QDateTime first;                     // Time of first data point
+   QDateTime first;                // Time of first data points
    QDialog* key;
    QString graphTitle;
    int graph_width;

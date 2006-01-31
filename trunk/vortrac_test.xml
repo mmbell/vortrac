@@ -4,6 +4,7 @@
         <name>Charley</name>
         <lat>26.2</lat>
         <lon>-82.3</lon>
+        <dir>workingDirs/</dir>
     </vortex>
     <radar>
         <name>KTBW</name>

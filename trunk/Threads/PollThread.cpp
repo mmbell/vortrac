@@ -14,13 +14,13 @@
 PollThread::PollThread(QObject *parent)
   : QThread(parent)
 {
-
+ 
   abort = false;
   connect(&analysisThread, SIGNAL(doneProcessing()), 
-	  this, SLOT(analysisDoneProcessing()));
+  	  this, SLOT(analysisDoneProcessing()));
   connect(&analysisThread, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
-
+ 
 }
 
 PollThread::~PollThread()
@@ -50,7 +50,7 @@ void PollThread::run()
   emit log(Message("PollThread Started"));
   RadarFactory *dataSource = new RadarFactory(configData->getConfig("radar"));
   connect(dataSource, SIGNAL(log(const Message&)),
-	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+  	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
 
   vortexList = new QList<VortexData>;
   analysisThread.setVortexList(vortexList);
@@ -87,8 +87,5 @@ void PollThread::catchLog(const Message& message)
 {
   emit log(message);
 }
-
-
-
 
 

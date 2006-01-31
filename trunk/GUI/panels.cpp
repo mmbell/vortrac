@@ -36,12 +36,14 @@ VortexPanel::VortexPanel()
 
   QLabel *latLabel = new QLabel(tr("Vortex Latitude:"));
   latBox = new QDoubleSpinBox();
+  latBox->setRange(-999,999);
   QHBoxLayout *lat = new QHBoxLayout;
   lat->addWidget(latLabel);
   lat->addWidget(latBox);
       
   QLabel *longLabel = new QLabel(tr("Vortex Longitude"));
   longBox = new QDoubleSpinBox();
+  longBox->setRange(-999, 999);
   QHBoxLayout *longitude = new QHBoxLayout;
   longitude->addWidget(longLabel);
   longitude->addWidget(longBox);
@@ -235,7 +237,7 @@ void RadarPanel::updatePanel(const QDomElement panelElement)
     QString parameter = child.text();
     if(name == "name") {
       radarName->clear();
-      radarName->insert(parameter); }
+      radarName->insert( parameter); }
     if (name == "lat") {
       latBox->setValue(parameter.toDouble()); }
     if (name == "lon") {

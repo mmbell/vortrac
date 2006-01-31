@@ -17,7 +17,7 @@ Log::Log(QWidget *parent)
 {
 
   connect(this, SIGNAL(log(const Message&)),
-	  this, SLOT(catchLog(const Message&)));
+	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
   
   workingDirectory = QString("workingDirs/");
   logFileName = QString("autoLog");

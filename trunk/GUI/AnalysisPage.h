@@ -85,6 +85,7 @@ class AnalysisPage : public QWidget
   GraphFace* graph;
   ConfigurationDialog *configDialog;
   QString workingDirectory;
+  QString imageFileName;
 
 };
 
