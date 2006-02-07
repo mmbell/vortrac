@@ -10,12 +10,12 @@ INCLUDEPATH += . GUI Config IO Radar
 HEADERS += DataObjects/PressureData.h \
            Threads/AnalysisThread.h \
            Threads/PollThread.h \
+		   Threads/SimplexThread.h \
            DataObjects/VortexData.h \
            Config/Configuration.h \
-           DataObjects/Cartesian.h \
-           DataObjects/Cylindrical.h \
+           DataObjects/CappiGrid.h \
            DataObjects/GriddedData.h \
-           DataObjects/Spherical.h \
+		   DataObjects/GriddedFactory.h \
            GUI/ConfigTree.h \
            GUI/ConfigurationDialog.h \
            GUI/MainWindow.h \
@@ -38,12 +38,12 @@ SOURCES += main.cpp \
            DataObjects/PressureData.cpp \
            Threads/AnalysisThread.cpp \
            Threads/PollThread.cpp \
+		   Threads/SimplexThread.cpp \
            DataObjects/VortexData.cpp \
            Config/Configuration.cpp \
-           DataObjects/Cartesian.cpp \
-           DataObjects/Cylindrical.cpp \
+           DataObjects/CappiGrid.cpp \
            DataObjects/GriddedData.cpp \
-           DataObjects/Spherical.cpp \
+           DataObjects/GriddedFactory.cpp \
            GUI/ConfigTree.cpp \
            GUI/ConfigurationDialog.cpp \
            GUI/MainWindow.cpp \

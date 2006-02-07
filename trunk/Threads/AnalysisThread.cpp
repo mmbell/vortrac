@@ -12,14 +12,19 @@
 
 #include "AnalysisThread.h"
 #include "Radar/RadarQC.h"
-#include "DataObjects/Cartesian.h"
+#include "DataObjects/CappiGrid.h"
 #include "DataObjects/VortexData.h"
 #include "Message.h"
+#include "SimplexThread.h"
 
 AnalysisThread::AnalysisThread(QObject *parent)
   : QThread(parent)
 {
+
   abort = false;
+  connect(&simplexThread, SIGNAL(log(const Message&)), this, 
+			SLOT(catchLog(const Message&)), Qt::DirectConnection);
+
 }
 
 AnalysisThread::~AnalysisThread()
@@ -66,7 +71,8 @@ void AnalysisThread::analyze(RadarData *dataVolume, Configuration *configPtr)
 
 void AnalysisThread::run()
 {
-  emit log(Message("AnalysisThread Started"));
+	   emit log(Message("AnalysisThread Started"));
+	   
        forever {
 		// Check to see if we should quit
 		if (abort)
@@ -112,24 +118,22 @@ void AnalysisThread::run()
 		
 		// Create CAPPI
 		emit log(Message("Create CAPPI"));
-		CartesianData *cartData = new CartesianData();
-		//connect(cartData, SIGNAL(log(const Message&)),this,
-		//SLOT(catchLog(const Message&)), Qt::DirectConnection);
-
-		cartData->gridData(radarVolume,
-				   configData->getConfig("cappi"),
-				   &vortexLat, &vortexLon);
-		
+		GriddedData *gridData = gridFactory.makeCappi(radarVolume,
+						configData->getConfig("cappi"),&vortexLat, &vortexLon);
+		/* GriddedData not currently a QObject so this will fail
+		   connect(gridData, SIGNAL(log(const Message&)),this,
+				SLOT(catchLog(const Message&)), Qt::DirectConnection); */
 
 		// Output Radar data to check if dealias worked
-		cartData->writeAsi();
+		gridData->writeAsi();
 
-		/*
-		// Create vortexdata instance
+		// Create vortexdata instance to hold the analysis results
 		VortexData *vortexdata = new VortexData(); 
 		
 		// Find Center
-		vortexdata->findCenter(configdata.getFindCenterParams());
+		simplexThread.findCenter(configData->getConfig("center"), gridData);
+
+/*
 		
 		// Get environmental wind
 		vortexdata->calculateEnvWind(configdata.getEnvWindParams());

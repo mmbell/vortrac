@@ -1,5 +1,5 @@
 /*
- *  Cartesian.cpp
+ *  CappiGrid.cpp
  *  VORTRAC
  *
  *  Created by Michael Bell on 7/29/05.
@@ -8,13 +8,13 @@
  *
  */
 
-#include "Cartesian.h"
+#include "CappiGrid.h"
 #include "Message.h"
 #include <math.h>
 #include <QTextStream>
 #include <QFile>
 
-CartesianData::CartesianData() : GriddedData()
+CappiGrid::CappiGrid() : GriddedData()
 {
 
   coordSystem = cartesian;
@@ -23,13 +23,13 @@ CartesianData::CartesianData() : GriddedData()
 
 }
 
-CartesianData::~CartesianData()
+CappiGrid::~CappiGrid()
 {
 }
 
 
-void CartesianData::gridData(RadarData *radarData, QDomElement cappiConfig,
-			     float *vortexLat, float *vortexLon)
+void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
+					float *vortexLat, float *vortexLon)
 {
 
   // Set the output file
@@ -48,7 +48,7 @@ void CartesianData::gridData(RadarData *radarData, QDomElement cappiConfig,
 
   // Get the relative center and expand the grid around it
   relDist = new float[2];
-  relDist = relLocation(radarData->getRadarLat(), radarData->getRadarLon(),
+  relDist = relEarthLocation(radarData->getRadarLat(), radarData->getRadarLon(),
 			vortexLat, vortexLon);
   xmin = nearbyintf(relDist[0] - (xDim/2)*xGridsp);
   xmax = nearbyintf(relDist[0] + (xDim/2)*xGridsp);
@@ -145,7 +145,7 @@ void CartesianData::gridData(RadarData *radarData, QDomElement cappiConfig,
   fieldNames << "DZ" << "VE" << "SW";
 
 }
-void CartesianData::CressmanInterpolation()
+void CappiGrid::CressmanInterpolation()
 {
 
   // Cressman Interpolation
@@ -211,7 +211,7 @@ void CartesianData::CressmanInterpolation()
   }
 }
 
-void CartesianData::BarnesInterpolation()
+void CappiGrid::BarnesInterpolation()
 {
 
   // Barnes Interpolation (see Koch et al, 1983 for details)
@@ -313,7 +313,7 @@ void CartesianData::BarnesInterpolation()
 
 	  
 	  refWeight += weight;
-	  float interpRef = bilinear(dx,dy,dz,0);
+	  float interpRef = trilinear(dx,dy,dz,0);
 	  sumRef += weight*(refValues[n].refValue - interpRef);
 	  
 	}
@@ -333,8 +333,8 @@ void CartesianData::BarnesInterpolation()
 
 	  
 	  velWeight += weight;
-	  float interpVel = bilinear(dx,dy,dz,1);
-	  float interpSw = bilinear(dx,dy,dz,2);
+	  float interpVel = trilinear(dx,dy,dz,1);
+	  float interpSw = trilinear(dx,dy,dz,2);
 	  sumVel += weight*(velValues[n].velValue - interpVel);
 	  sumSw += weight*(velValues[n].swValue - interpSw);
 
@@ -353,7 +353,7 @@ void CartesianData::BarnesInterpolation()
   
 }
 
-float CartesianData::bilinear(const float &x, const float &y,
+float CappiGrid::trilinear(const float &x, const float &y,
 			      const float &z, const int &param)
 {
 
@@ -431,7 +431,7 @@ float CartesianData::bilinear(const float &x, const float &y,
   return interpValue;
 }
 
-void CartesianData::writeAsi()
+void CappiGrid::writeAsi()
 {
 
 	// Write out the CAPPI to an asi file

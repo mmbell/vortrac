@@ -20,6 +20,8 @@
 #include "IO/Message.h"
 #include "Config/Configuration.h"
 #include "DataObjects/VortexData.h"
+#include "DataObjects/GriddedFactory.h"
+#include "SimplexThread.h"
 
 class AnalysisThread : public QThread
 {
@@ -48,6 +50,8 @@ class AnalysisThread : public QThread
      bool abort;
      Configuration *configData;
      RadarData *radarVolume;
+	 GriddedFactory gridFactory;
+	 SimplexThread simplexThread;
      QList<VortexData> *vortexList;
      void archiveAnalysis();
      float vortexLat, vortexLon;

@@ -29,12 +29,11 @@ GriddedData::~GriddedData()
 {
 }
 
-void GriddedData::gridData(RadarData *radarData, QDomElement cappiConfig,
-			   float *vortexLat, float *vortexLon)
+void GriddedData::writeAsi()
 {
 }
 
-float* GriddedData::relLocation(float *originLat, float *originLon,
+float* GriddedData::relEarthLocation(float *originLat, float *originLon,
 				float *relLat, float *relLon)
 {
 

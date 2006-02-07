@@ -1,5 +1,5 @@
 /*
- *  Cartesian.h
+ *  CappiGrid.h
  *  VORTRAC
  *
  *  Created by Michael Bell on 7/29/05.
@@ -8,25 +8,25 @@
  *
  */
 
-#ifndef CARTESIAN_H
-#define CARTESIAN_H
+#ifndef CAPPIGRID_H
+#define CAPPIGRID_H
 
 #include <QDomElement>
 #include <QFile>
 #include "Radar/RadarData.h"
 #include "DataObjects/GriddedData.h"
 
-class CartesianData : public GriddedData
+class CappiGrid : public GriddedData
 {
  
  public:
-  CartesianData();
-  ~CartesianData();
-  void gridData(RadarData *radarData, QDomElement cappiConfig,
+  CappiGrid();
+  ~CappiGrid();
+  void gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 		float *vortexLat, float *vortexLon);
   void BarnesInterpolation();
   void CressmanInterpolation();
-  float bilinear(const float &x, const float &y,
+  float trilinear(const float &x, const float &y,
 		 const float &z, const int &param);
   void writeAsi();
   

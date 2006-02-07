@@ -22,8 +22,8 @@ class GriddedData
   GriddedData();
   virtual ~GriddedData();
 
-  virtual void gridData(RadarData *radarPtr, QDomElement cappiConfig,
-			float *vortexLat, float *vortexLon) = 0;
+  virtual void writeAsi() = 0;
+  
   float getXdim() { return xDim; }
   float getYdim() { return yDim; }
   float getZdim() { return zDim; }
@@ -32,17 +32,22 @@ class GriddedData
   void setZdim(const int& dim);
   int getCoordSystem() { return coordSystem; }
   float fixAngle(const float &angle);
-  float* relLocation(float *originLat, float *originLon,
+  float* relEarthLocation(float *originLat, float *originLon,
 		     float *relLat, float* relLon);
   float* absLocation(float *originLat, float *originLon,
 		     float *relX, float *relY);
   // Return a 3D array of values
-  float* getFortranValues();
-  float* getCValues();
+  float* getNativeValues();
+  float* getCartesianValues();
+  float* getCylindricalValues();
+  float* getSphericalValues();
   
   // Return a 3D array of locations
-  float* getFortranLocations();
-  float* getCLocations();
+  float* getNativeLocations();
+  float* getCartesianLocations();
+  float* getCylindricalLocations();
+  float* getSphericalLocations();
+
 
  protected:
   float xDim;
