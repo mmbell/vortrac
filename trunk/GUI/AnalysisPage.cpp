@@ -330,6 +330,11 @@ void AnalysisPage::runThread()
 {
   // Start a processing thread using the current configuration
   
+  if(configData->getParam(configData->getConfig("radar"), "format")
+     == QString("MODEL")){
+    analyticModel();
+  }
+  
   pollThread.setConfig(configData);
   pollThread.start();
 
@@ -388,5 +393,50 @@ void AnalysisPage::prepareToClose()
   autoLog.remove();
 
   // autoImage is deleted in the GraphFace destructor
+
+}
+
+void AnalysisPage::analyticModel()
+{
+  QString modelFile = configData->getParam(configData->getConfig("radar"),
+					   "dir");
+  Configuration *modelConfig = new Configuration(this, modelFile);
+  connect(modelConfig, SIGNAL(log(const Message&)),
+	  this, SLOT(catchLog(const Message&)));
+  QDialog *modelDialog = new QDialog;
+  modelDialog->setModal(true);
+  QPushButton *run = new QPushButton("Create Analytic Model");
+  QPushButton *cancel = new QPushButton("Cancel");
+  ConfigTree *configTreeModel = new ConfigTree(modelDialog, modelConfig);
+  connect(configTreeModel, SIGNAL(log(const Message&)),
+	  this, SLOT(catchLog(const Message&)));
+  
+  connect(configTreeModel, SIGNAL(newParam(const QDomElement&, 
+					   const QString&, const QString&)), 
+	  modelConfig, SLOT(setParam(const QDomElement&, 
+				     const QString&, const QString&)));
+  connect(configTreeModel, SIGNAL(addDom(const QDomElement&, const QString&, 
+					 const QString&)), 
+	  modelConfig, SLOT(addDom(const QDomElement&,
+				   const QString&, const QString&)));
+  connect(configTreeModel, SIGNAL(removeDom(const QDomElement&,
+					    const QString&)),
+	  modelConfig, SLOT(removeDom(const QDomElement&,const QString&)));
+  
+  if(!configTreeModel->read())
+    emit log(Message("Error Reading Analytic Storm Configuration"));
+  
+  connect(run, SIGNAL(pressed()), modelDialog, SLOT(close()));
+  connect(cancel, SIGNAL(pressed()), modelDialog, SLOT(close()));
+  
+  QHBoxLayout *buttons = new QHBoxLayout;
+  buttons->addStretch(1);
+  buttons->addWidget(run);
+  buttons->addWidget(cancel);
+  QVBoxLayout *layout = new QVBoxLayout;
+  layout->addWidget(configTreeModel);
+  layout->addLayout(buttons);
+  modelDialog->setLayout(layout);
+  modelDialog->exec();
 
 }

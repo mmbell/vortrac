@@ -10,7 +10,7 @@
      <name>WSR-88D</name>
      <lat>0.00</lat>
      <lon>0.00</lon>
-     <dir>/path/to/radar/data</dir>
+     <dir>workingDirs/</dir>
      <format>LEVELII</format>
      <startdate>2005-1-1</startdate>
      <enddate>2005-1-2</enddate>

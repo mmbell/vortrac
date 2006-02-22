@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vortrac xmnls = 'http://www.eol.ucar.edu/ns/vortrac'>
+  <source>wind_field</source>
+  <mm5>
+     <dir>/location/of/MM5/Data</dir>
+  </mm5>
+  <wind_field>
+     <vortexX>100</vortexX>
+     <vortexY>100</vortexY>
+     <rmw>30</rmw>
+     <vt0>70</vt0>
+     <vr0>0</vr0>        
+     <vt1>0</vt1>
+     <vt1angle>0</vt1angle>
+     <vr1>0</vr1>
+     <vr1angle>0</vr1angle>
+     <vt2>0</vt2>
+     <vt2angle>0</vt2angle>
+     <vr2>0</vr2>
+     <vr2angle>0</vr2angle>
+     <env_wind>0</env_wind>
+     <env_dir>180</env_dir>
+  </wind_field>
+  <analytic_radar>
+     <sample>false</sample>
+     <radarX>100</radarX>
+     <radarY>0</radarY>
+     <nyquistVel>10</nyquistVel>
+  </analytic_radar>
+</vortrac>

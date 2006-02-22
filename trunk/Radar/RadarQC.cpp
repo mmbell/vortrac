@@ -1406,6 +1406,7 @@ bool RadarQC::leastSquaresRegression(float **a, float **b, int n, int m)
 {
 
   // get this to do what lls does using cpp recipes
+  // Gauss-Jordan Elemination
   // a = nxn coefficient matrix
   // b = nxm matrix
   

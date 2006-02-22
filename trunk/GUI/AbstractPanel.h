@@ -38,6 +38,7 @@ class AbstractPanel:public QWidget
    virtual bool  updateConfig();
      // Writes current values in the panel to the corresponding section of the 
      // Configuration
+
    QLineEdit *dir;
    QPushButton *browse;
    QSpinBox *maxWaveNumBox;
@@ -59,6 +60,7 @@ class AbstractPanel:public QWidget
 
  protected:
    void connectBrowse();
+   void connectFileBrowse();
 
  private:
    bool panelChanged;
@@ -78,6 +80,10 @@ class AbstractPanel:public QWidget
    void getDirectory();
      // Receives the signal emited by the browse button
      // Call's the getExisting Directory Dialog
+   void getFileName();
+     // Receives the signal emited by the browseFiles button
+     // Call's the getOpenFileName QDialog static member
+   void checkForAnalytic(const QString& format);
 
  signals:
    void log(const Message& message);

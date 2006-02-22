@@ -18,13 +18,13 @@
 #include <QHash>
 #include "Message.h"
 
-class Configuration:public QWidget
+class Configuration:public QObject
 {
 
   Q_OBJECT
  
  public:
-  Configuration(QWidget *parent = 0,const QString &filename = QString());
+  Configuration(QObject *parent = 0,const QString &filename = QString());
   ~Configuration();
   QDomElement getRoot();
   bool read(const QString &filename);

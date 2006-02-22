@@ -72,6 +72,7 @@ void AnalysisThread::analyze(RadarData *dataVolume, Configuration *configPtr)
 void AnalysisThread::run()
 {
 	   emit log(Message("AnalysisThread Started"));
+	   Message::toScreen("AnalysisThread Started");
 	   
        forever {
 		// Check to see if we should quit
@@ -118,15 +119,37 @@ void AnalysisThread::run()
 		
 		// Create CAPPI
 		emit log(Message("Create CAPPI"));
-		GriddedData *gridData = gridFactory.makeCappi(radarVolume,
-						configData->getConfig("cappi"),&vortexLat, &vortexLon);
+
+		/* If Analytic Model is running we need to make an analytic
+		   gridded data rather than a cappi*/
+		
+		GriddedData *gridData;
+		
+		if(radarVolume->getNumRays() < 0) {
+		  Configuration *analyticConfig = new Configuration();
+		  QDomElement radar = configData->getConfig("radar");
+		  analyticConfig->read(configData->getParam(radar, "dir"));
+		  gridData = gridFactory.makeAnalytic(radarVolume,
+						configData->getConfig("cappi"),
+						analyticConfig, &vortexLat, 
+						&vortexLon);
+		}
+		else {
+		  emit log(Message("Attempting to Make Cappi"));
+		  gridData = gridFactory.makeCappi(radarVolume,
+						configData->getConfig("cappi"),
+			 			&vortexLat, &vortexLon);
+
+		}
+		
+
 		/* GriddedData not currently a QObject so this will fail
 		   connect(gridData, SIGNAL(log(const Message&)),this,
-				SLOT(catchLog(const Message&)), Qt::DirectConnection); */
-
+		   SLOT(catchLog(const Message&)), Qt::DirectConnection); */
+		
 		// Output Radar data to check if dealias worked
 		gridData->writeAsi();
-
+		
 		// Create vortexdata instance to hold the analysis results
 		VortexData *vortexdata = new VortexData(); 
 		

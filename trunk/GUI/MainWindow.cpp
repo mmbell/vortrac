@@ -85,7 +85,8 @@ void MainWindow::newFile()
 
 void MainWindow::open()
 {
-    QString fileName = QFileDialog::getOpenFileName(this);
+    QString fileName = QFileDialog::getOpenFileName(this, QString(tr("Select Configuration File")), QString(), QString("Vortrac Configuration Files (*.xml)"));
+  
     if (!fileName.isEmpty()) {
         AnalysisPage *existing = findAnalysisPage(fileName);
         if (existing) {

@@ -10,12 +10,13 @@ INCLUDEPATH += . GUI Config IO Radar
 HEADERS += DataObjects/PressureData.h \
            Threads/AnalysisThread.h \
            Threads/PollThread.h \
-		   Threads/SimplexThread.h \
+           Threads/SimplexThread.h \
            DataObjects/VortexData.h \
            Config/Configuration.h \
+           DataObjects/AnalyticGrid.h \
            DataObjects/CappiGrid.h \
            DataObjects/GriddedData.h \
-		   DataObjects/GriddedFactory.h \
+           DataObjects/GriddedFactory.h \
            GUI/ConfigTree.h \
            GUI/ConfigurationDialog.h \
            GUI/MainWindow.h \
@@ -29,6 +30,7 @@ HEADERS += DataObjects/PressureData.h \
            IO/Log.h \
            Radar/RadarFactory.h \
            Radar/LevelII.h \
+           Radar/AnalyticRadar.h \
            Radar/nexh.h \
            Radar/RadarQC.h \
            Radar/RadarData.h \
@@ -38,9 +40,10 @@ SOURCES += main.cpp \
            DataObjects/PressureData.cpp \
            Threads/AnalysisThread.cpp \
            Threads/PollThread.cpp \
-		   Threads/SimplexThread.cpp \
+           Threads/SimplexThread.cpp \
            DataObjects/VortexData.cpp \
            Config/Configuration.cpp \
+           DataObjects/AnalyticGrid.cpp \
            DataObjects/CappiGrid.cpp \
            DataObjects/GriddedData.cpp \
            DataObjects/GriddedFactory.cpp \
@@ -57,6 +60,7 @@ SOURCES += main.cpp \
            IO/Log.cpp \
            Radar/RadarFactory.cpp \
            Radar/LevelII.cpp \
+           Radar/AnalyticRadar.cpp\
            Radar/RadarQC.cpp \
            Radar/RadarData.cpp \
            Radar/Ray.cpp \

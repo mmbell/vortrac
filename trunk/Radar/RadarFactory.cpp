@@ -10,10 +10,12 @@
 
 #include "RadarFactory.h"
 #include <iostream>
+#include <QPushButton>
 
 RadarFactory::RadarFactory(QDomElement radarConfig, QObject *parent)
   : QObject(parent)
 {
+  radarConfiguration = radarConfig;
 
   // Will poll for data and return radar objects in a queue
   radarQueue = new QQueue<QString>;
@@ -40,7 +42,11 @@ RadarFactory::RadarFactory(QDomElement radarConfig, QObject *parent)
   QString format = radarConfig.firstChildElement("format").text();
   if (format == "LEVELII") {
     radarFormat = levelII;
-  } else {
+  } 
+  if (format == "MODEL") {
+    radarFormat = model;
+  }
+  else { 
     // Will implement more later but give error for now
     emit log(Message("Data format not supported"));
   }
@@ -70,15 +76,31 @@ RadarData* RadarFactory::getUnprocessedData()
   // Now make a new radar object from that file and send it back
   switch(radarFormat) {
   case levelII :
-    LevelII *radarData = new LevelII(radarName, radarLat, radarLon, fileName);
-    return radarData;
-    break;
+    {
+      LevelII *radarData = new LevelII(radarName, radarLat, 
+				       radarLon, fileName);
+      return radarData;
+      break;
+    }
+  case model:
+    {
+      AnalyticRadar *radarData = new AnalyticRadar(radarName, 
+						   radarLat, radarLon,
+						   fileName);
+      radarData->setConfigElement(radarConfiguration.parentNode().toElement());
+      return radarData;
+      break;
+    }
   case dorade:
-    // Not yet implemented
-    break;
+    {
+      // Not yet implemented
+      break;
+    }
   case netcdf:
-    // Not yet implemented
-    break;
+    {
+      // Not yet implemented
+      break;
+    }
   }
 
   // If we get here theres a problem, return a null pointer
@@ -99,41 +121,67 @@ bool RadarFactory::hasUnprocessedData()
 
   switch(radarFormat) {
   case levelII:
-    // Should have filenames starting with radar ID
-    dataPath.setNameFilters(QStringList(radarName + "*"));
-    dataPath.setFilter(QDir::Files);
-    dataPath.setSorting(QDir::Time);
-    QStringList filenames = dataPath.entryList();
-    
-    // Check to see which are in the time limits
-    for (int i = 0; i < filenames.size(); ++i) {
-      QString file = filenames.at(i);
-      QString timepart = file;
-      // Replace the radarname so we just have timestamps
-      timepart.replace(radarName, "");
-      QStringList timestamp = timepart.split("_");
-      QDate fileDate = QDate::fromString(timestamp.at(0), "yyyyMMdd");
-      QTime fileTime = QTime::fromString(timestamp.at(1), "hhmmss");
-      QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
+    {
+      // Should have filenames starting with radar ID
+      dataPath.setNameFilters(QStringList(radarName + "*"));
+      dataPath.setFilter(QDir::Files);
+      dataPath.setSorting(QDir::Time);
+      QStringList filenames = dataPath.entryList();
       
-      if (fileDateTime >= startDateTime && fileDateTime <= endDateTime) {	
-		// Valid time and radar name, check to see if it has been processed
-		if (!fileAnalyzed[dataPath.filePath(file)]) {
-		// File has not been analyzed, add it to the queue
-		radarQueue->enqueue(file);
-		}
+      // Check to see which are in the time limits
+      for (int i = 0; i < filenames.size(); ++i) {
+	QString file = filenames.at(i);
+	QString timepart = file;
+	// Replace the radarname so we just have timestamps
+	timepart.replace(radarName, "");
+	QStringList timestamp = timepart.split("_");
+	QDate fileDate = QDate::fromString(timestamp.at(0), "yyyyMMdd");
+	QTime fileTime = QTime::fromString(timestamp.at(1), "hhmmss");
+	QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
+	
+	if (fileDateTime >= startDateTime && fileDateTime <= endDateTime) {	
+	  // Valid time and radar name, check to see if it has been processed
+	  if (!fileAnalyzed[dataPath.filePath(file)]) {
+	    // File has not been analyzed, add it to the queue
+	    radarQueue->enqueue(file);
+	  }
+	}
       }
     }
+   
     break;
+    
+  case model:
+    {
+      // Currently the GUI is set up to take the XML config in the 
+      // radar directory parameter when analytic storm is selected as
+      // radar format.
+      
+      // Here we will pass that xml file through the queue to be processed
+      
+      QString fileName = radarConfiguration.firstChildElement("dir").text();
 
-    /* case dorade:
-    // Not yet implemented
-    break;
-
+      //Message::toScreen("Radar Factory:analytic config filename: "+fileName);
+      
+      if (!fileAnalyzed[fileName]) {
+	// File has not been analyzed, add it to the queue
+	radarQueue->enqueue(fileName);
+      }
+      
+      break;
+    }
+    
+  case dorade:
+    {
+      // Not yet implemented
+      break;
+    }  
   case netcdf:
-    // Not yet implemented
-    break; 
-    */
+    {
+      // Not yet implemented
+      break; 
+    } 
+    
   }
 
   // See if we added any new files to the queue
@@ -150,4 +198,3 @@ void RadarFactory::catchLog(const Message& message)
 {
   emit log (message);
 }
-

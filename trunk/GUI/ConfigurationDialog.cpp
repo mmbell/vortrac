@@ -38,6 +38,7 @@ ConfigurationDialog::ConfigurationDialog(Configuration *initialConfig)
   selection->setCurrentRow(0);
 
   QPushButton *apply = new QPushButton(tr("Apply"));
+  apply->setDefault(true);
   QPushButton *cancel = new QPushButton(tr("Cancel"));
   connect(apply, SIGNAL(clicked()), this, SLOT(applyChanges()));
   connect(cancel, SIGNAL(clicked()), this, SLOT(close()));

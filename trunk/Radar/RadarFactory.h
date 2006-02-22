@@ -19,7 +19,9 @@
 #include <QHash>
 #include "Radar/RadarData.h"
 #include "Radar/LevelII.h"
+#include "Radar/AnalyticRadar.h"
 #include "IO/Message.h"
+#include "GUI/ConfigTree.h"
 
 class RadarFactory : public QObject
 {
@@ -41,6 +43,7 @@ class RadarFactory : public QObject
  private:
   enum dataFormat {
 	levelII,
+	model,
 	dorade,
 	netcdf
   };
@@ -55,6 +58,7 @@ class RadarFactory : public QObject
   QDateTime endDateTime;
   QHash<QString, bool> fileAnalyzed;
   QDateTime radarDateTime;
+  QDomElement radarConfiguration;
 
 };
   

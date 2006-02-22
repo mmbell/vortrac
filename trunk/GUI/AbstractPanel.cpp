@@ -34,7 +34,14 @@ void AbstractPanel::updatePanel(QDomElement panelElement)
 
 void AbstractPanel::connectBrowse()
 {
+  disconnect(browse, SIGNAL(clicked()), 0, 0);
   connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
+}
+
+void AbstractPanel::connectFileBrowse()
+{
+  disconnect(browse, SIGNAL(clicked()), 0, 0);
+  connect(browse, SIGNAL(clicked()), this, SLOT(getFileName()));
 }
 
 void AbstractPanel::getDirectory()
@@ -42,6 +49,17 @@ void AbstractPanel::getDirectory()
   QString filePath = QFileDialog::getExistingDirectory(this);
   dir->clear();
   dir->insert(filePath);
+}
+
+void AbstractPanel::getFileName()
+{
+  QString openFile;
+  openFile=QFileDialog::getOpenFileName(this,
+					QString("Select File"),
+					elem.firstChildElement("dir").text(), 
+					QString("Configuration Files (*.xml)"));
+  dir->clear();
+  dir->insert(openFile);
 }
 
 bool AbstractPanel::updateConfig()
@@ -166,4 +184,11 @@ void AbstractPanel::createDataGaps(const QString& value)
 void AbstractPanel::catchLog(const Message& message)
 {
   emit log(message);
+}
+
+void AbstractPanel::checkForAnalytic(const QString& format)
+{
+  if(format ==  QString("Analytic Model"))
+    connectFileBrowse();
+
 }

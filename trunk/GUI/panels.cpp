@@ -173,6 +173,7 @@ RadarPanel::RadarPanel()
   radarFormat = new QComboBox();
   radarFormat->addItem(tr("Select a Radar Data Format"));
   radarFormat->addItem(tr("LEVEL II"));
+  radarFormat->addItem(tr("Analytic Model"));
   radarFormat->setEditable(false);
   QHBoxLayout *radarFormatLayout = new QHBoxLayout;
   radarFormatLayout->addWidget(radarFormatLabel);
@@ -218,6 +219,8 @@ RadarPanel::RadarPanel()
 	  this, SLOT(valueChanged(const QDateTime&)));
   connect(endDateTime, SIGNAL(dateTimeChanged(const QDateTime&)), 
 	  this, SLOT(valueChanged(const QDateTime&)));
+  connect(radarFormat, SIGNAL(activated(const QString&)),
+	  this, SLOT(checkForAnalytic(const QString&)));
   setPanelChanged(false);
 
 }
@@ -246,8 +249,12 @@ void RadarPanel::updatePanel(const QDomElement panelElement)
       dir->clear();
       dir->insert(parameter); }
     if (name == "format"); {
-      if(parameter == QString("LEVELII"))
+      if(parameter == QString("LEVELII")) {
 	parameter = QString("LEVEL II");
+      connectBrowse();}
+      if(parameter == QString("MODEL")) {
+	parameter = QString("Analytic Model");
+	connectFileBrowse(); }
       int index = radarFormat->findText(parameter);
       if (index != -1)
 	radarFormat->setCurrentIndex(index);
@@ -315,8 +322,12 @@ bool RadarPanel::updateConfig()
       }
       if(element.firstChildElement("format").text()
 	 !=radarFormat->currentText()) {
-	if (radarFormat->currentText()==QString("LEVEL II"))
+	if (radarFormat->currentText()==QString("LEVEL II")) {
 	  emit changeDom(element, QString("format"), QString("LEVELII"));
+	  connectBrowse();}
+	if (radarFormat->currentText()==QString("Analytic Model")) {
+	  emit changeDom(element, QString("format"), QString("MODEL"));
+	  connectFileBrowse();}
 	else
 	  emit changeDom(element, QString("format"), 
 			 radarFormat->currentText());

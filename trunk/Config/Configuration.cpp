@@ -11,8 +11,8 @@
 #include "Configuration.h"
 
 
-Configuration::Configuration(QWidget *parent, const QString &filename)
-  :QWidget(parent)
+Configuration::Configuration(QObject *parent, const QString &filename)
+  :QObject(parent)
 {
   if(filename.isEmpty()) 
     {
@@ -44,7 +44,7 @@ QDomElement Configuration::getRoot()
 bool Configuration::read(const QString &filename)
 {
   // Read in an existing configuration from an XML file
-  
+
   QFile file(filename);
   if (!file.open(QIODevice::ReadOnly)) {
     emit log(Message("Error opening configuration file"));

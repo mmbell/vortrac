@@ -14,6 +14,7 @@
 #include <QString>
 #include <QFile>
 #include <QDateTime>
+#include <QDomElement>
 #include "Sweep.h"
 #include "Ray.h"
 

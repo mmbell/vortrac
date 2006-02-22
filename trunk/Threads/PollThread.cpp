@@ -79,9 +79,9 @@ void PollThread::run()
 	emit log(Message("PollThread Finished"));	
 }
 
-// These slots are used for log message relaying
+// This slot is used for log message relaying
 // Any objects created by this object must be connected
-// to these slots
+// to this slot
 
 void PollThread::catchLog(const Message& message)
 {
