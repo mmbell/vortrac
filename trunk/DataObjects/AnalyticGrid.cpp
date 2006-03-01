@@ -20,6 +20,9 @@ AnalyticGrid::AnalyticGrid()
   coordSystem = cartesian;
   xDim = yDim = zDim = 0;
   xGridsp = yGridsp = zGridsp = 0.0;
+  sphericalRangeSpacing = 1;
+  sphericalAzimuthSpacing = 1;
+  sphericalElevationSpacing = 1;
 
 }
 
@@ -71,15 +74,22 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
       QString tanAngle = tan+QString("angle");
       QString radAngle = rad+QString("angle");
       
-      vT.append(analyticConfig->getParam(winds, tan).toFloat());
+      if(v == 0) {
+	vT.append(analyticConfig->getParam(winds, tan).toFloat());
+	vR.append(analyticConfig->getParam(winds, rad).toFloat()); 
+      }
+      else {
+	vT.append(analyticConfig->getParam(winds, tan).toFloat()*vT[0]);
+	vR.append(analyticConfig->getParam(winds, rad).toFloat()*vR[0]); 
+      }
       vTAngle.append(analyticConfig->getParam(winds, 
 					      tanAngle).toFloat()*deg2rad);
-      vR.append(analyticConfig->getParam(winds, rad).toFloat()); 
       vRAngle.append(analyticConfig->getParam(winds, 
 					      radAngle).toFloat()*deg2rad);
       
     }
     
+    // Message::toScreen("EnvirWinds: "+QString().setNum(envSpeed));
     //Message::toScreen("Beginning Velocity Assignment");
     //Message::toScreen("Vortex Center = ("+QString().setNum(centX)+","+QString().setNum(centY)+")");
     //Message::toScreen("Radar Center = ("+QString().setNum(radX)+","+QString().setNum(radY)+")");
@@ -90,7 +100,7 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
       for(int i = xDim - 1; i >= 0; i--) {
 	for(int a = 0; a < 3; a++) {
 	  // zero out all the points
-	  cartGrid[a][i][j] = 0;
+	  dataGrid[a][i][j][0] = 0;
 	}
 
 	//Message::toScreen("loco ("+QString().setNum(i)+","
@@ -117,17 +127,17 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
 
 	if(r>rmw) {
 	  for(int a = 0; a < vT.count(); a++) {
-	    vx += vT[a]*cos(a*(.5*Pi-theta)-vTAngle[a])*(rmw/r)*(delY/r);
-	    vy += vT[a]*cos(a*(.5*Pi-theta)-vTAngle[a])*(rmw/r)*(delX/r);
-	    ref += vT[a]*cos(a*(.5*Pi-theta)-vTAngle[a])*(rmw/r);
+	    vx += vT[a]*cos(a*(Pi-theta+vTAngle[a]))*(rmw/r)*(delY/r);
+	    vy += vT[a]*cos(a*(Pi-theta+vTAngle[a]))*(rmw/r)*(delX/r);
+	    ref += vT[a]*cos(a*(Pi-theta+vTAngle[a]))*(rmw/r);
 	  } 
 	}
 	else {
 	  if(r!=0) {
 	    for(int a = 0; a < vT.count(); a++) {
-	      vx+=vT[a]*cos(a*(.5*Pi-theta)-vTAngle[a])*(r/rmw)*(delY/r);
-	      vy+=vT[a]*cos(a*(.5*Pi-theta)-vTAngle[a])*(r/rmw)*(delX/r);
-	      ref+=vT[a]*cos(a*(.5*Pi-theta)-vTAngle[a])*(r/rmw);
+	      vx+=vT[a]*cos(a*(Pi-theta+vTAngle[a]))*(r/rmw)*(delY/r);
+	      vy+=vT[a]*cos(a*(Pi-theta+vTAngle[a]))*(r/rmw)*(delX/r);
+	      ref+=vT[a]*cos(a*(Pi-theta+vTAngle[a]))*(r/rmw);
 	    } 
 	  }
 	}
@@ -141,18 +151,21 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
     * (0 north, clockwise)
     */
 
-	vx += envSpeed*sin((270-envDir)*deg2rad);
-	vy += envSpeed*cos((270-envDir)*deg2rad);
+	float vex = envSpeed*sin(Pi+(envDir)*deg2rad);
+	float vey = envSpeed*cos(Pi+(envDir)*deg2rad);
+	vx += vex;
+	vy += vey;
+	ref+= sqrt(vex*vex+vey*vey);
 	
 	// Sample in direction of radar
 	if(radR !=0) {
-	  cartGrid[1][i][j] = (delRX*vx-delRY*vy)/radR;
+	  dataGrid[1][i][j][0] = (delRX*vx-delRY*vy)/radR;
 	}      	
-	cartGrid[0][i][j] = ref;
-	cartGrid[2][i][j] = -999;
+	dataGrid[0][i][j][0] = ref;
+	dataGrid[2][i][j][0] = -999;
 
 	// out << "("<<QString().setNum(i)<<","<<QString().setNum(j)<<")";
-	//out << int (cartGrid[0][i][j]) << " ";
+	//out << int (dataGrid[0][i][j]) << " ";
 	//out << abs((int)theta) << " ";
       }
       // out << endl;
@@ -279,7 +292,7 @@ void AnalyticGrid::writeAsi()
 			  out << reset << left << fieldNames.at(n) << endl;
 				int line = 0;
 				for (int i = 0; i < int(xDim);  i++){
-				    out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << cartGrid[n][i][j];
+				    out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << dataGrid[n][i][j];
 					line++;
 					if (line == 8) {
 						out << endl;
@@ -294,3 +307,7 @@ void AnalyticGrid::writeAsi()
 	}	
   
 }	
+
+
+
+

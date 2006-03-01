@@ -160,9 +160,9 @@ void CappiGrid::CressmanInterpolation()
     for (int j = 0; j < int(yDim); j++) {
       for (int i = 0; i < int(xDim); i++) {
 
-	cartGrid[0][i][j][k] = -999.;
-	cartGrid[1][i][j][k] = -999.;
-	cartGrid[2][i][j][k] = -999.;
+	dataGrid[0][i][j][k] = -999.;
+	dataGrid[1][i][j][k] = -999.;
+	dataGrid[2][i][j][k] = -999.;
 
 	float sumRef = 0;
 	float sumVel = 0;
@@ -200,11 +200,11 @@ void CappiGrid::CressmanInterpolation()
 	}
 
 	if (refWeight > 0) {
-	  cartGrid[0][i][j][k] = sumRef/refWeight;
+	  dataGrid[0][i][j][k] = sumRef/refWeight;
 	}
 	if (velWeight > 0) {
-	  cartGrid[1][i][j][k] = sumVel/velWeight;
-	  cartGrid[2][i][j][k] = sumSw/velWeight;
+	  dataGrid[1][i][j][k] = sumVel/velWeight;
+	  dataGrid[2][i][j][k] = sumSw/velWeight;
 	}	  
       }
     }
@@ -226,9 +226,9 @@ void CappiGrid::BarnesInterpolation()
     for (int j = 0; j < int(yDim); j++) {
       for (int i = 0; i < int(xDim); i++) {
 
-	cartGrid[0][i][j][k] = -999.;
-	cartGrid[1][i][j][k] = -999.;
-	cartGrid[2][i][j][k] = -999.;
+	dataGrid[0][i][j][k] = -999.;
+	dataGrid[1][i][j][k] = -999.;
+	dataGrid[2][i][j][k] = -999.;
 
 	float sumRef = 0;
 	float sumVel = 0;
@@ -276,11 +276,11 @@ void CappiGrid::BarnesInterpolation()
 	}
 
 	if (refWeight > 0) {
-	  cartGrid[0][i][j][k] = sumRef/refWeight;
+	  dataGrid[0][i][j][k] = sumRef/refWeight;
 	}
 	if (velWeight > 0) {
-	  cartGrid[1][i][j][k] = sumVel/velWeight;
-	  cartGrid[2][i][j][k] = sumSw/velWeight;
+	  dataGrid[1][i][j][k] = sumVel/velWeight;
+	  dataGrid[2][i][j][k] = sumSw/velWeight;
 	}	  
       }
     }
@@ -341,11 +341,11 @@ void CappiGrid::BarnesInterpolation()
 	}
     
 	if (refWeight > 0) {
-	  cartGrid[0][i][j][k] += sumRef/refWeight;
+	  dataGrid[0][i][j][k] += sumRef/refWeight;
 	}
 	if (velWeight > 0) {
-	  cartGrid[1][i][j][k] += sumVel/velWeight;
-	  cartGrid[2][i][j][k] += sumSw/velWeight;
+	  dataGrid[1][i][j][k] += sumVel/velWeight;
+	  dataGrid[2][i][j][k] += sumSw/velWeight;
 	}	  	
       }
     }
@@ -403,29 +403,29 @@ float CappiGrid::trilinear(const float &x, const float &y,
   }
 
   float interpValue = 0;
-  if (cartGrid[param][x0][y0][z0] != -999) {
-    interpValue += omdx*omdy*omdz*cartGrid[param][x0][y0][z0];
+  if (dataGrid[param][x0][y0][z0] != -999) {
+    interpValue += omdx*omdy*omdz*dataGrid[param][x0][y0][z0];
   }
-  if (cartGrid[param][x0][y1][z0] != -999) {
-    interpValue += omdx*dy*omdz*cartGrid[param][x0][y1][z0];
+  if (dataGrid[param][x0][y1][z0] != -999) {
+    interpValue += omdx*dy*omdz*dataGrid[param][x0][y1][z0];
   }
-  if (cartGrid[param][x1][y0][z0] != -999) {
-    interpValue += dx*omdy*omdz*cartGrid[param][x1][y0][z0];
+  if (dataGrid[param][x1][y0][z0] != -999) {
+    interpValue += dx*omdy*omdz*dataGrid[param][x1][y0][z0];
   }
-  if (cartGrid[param][x1][y1][z0] != -999) {
-    interpValue += dx*dy*omdz*cartGrid[param][x1][y1][z0];
+  if (dataGrid[param][x1][y1][z0] != -999) {
+    interpValue += dx*dy*omdz*dataGrid[param][x1][y1][z0];
   }
-  if (cartGrid[param][x0][y0][z1] != -999) {
-    interpValue += omdx*omdy*dz*cartGrid[param][x0][y0][z1];
+  if (dataGrid[param][x0][y0][z1] != -999) {
+    interpValue += omdx*omdy*dz*dataGrid[param][x0][y0][z1];
   }
-  if (cartGrid[param][x0][y1][z1] != -999) {
-    interpValue += omdx*dy*dz*cartGrid[param][x0][y1][z1];
+  if (dataGrid[param][x0][y1][z1] != -999) {
+    interpValue += omdx*dy*dz*dataGrid[param][x0][y1][z1];
   }
-  if (cartGrid[param][x1][y0][z1] != -999) {
-    interpValue += dx*omdy*dz*cartGrid[param][x1][y0][z1];
+  if (dataGrid[param][x1][y0][z1] != -999) {
+    interpValue += dx*omdy*dz*dataGrid[param][x1][y0][z1];
   }
-  if (cartGrid[param][x1][y1][z1] != -999) {
-    interpValue += dx*dy*dz*cartGrid[param][x1][y1][z1];
+  if (dataGrid[param][x1][y1][z1] != -999) {
+    interpValue += dx*dy*dz*dataGrid[param][x1][y1][z1];
   }
 
   return interpValue;
@@ -535,7 +535,7 @@ void CappiGrid::writeAsi()
 				out << reset << left << fieldNames.at(n) << endl;
 				int line = 0;
 				for (int i = 0; i < int(xDim);  i++){
-				    out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << cartGrid[n][i][j][k];
+				    out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << dataGrid[n][i][j][k];
 					line++;
 					if (line == 8) {
 						out << endl;

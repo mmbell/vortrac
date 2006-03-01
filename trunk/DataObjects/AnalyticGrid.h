@@ -28,6 +28,7 @@ class AnalyticGrid : public GriddedData
   
   void writeAsi();
   
+  
  private:
   enum InfoSource {
     mm5,
@@ -51,10 +52,8 @@ class AnalyticGrid : public GriddedData
   float xmin, xmax;
   float ymin, ymax;
   float zmin, zmax;
-  float cartGrid[3][256][256];
-  //cartGrid[0] = reflectivity
-  //cartGrid[1] = doppler velocity magnitude
-  //cartGrid[2] = spectral width
+  
+
 
   float latReference, lonReference;
   QString outFileName;

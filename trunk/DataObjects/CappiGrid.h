@@ -34,7 +34,7 @@ class CappiGrid : public GriddedData
   float xmin, xmax;
   float ymin, ymax;
   float zmin, zmax;
-  float cartGrid[3][256][256][20];
+
   float latReference, lonReference;
   QString outFileName;
   float* relDist;

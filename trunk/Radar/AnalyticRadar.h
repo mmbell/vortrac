@@ -31,6 +31,10 @@ class AnalyticRadar : public RadarData
   Ray addRay();
 
  private:
+  
+  bool skipReadVolume();
+  bool readVolumeAnalytic();
+
   Configuration *config;
   // This config is the Configuration file for the analytic TC and
   // theoretical radar properties only it is not connected to the 
@@ -41,6 +45,12 @@ class AnalyticRadar : public RadarData
   // which controlls input to GUI and Analysis
 
   GriddedData *data;
+  float nyqVel;
+  float refGateSp;
+  float velGateSp;
+  QString vcp;
+  int refNumGates;
+  int velNumGates;
 
   float vortexLat, vortexLon;
 
