@@ -11,7 +11,7 @@
      <vt0>70</vt0>
      <vr0>0</vr0>        
      <vt1>.1</vt1>
-     <vt1angle>90</vt1angle>
+     <vt1angle>0</vt1angle>
      <vr1>0</vr1>
      <vr1angle>0</vr1angle>
      <vt2>0</vt2>
@@ -25,9 +25,9 @@
      <sample>false</sample>
      <radarX>100</radarX>
      <radarY>0</radarY>
-     <velgatesp>1<velgatesp>
-     <refgatesp>1<refgatesp>
-     <beamwidth>1<beamwidth>
+     <velgatesp>1</velgatesp>
+     <refgatesp>1</refgatesp>
+     <beamwidth>1</beamwidth>
      <nyquistVel>10</nyquistVel>
   </analytic_radar>
 </vortrac>

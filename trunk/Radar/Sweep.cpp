@@ -38,11 +38,11 @@ void Sweep::setFirst_vel_gate(const int &value) {
   first_vel_gate = value;
 }
 
-void Sweep::setRef_gatesp(const int &value) {
+void Sweep::setRef_gatesp(const float &value) {
   ref_gatesp = value;
 }
 
-void Sweep::setVel_gatesp(const int &value) {
+void Sweep::setVel_gatesp(const float &value) {
   vel_gatesp = value;
 }
 

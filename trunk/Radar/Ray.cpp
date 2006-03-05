@@ -70,11 +70,11 @@ void Ray::setFirst_vel_gate(const int &value) {
   first_vel_gate = value;
 }
 
-void Ray::setRef_gatesp(const int &value) {
+void Ray::setRef_gatesp(const float &value) {
   ref_gatesp = value;
 }
 
-void Ray::setVel_gatesp(const int &value) {
+void Ray::setVel_gatesp(const float &value) {
   vel_gatesp = value;
 }
 

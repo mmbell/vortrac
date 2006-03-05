@@ -25,11 +25,15 @@ GriddedData::GriddedData()
 
   // Setting default values
   sphericalRangeSpacing = 5;
-  sphericalAzimuthSpacing = .5;
-  sphericalElevationSpacing = .5;
-  poiX = 0;
-  poiY = 0;
-  poiZ = 0;
+  sphericalAzimuthSpacing = 1;
+  sphericalElevationSpacing = 1;
+  cylindricalRangeSpacing = 5;
+  cylindricalAzimuthSpacing = 1;
+  cylindricalHeightSpacing = 1;
+
+  poiI = 0;
+  poiJ = 0;
+  poiK = 0;
 
 }
 
@@ -74,11 +78,11 @@ float GriddedData::fixAngle(const float &angle) {
 
 void GriddedData::setPointOfInterest(int ii, int jj, int kk)
 {
-  if((ii > xDim)||(ii < 0)||(jj > yDim)||(jj < 0)||(kk > zDim)||(kk < 0))
+  if((ii > iDim)||(ii < 0)||(jj > jDim)||(jj < 0)||(kk > kDim)||(kk < 0))
     Message::toScreen("GriddedData: trying to examine point outside cappi");
-  poiX = ii;
-  poiY = jj;
-  poiZ = kk;
+  poiI = ii;
+  poiJ = jj;
+  poiK = kk;
 }
 
 
@@ -99,16 +103,20 @@ int GriddedData::getSphericalRangeLength(float azimuth, float elevation)
 {
   int count = 0;
  
-  for(int i = 0; i < xDim; i ++) {
-    for(int j = 0; j < yDim; j ++) {
-      for (int k = 0; k < zDim; k++) {
-	float rp = sqrt((i-poiX)*(i-poiX)+(j-poiY)*(j-poiY));
-	float pAzimuth = atan2((j-poiY),(i-poiX))*rad2deg;
-	float pElevation = atan2((k-poiZ),rp)*rad2deg;
-	if((pAzimuth < (azimuth+sphericalAzimuthSpacing/2)) 
-	   && (pAzimuth > (azimuth-sphericalAzimuthSpacing/2))) {
-	  if((pElevation <(elevation+sphericalElevationSpacing/2))
-	     && (pElevation > (elevation-sphericalElevationSpacing/2))) {
+  for(int i = 0; i < iDim; i ++) {
+    for(int j = 0; j < jDim; j ++) {
+      for (int k = 0; k < kDim; k++) {
+	float rp = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ));
+	float pAzimuth = atan2((j-poiJ),(i-poiI))*rad2deg;
+	if(pAzimuth < 0)
+	  pAzimuth+=360;
+	float pElevation = atan2((k-poiK),rp)*rad2deg;
+	if(pElevation < 0)
+	  pElevation += 360;
+	if((pAzimuth < (azimuth+sphericalAzimuthSpacing/2.)) 
+	   && (pAzimuth > (azimuth-sphericalAzimuthSpacing/2.))) {
+	  if((pElevation <(elevation+sphericalElevationSpacing/2.))
+	     && (pElevation > (elevation-sphericalElevationSpacing/2.))) {
 	    count++;
 	  }
 	}
@@ -126,16 +134,20 @@ float* GriddedData::getSphericalRangeData(QString& fieldName, float azimuth,
   float *values = new float[numPoints];
 
   int count = 0;
-  for(int i = 0; i < xDim; i ++) {
-    for(int j = 0; j < yDim; j++) {
-      for (int k = 0; k < zDim; k++) {
-	float rp = sqrt((i-poiX)*(i-poiX)+(j-poiY)*(j-poiY));
-	float pAzimuth = atan2((j-poiY),(i-poiX))*rad2deg;
-	float pElevation = atan2((k-poiZ),rp)*rad2deg;
-	if((pAzimuth < (azimuth+sphericalAzimuthSpacing/2)) 
-	   && (pAzimuth > (azimuth-sphericalAzimuthSpacing/2))) {
-	  if((pElevation <(elevation+sphericalElevationSpacing/2)) 
-	     && (pElevation > (elevation-sphericalElevationSpacing/2))) {
+  for(int i = 0; i < iDim; i ++) {
+    for(int j = 0; j < jDim; j++) {
+      for (int k = 0; k < kDim; k++) {
+	float rp = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ));
+	float pAzimuth = atan2((j-poiJ),(i-poiI))*rad2deg;
+	if(pAzimuth < 0)
+	  pAzimuth+=360;
+	float pElevation = atan2((k-poiK),rp)*rad2deg;
+	if(pElevation < 0)
+	  pElevation += 360;
+	if((pAzimuth < (azimuth+sphericalAzimuthSpacing/2.)) 
+	   && (pAzimuth > (azimuth-sphericalAzimuthSpacing/2.))) {
+	  if((pElevation <(elevation+sphericalElevationSpacing/2.)) 
+	     && (pElevation > (elevation-sphericalElevationSpacing/2.))) {
 	    values[count] = dataGrid[field][i][j][k];
 	    count++;
 	  }
@@ -153,17 +165,21 @@ float* GriddedData::getSphericalRangePosition(float azimuth, float elevation)
   float *positions = new float[numPoints];
 
   int count = 0;
-  for(int i = 0; i < xDim; i ++) {
-    for(int j = 0; j < yDim; j++) {
-      for (int k = 0; k < zDim; k++) {
-	float rp = sqrt((i-poiX)*(i-poiX)+(j-poiY)*(j-poiY));
-	float pAzimuth = atan2((j-poiY),(i-poiX))*rad2deg;
-	float pElevation = atan2((k-poiZ),rp)*rad2deg;
-	if((pAzimuth < (azimuth+sphericalAzimuthSpacing/2)) 
-	   && (pAzimuth > (azimuth-sphericalAzimuthSpacing/2))) {
-	  if((pElevation <(elevation+sphericalElevationSpacing/2)) 
-	     && (pElevation > (elevation-sphericalElevationSpacing/2))) {
-	    positions[count] = sqrt((i-poiX)*(i-poiX)+(j-poiY)*(j-poiY)+(k-poiZ)*(k-poiZ));
+  for(int i = 0; i < iDim; i ++) {
+    for(int j = 0; j < jDim; j++) {
+      for (int k = 0; k < kDim; k++) {
+	float rp = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ));
+	float pAzimuth = atan2((j-poiJ),(i-poiI))*rad2deg;
+	if(pAzimuth < 0)
+	  pAzimuth+=360;
+	float pElevation = atan2((k-poiK),rp)*rad2deg;
+	if(pElevation < 0)
+	  pElevation += 360;
+	if((pAzimuth < (azimuth+sphericalAzimuthSpacing/2.)) 
+	   && (pAzimuth > (azimuth-sphericalAzimuthSpacing/2.))) {
+	  if((pElevation <(elevation+sphericalElevationSpacing/2.)) 
+	     && (pElevation > (elevation-sphericalElevationSpacing/2.))) {
+	    positions[count] = sqrt(iGridsp*iGridsp*(i-poiI)*(i-poiI)+jGridsp*jGridsp*(j-poiJ)*(j-poiJ)+kGridsp*kGridsp*(k-poiK)*(k-poiK));
 	    count++;
 	  }
 	}
@@ -177,16 +193,18 @@ int GriddedData::getSphericalAzimuthLength(float range, float elevation)
 {
   int count = 0;
   
-  for(int i = 0; i < xDim; i ++) {
-    for(int j = 0; j < yDim; j ++) {
-      for (int k = 0; k < zDim; k++) {
-	float rp = sqrt((i-poiX)*(i-poiX)+(j-poiY)*(j-poiY));
-	float r = sqrt((i-poiX)*(i-poiX)+(j-poiY)*(j-poiY)+(k-poiZ)*(k-poiZ));
-	float pElevation = atan2((k-poiZ),rp)*rad2deg;
-	if((r < (range+sphericalRangeSpacing/2)) 
-	   && (r > (range-sphericalRangeSpacing/2))) {
-	  if((pElevation <(elevation+sphericalElevationSpacing/2))
-	     && (pElevation > (elevation-sphericalElevationSpacing/2))) {
+  for(int i = 0; i < iDim; i ++) {
+    for(int j = 0; j < jDim; j ++) {
+      for (int k = 0; k < kDim; k++) {
+	float rp = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ));
+	float r = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ)+(k-poiK)*(k-poiK));
+	float pElevation = atan2((k-poiK),rp)*rad2deg;
+	if(pElevation < 0)
+	  pElevation += 360;
+	if((r < (range+sphericalRangeSpacing/2.)) 
+	   && (r > (range-sphericalRangeSpacing/2.))) {
+	  if((pElevation <(elevation+sphericalElevationSpacing/2.))
+	     && (pElevation > (elevation-sphericalElevationSpacing/2.))) {
 	    count++;
 	  }
 	}
@@ -199,21 +217,23 @@ int GriddedData::getSphericalAzimuthLength(float range, float elevation)
 float* GriddedData::getSphericalAzimuthData(QString& fieldName, 
 					    float range, float elevation)
 {
-  int count = getSphericalAzimuthLength(range, elevation);
+  int numPoints = getSphericalAzimuthLength(range, elevation);
   int field = getFieldIndex(fieldName);
-
-  float *values = new float[count];
+  float *values = new float[numPoints];
   
-  for(int i = 0; i < xDim; i ++) {
-    for(int j = 0; j < yDim; j ++) {
-      for (int k = 0; k < zDim; k++) {
-	float rp = sqrt((i-poiX)*(i-poiX)+(j-poiY)*(j-poiY));
-	float r = sqrt((i-poiX)*(i-poiX)+(j-poiY)*(j-poiY)+(k-poiZ)*(k-poiZ));
-	float pElevation = atan2((k-poiZ),rp)*rad2deg;
-	if((r < (range+sphericalRangeSpacing/2)) 
-	   && (r > (range-sphericalRangeSpacing/2))) {
-	  if((pElevation <(elevation+sphericalElevationSpacing/2))
-	     && (pElevation > (elevation-sphericalElevationSpacing/2))) {
+  int count = 0;
+  for(int i = 0; i < iDim; i ++) {
+    for(int j = 0; j < jDim; j ++) {
+      for (int k = 0; k < kDim; k++) {
+	float rp = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ));
+	float r = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ)+(k-poiK)*(k-poiK));
+	float pElevation = atan2((k-poiK),rp)*rad2deg;
+	if(pElevation < 0)
+	  pElevation += 360;
+	if((r < (range+sphericalRangeSpacing/2.)) 
+	   && (r > (range-sphericalRangeSpacing/2.))) {
+	  if((pElevation <(elevation+sphericalElevationSpacing/2.))
+	     && (pElevation > (elevation-sphericalElevationSpacing/2.))) {
 	    values[count] = dataGrid[field][i][j][k];
 	    count++;
 	  }
@@ -226,21 +246,23 @@ float* GriddedData::getSphericalAzimuthData(QString& fieldName,
 
 float* GriddedData::getSphericalAzimuthPosition(float range, float elevation)
 {
-  int count = getSphericalAzimuthLength(range, elevation);
-
-  float *positions = new float[count];
+  int numPoints = getSphericalAzimuthLength(range, elevation);
+  float *positions = new float[numPoints];
   
-  for(int i = 0; i < xDim; i ++) {
-    for(int j = 0; j < yDim; j ++) {
-      for (int k = 0; k < zDim; k++) {
-	float rp = sqrt((i-poiX)*(i-poiX)+(j-poiY)*(j-poiY));
-	float r = sqrt((i-poiX)*(i-poiX)+(j-poiY)*(j-poiY)+(k-poiZ)*(k-poiZ));
-	float pElevation = atan2((k-poiZ),rp)*rad2deg;
-	if((r < (range+sphericalRangeSpacing/2)) 
-	   && (r > (range-sphericalRangeSpacing/2))) {
-	  if((pElevation <(elevation+sphericalElevationSpacing/2))
-	     && (pElevation > (elevation-sphericalElevationSpacing/2))) {
-	    float azimuth = atan2((j-poiY),(i-poiX))*rad2deg;
+  int count = 0;
+  for(int i = 0; i < iDim; i ++) {
+    for(int j = 0; j < jDim; j ++) {
+      for (int k = 0; k < kDim; k++) {
+	float rp = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ));
+	float r = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ)+(k-poiK)*(k-poiK));
+	float pElevation = atan2((k-poiK),rp)*rad2deg;
+	if(pElevation < 0)
+	  pElevation += 360;
+	if((r < (range+sphericalRangeSpacing/2.)) 
+	   && (r > (range-sphericalRangeSpacing/2.))) {
+	  if((pElevation <(elevation+sphericalElevationSpacing/2.))
+	     && (pElevation > (elevation-sphericalElevationSpacing/2.))) {
+	    float azimuth = atan2((j-poiJ),(i-poiI))*rad2deg;
 	    if (azimuth < 0)
 	      azimuth+=360;
 	    positions[count] = azimuth;
@@ -257,15 +279,17 @@ int GriddedData::getSphericalElevationLength(float range, float azimuth)
 {
   int count = 0;
   
-  for(int i = 0; i < xDim; i ++) {
-    for(int j = 0; j < yDim; j ++) {
-      for (int k = 0; k < zDim; k++) {
-	float r = sqrt((i-poiX)*(i-poiX)+(j-poiY)*(j-poiY)+(k-poiZ)*(k-poiZ));
-	float pAzimuth = atan2((j-poiY),(i-poiX))*rad2deg;
-	if((pAzimuth < (azimuth+sphericalAzimuthSpacing/2)) 
-	   && (pAzimuth > (azimuth-sphericalAzimuthSpacing/2))) {
-	  if((r < (range+sphericalRangeSpacing/2)) 
-	     && (r > (range-sphericalRangeSpacing/2))) {
+  for(int i = 0; i < iDim; i ++) {
+    for(int j = 0; j < jDim; j ++) {
+      for (int k = 0; k < kDim; k++) {
+	float r = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ)+(k-poiK)*(k-poiK));
+	float pAzimuth = atan2((j-poiJ),(i-poiI))*rad2deg;
+	if(pAzimuth < 0)
+	  pAzimuth+=360;
+	if((pAzimuth < (azimuth+sphericalAzimuthSpacing/2.)) 
+	   && (pAzimuth > (azimuth-sphericalAzimuthSpacing/2.))) {
+	  if((r < (range+sphericalRangeSpacing/2.)) 
+	     && (r > (range-sphericalRangeSpacing/2.))) {
 	    count++;
 	  }
 	}
@@ -279,20 +303,22 @@ int GriddedData::getSphericalElevationLength(float range, float azimuth)
 float* GriddedData::getSphericalElevationData(QString& fieldName, float range, 
 					      float azimuth)
 {
-  int count = getSphericalElevationLength(range, azimuth);
+  int numPoints = getSphericalElevationLength(range, azimuth);
   int field = getFieldIndex(fieldName);
-  
-  float *values = new float[count];
-  
-  for(int i = 0; i < xDim; i ++) {
-    for(int j = 0; j < yDim; j ++) {
-      for (int k = 0; k < zDim; k++) {
-	float r = sqrt((i-poiX)*(i-poiX)+(j-poiY)*(j-poiY)+(k-poiZ)*(k-poiZ));
-	float pAzimuth = atan2((j-poiY),(i-poiX))*rad2deg;
-	if((pAzimuth < (azimuth+sphericalAzimuthSpacing/2)) 
-	   && (pAzimuth > (azimuth-sphericalAzimuthSpacing/2))) {
-	  if((r < (range+sphericalRangeSpacing/2)) 
-	     && (r > (range-sphericalRangeSpacing/2))) {
+  float *values = new float[numPoints];
+
+  int count = 0;
+  for(int i = 0; i < iDim; i ++) {
+    for(int j = 0; j < jDim; j ++) {
+      for (int k = 0; k < kDim; k++) {
+	float r = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ)+(k-poiK)*(k-poiK));
+	float pAzimuth = atan2((j-poiJ),(i-poiI))*rad2deg;
+	if(pAzimuth < 0)
+	  pAzimuth+=360;
+	if((pAzimuth < (azimuth+sphericalAzimuthSpacing/2.)) 
+	   && (pAzimuth > (azimuth-sphericalAzimuthSpacing/2.))) {
+	  if((r < (range+sphericalRangeSpacing/2.)) 
+	     && (r > (range-sphericalRangeSpacing/2.))) {
 	    values[count] = dataGrid[field][i][j][k];
 	    count++;
 	  }
@@ -305,25 +331,266 @@ float* GriddedData::getSphericalElevationData(QString& fieldName, float range,
 
 float* GriddedData::getSphericalElevationPosition(float range, float azimuth)
 {
-  int count = getSphericalElevationLength(range, azimuth);
+  int numPoints = getSphericalElevationLength(range, azimuth);
+  float *positions = new float[numPoints];
   
-  float *positions = new float[count];
-  
-  for(int i = 0; i < xDim; i ++) {
-    for(int j = 0; j < yDim; j ++) {
-      for (int k = 0; k < zDim; k++) {
-	float rp = sqrt((i-poiX)*(i-poiX)+(j-poiY)*(j-poiY));
-	float r = sqrt((i-poiX)*(i-poiX)+(j-poiY)*(j-poiY)+(k-poiZ)*(k-poiZ));
-	float pAzimuth = atan2((j-poiY),(i-poiX))*rad2deg;
-	if((pAzimuth < (azimuth+sphericalAzimuthSpacing/2)) 
-	   && (pAzimuth > (azimuth-sphericalAzimuthSpacing/2))) {
-	  if((r < (range+sphericalRangeSpacing/2)) 
-	     && (r > (range-sphericalRangeSpacing/2))) {
-	    positions[count] = atan2((k-poiZ),rp)*rad2deg;
+  int count = 0;
+  for(int i = 0; i < iDim; i ++) {
+    for(int j = 0; j < jDim; j ++) {
+      for (int k = 0; k < kDim; k++) {
+	float rp = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ));
+	float r = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ)+(k-poiK)*(k-poiK));
+	float pAzimuth = atan2((j-poiJ),(i-poiI))*rad2deg;
+	if(pAzimuth < 0)
+	  pAzimuth+=360;
+	if((pAzimuth < (azimuth+sphericalAzimuthSpacing/2.)) 
+	   && (pAzimuth > (azimuth-sphericalAzimuthSpacing/2.))) {
+	  if((r < (range+sphericalRangeSpacing/2.)) 
+	     && (r > (range-sphericalRangeSpacing/2.))) {
+	    positions[count] = atan2((k-poiK),rp)*rad2deg;
 	    count++;
 	  }
 	}
       }    
+    }
+  }
+  return positions;
+}
+
+
+
+
+int GriddedData::getCylindricalRangeLength(float azimuth, float height)
+{
+  int count = 0;
+ 
+  for(int i = 0; i < iDim; i ++) {
+    for(int j = 0; j < jDim; j ++) {
+      for(int k = 0; k < kDim; k ++) {
+	float pAzimuth = atan2((j-poiJ),(i-poiI))*rad2deg;
+	if (pAzimuth < 0)
+	  pAzimuth+=360;
+	if((pAzimuth < (azimuth+cylindricalAzimuthSpacing/2.)) 
+	   && (pAzimuth > (azimuth-cylindricalAzimuthSpacing/2.))) {
+	  if((k < (height/kGridsp+cylindricalHeightSpacing/2))
+	     && (k > (height/kGridsp-cylindricalHeightSpacing/2))) {
+	    count++;
+	  }
+	}    
+      }
+   }
+  }
+  return count;
+}
+
+float* GriddedData::getCylindricalRangeData(QString& fieldName, float azimuth, 
+			       float height)
+{
+  int numPoints = getCylindricalRangeLength(azimuth, height);
+  int field = getFieldIndex(fieldName);
+  float *values = new float[numPoints];
+  
+  int count = 0;
+  for(int i = 0; i < iDim; i ++) {
+    for(int j = 0; j < jDim; j++) {
+      for(int k = 0; k < kDim; k++) {
+	float pAzimuth = atan2((j-poiJ),(i-poiI))*rad2deg;
+	if(pAzimuth < 0)
+	  pAzimuth+=360;
+	if((pAzimuth < (azimuth+cylindricalAzimuthSpacing/2.)) 
+	 && (pAzimuth > (azimuth-cylindricalAzimuthSpacing/2.))) {
+	  if((k < (height/kGridsp+cylindricalHeightSpacing/2))
+	     && (k > (height/kGridsp-cylindricalHeightSpacing/2))) {
+	    values[count] = dataGrid[field][i][j][k];
+	    count++;
+	  }
+	}
+      }     
+    }
+  }
+  return values;
+}
+
+float* GriddedData::getCylindricalRangePosition(float azimuth, float height)
+{
+ int numPoints = getCylindricalRangeLength(azimuth, height);
+  
+  float *positions = new float[numPoints];
+
+  int count = 0;
+  for(int i = 0; i < iDim; i ++) {
+    for(int j = 0; j < jDim; j++) {
+      for(int k = 0; k < kDim; k++) {
+	float pAzimuth = atan2((j-poiJ),(i-poiI))*rad2deg;
+	if(pAzimuth < 0)
+	  pAzimuth+=360;
+	if((pAzimuth < (azimuth+cylindricalAzimuthSpacing/2.)) 
+	   && (pAzimuth > (azimuth-cylindricalAzimuthSpacing/2.))) {
+	  if((k < (height/kGridsp+cylindricalHeightSpacing/2))
+	     && (k > (height/kGridsp-cylindricalHeightSpacing/2))) {
+	    positions[count] = sqrt(iGridsp*iGridsp*(i-poiI)*(i-poiI)+jGridsp*jGridsp*(j-poiJ)*(j-poiJ));
+	    count++;
+	  }
+	}
+      }						    
+    }
+  }
+  return positions;
+}
+
+int GriddedData::getCylindricalAzimuthLength(float range, float height)
+{
+  int count = 0;
+  
+  for(int i = 0; i < iDim; i ++) {
+    for(int j = 0; j < jDim; j ++) {  
+      for(int k = 0; k < kDim; k ++) {
+	float r = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ));
+	if((r < (range+cylindricalRangeSpacing/2.)) 
+	   && (r > (range-cylindricalRangeSpacing/2.))) {
+	  if((k < (height/kGridsp+cylindricalHeightSpacing/2))
+	     && (k > (height/kGridsp-cylindricalHeightSpacing/2))) {
+	    count++;
+	  }
+	}
+      }
+    }    
+  }
+  return count;
+  
+}
+
+float* GriddedData::getCylindricalAzimuthData(QString& fieldName, 
+					      float range, float height)
+{
+  int numPoints = getCylindricalAzimuthLength(range, height);
+  int field = getFieldIndex(fieldName);
+
+  float *values = new float[numPoints];
+
+  int count = 0;
+  for(int i = 0; i < iDim; i ++) {
+    for(int j = 0; j < jDim; j ++) {
+      for(int k = 0; k < kDim; k ++) {
+	float r = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ));
+	if((r < (range+cylindricalRangeSpacing/2.)) 
+	   && (r > (range-cylindricalRangeSpacing/2.))) {
+	  if((k < (height/kGridsp+cylindricalHeightSpacing/2))
+	     && (k > (height/kGridsp-cylindricalHeightSpacing/2))) {
+	    values[count] = dataGrid[field][i][j][k];
+	    count++;
+	  }
+	}
+      }    
+    }
+  }
+  return values;
+}
+
+float* GriddedData::getCylindricalAzimuthPosition(float range, float height) 
+{
+  int numPoints = getCylindricalAzimuthLength(range, height);
+
+  float *positions = new float[numPoints];
+  
+  int count = 0;
+  for(int i = 0; i < iDim; i ++) {
+    for(int j = 0; j < jDim; j ++) {
+      for(int k = 0; k < kDim; k ++) {
+	float r = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ));
+	if((r < (range+cylindricalRangeSpacing/2.)) 
+	   && (r > (range-cylindricalRangeSpacing/2.))) {
+	  if((k < (height/kGridsp+cylindricalHeightSpacing/2))
+	     && (k > (height/kGridsp-cylindricalHeightSpacing/2))) {
+	    float azimuth = atan2((j-poiJ),(i-poiI))*rad2deg;
+	    if (azimuth < 0)
+	      azimuth+=360;
+	    positions[count] = azimuth;
+	    count++;
+	  }
+	}
+      }    
+    }
+  }
+  return positions;
+}
+
+int GriddedData::getCylindricalHeightLength(float range, float azimuth)
+{
+  int count = 0;
+  for(int i = 0; i < iDim; i++){
+    for(int j = 0; j < jDim; j++){
+      float r = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ));
+      float pAzimuth = atan2((j-poiJ),(i-poiI))*rad2deg;
+      if(pAzimuth < 0)
+	pAzimuth+=360;
+      if((r < (range+cylindricalRangeSpacing/2.)) 
+	 && (r > (range-cylindricalRangeSpacing/2.))) {
+	if((pAzimuth < azimuth+cylindricalAzimuthSpacing/2.)
+	   && (pAzimuth > azimuth+cylindricalAzimuthSpacing/2.)) {
+	  for(int k = 0; k < kDim; k++){
+	    count++;
+	  }
+	}
+      }
+    }
+  }
+  return count;
+}
+
+float* GriddedData::getCylindricalHeightData(QString& fieldName, float range, 
+					     float azimuth)
+{
+  int numPoints = getCylindricalHeightLength(range, azimuth);
+  
+  int field = getFieldIndex(fieldName); 
+  
+  float *data = new float[numPoints];
+  
+  int count = 0;
+  for(int i = 0; i < iDim; i++){
+    for(int j = 0; j < jDim; j++){
+      float r = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ));
+      float pAzimuth = atan2((j-poiJ),(i-poiI))*rad2deg;
+      if(pAzimuth < 0)
+	pAzimuth+=360;
+      if((r < (range+cylindricalRangeSpacing/2.)) 
+	 && (r > (range-cylindricalRangeSpacing/2.))) {
+	if((pAzimuth < azimuth+cylindricalAzimuthSpacing/2.)
+	   && (pAzimuth > azimuth+cylindricalAzimuthSpacing/2.)) {
+	  for(int k = 0; k < kDim; k++){
+	    data[count] = dataGrid[field][i][j][k];
+	    count++;
+	  }
+	}
+      }
+    }
+  }
+  return data;
+}
+
+float* GriddedData::getCylindricalHeightPosition(float range, float azimuth)
+{
+  int numPoints = getCylindricalHeightLength(range, azimuth);
+  float *positions = new float[numPoints];
+  
+  int count = 0;
+  for(int i = 0; i < iDim; i++){
+    for(int j = 0; j < jDim; j++){
+      float r = sqrt((i-poiI)*(i-poiI)+(j-poiJ)*(j-poiJ));
+      float pAzimuth = atan2((j-poiJ),(i-poiI))*rad2deg;
+      if(pAzimuth < 0)
+	pAzimuth+=360;
+      if((r < (range+cylindricalRangeSpacing/2.)) 
+	 && (r > (range-cylindricalRangeSpacing/2.))) {
+	if((pAzimuth < azimuth+cylindricalAzimuthSpacing/2.)
+	   && (pAzimuth > azimuth+cylindricalAzimuthSpacing/2.)) {
+	  for(int k = 0; k < kDim; k++){
+	    positions[count] = kGridsp*k;
+	    count++;
+	  }
+	}
+      }
     }
   }
   return positions;

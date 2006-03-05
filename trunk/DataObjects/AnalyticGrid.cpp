@@ -18,8 +18,8 @@ AnalyticGrid::AnalyticGrid()
   : GriddedData()
 {
   coordSystem = cartesian;
-  xDim = yDim = zDim = 0;
-  xGridsp = yGridsp = zGridsp = 0.0;
+  iDim = jDim = kDim = 0;
+  iGridsp = jGridsp = kGridsp = 0.0;
   sphericalRangeSpacing = 1;
   sphericalAzimuthSpacing = 1;
   sphericalElevationSpacing = 1;
@@ -41,16 +41,16 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
   outFileName = filePath + "/" + fileName;
 
   // Get the dimensions from the configuration
-  xDim = cappiConfig.firstChildElement("xdim").text().toFloat();
-  yDim = cappiConfig.firstChildElement("ydim").text().toFloat();
-  zDim = cappiConfig.firstChildElement("zdim").text().toFloat();
+  iDim = cappiConfig.firstChildElement("xdim").text().toFloat();
+  jDim = cappiConfig.firstChildElement("ydim").text().toFloat();
+  kDim = cappiConfig.firstChildElement("zdim").text().toFloat();
   xmin = ymin = zmin = 0;
-  xmax = xmin+xDim;
-  ymax = ymin+yDim;
+  xmax = xmin+iDim;
+  ymax = ymin+jDim;
   zmax = 1;
-  xGridsp = cappiConfig.firstChildElement("xgridsp").text().toFloat();
-  yGridsp = cappiConfig.firstChildElement("ygridsp").text().toFloat();
-  zGridsp = cappiConfig.firstChildElement("zgridsp").text().toFloat();
+  iGridsp = cappiConfig.firstChildElement("xgridsp").text().toFloat();
+  jGridsp = cappiConfig.firstChildElement("ygridsp").text().toFloat();
+  kGridsp = cappiConfig.firstChildElement("zgridsp").text().toFloat();
 
   QString sourceString = analyticConfig->getRoot().firstChildElement("source").text();
   
@@ -96,8 +96,8 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
 
     QTextStream out(stdout);
 
-    for(int j = yDim - 1; j >= 0; j--) {
-      for(int i = xDim - 1; i >= 0; i--) {
+    for(int j = jDim - 1; j >= 0; j--) {
+      for(int i = iDim - 1; i >= 0; i--) {
 	for(int a = 0; a < 3; a++) {
 	  // zero out all the points
 	  dataGrid[a][i][j][0] = 0;
@@ -110,12 +110,12 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
 	float vy = 0;
 	float ref = 0;
 	float delX, delY, r, theta, delRX, delRY, radR;
-	delX = centX-(xGridsp*i);
-	delY = centY-(yGridsp*j);
+	delX = centX-(iGridsp*i);
+	delY = centY-(jGridsp*j);
 	r = sqrt(delX*delX+delY*delY);
 	theta = atan2(delX,delY);
-	delRX = radX-(xGridsp*i);
-	delRY = radY-(yGridsp*j);
+	delRX = radX-(iGridsp*i);
+	delRY = radY-(jGridsp*j);
 	radR = sqrt(delRX*delRX+delRY*delRY);
 
 	// Add in tangential wind structure
@@ -232,24 +232,24 @@ void AnalyticGrid::writeAsi()
 	id[69] = 64;
 
 	// X Header
-	id[160] = (int)(xmin * xGridsp * 100);
-	id[161] = (int)(xmax * xGridsp * 100);
-	id[162] = (int)xDim;
-	id[163] = (int)xGridsp * 1000;
+	id[160] = (int)(xmin * iGridsp * 100);
+	id[161] = (int)(xmax * iGridsp * 100);
+	id[162] = (int)iDim;
+	id[163] = (int)iGridsp * 1000;
 	id[164] = 1;
   
 	// Y Header
-	id[165] = (int)(ymin * yGridsp * 100);
-	id[166] = (int)(ymax * yGridsp * 100);
-	id[167] = (int)yDim;
-	id[168] = (int)yGridsp * 1000;
+	id[165] = (int)(ymin * jGridsp * 100);
+	id[166] = (int)(ymax * jGridsp * 100);
+	id[167] = (int)jDim;
+	id[168] = (int)jGridsp * 1000;
 	id[169] = 2;
   
 	// Z Header
-	id[170] = (int)(zmin * zGridsp * 1000);
-	id[171] = (int)(zmax * zGridsp * 1000);
-	id[172] = (int)zDim;
-	id[173] = (int)zGridsp * 1000;
+	id[170] = (int)(zmin * kGridsp * 1000);
+	id[171] = (int)(zmax * kGridsp * 1000);
+	id[172] = (int)kDim;
+	id[173] = (int)kGridsp * 1000;
 	id[174] = 3;
 
 	// Number of radars
@@ -285,14 +285,14 @@ void AnalyticGrid::writeAsi()
 	// Write data
 	for(int k = 0; k < 1; k++) {
 		out << reset << "level" << qSetFieldWidth(2) << k+1 << endl;
-		for(int j = 0; j < int(yDim); j++) {
+		for(int j = 0; j < int(jDim); j++) {
 			out << reset << "azimuth" << qSetFieldWidth(3) << j+1 << endl;
 
 			for(int n = 0; n < fieldNames.size(); n++) {
 			  out << reset << left << fieldNames.at(n) << endl;
 				int line = 0;
-				for (int i = 0; i < int(xDim);  i++){
-				    out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << dataGrid[n][i][j];
+				for (int i = 0; i < int(iDim);  i++){
+				    out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << dataGrid[n][i][j][0];
 					line++;
 					if (line == 8) {
 						out << endl;

@@ -18,8 +18,8 @@ CappiGrid::CappiGrid() : GriddedData()
 {
 
   coordSystem = cartesian;
-  xDim = yDim = zDim = 0;
-  xGridsp = yGridsp = zGridsp = 0.0;
+  iDim = jDim = kDim = 0;
+  iGridsp = jGridsp = kGridsp = 0.0;
 
 }
 
@@ -39,27 +39,27 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   outFileName = cappiPath + "/" + cappiFile;
   
   // Get the dimensions from the configuration
-  xDim = cappiConfig.firstChildElement("xdim").text().toFloat();
-  yDim = cappiConfig.firstChildElement("ydim").text().toFloat();
-  zDim = cappiConfig.firstChildElement("zdim").text().toFloat();
-  xGridsp = cappiConfig.firstChildElement("xgridsp").text().toFloat();
-  yGridsp = cappiConfig.firstChildElement("ygridsp").text().toFloat();
-  zGridsp = cappiConfig.firstChildElement("zgridsp").text().toFloat();
+  iDim = cappiConfig.firstChildElement("xdim").text().toFloat();
+  jDim = cappiConfig.firstChildElement("ydim").text().toFloat();
+  kDim = cappiConfig.firstChildElement("zdim").text().toFloat();
+  iGridsp = cappiConfig.firstChildElement("xgridsp").text().toFloat();
+  jGridsp = cappiConfig.firstChildElement("ygridsp").text().toFloat();
+  kGridsp = cappiConfig.firstChildElement("zgridsp").text().toFloat();
 
   // Get the relative center and expand the grid around it
   relDist = new float[2];
   relDist = relEarthLocation(radarData->getRadarLat(), radarData->getRadarLon(),
 			vortexLat, vortexLon);
-  xmin = nearbyintf(relDist[0] - (xDim/2)*xGridsp);
-  xmax = nearbyintf(relDist[0] + (xDim/2)*xGridsp);
-  ymin = nearbyintf(relDist[1] - (yDim/2)*yGridsp);
-  ymax = nearbyintf(relDist[1] + (yDim/2)*yGridsp);
+  xmin = nearbyintf(relDist[0] - (iDim/2)*iGridsp);
+  xmax = nearbyintf(relDist[0] + (iDim/2)*iGridsp);
+  ymin = nearbyintf(relDist[1] - (jDim/2)*jGridsp);
+  ymax = nearbyintf(relDist[1] + (jDim/2)*jGridsp);
   latReference = *vortexLat;
   lonReference = *vortexLon;
   float distance = sqrt(relDist[0] * relDist[0] + relDist[1] * relDist[1]);
   float beamHeight = radarData->radarBeamHeight(distance, radarData->getSweep(0)->getElevation());
-  zmin = (float(int(beamHeight/zGridsp)))*zGridsp;
-  zmax = zmin + zDim*zGridsp;
+  zmin = (float(int(beamHeight/kGridsp)))*kGridsp;
+  zmax = zmin + kDim*kGridsp;
   
   // Find good values
   int r = 0;
@@ -78,12 +78,12 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 		float range = float(currentRay->getFirst_ref_gate() +
 					  (g * currentRay->getRef_gatesp()))/1000.;
 		float x = range*sin(phi)*cos(theta);
-		if ((x < (xmin - xGridsp)) or x > (xmax + xGridsp)) { continue; }
+		if ((x < (xmin - iGridsp)) or x > (xmax + iGridsp)) { continue; }
 		float y = range*sin(phi)*sin(theta);
-		if ((y < (ymin - yGridsp)) or y > (ymax + yGridsp)) { continue; }
+		if ((y < (ymin - jGridsp)) or y > (ymax + jGridsp)) { continue; }
 		float z = radarData->radarBeamHeight(range,
 					     currentRay->getElevation() );
-		if ((z < (zmin - zGridsp)) or z > (zmax + zGridsp)) { continue; }
+		if ((z < (zmin - kGridsp)) or z > (zmax + kGridsp)) { continue; }
 
 		// Looks like a good point
 		refValues[r].refValue = refData[g];
@@ -106,12 +106,12 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 		float range = float(currentRay->getFirst_vel_gate() +
 					  (g * currentRay->getVel_gatesp()))/1000.;
 		float x = range*sin(phi)*cos(theta);
-		if ((x < (xmin - xGridsp)) or x > (xmax + xGridsp)) { continue; }
+		if ((x < (xmin - iGridsp)) or x > (xmax + iGridsp)) { continue; }
 		float y = range*sin(phi)*sin(theta);
-		if ((y < (ymin - yGridsp)) or y > (ymax + yGridsp)) { continue; }
+		if ((y < (ymin - jGridsp)) or y > (ymax + jGridsp)) { continue; }
 		float z = radarData->radarBeamHeight(range,
 					     currentRay->getElevation() );
-		if ((z < (zmin - zGridsp)) or z > (zmax + zGridsp)) { continue; }
+		if ((z < (zmin - kGridsp)) or z > (zmax + kGridsp)) { continue; }
 
 		// Looks like a good point
 		velValues[v].velValue = velData[g];
@@ -151,14 +151,14 @@ void CappiGrid::CressmanInterpolation()
   // Cressman Interpolation
   
   // Calculate radius of influence 
-  float xRadius = (xGridsp * xGridsp) * 2.25;
-  float yRadius = (yGridsp * yGridsp) * 2.25;
-  float zRadius = (zGridsp * zGridsp) * 2.25;
+  float xRadius = (iGridsp * iGridsp) * 2.25;
+  float yRadius = (jGridsp * jGridsp) * 2.25;
+  float zRadius = (kGridsp * kGridsp) * 2.25;
   float RSquare = xRadius + yRadius + zRadius;
 
-  for (int k = 0; k < int(zDim); k++) { 
-    for (int j = 0; j < int(yDim); j++) {
-      for (int i = 0; i < int(xDim); i++) {
+  for (int k = 0; k < int(kDim); k++) { 
+    for (int j = 0; j < int(jDim); j++) {
+      for (int i = 0; i < int(iDim); i++) {
 
 	dataGrid[0][i][j][k] = -999.;
 	dataGrid[1][i][j][k] = -999.;
@@ -171,9 +171,9 @@ void CappiGrid::CressmanInterpolation()
 	float velWeight = 0;
 
 	for (int n = 0; n <= maxRefIndex; n++) {
-	  float dx = refValues[n].x - (xmin + i*xGridsp);
-	  float dy = refValues[n].y - (ymin + j*yGridsp);
-	  float dz = refValues[n].z - (zmin + k*zGridsp);
+	  float dx = refValues[n].x - (xmin + i*iGridsp);
+	  float dy = refValues[n].y - (ymin + j*jGridsp);
+	  float dz = refValues[n].z - (zmin + k*kGridsp);
 	  float rSquare = (dx*dx) + (dy*dy) + (dz*dz);
 	  if (rSquare > RSquare) { continue; }
 	  
@@ -185,9 +185,9 @@ void CappiGrid::CressmanInterpolation()
 	}
 
 	for (int n = 0; n <= maxVelIndex; n++) {
-	  float dx = velValues[n].x - (xmin + i*xGridsp);
-	  float dy = velValues[n].y - (ymin + j*yGridsp);
-	  float dz = velValues[n].z - (zmin + k*xGridsp);
+	  float dx = velValues[n].x - (xmin + i*iGridsp);
+	  float dy = velValues[n].y - (ymin + j*jGridsp);
+	  float dz = velValues[n].z - (zmin + k*iGridsp);
 	  float rSquare = (dx*dx) + (dy*dy) + (dz*dz);
 	  if (rSquare > RSquare) { continue; }
 	  
@@ -216,15 +216,15 @@ void CappiGrid::BarnesInterpolation()
 
   // Barnes Interpolation (see Koch et al, 1983 for details)
 
-  float falloff_x = 5.052*pow((4* xGridsp / Pi),2);
-  float falloff_y = 5.052*pow((4* yGridsp / Pi),2);
-  float falloff_z = 5.052*pow((4* zGridsp / Pi),2);
+  float falloff_x = 5.052*pow((4* iGridsp / Pi),2);
+  float falloff_y = 5.052*pow((4* jGridsp / Pi),2);
+  float falloff_z = 5.052*pow((4* kGridsp / Pi),2);
   float smoother = 0.3;
 
 
-  for (int k = 0; k < int(zDim); k++) { 
-    for (int j = 0; j < int(yDim); j++) {
-      for (int i = 0; i < int(xDim); i++) {
+  for (int k = 0; k < int(kDim); k++) { 
+    for (int j = 0; j < int(jDim); j++) {
+      for (int i = 0; i < int(iDim); i++) {
 
 	dataGrid[0][i][j][k] = -999.;
 	dataGrid[1][i][j][k] = -999.;
@@ -237,13 +237,13 @@ void CappiGrid::BarnesInterpolation()
 	float velWeight = 0;
 
 	for (int n = 0; n <= maxRefIndex; n++) {
-	  float dx = refValues[n].x - (xmin + i*xGridsp);
+	  float dx = refValues[n].x - (xmin + i*iGridsp);
 	  if (fabs(dx) > sqrt(20 * falloff_x)) { continue; }
 
-	  float dy = refValues[n].y - (ymin + j*xGridsp);
+	  float dy = refValues[n].y - (ymin + j*iGridsp);
 	  if (fabs(dy) > sqrt(20 * falloff_y)) { continue; }
 
-	  float dz = refValues[n].z - (zmin + k*xGridsp);
+	  float dz = refValues[n].z - (zmin + k*iGridsp);
 	  if (fabs(dz) > sqrt(20 * falloff_z)) { continue; }
 	  
 	  float weight = exp(-(dx*dx)/falloff_x 
@@ -256,13 +256,13 @@ void CappiGrid::BarnesInterpolation()
 	}
 
 	for (int n = 0; n <= maxVelIndex; n++) {
-	  float dx = velValues[n].x - (xmin + i*xGridsp);
+	  float dx = velValues[n].x - (xmin + i*iGridsp);
 	  if (fabs(dx) > sqrt(20 * falloff_x)) { continue; }
 
-	  float dy = velValues[n].y - (ymin + j*xGridsp);
+	  float dy = velValues[n].y - (ymin + j*iGridsp);
 	  if (fabs(dy) > sqrt(20 * falloff_y)) { continue; }
 
-	  float dz = velValues[n].z - (zmin + k*xGridsp);
+	  float dz = velValues[n].z - (zmin + k*iGridsp);
 	  if (fabs(dz) > sqrt(20 * falloff_z)) { continue; }
 	  
 	  float weight = exp(-(dx*dx)/falloff_x 
@@ -286,9 +286,9 @@ void CappiGrid::BarnesInterpolation()
     }
   }
 
-  for (int k = 0; k < int(zDim); k++) {
-    for (int j = 0; j < int(yDim); j++) {
-      for (int i = 0; i < int(xDim); i++) {
+  for (int k = 0; k < int(kDim); k++) {
+    for (int j = 0; j < int(jDim); j++) {
+      for (int i = 0; i < int(iDim); i++) {
 
 	float sumRef = 0;
 	float sumVel = 0;
@@ -298,13 +298,13 @@ void CappiGrid::BarnesInterpolation()
 
 	for (int n = 0; n <= maxRefIndex; n++) {
 
-	  float dx = refValues[n].x - (xmin + i*xGridsp);
+	  float dx = refValues[n].x - (xmin + i*iGridsp);
 	  if (fabs(dx) > sqrt(20 * falloff_x)) { continue; }
 
-	  float dy = refValues[n].y - (ymin + j*xGridsp);
+	  float dy = refValues[n].y - (ymin + j*iGridsp);
 	  if (fabs(dy) > sqrt(20 * falloff_y)) { continue; }
 
-	  float dz = refValues[n].z - (zmin + k*xGridsp);
+	  float dz = refValues[n].z - (zmin + k*iGridsp);
 	  if (fabs(dz) > sqrt(20 * falloff_z)) { continue; }
 	  
 	  float weight = exp(-(dx*dx)/(falloff_x*smoother)
@@ -318,13 +318,13 @@ void CappiGrid::BarnesInterpolation()
 	  
 	}
 	for (int n = 0; n <= maxVelIndex; n++) {
-	  float dx = velValues[n].x - (xmin + i*xGridsp);
+	  float dx = velValues[n].x - (xmin + i*iGridsp);
 	  if (fabs(dx) > sqrt(20 * falloff_x)) { continue; }
 
-	  float dy = velValues[n].y - (ymin + j*xGridsp);
+	  float dy = velValues[n].y - (ymin + j*iGridsp);
 	  if (fabs(dy) > sqrt(20 * falloff_y)) { continue; }
 
-	  float dz = velValues[n].z - (zmin + k*xGridsp);
+	  float dz = velValues[n].z - (zmin + k*iGridsp);
 	  if (fabs(dz) > sqrt(20 * falloff_z)) { continue; }
 	  
 	  float weight = exp(-(dx*dx)/falloff_x 
@@ -358,12 +358,12 @@ float CappiGrid::trilinear(const float &x, const float &y,
 {
 
   // Do a bilinear interpolation from the nearest gridpoints
-  int x0 = int((float(int(x/xGridsp))*xGridsp - xmin)/xGridsp);
-  int y0 = int((float(int(y/yGridsp))*yGridsp - ymin)/yGridsp);
-  int z0 = int((float(int(z/zGridsp))*zGridsp - zmin)/zGridsp);
-  float dx = (x/xGridsp) - int(x/xGridsp);
-  float dy = (y/yGridsp) - int(y/yGridsp);
-  float dz = (z/zGridsp) - int(z/zGridsp);
+  int x0 = int((float(int(x/iGridsp))*iGridsp - xmin)/iGridsp);
+  int y0 = int((float(int(y/jGridsp))*jGridsp - ymin)/jGridsp);
+  int z0 = int((float(int(z/kGridsp))*kGridsp - zmin)/kGridsp);
+  float dx = (x/iGridsp) - int(x/iGridsp);
+  float dy = (y/jGridsp) - int(y/jGridsp);
+  float dz = (z/kGridsp) - int(z/kGridsp);
   float omdx = 1 - dx;
   float omdy = 1 - dy;
   float omdz = 1 - dz;
@@ -384,19 +384,19 @@ float CappiGrid::trilinear(const float &x, const float &y,
   }
 
 
-  if (x0 >= xDim-1) {
+  if (x0 >= iDim-1) {
     x1 = x0;
   } else {
     x1 = x0 + 1;
   }
 
-  if (y0 >= yDim-1) {
+  if (y0 >= jDim-1) {
     y1 = y0;
   } else {
     y1 = y0 + 1;
   }
 
-  if (z0 >= zDim-1) {
+  if (z0 >= kDim-1) {
     z1 = z0;
   } else {
     z1 = z0 + 1;
@@ -477,24 +477,24 @@ void CappiGrid::writeAsi()
 	id[69] = 64;
 
 	// X Header
-	id[160] = (int)(xmin * xGridsp * 100);
-	id[161] = (int)(xmax * xGridsp * 100);
-	id[162] = (int)xDim;
-	id[163] = (int)xGridsp * 1000;
+	id[160] = (int)(xmin * iGridsp * 100);
+	id[161] = (int)(xmax * iGridsp * 100);
+	id[162] = (int)iDim;
+	id[163] = (int)iGridsp * 1000;
 	id[164] = 1;
   
 	// Y Header
-	id[165] = (int)(ymin * yGridsp * 100);
-	id[166] = (int)(ymax * yGridsp * 100);
-	id[167] = (int)yDim;
-	id[168] = (int)yGridsp * 1000;
+	id[165] = (int)(ymin * jGridsp * 100);
+	id[166] = (int)(ymax * jGridsp * 100);
+	id[167] = (int)jDim;
+	id[168] = (int)jGridsp * 1000;
 	id[169] = 2;
   
 	// Z Header
-	id[170] = (int)(zmin * zGridsp * 1000);
-	id[171] = (int)(zmax * zGridsp * 1000);
-	id[172] = (int)zDim;
-	id[173] = (int)zGridsp * 1000;
+	id[170] = (int)(zmin * kGridsp * 1000);
+	id[171] = (int)(zmax * kGridsp * 1000);
+	id[172] = (int)kDim;
+	id[173] = (int)kGridsp * 1000;
 	id[174] = 3;
 
 	// Number of radars
@@ -526,15 +526,15 @@ void CappiGrid::writeAsi()
 	}
 
 	// Write data
-	for(int k = 0; k < int(zDim); k++) {
+	for(int k = 0; k < int(kDim); k++) {
 		out << reset << "level" << qSetFieldWidth(2) << k+1 << endl;
-		for(int j = 0; j < int(yDim); j++) {
+		for(int j = 0; j < int(jDim); j++) {
 			out << reset << "azimuth" << qSetFieldWidth(3) << j+1 << endl;
 
 			for(int n = 0; n < fieldNames.size(); n++) {
 				out << reset << left << fieldNames.at(n) << endl;
 				int line = 0;
-				for (int i = 0; i < int(xDim);  i++){
+				for (int i = 0; i < int(iDim);  i++){
 				    out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << dataGrid[n][i][j][k];
 					line++;
 					if (line == 8) {

@@ -63,7 +63,7 @@ GriddedData* GriddedFactory::makeAnalytic(RadarData *radarData,
 					  float *vortexLat, float *vortexLon)
 {
                 
-                if(radarData->getNumRays() < 0) {
+                if(radarData->getNumRays() <= 0) {
 		     coordSystem = cartesian;
 		     AnalyticGrid *data = new AnalyticGrid();
 		     data->gridAnalyticData(cappiConfig, analyticConfig, 

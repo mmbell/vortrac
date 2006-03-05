@@ -25,12 +25,12 @@ class GriddedData
 
   virtual void writeAsi() = 0;
   
-  float getXdim() { return xDim; }
-  float getYdim() { return yDim; }
-  float getZdim() { return zDim; }
-  void setXdim(const int& dim);
-  void setYdim(const int& dim);
-  void setZdim(const int& dim);
+  float getIdim() { return iDim; }
+  float getJdim() { return jDim; }
+  float getKdim() { return kDim; }
+  void setIdim(const int& dim);
+  void setJdim(const int& dim);
+  void setKdim(const int& dim);
   int getCoordSystem() { return coordSystem; }
   float fixAngle(const float &angle);
   float* relEarthLocation(float *originLat, float *originLon,
@@ -57,10 +57,12 @@ class GriddedData
 
   /* Needed a reference point before we could redo coordinate systems. -LM */
 
+  // Spherical Coordinates
+
   int getSphericalRangeLength(float azimuth, float elevation);
   float* getSphericalRangeData(QString& fieldName, float azimuth, 
 			       float elevation);
-  float* getSphericalRangePosition(float azimuth, float elevations);
+  float* getSphericalRangePosition(float azimuth, float elevation);
   int getSphericalAzimuthLength(float range,float elevation);
   float* getSphericalAzimuthData(QString& fieldName, float range, 
 				 float elevation);
@@ -70,6 +72,20 @@ class GriddedData
 				   float azimuth);
   float* getSphericalElevationPosition(float range,float azimuth);
 
+  // Cylindrical Coordinates
+
+  int getCylindricalRangeLength(float azimuth, float height);
+  float* getCylindricalRangeData(QString& fieldName, float azimuth, 
+				 float height);
+  float* getCylindricalRangePosition(float azimuth, float height);
+  int getCylindricalAzimuthLength(float range, float height);
+  float* getCylindricalAzimuthData(QString& fieldName, float range,
+				   float height);
+  float* getCylindricalAzimuthPosition(float range, float height);
+  int getCylindricalHeightLength(float range, float height);
+  float* getCylindricalHeightData(QString& fieldName, float range, 
+				  float height);
+  float* getCylindricalHeightPosition(float range, float height);
 
   /* All of these functions go through all points in the grid to check for
      points within the requested range. Somewhat inefficient. -LM
@@ -77,12 +93,12 @@ class GriddedData
   
   
  protected:
-  float xDim;
-  float yDim;
-  float zDim;
-  float xGridsp;
-  float yGridsp;
-  float zGridsp;
+  float iDim;
+  float jDim;
+  float kDim;
+  float iGridsp;
+  float jGridsp;
+  float kGridsp;
   float Pi;
   float deg2rad;
   float rad2deg;
@@ -97,11 +113,15 @@ class GriddedData
   float sphericalAzimuthSpacing;
   float sphericalElevationSpacing;
 
-  float poiX;
-  float poiY;
-  float poiZ;
+  float cylindricalRangeSpacing;
+  float cylindricalAzimuthSpacing;
+  float cylindricalHeightSpacing;
+
+  float poiI;
+  float poiJ;
+  float poiK;
   
-  /* I don't think we still need these enumeration values!?!*/
+  /* I don't think we still need these enumeration values -LM */
 
   enum coordSystems {
     cartesian,

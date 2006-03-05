@@ -124,15 +124,15 @@ void AnalysisThread::run()
 		   gridded data rather than a cappi*/
 		
 		GriddedData *gridData;
-		
+
 		if(radarVolume->getNumRays() < 0) {
 		  Configuration *analyticConfig = new Configuration();
 		  QDomElement radar = configData->getConfig("radar");
 		  analyticConfig->read(configData->getParam(radar, "dir"));
 		  gridData = gridFactory.makeAnalytic(radarVolume,
-						configData->getConfig("cappi"),
-						analyticConfig, &vortexLat, 
-						&vortexLon);
+					   configData->getConfig("cappi"),
+					   analyticConfig, &vortexLat, 
+					   &vortexLon);
 		}
 		else {
 		  emit log(Message("Attempting to Make Cappi"));
@@ -142,7 +142,7 @@ void AnalysisThread::run()
 
 		}
 		
-
+		
 		/* GriddedData not currently a QObject so this will fail
 		   connect(gridData, SIGNAL(log(const Message&)),this,
 		   SLOT(catchLog(const Message&)), Qt::DirectConnection); */

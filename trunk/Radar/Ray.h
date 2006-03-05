@@ -30,8 +30,14 @@ class Ray
   void setNyquist_vel(const float &value);
   void setFirst_ref_gate(const int &value);
   void setFirst_vel_gate(const int &value);
-  void setRef_gatesp(const int &value);
-  void setVel_gatesp(const int &value);
+
+  /* These used to take int, I changed them to float, is there any reason
+     they should be ints, I get the impression we are getting a value in feet
+     meters ... etc -LM
+  */
+  void setRef_gatesp(const float &value);
+  void setVel_gatesp(const float &value);
+  
   void setRef_numgates(const int &value);
   void setVel_numgates(const int &value);
   void setVcp(const int &value);
@@ -71,8 +77,15 @@ class Ray
   float nyquist_vel;
   int first_ref_gate;
   int first_vel_gate;
-  int ref_gatesp;
-  int vel_gatesp;
+
+  /* These used to take int, I changed them to float, is there any reason
+     they should be ints, I get the impression we are getting a value in feet
+     meters ... etc -LM
+  */
+
+  float ref_gatesp;
+  float vel_gatesp;
+  
   int ref_numgates;
   int vel_numgates;
   int vcp;
