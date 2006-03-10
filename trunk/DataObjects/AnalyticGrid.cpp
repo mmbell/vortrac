@@ -309,5 +309,3 @@ void AnalyticGrid::writeAsi()
 }	
 
 
-
-

@@ -14,8 +14,8 @@
      <vt1angle>0</vt1angle>
      <vr1>0</vr1>
      <vr1angle>0</vr1angle>
-     <vt2>0</vt2>
-     <vt2angle>0</vt2angle>
+     <vt2>.1</vt2>
+     <vt2angle>90</vt2angle>
      <vr2>0</vr2>
      <vr2angle>0</vr2angle>
      <env_speed>0</env_speed>

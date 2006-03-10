@@ -248,7 +248,7 @@ bool AnalyticRadar::readVolumeAnalytic()
   GriddedFactory *factory = new GriddedFactory();
   data = factory->makeAnalytic(this, masterRoot.firstChildElement("cappi"), 
 			       config, &vortexLat, &vortexLon);
-  data->setPointOfInterest((int)radarLon,(int)radarLat,0);
+  data->setCartesianReferencePoint((int)radarLon,(int)radarLat,0);
  
   // Sample with theoretical radar
   // VCP 0 : flat cappi sample

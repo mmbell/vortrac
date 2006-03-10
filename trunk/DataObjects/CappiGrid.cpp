@@ -48,8 +48,14 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 
   // Get the relative center and expand the grid around it
   relDist = new float[2];
-  relDist = relEarthLocation(radarData->getRadarLat(), radarData->getRadarLon(),
-			vortexLat, vortexLon);
+  
+  relDist = relEarthLocation(radarData->getRadarLat(), 
+			     radarData->getRadarLon(),
+			     vortexLat, vortexLon);
+  float vXDistance =  iDim/2*iGridsp;
+  float vYDistance =  jDim/2*jGridsp;
+  setZeroLocation(vortexLat, vortexLon,&vXDistance,&vYDistance);
+
   xmin = nearbyintf(relDist[0] - (iDim/2)*iGridsp);
   xmax = nearbyintf(relDist[0] + (iDim/2)*iGridsp);
   ymin = nearbyintf(relDist[1] - (jDim/2)*jGridsp);

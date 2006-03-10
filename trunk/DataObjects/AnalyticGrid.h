@@ -27,8 +27,7 @@ class AnalyticGrid : public GriddedData
 			float *vortexLat, float *vortexLon);
   
   void writeAsi();
-  
-  
+   
  private:
   enum InfoSource {
     mm5,

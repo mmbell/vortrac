@@ -32,7 +32,9 @@ class GriddedData
   void setJdim(const int& dim);
   void setKdim(const int& dim);
   int getCoordSystem() { return coordSystem; }
-  float fixAngle(const float &angle);
+  float fixAngle(float angle);
+  void setZeroLocation(float *knownLat, float *knownLon, float *relX, 
+		       float *relY);
   float* relEarthLocation(float *originLat, float *originLon,
 		     float *relLat, float* relLon);
   float* absLocation(float *originLat, float *originLon,
@@ -51,9 +53,11 @@ class GriddedData
 
   /* these are all done in Math Coordinates, should we changes the names,
      so the sound less like meteorological coords?  -LM */
+
   int getFieldIndex(QString& fieldName);
 
-  void setPointOfInterest(int ii, int jj, int kk); 
+  void setCartesianReferencePoint(int ii, int jj, int kk); 
+  void setAbsoluteReferencePoint(float Lat, float Lon, float Height);
 
   /* Needed a reference point before we could redo coordinate systems. -LM */
 
@@ -74,21 +78,21 @@ class GriddedData
 
   // Cylindrical Coordinates
 
-  int getCylindricalRangeLength(float azimuth, float height);
-  float* getCylindricalRangeData(QString& fieldName, float azimuth, 
+  int getCylindricalRadiusLength(float azimuth, float height);
+  float* getCylindricalRadiusData(QString& fieldName, float azimuth, 
 				 float height);
-  float* getCylindricalRangePosition(float azimuth, float height);
-  int getCylindricalAzimuthLength(float range, float height);
-  float* getCylindricalAzimuthData(QString& fieldName, float range,
+  float* getCylindricalRadiusPosition(float azimuth, float height);
+  int getCylindricalAzimuthLength(float radius, float height);
+  float* getCylindricalAzimuthData(QString& fieldName, float radius,
 				   float height);
-  float* getCylindricalAzimuthPosition(float range, float height);
-  int getCylindricalHeightLength(float range, float height);
-  float* getCylindricalHeightData(QString& fieldName, float range, 
+  float* getCylindricalAzimuthPosition(float radius, float height);
+  int getCylindricalHeightLength(float radius, float height);
+  float* getCylindricalHeightData(QString& fieldName, float radius, 
 				  float height);
-  float* getCylindricalHeightPosition(float range, float height);
+  float* getCylindricalHeightPosition(float radius, float height);
 
   /* All of these functions go through all points in the grid to check for
-     points within the requested range. Somewhat inefficient. -LM
+     points within the requested radius. Somewhat inefficient. -LM
   */
   
   
@@ -113,13 +117,17 @@ class GriddedData
   float sphericalAzimuthSpacing;
   float sphericalElevationSpacing;
 
-  float cylindricalRangeSpacing;
+  float cylindricalRadiusSpacing;
   float cylindricalAzimuthSpacing;
   float cylindricalHeightSpacing;
 
-  float poiI;
-  float poiJ;
-  float poiK;
+  float refPointI;
+  float refPointJ;
+  float refPointK;
+
+  // Latitude and Longitude Coordinates for the i = 0, j= 0, k = 0, point
+  float zeroLat;
+  float zeroLon;
   
   /* I don't think we still need these enumeration values -LM */
 
