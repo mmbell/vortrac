@@ -60,14 +60,16 @@ GriddedData* GriddedFactory::makeCappi(RadarData *radarData,
 GriddedData* GriddedFactory::makeAnalytic(RadarData *radarData,
 					  QDomElement cappiConfig, 
 					  Configuration* analyticConfig,
-					  float *vortexLat, float *vortexLon)
+					  float *vortexLat, float *vortexLon,
+					  float *radarLat, float *radarLon)
 {
                 
                 if(radarData->getNumRays() <= 0) {
 		     coordSystem = cartesian;
 		     AnalyticGrid *data = new AnalyticGrid();
 		     data->gridAnalyticData(cappiConfig, analyticConfig, 
-					    vortexLat, vortexLon);
+					    vortexLat, vortexLon,radarLat,
+					    radarLon);
 		     return data;
 		}
 		else {

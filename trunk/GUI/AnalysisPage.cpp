@@ -332,11 +332,17 @@ void AnalysisPage::runThread()
   
   if(configData->getParam(configData->getConfig("radar"), "format")
      == QString("MODEL")){
-    analyticModel();
+    if(analyticModel()) {
+      pollThread.setConfig(configData);
+      pollThread.start();
+    }
   }
+
   
-  pollThread.setConfig(configData);
-  pollThread.start();
+  else {
+    pollThread.setConfig(configData);
+    pollThread.start();
+  }
 
 }
 
@@ -346,9 +352,10 @@ void AnalysisPage::abortThread()
   // Try to kill the thread
   if(pollThread.isRunning()) {
 	pollThread.quit();
+	emit log(Message("Analysis Aborted!"));
   }
 
-  emit log(Message("Analysis Aborted!"));
+  
 
 }
 
@@ -396,7 +403,7 @@ void AnalysisPage::prepareToClose()
 
 }
 
-void AnalysisPage::analyticModel()
+bool AnalysisPage::analyticModel()
 {
   QString modelFile = configData->getParam(configData->getConfig("radar"),
 					   "dir");
@@ -426,8 +433,8 @@ void AnalysisPage::analyticModel()
   if(!configTreeModel->read())
     emit log(Message("Error Reading Analytic Storm Configuration"));
   
-  connect(run, SIGNAL(pressed()), modelDialog, SLOT(close()));
-  connect(cancel, SIGNAL(pressed()), modelDialog, SLOT(close()));
+  connect(run, SIGNAL(pressed()), modelDialog, SLOT(accept()));
+  connect(cancel, SIGNAL(pressed()), modelDialog, SLOT(reject()));
   
   QHBoxLayout *buttons = new QHBoxLayout;
   buttons->addStretch(1);
@@ -438,5 +445,10 @@ void AnalysisPage::analyticModel()
   layout->addLayout(buttons);
   modelDialog->setLayout(layout);
   modelDialog->exec();
+
+  if(modelDialog->result()==QDialog::Accepted)
+    return true;
+  else 
+    return false;
 
 }

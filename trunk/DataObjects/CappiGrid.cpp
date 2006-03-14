@@ -31,12 +31,14 @@ CappiGrid::~CappiGrid()
 void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 					float *vortexLat, float *vortexLon)
 {
-
+  Message::toScreen("IN CAPPI GRID DATA");
   // Set the output file
   QString cappiPath = cappiConfig.firstChildElement("dir").text();
   QString cappiFile = radarData->getDateTimeString();
   cappiFile.replace(QString(":"),QString("_"));
   outFileName = cappiPath + "/" + cappiFile;
+
+  //testing Message::toScreen("OutputFile = "+outFileName);
   
   // Get the dimensions from the configuration
   iDim = cappiConfig.firstChildElement("xdim").text().toFloat();
@@ -49,6 +51,10 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   // Get the relative center and expand the grid around it
   relDist = new float[2];
   
+  //testing Message::toScreen("vortexLat = "+QString().setNum(*vortexLat)+" "+QString().setNum(*vortexLon));
+
+  //testing Message::toScreen("radarLat = "+QString().setNum(*radarData->getRadarLat())+" "+QString().setNum(*radarData->getRadarLon()));
+
   relDist = relEarthLocation(radarData->getRadarLat(), 
 			     radarData->getRadarLon(),
 			     vortexLat, vortexLon);
@@ -60,6 +66,10 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   xmax = nearbyintf(relDist[0] + (iDim/2)*iGridsp);
   ymin = nearbyintf(relDist[1] - (jDim/2)*jGridsp);
   ymax = nearbyintf(relDist[1] + (jDim/2)*jGridsp);
+
+  //testing Message::toScreen("xmax = "+QString().setNum(xmax)+" xmin "+QString().setNum(xmin));
+   //testing Message::toScreen("ymax = "+QString().setNum(ymax)+" ymin "+QString().setNum(ymin));
+
   latReference = *vortexLat;
   lonReference = *vortexLon;
   float distance = sqrt(relDist[0] * relDist[0] + relDist[1] * relDist[1]);
@@ -71,7 +81,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   int r = 0;
   int v = 0;
   
-  for (int n = 0; n <= radarData->getNumRays(); n++) {
+  for (int n = 0; n < radarData->getNumRays(); n++) {
     Ray* currentRay = radarData->getRay(n);
     float theta = deg2rad * fmodf((450. - currentRay->getAzimuth()),360.);
     float phi = deg2rad * (90. - (currentRay->getElevation()));
@@ -82,7 +92,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
       for (int g = 0; g <= (currentRay->getRef_numgates()-1); g++) {
 		if (refData[g] == -999.) { continue; }
 		float range = float(currentRay->getFirst_ref_gate() +
-					  (g * currentRay->getRef_gatesp()))/1000.;
+				    (g * currentRay->getRef_gatesp()))/1000.;
 		float x = range*sin(phi)*cos(theta);
 		if ((x < (xmin - iGridsp)) or x > (xmax + iGridsp)) { continue; }
 		float y = range*sin(phi)*sin(theta);
@@ -135,12 +145,15 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 
   }
 
+  //testing Message::toScreen("r = "+QString().setNum(r)+" v = "+QString().setNum(v));
+
   // Subtract off one from the count for iterative purposes
   maxRefIndex = r - 1;
   maxVelIndex = v - 1;
 
   // Interpolate the data depending on method chosen
   QString interpolation = cappiConfig.firstChildElement("interpolation").text();
+  Message::toScreen("Using "+interpolation+" interpolation ");
   if (interpolation == "barnes") {
     BarnesInterpolation();
   } else if (interpolation == "cressman") {
@@ -149,6 +162,8 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 
   // Set the initial field names
   fieldNames << "DZ" << "VE" << "SW";
+
+  Message::toScreen("Completed Cappi Process");
 
 }
 void CappiGrid::CressmanInterpolation()
@@ -356,7 +371,7 @@ void CappiGrid::BarnesInterpolation()
       }
     }
   }
-  
+  Message::toScreen("Leaving Barnes");
 }
 
 float CappiGrid::trilinear(const float &x, const float &y,
@@ -515,7 +530,7 @@ void CappiGrid::writeAsi()
 	outFileName += ".asi";
 	QFile asiFile(outFileName);
 	if(!asiFile.open(QIODevice::WriteOnly)) {
-		Message::report("Can't open CAPPI file for writing");
+		Message::toScreen("Can't open CAPPI file for writing");
 	}
 
 	QTextStream out(&asiFile);

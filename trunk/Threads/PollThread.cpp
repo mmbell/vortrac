@@ -20,6 +20,8 @@ PollThread::PollThread(QObject *parent)
   	  this, SLOT(analysisDoneProcessing()));
   connect(&analysisThread, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+  connect(this, SIGNAL(terminated()),
+	  &analysisThread, SLOT(terminate()));
  
 }
 

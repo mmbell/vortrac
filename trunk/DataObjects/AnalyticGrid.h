@@ -24,9 +24,11 @@ class AnalyticGrid : public GriddedData
   ~AnalyticGrid();
 
   void gridAnalyticData(QDomElement cappiConfig,Configuration* analyticConfig,
-			float *vortexLat, float *vortexLon);
+			float *vortexLat, float *vortexLon, float *radarLat,
+			float *radarLon);
   
   void writeAsi();
+  void testRange();
    
  private:
   enum InfoSource {

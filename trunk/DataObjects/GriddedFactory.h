@@ -27,7 +27,8 @@ class GriddedFactory
 		GriddedData* makeAnalytic(RadarData *radarData,
 					  QDomElement cappiConfig,
 					  Configuration* analyticConfig,
-					  float *vortexLat, float *vortexLon);
+					  float *vortexLat, float *vortexLon,
+					  float *radarLat, float *radarLon);
 							   
 	private:
 		enum coordSystems {

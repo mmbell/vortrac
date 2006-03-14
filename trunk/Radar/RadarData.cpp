@@ -13,7 +13,9 @@
 
 RadarData::RadarData(QString radarname, float lat, float lon, QString filename)
 {
-
+        Pi = 3.141592653589793238462643;
+        deg2rad = Pi/180.;
+        rad2deg = 180./Pi;
 	radarName = radarname;
 	radarLat = lat;
 	radarLon = lon;

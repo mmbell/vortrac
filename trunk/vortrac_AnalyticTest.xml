@@ -2,15 +2,15 @@
 <vortrac xmnls="http://www.eol.ucar.edu/ns/vortrac" >
     <vortex>
         <name>Analytic Storm</name>
-        <lat>0.00</lat>
-        <lon>0.00</lon>
+        <lat>.90</lat>
+        <lon>.90</lon>
         <dir>workingDirs/</dir>
     </vortex>
     <radar>
         <name>WSR-88D</name>
         <lat>0.00</lat>
         <lon>0.00</lon>
-        <dir>vortrac_defaultAnalyticTC.xml</dir>
+        <dir>/scr/science40/mauger/Working/trunk/vortrac_defaultAnalyticTC.xml</dir>
         <format>MODEL</format>
         <startdate>2005-1-1</startdate>
         <enddate>2005-1-2</enddate>
@@ -24,14 +24,14 @@
         <zdim>1</zdim>
         <xgridsp>1.0</xgridsp>
         <ygridsp>1.0</ygridsp>
-        <zgridsp>0</zgridsp>
+        <zgridsp>1.0</zgridsp>
         <ref_min>-15.0</ref_min>
         <ref_max>65.0</ref_max>
         <vel_min>-100.0</vel_min>
         <vel_max>100.0</vel_max>
         <adv_speed>0.0</adv_speed>
         <adv_dir>0.0</adv_dir>
-        <interpolation>bilinear</interpolation>
+        <interpolation>cressman</interpolation>
     </cappi>
     <center>
         <dir>/path/to/center/output</dir>
@@ -81,13 +81,13 @@
         <rmwmax>60.0</rmwmax>
     </graphics>
     <qc>
-        <wind_method>vad</wind_method>
+        <wind_method>user</wind_method>
         <vel_threshold>1.0</vel_threshold>
         <sw_threshold>10.0</sw_threshold>
         <bbcount>50</bbcount>
         <maxfold>4</maxfold>
-        <windspeed>30</windspeed>
-        <winddirection>180</winddirection>
+        <windspeed>0</windspeed>
+        <winddirection>0</winddirection>
         <awips_dir>/path/to/awips/data</awips_dir>
         <vadlevels>25</vadlevels>
         <numcoeff>3</numcoeff>

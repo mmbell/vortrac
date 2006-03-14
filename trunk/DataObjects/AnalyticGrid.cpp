@@ -24,6 +24,8 @@ AnalyticGrid::AnalyticGrid()
   sphericalAzimuthSpacing = 1;
   sphericalElevationSpacing = 1;
 
+  testRange();
+
 }
 
 AnalyticGrid::~AnalyticGrid()
@@ -32,7 +34,8 @@ AnalyticGrid::~AnalyticGrid()
 
 void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
 				    Configuration* analyticConfig, 
-				    float *vortexLat, float *vortexLon)
+				    float *vortexLat, float *vortexLon,
+				    float *radarLat, float *radarLon)
 {
 
   // Set the output file
@@ -58,10 +61,18 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
   if (sourceString == QString("wind_field")) {
     //source = windFields;
     QDomElement winds = analyticConfig->getRoot().firstChildElement("wind_field");
-    centX = analyticConfig->getParam(winds, "vortexX").toFloat();
-    centY = analyticConfig->getParam(winds, "vortexY").toFloat();
-    radX = analyticConfig->getParam(radar, "radarX").toFloat();
-    radY = analyticConfig->getParam(radar, "radarY").toFloat();
+
+    float *radLocation  = new float[2];
+    radLocation = relEarthLocation(vortexLat,vortexLon,radarLat,radarLon);
+    centX = iDim/2*iGridsp;
+    centY = jDim/2*jGridsp;
+    setZeroLocation(vortexLat, vortexLon, &centX, &centY);
+    radX = centX+radLocation[0];
+    radY = centY+radLocation[1];
+
+    //testing Message::toScreen("RadX,Y ="+QString().setNum(radX)+", "+QString().setNum(radY)+"  VortX,Y ="+QString().setNum(centX)+", "+QString().setNum(centY));
+    
+
     rmw = analyticConfig->getParam(winds, "rmw").toFloat();
     envSpeed = analyticConfig->getParam(winds, "env_speed").toFloat();
     envDir = analyticConfig->getParam(winds, "env_dir").toFloat();
@@ -309,3 +320,33 @@ void AnalyticGrid::writeAsi()
 }	
 
 
+void AnalyticGrid::testRange() 
+{
+  iDim = 100;
+  jDim = 100;
+  kDim = 5;
+  iGridsp = 1;
+  jGridsp = 1;
+  kGridsp = 1;
+  for(int i = 0; i < iDim; i++) {
+    for(int j = 0; j < jDim; j++) {
+      for(int k = 0; k < kDim; k++) {
+	for(int field = 0; field < 3; field++) {
+	  float range = sqrt((i-50)*(i-50)+(j-50)*(j-50)+k*k);
+	  dataGrid[field][i][j][k] = range;
+	}
+      }
+    }
+  }
+  setCartesianReferencePoint(50, 50, 0);
+  int numPoints = getSphericalRangeLength(90, 0);
+  float *refData = new float[numPoints];
+  QString field("DZ");
+  refData = getSphericalRangeData(field, 90, 0);
+  QString print;
+  for(int n = 0; n < numPoints; n++) {
+    print+=QString().setNum(refData[n])+" ";
+  }
+  //testing Message::toScreen("testRange");
+  //testing Message::toScreen(print);
+}

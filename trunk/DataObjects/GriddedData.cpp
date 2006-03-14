@@ -96,8 +96,10 @@ void GriddedData::setZeroLocation(float *knownLat, float *knownLon,
   float fac_lon = 111.41513 * cos(knownLatRadians)
     - 0.09455 * cos(3.0 * knownLatRadians) + 0.00012 * cos(5.0 * knownLatRadians);
 
-  zeroLon = *relX/fac_lon+*knownLon;
-  zeroLat = *relY/fac_lat+*knownLat;
+  zeroLon = *knownLon-*relX/fac_lon;
+  zeroLat = *knownLat-*relY/fac_lat;
+
+  // testing Message::toScreen("Set Zero: ZeroLat = "+QString().setNum(zeroLat)+" ZeroLon = "+QString().setNum(zeroLon));
   
 
 }
@@ -136,6 +138,7 @@ void GriddedData::setAbsoluteReferencePoint(float Lat, float Lon, float Height)
   refPointI = floor(locations[0]/iGridsp +.5);
   refPointJ = floor(locations[1]/jGridsp +.5);
   refPointK = floor(Height/kGridsp +.5);
+  // testing Message::toScreen("I = "+QString().setNum(refPointI)+" J = "+QString().setNum(refPointJ)+" K = "+QString().setNum(refPointK));
 
 }
 

@@ -125,17 +125,18 @@ void AnalysisThread::run()
 		
 		GriddedData *gridData;
 
-		if(radarVolume->getNumRays() < 0) {
+		if(radarVolume->getNumSweeps() < 0) {
 		  Configuration *analyticConfig = new Configuration();
 		  QDomElement radar = configData->getConfig("radar");
+		  float radarLat = configData->getParam(radar,"lat").toFloat();
+		  float radarLon = configData->getParam(radar,"lon").toFloat();
 		  analyticConfig->read(configData->getParam(radar, "dir"));
 		  gridData = gridFactory.makeAnalytic(radarVolume,
 					   configData->getConfig("cappi"),
 					   analyticConfig, &vortexLat, 
-					   &vortexLon);
+					   &vortexLon, &radarLat, &radarLon);
 		}
 		else {
-		  emit log(Message("Attempting to Make Cappi"));
 		  gridData = gridFactory.makeCappi(radarVolume,
 						configData->getConfig("cappi"),
 			 			&vortexLat, &vortexLon);
@@ -149,6 +150,7 @@ void AnalysisThread::run()
 		
 		// Output Radar data to check if dealias worked
 		gridData->writeAsi();
+		emit log(Message("Writing ASI"));
 		
 		// Create vortexdata instance to hold the analysis results
 		VortexData *vortexdata = new VortexData(); 

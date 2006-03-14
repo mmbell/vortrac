@@ -48,6 +48,9 @@ class RadarData
   Ray* Rays;
   int numSweeps;
   int numRays;
+  float Pi;
+  float deg2rad;
+  float rad2deg;
 
  private:
   bool dealiased;

@@ -87,7 +87,7 @@ class AnalysisPage : public QWidget
   QString workingDirectory;
   QString imageFileName;
 
-  void analyticModel();
+  bool analyticModel();
 
 };
 
