@@ -26,6 +26,8 @@ class AnalyticGrid : public GriddedData
   void gridAnalyticData(QDomElement cappiConfig,Configuration* analyticConfig,
 			float *vortexLat, float *vortexLon, float *radarLat,
 			float *radarLon);
+
+  void gridWindFieldData();
   
   void writeAsi();
   void testRange();

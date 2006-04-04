@@ -18,11 +18,24 @@ AnalyticGrid::AnalyticGrid()
   : GriddedData()
 {
   coordSystem = cartesian;
+  // Original coordinate system for gridded data points
+
   iDim = jDim = kDim = 0;
+  // Dimensions of the gridded data set (number of points) 
+  // in the i, j and k directions.
+
   iGridsp = jGridsp = kGridsp = 0.0;
-  sphericalRangeSpacing = 1;
-  sphericalAzimuthSpacing = 1;
-  sphericalElevationSpacing = 1;
+  // Spacing between the grid points in the i, j and k directions (km)
+
+  sphericalRangeSpacing = 3;
+  // The spacing to be used between range calculations at a specific
+  // elevation and azimuthal angle (km)
+
+  sphericalAzimuthSpacing = 3;
+  // Spacing between azimuth angle measurements in degrees
+
+  sphericalElevationSpacing = 3;
+  // Spacing between elevation angle measurements in degrees
 
   testRange();
 
@@ -36,6 +49,15 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
 				    Configuration* analyticConfig, 
 				    float *vortexLat, float *vortexLon,
 				    float *radarLat, float *radarLon)
+  
+  /* 
+   * Retreives information from the analytic vortex configuration xml file
+   * and the cappi portion of the master configuration xml file. 
+   * Determines the desired model vortex with necessary parameters 
+   * from the configuration information and creates and populates a cartesian
+   * grid of data points.
+   */
+
 {
 
   // Set the output file
@@ -50,7 +72,7 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
   xmin = ymin = zmin = 0;
   xmax = xmin+iDim;
   ymax = ymin+jDim;
-  zmax = 1;
+  zmax = zmin+kDim;
   iGridsp = cappiConfig.firstChildElement("xgridsp").text().toFloat();
   jGridsp = cappiConfig.firstChildElement("ygridsp").text().toFloat();
   kGridsp = cappiConfig.firstChildElement("zgridsp").text().toFloat();
@@ -105,7 +127,34 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
     //Message::toScreen("Vortex Center = ("+QString().setNum(centX)+","+QString().setNum(centY)+")");
     //Message::toScreen("Radar Center = ("+QString().setNum(radX)+","+QString().setNum(radY)+")");
 
-    QTextStream out(stdout);
+    gridWindFieldData();
+
+  }
+  
+  if (sourceString == "mm5") {
+    source = mm5;
+    
+  }
+
+  // Set the initial field names
+  fieldNames << "DZ" << "VE" << "SW";
+
+}
+
+void AnalyticGrid::gridWindFieldData()
+
+  /*
+   * Creates data from user specified winds based on the rankine vortex model
+   * allows for asymmetries in tangential and radial flows within the idealized
+   * vortex.
+   */
+{
+  /*
+   * Creates data points based on given analytic vortex parameters using
+   * the rankine vortex model with asymetric wind options
+   */
+
+  //QTextStream out(stdout);
 
     for(int j = jDim - 1; j >= 0; j--) {
       for(int i = iDim - 1; i >= 0; i--) {
@@ -113,9 +162,6 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
 	  // zero out all the points
 	  dataGrid[a][i][j][0] = 0;
 	}
-
-	//Message::toScreen("loco ("+QString().setNum(i)+","
-	//+QString().setNum(j)+")");
 
 	float vx = 0;
 	float vy = 0;
@@ -181,15 +227,6 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
       }
       // out << endl;
     } 
-  }
-  
-  if (sourceString == "mm5") {
-    source = mm5;
-    
-  }
-
-  // Set the initial field names
-  fieldNames << "DZ" << "VE" << "SW";
 
 }
 

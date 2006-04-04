@@ -123,15 +123,54 @@ bool RadarQC::dealias()
    *
    */
 
+
+  /*  
+  Ray* check = radarData->getRay(35);
+  float* checkVel = check->getVelData();
+  QString checkPrint("First");
+  for(int r = 0; r < check->getVel_numgates(); r++)
+    {
+      checkPrint+=QString(" ")+QString().setNum(checkVel[r]);
+    }
+  Message::toScreen(checkPrint);
+  */
   if(!terminalVelocity())
     return false;
-  
+  /*
+  check = radarData->getRay(35);
+  checkVel = check->getVelData();
+  checkPrint = QString("Terminal Vel");
+  for(int r = 0; r < check->getVel_numgates(); r++)
+    {
+      checkPrint+=QString(" ")+QString().setNum(checkVel[r]);
+    }
+  Message::toScreen(checkPrint);
+  */
   thresholdData();
-  
+  /*
+  check = radarData->getRay(35);
+  checkVel = check->getVelData();
+  checkPrint = QString("Threshold Data");
+  for(int r = 0; r < check->getVel_numgates(); r++)
+    {
+      checkPrint+=QString(" ")+QString().setNum(checkVel[r]);
+    }
+  Message::toScreen(checkPrint);
+  */
   findEnvironmentalWind();
   
   if(!BB())
      return false;
+  /*
+  check = radarData->getRay(35);
+  checkVel = check->getVelData();
+  checkPrint = QString("BB");
+  for(int r = 0; r < check->getVel_numgates(); r++)
+    {
+      checkPrint+=QString(" ")+QString().setNum(checkVel[r]);
+    }
+  Message::toScreen(checkPrint);
+  */
   return true;
 }
 
@@ -153,11 +192,14 @@ void RadarQC::thresholdData()
   for (int i = 0; i < numSweeps; i++) {
     Sweep *currentSweep = radarData->getSweep(i);
     int index = currentSweep->getFirstRay();
+    //Message::toScreen("Index of First Ray = "+QString().setNum(index));
     int numBins = radarData->getRay(index)->getVel_numgates();
+    //Message::toScreen("Number of vel bins in that ray ="+QString().setNum(numBins));
     validBinCount[i] = new float[numBins]; 
   }
 
   int numRays = radarData->getNumRays();
+  Message::toScreen("total ray count = "+QString().setNum(numRays));
   Ray* currentRay = new Ray;
   int numVGates;
   for(int i = 0; i < numRays; i++)
@@ -171,8 +213,19 @@ void RadarQC::thresholdData()
 	{
 	  if((swGates[j] > specWidthLimit)||
 	     (fabs(vGates[j]) < velThresholdLimit)) {
-	    vGates[j]= velNull;
+	    vGates[j] = velNull;
 	  }
+	  
+	  //if(swGates[j] > specWidthLimit){
+	    //if(i == 35)
+	    //Message::toScreen("specLimit fail v= "+QString().setNum(vGates[j])+" sw= "+QString().setNum(swGates[j]));
+	  //  vGates[j]= velNull;
+	  //}
+	  //  if(fabs(vGates[j]) < velThresholdLimit) {
+	  //  if(i==35)
+	  //Message::toScreen("velLimit fail"+QString().setNum(fabs(vGates[j])));
+	  //  vGates[j] = velNull;
+	  //}
 	  if(vGates[j]!=velNull) {
 	    validBinCount[sweepIndex][j]++;
 	  }
@@ -969,7 +1022,7 @@ bool RadarQC::BB()
 	  float nyquistSum = float(numVGatesAveraged)*nyquistVelocity;
 	  float n = 0.0;
 	  int overMaxFold = 0;
-	  bool unaliased;
+	  bool dealiased;
 	  float segVelocity[numVGatesAveraged];
 	  for(int k = 0; k < numVGatesAveraged; k++)
 	    {
@@ -980,15 +1033,15 @@ bool RadarQC::BB()
 	      if(vGates[j]!=velNull)
 		{
 		  n = 0.0;
-		  unaliased = false;
-		  while(unaliased!=true)
+		  dealiased = false;
+		  while(dealiased!=true)
 		    {
 		      float tryVelocity = numVGatesAveraged
 			*(vGates[j]+(2*n*nyquistVelocity));
 		      if((sum+nyquistSum > tryVelocity)&&
 			 (tryVelocity > sum-nyquistSum))
 			{
-			  unaliased=true;
+			  dealiased=true;
 			} 
 		      else 
 			{
@@ -1002,8 +1055,9 @@ bool RadarQC::BB()
 					   +QString(" Gate# ")
 					   +QString().setNum(j)
 					   +QString(" exceeded maxfolds")));
+
 			    overMaxFold++;
-			    unaliased=true;
+			    dealiased=true;
 			    vGates[j]=velNull;
 			  }
 			}

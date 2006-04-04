@@ -63,10 +63,10 @@ class CappiGrid : public GriddedData
 	float el;
   };
 
-  goodRef refValues[20000];
-  goodVel velValues[60000];
-  int maxRefIndex;
-  int maxVelIndex;
+  goodRef refValues[200000];
+  goodVel velValues[200000];
+  long maxRefIndex;
+  long maxVelIndex;
   
 };
                

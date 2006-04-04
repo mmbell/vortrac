@@ -24,12 +24,12 @@ GriddedData::GriddedData()
   rad2deg = 180./Pi;
 
   // Setting default values
-  sphericalRangeSpacing = 1;
-  sphericalAzimuthSpacing = 1;
-  sphericalElevationSpacing = 1;
-  cylindricalRadiusSpacing = 1;
-  cylindricalAzimuthSpacing = 1;
-  cylindricalHeightSpacing = 1;
+  sphericalRangeSpacing = 1.0;
+  sphericalAzimuthSpacing = 1.0;
+  sphericalElevationSpacing = 1.0;
+  cylindricalRadiusSpacing = 1.0;
+  cylindricalAzimuthSpacing = 1.0;
+  cylindricalHeightSpacing = 1.0;
 
   refPointI = 0;
   refPointJ = 0;

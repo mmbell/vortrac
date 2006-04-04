@@ -22,13 +22,6 @@
   config->read(configFile);
   QDomElement radar = config->getRoot().firstChildElement("analytic_radar");
   QString sampling = config->getParam(radar, "sample");
-
-  // testing Message::toScreen("Should We Sample ? "+sampling);
-
-  //if(radar.isNull())
-  //  Message::toScreen("Null Element");
-  //else
-  //  Message::toScreen("Maybe theft");
   
   if (sampling == QString("false") || sampling == QString("no")) {
     isDealiased(true);
@@ -103,13 +96,12 @@ Ray AnalyticRadar::addRay()
   newRay->setRayIndex(numRays);
   
   float elevAngle = Sweeps[numSweeps-1].getElevation();
-  //float azimAngle = beamWidth*(90-(newRay->getRayIndex()-Sweeps[numSweeps-1].getFirstRay()));
 
-  float metAzimAngle =  beamWidth*(newRay->getRayIndex()-Sweeps[numSweeps-1].getFirstRay());
+  float metAzimAngle =  beamWidth*(float)(newRay->getRayIndex()-Sweeps[numSweeps-1].getFirstRay());
   
-  float azimAngle = 450-metAzimAngle;
-  if(azimAngle >= 360)
-    azimAngle-=360;
+  float azimAngle = 450.0-metAzimAngle;
+  if(azimAngle >= 360.0)
+    azimAngle-=360.0;
   newRay->setAzimuth( metAzimAngle );
   newRay->setElevation( elevAngle );
   newRay->setNyquist_vel( nyqVel );
@@ -127,7 +119,9 @@ Ray AnalyticRadar::addRay()
     if(raw_ref_positions[z] > furthestPosition)
       furthestPosition = raw_ref_positions[z];
   }
-  //  int numRefGates = (int)ceil(furthestPosition/refGateSp);
+
+  //int numRefGates = (int)ceil(furthestPosition/refGateSp);
+  
   int numRefGates = 300;
   float *ref_data = new float[numRefGates];
   float gateBoundary = 0;
@@ -138,7 +132,7 @@ Ray AnalyticRadar::addRay()
       int count = 0;
       for(int p = 0; p < numPoints; p++) {
 	if((raw_ref_positions[p] > gateBoundary) 
-	   && (raw_ref_positions[p] < gateBoundary+refGateSp)) {
+	   && (raw_ref_positions[p] <= (gateBoundary+refGateSp))) {
 	  refSum+= raw_ref_data[p];
 	  count++;
 	}
@@ -149,7 +143,7 @@ Ray AnalyticRadar::addRay()
 	ref_data[gateNum] = -999;
     }
     else {
-      ref_data[gateNum] = 0;
+      ref_data[gateNum] = -999;
     }
     gateBoundary+=refGateSp;
   }
@@ -162,7 +156,7 @@ Ray AnalyticRadar::addRay()
   //  int gateNum = 0;
   int numVelGates = 300;
   float *vel_data = new float[numVelGates];
-  float *sw_data = new float [numVelGates];
+  float *sw_data = new float[numVelGates];
   gateBoundary = 0;
   
   for(int gateNum = 0; gateNum < numVelGates; gateNum++ ) {
@@ -171,7 +165,7 @@ Ray AnalyticRadar::addRay()
       int count = 0;
       for(int p = 0; p < numPoints; p++) {
 	if ((raw_ref_positions[p] > gateBoundary) 
-	    && (raw_ref_positions[p] < gateBoundary+velGateSp)) {
+	    && (raw_ref_positions[p] <= (gateBoundary+velGateSp))) {
 	  velSum += raw_vel_data[p];
 	  count++;
 	}
@@ -182,15 +176,7 @@ Ray AnalyticRadar::addRay()
       }
       else {
 	vel_data[gateNum] = velSum*cos(elevAngle*deg2rad)/(float)count;
-       	//while(fabs(vel_data[gateNum]) > nyqVel) {
-	//  if(vel_data[gateNum] > 0) {
-	//    vel_data[gateNum]-=nyqVel;
-	//  }
-	//  else {
-	//    vel_data[gateNum]+=nyqVel;
-	//  }
-       	//}
-	
+
 	float *sw_points = new float[count];
 	int countAgain = 0;
 	for(int p = 0; p < numPoints; p++) {
@@ -205,24 +191,35 @@ Ray AnalyticRadar::addRay()
 	  swSum = (sw_points[q]-vel_data[gateNum])*(sw_points[q]-vel_data[gateNum]);
 	}
 	sw_data[gateNum] = sqrt(swSum/(float)count);
+
+       	while(fabs(vel_data[gateNum]) > nyqVel) {
+	  if(vel_data[gateNum] > 0) {
+	    vel_data[gateNum]-=2*nyqVel;
+	  }
+	  else {
+	    vel_data[gateNum]+=2*nyqVel;
+	  }
+       	}
       }
     }
     else {
-      vel_data[gateNum] = 0;
-      sw_data[gateNum] = 0;
+      vel_data[gateNum] = -999;
+      sw_data[gateNum] = -999;
     } 
     gateBoundary+=velGateSp;
   }
 
   
-  if(numRays%5 == 0) {
-    /*  Message::toScreen("RAY #:"+QString().setNum(numRays)+" azimuth "+QString().setNum(azimAngle)+" #refGates: "+QString().setNum(numRefGates)+" midRefValue "+QString().setNum(ref_data[numRefGates/2])+" #velGates: "+QString().setNum(numVelGates)+" midVelValue "+QString().setNum(vel_data[numVelGates/2]));
-     */
+  /*
+  if(numRays == 5) {
+    Message::toScreen("RAY #:"+QString().setNum(numRays)+" azimuth "+QString().setNum(azimAngle)+" #refGates: "+QString().setNum(numRefGates)+" midRefValue "+QString().setNum(ref_data[numRefGates/2])+" #velGates: "+QString().setNum(numVelGates)+" midVelValue "+QString().setNum(vel_data[numVelGates/2]));
+    
     QString print;
-    for(int p = 0; p < numRefGates; p+=5)
-      print+= " "+QString().setNum(ref_data[p]);
-    //testing Message::toScreen("RAY #:"+QString().setNum(numRays)+" azimuth "+QString().setNum(azimAngle)+print);
+    for(int p = 0; p < numVelGates; p+=2)
+      print+= " "+QString().setNum(vel_data[p]);
+    Message::toScreen("RAY #:"+QString().setNum(numRays)+" azimuth "+QString().setNum(azimAngle)+print);
   }
+  */
     
   newRay->setRefData( ref_data );
   newRay->setVelData( vel_data );
@@ -239,7 +236,7 @@ Ray AnalyticRadar::addRay()
   // With Useful info
 
   //newRay->setVelResolution( radarHeader->velocity_resolution );
-  //newRay->setUnambig_range( (radarHeader->unamb_range_x10) / 10.0 );
+  newRay->setUnambig_range( numVelGates*velGateSp);
   newRay->setFirst_ref_gate(0);
   newRay->setFirst_vel_gate(0);
 
@@ -284,9 +281,17 @@ bool AnalyticRadar::readVolumeAnalytic()
   //  radarLat = config->getParam(radar, "radarY").toFloat();
   //  radarLon = config->getParam(radar, "radarX").toFloat();
   nyqVel= config->getParam(radar, "nyquistVel").toFloat();
+
   refGateSp = config->getParam(radar, "refgatesp").toFloat();
   velGateSp = config->getParam(radar, "velgatesp").toFloat();
   beamWidth = config->getParam(radar, "beamwidth").toFloat();
+  QString sendToDealias = config->getParam(radar, "dealiasdata");
+  if((sendToDealias == "true")||(sendToDealias == "True")
+     ||(sendToDealias=="TRUE")){
+    isDealiased(false);
+  }
+  else
+    isDealiased(true);
 
   radarDateTime = QDateTime::currentDateTime();
 
@@ -330,8 +335,7 @@ bool AnalyticRadar::readVolumeAnalytic()
     }  
     Sweeps[n].setLastRay(numRays-1);
   }
-  bool yes = true;
-  isDealiased(yes);
+
   return true;
 }
 

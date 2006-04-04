@@ -6,7 +6,7 @@
   </mm5>
   <wind_field>
      <rmw>30</rmw>
-     <vt0>70</vt0>
+     <vt0>65</vt0>
      <vr0>0</vr0>        
      <vt1>0</vt1>
      <vt1angle>0</vt1angle>
@@ -25,5 +25,6 @@
      <refgatesp>1</refgatesp>
      <beamwidth>1</beamwidth>
      <nyquistVel>100</nyquistVel>
+     <dealiasdata>false</dealiasdata>
   </analytic_radar>
 </vortrac>

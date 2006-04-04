@@ -32,6 +32,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 					float *vortexLat, float *vortexLon)
 {
   Message::toScreen("IN CAPPI GRID DATA");
+
   // Set the output file
   QString cappiPath = cappiConfig.firstChildElement("dir").text();
   QString cappiFile = radarData->getDateTimeString();
@@ -58,28 +59,40 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   relDist = relEarthLocation(radarData->getRadarLat(), 
 			     radarData->getRadarLon(),
 			     vortexLat, vortexLon);
-  float vXDistance =  iDim/2*iGridsp;
-  float vYDistance =  jDim/2*jGridsp;
-  setZeroLocation(vortexLat, vortexLon,&vXDistance,&vYDistance);
+  /*
+    The old way of doing things....
+
+    float vXDistance =  iDim/2*iGridsp;
+    float vYDistance =  jDim/2*jGridsp;
+    setZeroLocation(vortexLat, vortexLon,&vXDistance,&vYDistance);
+    latReference = *vortexLat;
+    lonReference = *vortexLon;
+  */
+  
+  float rXDistance =  0;
+  float rYDistance =  0;
+
+  setZeroLocation(radarData->getRadarLat(), radarData->getRadarLon(),
+		  &rXDistance,&rYDistance);
 
   xmin = nearbyintf(relDist[0] - (iDim/2)*iGridsp);
   xmax = nearbyintf(relDist[0] + (iDim/2)*iGridsp);
   ymin = nearbyintf(relDist[1] - (jDim/2)*jGridsp);
   ymax = nearbyintf(relDist[1] + (jDim/2)*jGridsp);
 
-  //testing Message::toScreen("xmax = "+QString().setNum(xmax)+" xmin "+QString().setNum(xmin));
-   //testing Message::toScreen("ymax = "+QString().setNum(ymax)+" ymin "+QString().setNum(ymin));
+  //  Message::toScreen("xmax = "+QString().setNum(xmax)+" xmin "+QString().setNum(xmin));
+  //  Message::toScreen("ymax = "+QString().setNum(ymax)+" ymin "+QString().setNum(ymin));
 
-  latReference = *vortexLat;
-  lonReference = *vortexLon;
+  latReference = *radarData->getRadarLat();
+  lonReference = *radarData->getRadarLon();
   float distance = sqrt(relDist[0] * relDist[0] + relDist[1] * relDist[1]);
   float beamHeight = radarData->radarBeamHeight(distance, radarData->getSweep(0)->getElevation());
   zmin = (float(int(beamHeight/kGridsp)))*kGridsp;
   zmax = zmin + kDim*kGridsp;
   
   // Find good values
-  int r = 0;
-  int v = 0;
+  long r = 0;
+  long v = 0;
   
   for (int n = 0; n < radarData->getNumRays(); n++) {
     Ray* currentRay = radarData->getRay(n);
@@ -93,6 +106,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 		if (refData[g] == -999.) { continue; }
 		float range = float(currentRay->getFirst_ref_gate() +
 				    (g * currentRay->getRef_gatesp()))/1000.;
+
 		float x = range*sin(phi)*cos(theta);
 		if ((x < (xmin - iGridsp)) or x > (xmax + iGridsp)) { continue; }
 		float y = range*sin(phi)*sin(theta);
@@ -109,48 +123,75 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 		refValues[r].rg = range;
 		refValues[r].az = currentRay->getAzimuth();
 		refValues[r].el = currentRay->getElevation();
+		/*
+		if(r == 888){
+		  QString print("r = "+QString().setNum(r));
+		  print+=" Range= "+QString().setNum(range);
+		  print+=" x= "+QString().setNum(x);
+		  print+=" y= "+QString().setNum(y);
+		  print+=" z= "+QString().setNum(z);
+		  print+=" ref= "+QString().setNum(refData[g]);
+		  Message::toScreen(print);
+		}
+		*/
 		r++;
       }
-
+      
     }
     if (currentRay->getVel_numgates() > 0) {
-
+      
       float* velData = currentRay->getVelData();
       float* swData = currentRay->getSwData();
       for (int g = 0; g <= (currentRay->getVel_numgates()-1); g++) {
 		if (velData[g] == -999.) { continue; }
+		
 		float range = float(currentRay->getFirst_vel_gate() +
-					  (g * currentRay->getVel_gatesp()))/1000.;
+				    (g * currentRay->getVel_gatesp()))/1000.;
 		float x = range*sin(phi)*cos(theta);
 		if ((x < (xmin - iGridsp)) or x > (xmax + iGridsp)) { continue; }
 		float y = range*sin(phi)*sin(theta);
 		if ((y < (ymin - jGridsp)) or y > (ymax + jGridsp)) { continue; }
 		float z = radarData->radarBeamHeight(range,
-					     currentRay->getElevation() );
+						     currentRay->getElevation() );
 		if ((z < (zmin - kGridsp)) or z > (zmax + kGridsp)) { continue; }
-
+		
+		
 		// Looks like a good point
 		velValues[v].velValue = velData[g];
 		velValues[v].swValue = swData[g];
 		velValues[v].x = x;
 		velValues[v].y = y;
 		velValues[v].z = z;
-		velValues[r].rg = range;
-		velValues[r].az = currentRay->getAzimuth();
-		velValues[r].el = currentRay->getElevation();
+		velValues[v].rg = range;
+		velValues[v].az = currentRay->getAzimuth();
+		velValues[v].el = currentRay->getElevation();
+		/*
+		if(v == 888){
+		  QString print("v = "+QString().setNum(v));
+		  print+=" Range= "+QString().setNum(range);
+		  print+=" x= "+QString().setNum(x);
+		  print+=" y= "+QString().setNum(y);
+		  print+=" z= "+QString().setNum(z);
+		  print+=" vel= "+QString().setNum(velData[g]);
+		  Message::toScreen(print);
+		}
+		*/
 		v++;
+
       }
-	  
+      
     }
-
+    
   }
-
-  //testing Message::toScreen("r = "+QString().setNum(r)+" v = "+QString().setNum(v));
-
+  //  Message::toScreen("r = "+QString().setNum(r)+" v = "+QString().setNum(v));
+  
   // Subtract off one from the count for iterative purposes
   maxRefIndex = r - 1;
   maxVelIndex = v - 1;
 
+  if((maxRefIndex > 199999)||(maxVelIndex >199999))
+    Message::toScreen("Gone out of array bounds in CappiGrid.ccp velValues or refValues");
+  
   // Interpolate the data depending on method chosen
   QString interpolation = cappiConfig.firstChildElement("interpolation").text();
   Message::toScreen("Using "+interpolation+" interpolation ");
@@ -159,13 +200,14 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   } else if (interpolation == "cressman") {
     CressmanInterpolation();
   }
-
+  
   // Set the initial field names
   fieldNames << "DZ" << "VE" << "SW";
-
+  
   Message::toScreen("Completed Cappi Process");
-
+  
 }
+
 void CappiGrid::CressmanInterpolation()
 {
 
@@ -191,7 +233,7 @@ void CappiGrid::CressmanInterpolation()
 	float refWeight = 0;
 	float velWeight = 0;
 
-	for (int n = 0; n <= maxRefIndex; n++) {
+	for (long n = 0; n <= maxRefIndex; n++) {
 	  float dx = refValues[n].x - (xmin + i*iGridsp);
 	  float dy = refValues[n].y - (ymin + j*jGridsp);
 	  float dz = refValues[n].z - (zmin + k*kGridsp);
@@ -199,16 +241,16 @@ void CappiGrid::CressmanInterpolation()
 	  if (rSquare > RSquare) { continue; }
 	  
 	  float weight = (RSquare - rSquare) / (RSquare + rSquare);
-
+	  
 	  refWeight += weight;
 	  sumRef += weight*refValues[n].refValue;
-
+	  
 	}
-
-	for (int n = 0; n <= maxVelIndex; n++) {
+	
+	for (long n = 0; n <= maxVelIndex; n++) {
 	  float dx = velValues[n].x - (xmin + i*iGridsp);
 	  float dy = velValues[n].y - (ymin + j*jGridsp);
-	  float dz = velValues[n].z - (zmin + k*iGridsp);
+	  float dz = velValues[n].z - (zmin + k*kGridsp);
 	  float rSquare = (dx*dx) + (dy*dy) + (dz*dz);
 	  if (rSquare > RSquare) { continue; }
 	  
@@ -219,14 +261,14 @@ void CappiGrid::CressmanInterpolation()
 	  sumSw += weight*velValues[n].swValue;
 
 	}
-
+	
 	if (refWeight > 0) {
 	  dataGrid[0][i][j][k] = sumRef/refWeight;
 	}
 	if (velWeight > 0) {
 	  dataGrid[1][i][j][k] = sumVel/velWeight;
 	  dataGrid[2][i][j][k] = sumSw/velWeight;
-	}	  
+	}
       }
     }
   }
@@ -236,6 +278,8 @@ void CappiGrid::BarnesInterpolation()
 {
 
   // Barnes Interpolation (see Koch et al, 1983 for details)
+
+  // Barnes Interpolation does not seem to be working right now -LM
 
   float falloff_x = 5.052*pow((4* iGridsp / Pi),2);
   float falloff_y = 5.052*pow((4* jGridsp / Pi),2);

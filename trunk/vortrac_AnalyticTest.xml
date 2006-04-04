@@ -9,7 +9,7 @@
     <radar>
         <name>WSR-88D</name>
         <lat>0.00</lat>
-        <lon>0.00</lon>
+        <lon>0.90</lon>
         <dir>/scr/science40/mauger/Working/trunk/vortrac_defaultAnalyticTC.xml</dir>
         <format>MODEL</format>
         <startdate>2005-1-1</startdate>
@@ -24,7 +24,7 @@
         <zdim>1</zdim>
         <xgridsp>1.0</xgridsp>
         <ygridsp>1.0</ygridsp>
-        <zgridsp>1.0</zgridsp>
+        <zgridsp>2.0</zgridsp>
         <ref_min>-15.0</ref_min>
         <ref_max>65.0</ref_max>
         <vel_min>-100.0</vel_min>
