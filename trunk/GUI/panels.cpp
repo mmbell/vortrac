@@ -141,24 +141,47 @@ bool VortexPanel::updateConfig()
 RadarPanel::RadarPanel()
 {
   QLabel *radarNameLabel = new QLabel(tr("Radar Name:"));
-  radarName = new QLineEdit();
+  radarName = new QComboBox();
+  radars = new Configuration(this,QString("vortrac_radarList.xml"));
+  connect(radars, SIGNAL(log(const Message&)),
+	  this, SLOT(catchLog(const Message&)));
+  radars->read(QString("vortrac_radarList.xml"));
+  QDomNodeList radarList = 
+    radars->getRoot().firstChildElement().childNodes();
+  for (int i = 0; i <= radarList.count()-1; i++) 
+    {
+      QDomNode curNode = radarList.item(i);
+      radarName->addItem(curNode.firstChildElement(QString("text")).text());
+    }
+  radarName->setEditable(false);
+  
   QHBoxLayout *name = new QHBoxLayout;
   name->addWidget(radarNameLabel);
   name->addWidget(radarName);
 
   QLabel *latLabel = new QLabel(tr("Radar Latitude:"));
-  latBox = new QDoubleSpinBox;
-  latBox->setRange(-999,999);
+  radarLatBox = new QDoubleSpinBox;
+  radarLatBox->setRange(-999,999);
+  radarLatBox->setDecimals(3);
   QHBoxLayout *lat = new QHBoxLayout;
   lat->addWidget(latLabel);
-  lat->addWidget(latBox);
+  lat->addWidget(radarLatBox);
 
   QLabel *longLabel = new QLabel(tr("Radar Longitude"));
-  longBox = new QDoubleSpinBox();
-  longBox->setRange(-999, 999);
+  radarLongBox = new QDoubleSpinBox();
+  radarLongBox->setDecimals(3);
+  radarLongBox->setRange(-999, 999);
   QHBoxLayout *longitude = new QHBoxLayout;
   longitude->addWidget(longLabel);
-  longitude->addWidget(longBox);
+  longitude->addWidget(radarLongBox);
+
+  QLabel *altLabel = new QLabel(tr("Radar Altitude"));
+  radarAltBox = new QDoubleSpinBox();
+  radarAltBox->setDecimals(3);
+  radarAltBox->setRange(-999, 999);
+  QHBoxLayout *altitude = new QHBoxLayout;
+  altitude->addWidget(altLabel);
+  altitude->addWidget(radarAltBox);
 
   QLabel *radarDirLabel = new QLabel(tr("Radar Data Directory"));
   dir = new QLineEdit();
@@ -170,10 +193,17 @@ RadarPanel::RadarPanel()
   radarDirLayout->addWidget(browse, 1, 3);
 
   QLabel *radarFormatLabel = new QLabel(tr("Data Format"));
+  radarFormatOptions = new QHash<QString, QString>;
+  radarFormatOptions->insert(QString("Select a Radar Data Format"),
+			     QString(""));
+  radarFormatOptions->insert(QString("Level II"), QString("LEVELII"));
+  radarFormatOptions->insert(QString("Analytic Model"), QString("MODEL"));
   radarFormat = new QComboBox();
-  radarFormat->addItem(tr("Select a Radar Data Format"));
-  radarFormat->addItem(tr("LEVEL II"));
-  radarFormat->addItem(tr("Analytic Model"));
+  QList<QString> options = radarFormatOptions->keys();
+  for(int i = 0; i < options.count(); i++) 
+    {
+      radarFormat->addItem(options[i]);
+    }
   radarFormat->setEditable(false);
   QHBoxLayout *radarFormatLayout = new QHBoxLayout;
   radarFormatLayout->addWidget(radarFormatLabel);
@@ -198,6 +228,7 @@ RadarPanel::RadarPanel()
   mainLayout->addLayout(name);
   mainLayout->addLayout(lat);
   mainLayout->addLayout(longitude);
+  mainLayout->addLayout(altitude);
   mainLayout->addLayout(radarDirLayout);
   mainLayout->addLayout(radarFormatLayout);
   mainLayout->addLayout(startLayout);
@@ -205,11 +236,11 @@ RadarPanel::RadarPanel()
   mainLayout->addStretch(1);
   setLayout(mainLayout);
 
-  connect(radarName, SIGNAL(textChanged(const QString&)), 
+  connect(radarName, SIGNAL(activated(const QString&)), 
 	  this, SLOT(valueChanged()));
-  connect(latBox, SIGNAL(valueChanged(const QString&)), 
+  connect(radarLatBox, SIGNAL(valueChanged(const QString&)), 
 	  this, SLOT(valueChanged(const QString&)));
-  connect(longBox, SIGNAL(valueChanged(const QString&)), 
+  connect(radarLongBox, SIGNAL(valueChanged(const QString&)), 
 	  this, SLOT(valueChanged(const QString&))); 
   connect(dir, SIGNAL(textChanged(const QString&)), 
 	  this, SLOT(valueChanged(const QString&)));
@@ -221,8 +252,104 @@ RadarPanel::RadarPanel()
 	  this, SLOT(valueChanged(const QDateTime&)));
   connect(radarFormat, SIGNAL(activated(const QString&)),
 	  this, SLOT(checkForAnalytic(const QString&)));
+  connect(radarName, SIGNAL(activated(const QString&)),
+	  this, SLOT(radarChanged(const QString&)));
   setPanelChanged(false);
 
+}
+
+void RadarPanel::fillRadarHash()
+{
+  /*
+  radarNameOptions = new QHash<QString, QString>;
+  radarLocations = new QHash<QString, QPointF>;
+  radarNameOptions->insert(QString("Please select a radar"), QString(""));
+  radarLocations->insert(QString("Please select a radar"), QPointF(0.0,0.0));
+  radarNameOptions->insert(QString("RCWF in Taiwan"),QString("RCWF"));
+  radarLocations->insert(QString("RCWF in Taiwan"), QPointF(121.773, 25.073));
+  radarLocations->insert(QString("TJUA in San Juan Puerto Rico"), 
+			 QPointF(-66.078, 18.116));
+  radarLocations->insert(QString("KENX in Albany, NY"), 
+			 QPointF(-74.064, 42.586));
+  radarLocations->insert(QString("Anderson_AFB in Guam"), 
+			 QPointF(144.811,13.453));
+  radarLocations->insert(QString("KFFC in Atlanta, GA"),
+			 QPointF(-84.567, 33.364));
+  radarLocations->insert(QString("KEWX in Austin/San Antonio, TX"),
+			 QPointF(-98.028, 29.704));
+  radarLocations->insert(QString("KBGM in Binghamton, NY"),
+			 QPointF(-75.985, 42.200));
+  radarLocations->insert(QString("KBMX in Birmingham, AL"),
+			 QPointF(-86.770, 33.172));
+  radarLocations->insert(QString("KBOX in Boston, MA"), 
+			 QPointF(-71.137, 41.956));
+  radarLocations->insert(QString("KBRO in Brownsville, TX"),
+			 QPointF(-97.419, 25.916));
+  radarLocations->insert(QString("RKSG in Camp Humphreys, South Korea"),
+			 QPointF(127.021, 36.956));
+  radarLocations->insert(QString("KCLX in Charleston, SC"),
+			 QPointF(-81.042, 32.656));
+  radarLocations->insert(QString("KCAE in Columbia SC"),
+			 QPointF(-81.118, 33.949));
+  radarLocations->insert(QString("KCRP in Corpus Christi, TX"),
+			 QPointF(-97.511,27.784));
+  radarLocations->insert(QString("KDOX at Dover AFB, DE"),
+			 QPointF(-75.440,38.826));
+  radarLocations->insert(QString("KDYX at Dyess AFB, TX"),
+			 QPointF(-99.254, 32.538));
+  radarLocations->insert(QString("KEVX at Eglin AFB, FL"),
+			 QPointF(-85.921, 30.564));
+  radarLocations->insert(QString("KPOE at Fort Polk, LA"),
+			 QPointF(-92.976, 31.156));
+  radarLocations->insert(QString("KCBW in Houlton, ME"),
+			 QPointF(-67.806, 46.039));
+  radarLocations->insert(QString("KHGX in Galveston, TX"),
+			 QPointF(-95.079, 29.742));
+  radarLocations->insert(QString("KJAN in Jackson, MS"),
+			 QPointF(-90.080,32.318));
+  radarLocations->insert(QString("KJAX in JacksonVille, FL"),
+			 QPointF(81.701, 30.485));
+  radarLocations->insert(QString("RODN in Kadena Okinawa, Japan"),
+			 QPointF(127.910, 26.302));
+  radarLocations->insert(QString("KBYX in Key West, FL"),
+			 QPointF(-81.703, 24.598));
+  radarLocations->insert(QString("KLCH in Lake Charles, LA"),
+			 QPointF(-93.216, 30.125));
+  radarLocations->insert(QString("KMXX in Maxwell ARB, AL"),
+			 QPointF(-85.790, 32.537));
+  radarLocations->insert(QString("KMLB in Melbourne, FL"),
+			 QPointF(-80.654, 28.113));
+  radarLocations->insert(QString("KAMX in Miami, FL"),
+			 QPointF(-80.413, 25.611));
+  radarLocations->insert(QString("KMOB in Mobile, AL"),
+			 QPointF(-88.240, 30.679));
+  radarLocations->insert(QString("KVAX at Moody AFB, GA"),
+			 QPointF(-83.390, 30.390));
+  radarLocations->insert(QString("KMHX in Morehead City, NC"),
+			 QPointF(-76.876, 34.776));
+  radarLocations->insert(QString("KLIX in New Orleans, LA"),
+			 QPointF(-89.826, 30.337));
+  radarLocations->insert(QString("KOKX in New York City, NY"),
+			 QPointF(-72.864, 40.866));
+  radarLocations->insert(QString("KAKO, in Richmond, VA"),
+			 QPointF(-77.007, 36.984));
+  radarLocations->insert(QString("KRAX in Raleigh, NC"),
+			 QPointF(-78.490, 35.666));
+  radarLocations->insert(QString("PHKI in South Kauai, HI"),
+			 QPointF(-159.552, 21.894));
+  radarLocations->insert(QString("KLWX in Sterling, VA"),
+			 QPointF(-77.478, 38.975));
+  radarLocations->insert(QString("KTLH in Tallahassee, FL"),
+			 QPointF(-84.329, 30.398));
+  radarLocations->insert(QString("KTBW in Tampa, FL"),
+			 QPointF(-82.402, 27.706 ));
+  radarLocations->insert(QString("KLTX in Wilmington, NC"),
+			 QPointF(-78.429, 33.990));
+  radarLocations->insert(QString("Other Radar...."),
+			 QPointF(0.0, 0.0));
+*/
+
+  
 }
 
 
@@ -239,30 +366,35 @@ void RadarPanel::updatePanel(const QDomElement panelElement)
     QString name = child.tagName();
     QString parameter = child.text();
     if(name == "name") {
-      radarName->clear();
-      radarName->insert( parameter); }
+      int index = radarName->findText(parameter, 
+				      Qt::MatchStartsWith);
+      if (index != -1)
+	radarName->setCurrentIndex(index);
+      else 
+	radarName->setCurrentIndex(0);}
     if (name == "lat") {
-      latBox->setValue(parameter.toDouble()); }
+      radarLatBox->setValue(parameter.toFloat()); }
     if (name == "lon") {
-      longBox->setValue(parameter.toDouble()); }
+      radarLongBox->setValue(parameter.toFloat()); }
+    if(name == "alt") {
+      radarAltBox->setValue(parameter.toFloat()); }
     if (name == "dir") {
       dir->clear();
       dir->insert(parameter); }
-    if (name == "format"); {
-      if(parameter == QString("LEVELII")) {
-	parameter = QString("LEVEL II");
-      connectBrowse();}
-      if(parameter == QString("MODEL")) {
-	parameter = QString("Analytic Model");
-	connectFileBrowse(); }
-      int index = radarFormat->findText(parameter);
+    if (name == "format") {
+      if(parameter == QString("MODEL"))
+	connectFileBrowse(); 
+      else 
+	connectBrowse();
+      int index = radarFormat->findText(radarFormatOptions->key(parameter), 
+					Qt::MatchStartsWith);
       if (index != -1)
 	radarFormat->setCurrentIndex(index);
     }
     if (name == "startdate") {
-      startDateTime->setDate(QDate::fromString(parameter, "yyyy-M-d")); }
+      startDateTime->setDate(QDate::fromString(parameter, "yyyy-MM-dd")); }
     if (name == "enddate") {
-      endDateTime->setDate(QDate::fromString(parameter, "yyyy-M-d")); }
+      endDateTime->setDate(QDate::fromString(parameter, "yyyy-MM-dd")); }
     if (name == "starttime") {
       startDateTime->setTime(QTime::fromString(parameter, "hh:mm:ss")); }
     if (name == "endtime") {
@@ -284,31 +416,38 @@ bool RadarPanel::updateConfig()
 	emit log(Message("Start Date and Time must occur before End Date and Time"));
 	return false;
       }
-      if(element.firstChildElement("name").text()!=radarName->text()) {
-	emit changeDom(element, "name", radarName->text());
+      if(element.firstChildElement("name").text()!=
+	 radarName->currentText().left(4)) {
+	emit changeDom(element, "name", 
+		       radarName->currentText().left(4));
       }
       if(element.firstChildElement("lat").text().toDouble()
-	 !=latBox->value()) {
+	 !=radarLatBox->value()) {
 	emit changeDom(element, QString("lat"), 
-		       QString().setNum(latBox->value()));
+		       QString().setNum(radarLatBox->value()));
       }
       if(element.firstChildElement("lon").text().toDouble()
-	 !=longBox->value()) {
+	 !=radarLongBox->value()) {
 	emit changeDom(element, QString("lon"), 
-		       QString().setNum(longBox->value()));
+		       QString().setNum(radarLongBox->value()));
+      }
+      if(element.firstChildElement("alt").text().toFloat()
+	 !=radarAltBox->value()) {
+	emit changeDom(element, QString("alt"),
+		       QString().setNum(radarAltBox->value()));
       }
       if(element.firstChildElement("dir").text()!=dir->text()) {
 	emit changeDom(element, QString("dir"), dir->text());
       }
       if(element.firstChildElement("startdate").text()
-	 !=startDateTime->date().toString("yyyy-M-d")) {
+	 !=startDateTime->date().toString("yyyy-MM-dd")) {
 	emit changeDom(element, QString("startdate"), 
-		       startDateTime->date().toString("yyyy-M-d"));
+		       startDateTime->date().toString("yyyy-MM-dd"));
       }
       if(element.firstChildElement("enddate").text()
-	 !=endDateTime->date().toString("yyyy-M-d")) {
+	 !=endDateTime->date().toString("yyyy-MM-dd")) {
 	emit changeDom(element, QString("enddate"), 
-		       endDateTime->date().toString("yyyy-M-d"));
+		       endDateTime->date().toString("yyyy-MM-dd"));
       }
       if(element.firstChildElement("starttime").text()
 	 !=startDateTime->time().toString("hh:mm:ss")) {
@@ -321,21 +460,19 @@ bool RadarPanel::updateConfig()
 		       endDateTime->time().toString("hh:mm:ss"));
       }
       if(element.firstChildElement("format").text()
-	 !=radarFormat->currentText()) {
-	if (radarFormat->currentText()==QString("LEVEL II")) {
-	  emit changeDom(element, QString("format"), QString("LEVELII"));
-	  connectBrowse();}
-	if (radarFormat->currentText()==QString("Analytic Model")) {
-	  emit changeDom(element, QString("format"), QString("MODEL"));
-	  connectFileBrowse();}
+	 !=radarFormatOptions->value(radarFormat->currentText())) {
+	if (radarFormat->currentText()==QString("Analytic Model")) 
+	  connectFileBrowse();
 	else
-	  emit changeDom(element, QString("format"), 
-			 radarFormat->currentText());
+	  connectBrowse();
+	emit changeDom(element, QString("format"), 
+		       radarFormatOptions->value(radarFormat->currentText()));
       }
     }
   setPanelChanged(false);
   return true;
 }
+
 
 CappiPanel::CappiPanel()
 {
@@ -436,9 +573,19 @@ CappiPanel::CappiPanel()
   adv->addWidget(advDirBox);
 
   QLabel *interpolation = new QLabel(tr("Interpolation"));
+  interpolationMethod = new QHash<QString, QString>;
+  interpolationMethod->insert(QString("Cressman Interpolation"),
+			      QString("cressman"));
+  interpolationMethod->insert(QString("Barnes Interpolation"),
+			      QString("barnes"));
+  interpolationMethod->insert(QString("Select Interpolation Method"), 
+			      QString(""));
   intBox = new QComboBox;
-  intBox->addItem("Select Interpolation Format");
-  intBox->addItem("Bilinear Interpolation");
+  QList<QString> options = interpolationMethod->keys();
+  for(int i = 0; i < options.count(); i++)
+    {
+      intBox->addItem(options[i]);
+    }
   QHBoxLayout *interpolationLayout = new QHBoxLayout;
   interpolationLayout->addWidget(interpolation);
   interpolationLayout->addWidget(intBox);
@@ -525,7 +672,8 @@ void CappiPanel::updatePanel(const QDomElement panelElement)
     if( name == "adv_dir") {
       advDirBox->setValue(parameter.toDouble()); }
     if (name == "interpolation") {
-      int index = intBox->findText(parameter, Qt::MatchStartsWith);
+      int index = intBox->findText(interpolationMethod->key(parameter),
+				   Qt::MatchStartsWith);
       if (index != -1)
 	intBox->setCurrentIndex(index);
     }
@@ -606,13 +754,10 @@ bool CappiPanel::updateConfig()
 		       QString().setNum(advDirBox->value()));
       }
       if(element.firstChildElement("interpolation").text()
-	 !=intBox->currentText()) 
+	 !=interpolationMethod->value(intBox->currentText())) 
 	{
-	  if (intBox->currentText()==QString("Bilinear Interpolation"))
-	    emit changeDom(element, QString("interpolation"), QString("bilinear"));
-	  else
-	    emit changeDom(element, QString("interpolation"), 
-			   intBox->currentText());
+	  emit changeDom(element, QString("interpolation"),
+			 interpolationMethod->value(intBox->currentText()));
 	}
     }
   setPanelChanged(false);

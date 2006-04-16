@@ -10,6 +10,7 @@
         <name>KTBW</name>
         <lat>27.7056</lat>
         <lon>-82.4017</lon>
+        <alt>0.00</alt>
         <dir>/scr/science40/mauger/charley/levelii</dir>
         <format>LEVELII</format>
         <startdate>2004-08-01</startdate>

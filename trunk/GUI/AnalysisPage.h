@@ -21,6 +21,7 @@
 #include "Threads/PollThread.h"
 #include "GraphFace.h"
 #include "ConfigurationDialog.h"
+#include "DiagnosticPanel.h"
 
 #include "TestGraph.h"
 
@@ -76,7 +77,8 @@ class AnalysisPage : public QWidget
   QString vortexLabel;
   QString configFileName;
   Configuration *configData;
-  ConfigTree *configTree;
+  // ConfigTree *configTree;
+  DiagnosticPanel *diagPanel;
   Log *statusLog;
   QTextEdit *statusText;
   int lastMax;

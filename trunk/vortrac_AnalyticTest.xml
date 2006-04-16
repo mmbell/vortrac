@@ -10,6 +10,7 @@
         <name>WSR-88D</name>
         <lat>0.00</lat>
         <lon>0.90</lon>
+        <alt>0.00</alt>
         <dir>/scr/science40/mauger/Working/trunk/vortrac_defaultAnalyticTC.xml</dir>
         <format>MODEL</format>
         <startdate>2005-1-1</startdate>

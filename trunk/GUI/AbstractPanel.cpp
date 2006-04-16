@@ -14,7 +14,7 @@
 #include "Message.h"
 #include <QGridLayout>
 #include <QLabel>
-
+#include <QDialog>
 
 #include <QFileDialog>
 
@@ -191,4 +191,43 @@ void AbstractPanel::checkForAnalytic(const QString& format)
   if(format ==  QString("Analytic Model"))
     connectFileBrowse();
 
+}
+
+void AbstractPanel::buildRadarConfiguration()
+{
+
+}
+
+void AbstractPanel::radarChanged(const QString& text)
+{
+
+  QDomElement allRadars = radars->getRoot().firstChildElement();
+  QString getEditPanel = allRadars.firstChildElement("OTHER").firstChildElement("text").text();
+  if(text == getEditPanel){
+    // If the other option is selected a panel appears for editing and adding
+    // new radars to the existing radar list
+    /*
+    QDialog *editRadar = new QDialog;
+    QGroupBox *editRadarBox = new QGroupBox;
+    QRadioButton *old = new QRadioButton(tr("Edit Existing Radar Entry"), 
+					 editRadarBox);
+    QRadioButton *newRadar = new QRadioButton(tr("Create New Radar Entry"),
+					      editRadarBox);
+    QPushButton *apply = new QPushButton(tr("Apply"));
+    apply->setDefault(true);
+    QPushButton *cancel = new QPushButton(tr("Cancel"));
+    connect(apply, SIGNAL(clicked()), this, SLOT(applyChanges()));
+    connect(cancel, SIGNAL(clicked()), editRadar, SLOT(close()));
+    QHBoxLayout *buttons = new QHBoxLayout;
+    buttons->addStretch(1);
+    buttons->addWidget(apply);
+    buttons->addWidget(cancel);
+    */
+  }
+  else {
+    QDomElement radar = allRadars.firstChildElement(text.left(4));
+    radarLatBox->setValue(radar.firstChildElement("latitude").text().toFloat());
+    radarLongBox->setValue(radar.firstChildElement("longitude").text().toFloat());
+    radarAltBox->setValue(radar.firstChildElement("altitude").text().toFloat());
+  }
 }

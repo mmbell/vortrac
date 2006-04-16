@@ -13,6 +13,7 @@
 #define PANELS_H
 
 #include "AbstractPanel.h"
+#include "Configuration.h"
 
 #include <QWidget>
 #include <QDoubleSpinBox>
@@ -23,7 +24,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QRadioButton>
-
+#include <QPointF>
 
 /*
  * These classes created the Panels for used in the ConfigurationDialog
@@ -52,10 +53,20 @@ class RadarPanel:public AbstractPanel
    void updatePanel(const QDomElement panelElement);
    bool updateConfig();
  private:
-   QLineEdit *radarName;
-   QDoubleSpinBox *latBox, *longBox;
-   QComboBox *radarFormat;
+   //QLineEdit *radarName;
+   //QDoubleSpinBox *latBox, *longBox;
+   QComboBox *radarFormat;  // *radarName;
    QDateTimeEdit *startDateTime, *endDateTime;
+   QHash<QString, QString> *radarFormatOptions;
+   // QHash<(Text to be displayed in drop down), (spaceless text for XML)>
+   // Configuration *radars;
+   
+   void fillRadarHash();
+   QHash<QString, QString> *radarNameOptions;
+   // QHash<(Name and Location), (4 char call for XML)>
+   QHash<QString, QPointF> *radarLocations;
+   // QHash<(Name and Location), Point(X = Lon, Y = Lat)>
+  
 
 };
 
@@ -71,6 +82,7 @@ class CappiPanel:public AbstractPanel
   QDoubleSpinBox *refMinBox, *refMaxBox, *velMinBox, *velMaxBox;
   QDoubleSpinBox *advSpeedBox, *advDirBox;
   QComboBox *intBox;
+  QHash<QString, QString> *interpolationMethod;
 };
 
 class CenterPanel:public AbstractPanel

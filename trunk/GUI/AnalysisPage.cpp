@@ -33,9 +33,9 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   connect(configDialog, SIGNAL(log(const Message&)),
 	  this, SLOT(catchLog(const Message&)));
   
-  configTree = new ConfigTree(window(), configData);
-  configTree->setFixedWidth(300);
-  connect(configTree, SIGNAL(log(const Message&)),
+  diagPanel = new DiagnosticPanel;
+  diagPanel->setFixedWidth(250);
+  connect(diagPanel, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)));
 
   GraphFace *graph = new GraphFace(vortexLabel);
@@ -48,17 +48,6 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   // Connect signals and slots that update the configuration
   
   connect(configData, SIGNAL(configChanged()), this, SLOT(updatePage()));
-  connect(configDialog, SIGNAL(configChanged()), configTree, SLOT(reread()));
-  connect(configTree, SIGNAL(newParam(const QDomElement&, 
-				      const QString&, const QString&)), 
-	  configData, SLOT(setParam(const QDomElement&, 
-				    const QString&, const QString&)));
-  connect(configTree, SIGNAL(addDom(const QDomElement&, const QString&, 
-				    const QString&)), 
-	  configData, SLOT(addDom(const QDomElement&,
-				  const QString&, const QString&)));
-  connect(configTree, SIGNAL(removeDom(const QDomElement&,const QString&)),
-	  configData, SLOT(removeDom(const QDomElement&,const QString&)));
 
   connect(this, SIGNAL(tabLabelChanged(const QString&)), 
   	  graph, SLOT(updateTitle(const QString&)));
@@ -145,7 +134,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   displayPanel->addLayout(runLayout);
 
   QHBoxLayout *display = new QHBoxLayout;
-  display->addWidget(configTree);
+  display->addWidget(diagPanel);
   display->addLayout(displayPanel);
 
   setLayout(display);
@@ -196,12 +185,12 @@ void AnalysisPage::newFile()
 
 bool AnalysisPage::loadFile(const QString &fileName)
 {
-  // Load up a configuration file in the configTree and ConfigurationDialog
+  // Load up a configuration file in the ConfigurationDialog
   if (!configData->read(fileName)) {
     emit log(Message("Couldn't load configuration file"));
     return false;
   }
-  configTree->read();
+ 
   configDialog->read();
 
   // Set the filename

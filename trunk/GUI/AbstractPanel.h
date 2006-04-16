@@ -23,7 +23,9 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QDateTime>
+#include <QComboBox>
 #include "Message.h"
+#include "Configuration.h"
 
 class AbstractPanel:public QWidget
 {
@@ -53,6 +55,13 @@ class AbstractPanel:public QWidget
    QDomElement getPanelElement() {return elem;}
    void setElement(QDomElement newElement);
    void createDataGaps();
+   
+   /*
+    *  Used to provide automatic radar latitude and longitude display
+    */
+   
+   QDoubleSpinBox *radarLatBox, *radarLongBox, *radarAltBox;
+   QComboBox *radarName;
 
  public slots:
    void createDataGaps(const QString& value);
@@ -61,6 +70,8 @@ class AbstractPanel:public QWidget
  protected:
    void connectBrowse();
    void connectFileBrowse();
+   Configuration *radars;
+
 
  private:
    bool panelChanged;
@@ -84,6 +95,8 @@ class AbstractPanel:public QWidget
      // Receives the signal emited by the browseFiles button
      // Call's the getOpenFileName QDialog static member
    void checkForAnalytic(const QString& format);
+   void buildRadarConfiguration();
+   void radarChanged(const QString& text);
 
  signals:
    void log(const Message& message);

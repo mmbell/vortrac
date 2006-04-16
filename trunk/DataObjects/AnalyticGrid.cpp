@@ -174,6 +174,8 @@ void AnalyticGrid::gridWindFieldData()
 	delRX = radX-(iGridsp*i);
 	delRY = radY-(jGridsp*j);
 	radR = sqrt(delRX*delRX+delRY*delRY);
+	float c1 = .1;
+	float c2 = 3;
 
 	// Add in tangential wind structure
 
@@ -184,22 +186,58 @@ void AnalyticGrid::gridWindFieldData()
 
 	if(r>rmw) {
 	  for(int a = 0; a < vT.count(); a++) {
-	    vx += vT[a]*cos(a*(Pi-theta+vTAngle[a]))*(rmw/r)*(delY/r);
-	    vy += vT[a]*cos(a*(Pi-theta+vTAngle[a]))*(rmw/r)*(delX/r);
-	    ref += vT[a]*cos(a*(Pi-theta+vTAngle[a]))*(rmw/r);
+	    float tangentialV =  vT[a]*cos(a*(Pi-theta+vTAngle[a]))*(rmw/r);
+	    vx +=tangentialV*(delY/r);
+	    vy +=tangentialV*(delX/r);
+	    ref += tangentialV;
 	  } 
 	}
 	else {
 	  if(r!=0) {
 	    for(int a = 0; a < vT.count(); a++) {
-	      vx+=vT[a]*cos(a*(Pi-theta+vTAngle[a]))*(r/rmw)*(delY/r);
-	      vy+=vT[a]*cos(a*(Pi-theta+vTAngle[a]))*(r/rmw)*(delX/r);
-	      ref+=vT[a]*cos(a*(Pi-theta+vTAngle[a]))*(r/rmw);
+	      float tangentialV =vT[a]*cos(a*(Pi-theta+vTAngle[a]))*(r/rmw);
+	      vx+=tangentialV*(delY/r);
+	      vy+=tangentialV*(delX/r);
+	      ref+=tangentialV;
 	    } 
 	  }
 	}
   
-	//
+	/*
+	if(r>rmw) {
+	  for(int a = 0; a < vR.count(); a++) {
+	    float radialV = vR[a]*cos(a*(Pi-theta+vRAngle[a]))*(rmw/r);
+	    vx+=radialV *(delX/r);
+	    vy+=radialV *(delY/r);
+	    ref+=radialV;
+	  }
+	}
+	else {
+	  if(r!=0) {
+	    for(int a = 0; a < vR.count(); a++) {
+	      float radialV = vR[a]*cos(a*(Pi-theta+vRAngle[a]))*(r/rmw);
+	      vx+=radialV*(delX/r);
+	      vy+=radialV*(delY/r);
+	      ref+=radialV;
+	    }
+	  }
+	}
+	*/
+
+	if(r>rmw) {
+	    float radialV = vR[0]*-c2*sqrt(r-rmw)*(rmw/r);
+	    vx+=radialV *(-delX/r);
+	    vy+=radialV *(delY/r);
+	    //ref+=radialV;
+	}
+	else {
+	  if(r!=0) {
+	    float radialV = vR[0]*c1*sqrt((rmw-r)*r);
+	    vx+=radialV*(-delX/r);
+	    vy+=radialV*(delY/r);
+	    //ref+=radialV;
+	  }
+	}
 	
 	// Add in environmental wind structure
 	
@@ -216,7 +254,7 @@ void AnalyticGrid::gridWindFieldData()
 	
 	// Sample in direction of radar
 	if(radR !=0) {
-	  dataGrid[1][i][j][0] = (delRX*vx-delRY*vy)/radR;
+	  dataGrid[1][i][j][0] = -(delRX*vx-delRY*vy)/radR;
 	}      	
 	dataGrid[0][i][j][0] = ref;
 	dataGrid[2][i][j][0] = -999;

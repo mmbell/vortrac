@@ -28,9 +28,16 @@ class KeyPicture:public QWidget
  public:
         KeyPicture(const int& i,QBrush brush, QPen pen, QSize hint, 
 		   QWidget *parent = 0);
+        // This constructor is designed for making the dropsonde picture 
+        // on the key that pops up to explaine the pressure rmw graph
+
 
         KeyPicture(const int& i, QBrush brush, QPen pen, QPen stdPen1, 
 		   QPen stdPen2, QSize hint, QWidget *parent = 0);
+
+	// This constructor is designed for making the point with std
+	// deviation bars that is used in the key for rmw and pressure points
+
 	QSize sizeHint() const;
 
 	void createImages();
