@@ -17,7 +17,6 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
-#include <QLineEdit>
 #include <QLabel>
 #include <QBrush>
 #include <QGradient>
@@ -31,7 +30,7 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
 
   timer = new QTimer(this);
   timer->setSingleShot(false);
-  timer->setInterval(2000);
+  timer->setInterval(1000);
   timer->start();
 
   QGroupBox *clockBox = new QGroupBox("Current Time UTC");
@@ -43,10 +42,10 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
 
   QGridLayout *clockLayout = new QGridLayout;
   clockLayout->addWidget(clock,0,1,1,1);
-  clockLayout->setRowMinimumHeight(1,100);
-  clockLayout->setRowStretch(0,9);
+  //clockLayout->setRowMinimumHeight(1,100);
+  clockLayout->setRowStretch(0,8);
   clockBox->setLayout(clockLayout);
-  clockBox->resize(230,150);
+  //clockBox->resize(230,150);
   
 
   connect(timer, SIGNAL(timeout()), 
@@ -56,35 +55,41 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
 
   //QPushButton *color = new QPushButton("color", this);
   //connect(color, SIGNAL(pressed()), this, SLOT(pickColor()));
-
-  QBrush redBrush(Qt::red);
-  QBrush yellowBrush(Qt::yellow);
-  QBrush greenBrush(Qt::green);
-  QPen blackPen(Qt::black);
-  QSize theSize(75,75);
-
-  //red = new KeyPicture(4,redBrush, blackPen,theSize,this);
-  //yellow = new KeyPicture(4,yellowBrush, blackPen, theSize, this);
-  // green = new KeyPicture(4, greenBrush, blackPen, theSize, this);
-  //QHBoxLayout *lights = new QHBoxLayout;
-  //lights->addWidget(red);
-  //lights->addWidget(yellow);
-  //lights->addWidget(green);
   
+
+  lights = new StopLight(QSize(225,80), this);
+  connect(lights, SIGNAL(log(const Message&)),
+	  this, SLOT(catchLog(const Message&)));
+
+  QHBoxLayout *lightsLayout = new QHBoxLayout;
+  lightsLayout->addStretch();
+  lightsLayout->addWidget(lights);
+  lightsLayout->addStretch();
+
   QLabel *vcpLabel = new QLabel(tr("Current Radar VCP"));
-  QLineEdit *vcp = new QLineEdit;
-  
+  vcp = new QLineEdit(QString("No VCP available"));
+  vcp->setReadOnly(true);
+
+  warning = new QLineEdit;
+  warning->setReadOnly(true);
 
   QVBoxLayout *main = new QVBoxLayout();
   // main->addStretch();
   main->addWidget(clockBox);
-  // main->addWidget(color);
-  // main->addLayout(lights);
+
   main->addWidget(vcpLabel);
   main->addWidget(vcp);
+  
+  main->addLayout(lightsLayout);
+  main->addWidget(warning);
+
   main->addStretch();
+
+  //main->addWidget(color);
   setLayout(main);
 
+  //  dummy = 0;
+  lights->changeColor(6);
 }
 
 DiagnosticPanel::~DiagnosticPanel()
@@ -97,6 +102,16 @@ void DiagnosticPanel::updateClock()
   QString displayTime;
   displayTime = QDateTime::currentDateTime().toUTC().toString("hh:mm");
   clock->display(displayTime);
+  /*
+  if(QDateTime::currentDateTime().time().second()%10 == 0){
+    lights->changeColor(dummy);
+    if(dummy < 6)
+      dummy++;
+    else 
+      dummy = 0;
+  }
+  */
+
   update();
 
 }
@@ -110,4 +125,10 @@ void DiagnosticPanel::pickColor()
 
 {
   QColorDialog::getColor(); 
+}
+
+void DiagnosticPanel::updateVCP(const int newVCP)
+{
+  vcp->clear();
+  vcp->insert(QString().setNum(newVCP));
 }

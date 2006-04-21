@@ -34,9 +34,11 @@ class PollThread : public QThread
   public slots:
         void catchLog(const Message& message);
         void analysisDoneProcessing();
+	void catchVCP(const int vcp);
 
   signals:
 	void log(const Message& message);
+	void newVCP(const int);
 	
   protected:
 	void run();

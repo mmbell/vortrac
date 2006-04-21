@@ -59,9 +59,9 @@ class AbstractPanel:public QWidget
    /*
     *  Used to provide automatic radar latitude and longitude display
     */
-   
    QDoubleSpinBox *radarLatBox, *radarLongBox, *radarAltBox;
    QComboBox *radarName;
+   Configuration *radars;
 
  public slots:
    void createDataGaps(const QString& value);
@@ -70,8 +70,6 @@ class AbstractPanel:public QWidget
  protected:
    void connectBrowse();
    void connectFileBrowse();
-   Configuration *radars;
-
 
  private:
    bool panelChanged;
@@ -95,8 +93,8 @@ class AbstractPanel:public QWidget
      // Receives the signal emited by the browseFiles button
      // Call's the getOpenFileName QDialog static member
    void checkForAnalytic(const QString& format);
-   void buildRadarConfiguration();
    void radarChanged(const QString& text);
+ 
 
  signals:
    void log(const Message& message);

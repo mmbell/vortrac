@@ -192,23 +192,6 @@ void KeyPicture::createImages()
 	  painter->end();
 	break;
       }
-    case 4:
-      { 
-	QImage LEDImage(hint,QImage::Format_ARGB32_Premultiplied);
-	QPainter *painter = new QPainter(&LEDImage);
-	painter->setRenderHint(QPainter::Antialiasing);
-	//painter->setBrush(Qt::white);
-	//painter->drawRect(QRectF(QPointF(0,0),hint));
-	painter->scale(width()/10, height()/10);
-	painter->setPen(pen);
-	painter->setBrush(brush);
-	painter->drawEllipse(QRectF(0.5, 0.5, 9, 9));
-	if(!LEDImage.save("images/LEDImage", "PNG"))
-	  Q_ASSERT("LED Image save Failed");
-	if (painter->isActive())
-	  painter->end();
-	break;
-      }
     }
 }
 
@@ -239,11 +222,6 @@ void KeyPicture::paintEvent(QPaintEvent *event)
     case 3:
       {
 	filename->append("RMWImage");
-	break;
-      }
-    case 4:
-      {
-	filename->append("LEDImage");
 	break;
       }
     }

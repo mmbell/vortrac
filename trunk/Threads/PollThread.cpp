@@ -22,6 +22,8 @@ PollThread::PollThread(QObject *parent)
   	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
   connect(this, SIGNAL(terminated()),
 	  &analysisThread, SLOT(terminate()));
+  connect(&analysisThread, SIGNAL(newVCP(const int)),
+	  this, SLOT(catchVCP(const int)), Qt::DirectConnection);
  
 }
 
@@ -91,3 +93,7 @@ void PollThread::catchLog(const Message& message)
 }
 
 
+void PollThread::catchVCP(const int vcp)
+{
+  emit newVCP(vcp);
+}

@@ -12,9 +12,14 @@
 
 #include "AbstractPanel.h"
 #include "Message.h"
+#include "RadarListDialog.h"
+
 #include <QGridLayout>
 #include <QLabel>
 #include <QDialog>
+#include <QLineEdit>
+#include <QRadioButton>
+#include <QFrame>
 
 #include <QFileDialog>
 
@@ -175,9 +180,7 @@ void AbstractPanel::createDataGaps()
 
 void AbstractPanel::createDataGaps(const QString& value)
 {
-
   // Overloaded function
-
   createDataGaps();
 }
 
@@ -193,11 +196,6 @@ void AbstractPanel::checkForAnalytic(const QString& format)
 
 }
 
-void AbstractPanel::buildRadarConfiguration()
-{
-
-}
-
 void AbstractPanel::radarChanged(const QString& text)
 {
 
@@ -206,23 +204,9 @@ void AbstractPanel::radarChanged(const QString& text)
   if(text == getEditPanel){
     // If the other option is selected a panel appears for editing and adding
     // new radars to the existing radar list
-    /*
-    QDialog *editRadar = new QDialog;
-    QGroupBox *editRadarBox = new QGroupBox;
-    QRadioButton *old = new QRadioButton(tr("Edit Existing Radar Entry"), 
-					 editRadarBox);
-    QRadioButton *newRadar = new QRadioButton(tr("Create New Radar Entry"),
-					      editRadarBox);
-    QPushButton *apply = new QPushButton(tr("Apply"));
-    apply->setDefault(true);
-    QPushButton *cancel = new QPushButton(tr("Cancel"));
-    connect(apply, SIGNAL(clicked()), this, SLOT(applyChanges()));
-    connect(cancel, SIGNAL(clicked()), editRadar, SLOT(close()));
-    QHBoxLayout *buttons = new QHBoxLayout;
-    buttons->addStretch(1);
-    buttons->addWidget(apply);
-    buttons->addWidget(cancel);
-    */
+    
+    RadarListDialog *editRadar = new RadarListDialog(this, radars);
+
   }
   else {
     QDomElement radar = allRadars.firstChildElement(text.left(4));
@@ -231,3 +215,4 @@ void AbstractPanel::radarChanged(const QString& text)
     radarAltBox->setValue(radar.firstChildElement("altitude").text().toFloat());
   }
 }
+

@@ -167,7 +167,7 @@ RadarPanel::RadarPanel()
   lat->addWidget(latLabel);
   lat->addWidget(radarLatBox);
 
-  QLabel *longLabel = new QLabel(tr("Radar Longitude"));
+  QLabel *longLabel = new QLabel(tr("Radar Longitude:"));
   radarLongBox = new QDoubleSpinBox();
   radarLongBox->setDecimals(3);
   radarLongBox->setRange(-999, 999);
@@ -175,7 +175,7 @@ RadarPanel::RadarPanel()
   longitude->addWidget(longLabel);
   longitude->addWidget(radarLongBox);
 
-  QLabel *altLabel = new QLabel(tr("Radar Altitude"));
+  QLabel *altLabel = new QLabel(tr("Radar Altitude in meters:"));
   radarAltBox = new QDoubleSpinBox();
   radarAltBox->setDecimals(3);
   radarAltBox->setRange(-999, 999);
@@ -252,6 +252,7 @@ RadarPanel::RadarPanel()
 	  this, SLOT(valueChanged(const QDateTime&)));
   connect(radarFormat, SIGNAL(activated(const QString&)),
 	  this, SLOT(checkForAnalytic(const QString&)));
+
   connect(radarName, SIGNAL(activated(const QString&)),
 	  this, SLOT(radarChanged(const QString&)));
   setPanelChanged(false);

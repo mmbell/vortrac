@@ -1,4 +1,4 @@
-/*
+ /*
  * ConfigurationDialog.cpp
  * VORTRAC
  *

@@ -37,6 +37,8 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   diagPanel->setFixedWidth(250);
   connect(diagPanel, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)));
+  connect(&pollThread, SIGNAL(newVCP(const int)),
+	  diagPanel, SLOT(updateVCP(const int)), Qt::DirectConnection);
 
   GraphFace *graph = new GraphFace(vortexLabel);
   connect(graph, SIGNAL(log(const Message&)), 

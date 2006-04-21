@@ -36,6 +36,9 @@ class RadarData
   float* getRadarLat();
   float* getRadarLon();
   float radarBeamHeight(float &distance, float elevation);
+  // returns height in km from sea level
+  int getVCP() {return vcp;} 
+  void setAltitude(const float newAltitude);
 
 
  protected:
@@ -51,6 +54,8 @@ class RadarData
   float Pi;
   float deg2rad;
   float rad2deg;
+  int vcp;
+  float altitude; // Tower height from sea level in km
 
  private:
   bool dealiased;

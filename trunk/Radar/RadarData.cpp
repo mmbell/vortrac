@@ -95,6 +95,12 @@ float RadarData::radarBeamHeight(float &distance, float elevation)
   float elevRadians = elevation * acos(-1.0) / 180.0;
   float height = sqrt(distance * distance + REsq 
 		      + 2.0 * distance * RE * sin(elevRadians)) - RE;
+  // height+=altitude;
   return height; 
 
+}
+
+void RadarData::setAltitude(const float newAltitude)
+{
+  altitude = newAltitude;
 }

@@ -34,6 +34,7 @@
 
   numSweeps = 0;
   numRays = 0;
+  vcp = 0;
 
   // Configure Properties from theoretical radar
 
@@ -51,6 +52,7 @@ void AnalyticRadar::setConfigElement(QDomElement configRoot)
 
 bool AnalyticRadar::readVolume()
 {
+  
   if(isDealiased()) {
 
     if(skipReadVolume())
@@ -310,7 +312,7 @@ bool AnalyticRadar::readVolumeAnalytic()
 
   //testing Message::toScreen("In make radarVolume part of readVolumeAnalytic");
 
-  int vcp = 32;
+  vcp = 32;
 
   int totNumSweeps = 1;
   int numRaysPerSweep = (int)floor(360.0/beamWidth);

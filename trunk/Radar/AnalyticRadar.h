@@ -48,7 +48,6 @@ class AnalyticRadar : public RadarData
   float nyqVel;
   float refGateSp;
   float velGateSp;
-  int vcp;
   int refNumGates;
   int velNumGates;
   float beamWidth;

@@ -16,9 +16,10 @@
 #include <QLCDNumber>
 #include <QPushButton>
 #include <QColor>
+#include <QLineEdit>
 
 #include "Message.h"
-#include "KeyPicture.h"
+#include "StopLight.h"
 
 class DiagnosticPanel : public QWidget
 {
@@ -32,11 +33,14 @@ Q_OBJECT
  public slots:
       void catchLog(const Message& message);
       void pickColor();
+      void updateVCP(const int newVCP);
  
  private:
       QTimer *timer;
       QLCDNumber *clock;
-      KeyPicture *red, *yellow, *green;
+      QLineEdit *vcp, *warning;
+      StopLight *lights;
+      int dummy;
 
  private slots:
       void updateClock();

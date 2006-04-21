@@ -72,8 +72,7 @@ void AnalysisThread::analyze(RadarData *dataVolume, Configuration *configPtr)
 void AnalysisThread::run()
 {
 	   emit log(Message("AnalysisThread Started"));
-	   Message::toScreen("AnalysisThread Started");
-	   
+
        forever {
 		// Check to see if we should quit
 		if (abort)
@@ -85,6 +84,9 @@ void AnalysisThread::run()
 		
 		// Read in the radar data
 		radarVolume->readVolume();
+
+		// Pass VCP value to display
+		emit newVCP(radarVolume->getVCP());
 	       
 		//Dealias
 		if(!radarVolume->isDealiased()){

@@ -70,6 +70,8 @@ bool LevelII::readVolume()
 	swapRadarHeader();
       }
 
+      vcp = radarHeader->vol_coverage_pattern;
+
       // Is this a new sweep? Check radial status
       if (radarHeader->radial_status == 3) {
 

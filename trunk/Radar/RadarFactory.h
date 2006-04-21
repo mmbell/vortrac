@@ -52,6 +52,7 @@ class RadarFactory : public QObject
   QString radarName;
   float radarLat;
   float radarLon;
+  float radarAlt;
   dataFormat radarFormat;
   QQueue<QString> *radarQueue;
   QDateTime startDateTime;

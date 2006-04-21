@@ -43,6 +43,7 @@ class AnalysisThread : public QThread
  signals:
      void doneProcessing();
      void log(const Message& message);
+     void newVCP(const int);
  
  private:
      QMutex mutex;

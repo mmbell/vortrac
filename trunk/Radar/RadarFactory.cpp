@@ -24,6 +24,9 @@ RadarFactory::RadarFactory(QDomElement radarConfig, QObject *parent)
   radarName = radarConfig.firstChildElement("name").text();
   radarLat = radarConfig.firstChildElement("lat").text().toFloat();
   radarLon = radarConfig.firstChildElement("lon").text().toFloat();
+  radarAlt = radarConfig.firstChildElement("alt").text().toFloat();
+  // radarAltitude is given in meters, convert to km
+  radarAlt = radarAlt/1000;
 
   QDate startDate = QDate::fromString(radarConfig.firstChildElement("startdate").text(),
 				      Qt::ISODate);
@@ -79,6 +82,7 @@ RadarData* RadarFactory::getUnprocessedData()
     {
       LevelII *radarData = new LevelII(radarName, radarLat, 
 				       radarLon, fileName);
+      radarData->setAltitude(radarAlt);
       return radarData;
       break;
     }
@@ -87,6 +91,7 @@ RadarData* RadarFactory::getUnprocessedData()
       AnalyticRadar *radarData = new AnalyticRadar(radarName, 
 						   radarLat, radarLon,
 						   fileName);
+      radarData->setAltitude(radarAlt);
       radarData->setConfigElement(radarConfiguration.parentNode().toElement());
       return radarData;
       break;
