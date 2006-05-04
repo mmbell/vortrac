@@ -13,14 +13,14 @@
      <vr1>0</vr1>
      <vr1angle>0</vr1angle>
      <vt2>0</vt2>
-     <vt2angle>90</vt2angle>
+     <vt2angle>0</vt2angle>
      <vr2>0</vr2>
      <vr2angle>0</vr2angle>
      <env_speed>0</env_speed>
      <env_dir>0</env_dir>
   </wind_field>
   <analytic_radar>
-     <sample>true</sample>
+     <sample>false</sample>
      <velgatesp>1</velgatesp>
      <refgatesp>1</refgatesp>
      <beamwidth>1</beamwidth>

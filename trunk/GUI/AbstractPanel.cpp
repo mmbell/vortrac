@@ -150,32 +150,6 @@ void AbstractPanel::createDataGaps()
   }
 
   dataGap->setMinimumSize(dataGapLayout->minimumSize());
-  
-  /*
-    int numberOfColumns = 0;
-    for (int j = 4; j > 0; j--) {
-    if ((dataGapBoxes.count()%j == 0)&&(j>numberOfColumns)) {
-    numberOfColumns = j;
-    } 
-    }
-    if (numberOfColumns==0); {
-    for(int k = 4; k > 0; k--) {
-    if((dataGapBoxes.count()/k > 0)&&(dataGapBoxes.count()%k >= k/2.0)
-    &&(k>numberOfColumns)) {
-    numberOfColumns = k;} } } 
-    int row = 0;
-    int column = 0;
-    for(int i = 0; i < dataGapBoxes.count(); i++)
-    {
-    
-    dataGapLayout->addWidget(dataGapLabels[i],row, column);
-    column++;
-    dataGapLayout->addWidget(dataGapBoxes[i], row, column);
-    column++;
-    if (column >= 2*numberOfColumns) {
-    row++; 
-    column = 0; }
-    } */
 }
 
 void AbstractPanel::createDataGaps(const QString& value)
@@ -199,14 +173,30 @@ void AbstractPanel::checkForAnalytic(const QString& format)
 void AbstractPanel::radarChanged(const QString& text)
 {
 
-  QDomElement allRadars = radars->getRoot().firstChildElement();
+  QDomElement allRadars = radars->getRoot();
+  int initialCount = allRadars.childNodes().count();
   QString getEditPanel = allRadars.firstChildElement("OTHER").firstChildElement("text").text();
   if(text == getEditPanel){
     // If the other option is selected a panel appears for editing and adding
     // new radars to the existing radar list
     
     RadarListDialog *editRadar = new RadarListDialog(this, radars);
+    
+    updatePanel(elem);
 
+    QDomNodeList radarList = 
+      radars->getRoot().childNodes();
+    for (int i = 0; i <= radarList.count()-1; i++) 
+      {
+	QDomNode curNode = radarList.item(i);
+	radarName->addItem(curNode.firstChildElement(QString("text")).text());
+      }
+    
+    if(radarList.count() > initialCount)
+      radarName->setCurrentIndex(radarList.count()-1);
+    if(radarList.count() == initialCount)
+      radarName->setCurrentIndex(0);
+    
   }
   else {
     QDomElement radar = allRadars.firstChildElement(text.left(4));

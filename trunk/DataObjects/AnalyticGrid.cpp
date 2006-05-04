@@ -77,29 +77,43 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
   jGridsp = cappiConfig.firstChildElement("ygridsp").text().toFloat();
   kGridsp = cappiConfig.firstChildElement("zgridsp").text().toFloat();
 
+  // Determine what type of analytic storm is desired
   QString sourceString = analyticConfig->getRoot().firstChildElement("source").text();
   
   QDomElement radar = analyticConfig->getRoot().firstChildElement("analytic_radar");
   if (sourceString == QString("wind_field")) {
-    //source = windFields;
+    // This indicates that the analytic storm will be constructed from 
+    // a series of overlayed wind fields from the specifications in 
+    // the default analytic xml file
+    
     QDomElement winds = analyticConfig->getRoot().firstChildElement("wind_field");
 
     float *radLocation  = new float[2];
     radLocation = relEarthLocation(vortexLat,vortexLon,radarLat,radarLon);
-    centX = iDim/2*iGridsp;
-    centY = jDim/2*jGridsp;
+
+    centX = iDim/2*iGridsp;  // x coordinate of storm center on grid
+    centY = jDim/2*jGridsp;  // y coordinate of storm center on grid
+
+    // Connects the gridded dimensions on the cappi with the correct latitude
+    // and longitude coordinates for the area
     setZeroLocation(vortexLat, vortexLon, &centX, &centY);
-    radX = centX+radLocation[0];
-    radY = centY+radLocation[1];
+
+    radX = centX+radLocation[0];  // x coordinate of radar on grid
+    radY = centY+radLocation[1];  // y coordinate of radar on grid
 
     //testing Message::toScreen("RadX,Y ="+QString().setNum(radX)+", "+QString().setNum(radY)+"  VortX,Y ="+QString().setNum(centX)+", "+QString().setNum(centY));
     
-
+    // radius of maximum wind for analytic storm
     rmw = analyticConfig->getParam(winds, "rmw").toFloat();
+
+    // speed and direction of mean environmental wind 
     envSpeed = analyticConfig->getParam(winds, "env_speed").toFloat();
     envDir = analyticConfig->getParam(winds, "env_dir").toFloat();
+    
+   
+    //    scale = analyticConfig->getParam(radar, "noise").toFloat();
 
-    for(int v = 0; v < 3; v++) {
+     for(int v = 0; v < 3; v++) {
       QString tan("vt");
       tan+=QString().setNum(v);
       QString rad("vr");
@@ -110,15 +124,17 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
       if(v == 0) {
 	vT.append(analyticConfig->getParam(winds, tan).toFloat());
 	vR.append(analyticConfig->getParam(winds, rad).toFloat()); 
+	vTAngle.append(0);
+	vRAngle.append(0);
       }
       else {
 	vT.append(analyticConfig->getParam(winds, tan).toFloat()*vT[0]);
 	vR.append(analyticConfig->getParam(winds, rad).toFloat()*vR[0]); 
+	vTAngle.append(analyticConfig->getParam(winds, 
+						tanAngle).toFloat()*deg2rad);
+	vRAngle.append(analyticConfig->getParam(winds, 
+						radAngle).toFloat()*deg2rad);
       }
-      vTAngle.append(analyticConfig->getParam(winds, 
-					      tanAngle).toFloat()*deg2rad);
-      vRAngle.append(analyticConfig->getParam(winds, 
-					      radAngle).toFloat()*deg2rad);
       
     }
     
@@ -202,7 +218,6 @@ void AnalyticGrid::gridWindFieldData()
 	    } 
 	  }
 	}
-  
 	/*
 	if(r>rmw) {
 	  for(int a = 0; a < vR.count(); a++) {
@@ -225,17 +240,23 @@ void AnalyticGrid::gridWindFieldData()
 	*/
 
 	if(r>rmw) {
-	    float radialV = vR[0]*-c2*sqrt(r-rmw)*(rmw/r);
+	  for(int a = 0; a < vR.count(); a++) {
+	    float radialV = vR[a]*-c2*sqrt(r-rmw)*(rmw/r);
+	    radialV *= cos(a*(Pi-theta+vRAngle[a]));
 	    vx+=radialV *(-delX/r);
 	    vy+=radialV *(delY/r);
 	    //ref+=radialV;
+	  }
 	}
 	else {
 	  if(r!=0) {
-	    float radialV = vR[0]*c1*sqrt((rmw-r)*r);
-	    vx+=radialV*(-delX/r);
-	    vy+=radialV*(delY/r);
+	    for(int a = 0; a < vR.count(); a++) {
+	      float radialV = vR[a]*c1*sqrt((rmw-r)*r);
+	      radialV *=cos(a*(Pi-theta+vRAngle[a]));
+	      vx+=radialV*(-delX/r);
+	      vy+=radialV*(delY/r);
 	    //ref+=radialV;
+	    }
 	  }
 	}
 	
@@ -250,10 +271,11 @@ void AnalyticGrid::gridWindFieldData()
 	float vey = envSpeed*cos(Pi+(envDir)*deg2rad);
 	vx += vex;
 	vy += vey;
-	ref+= sqrt(vex*vex+vey*vey);
+	//ref+= sqrt(vex*vex+vey*vey);
 	
 	// Sample in direction of radar
-	if(radR !=0) {
+	if(radR != 0) {
+      
 	  dataGrid[1][i][j][0] = -(delRX*vx-delRY*vy)/radR;
 	}      	
 	dataGrid[0][i][j][0] = ref;
@@ -369,7 +391,7 @@ void AnalyticGrid::writeAsi()
 	
 
 	// Write data
-	for(int k = 0; k < 1; k++) {
+	for(int k = 0; k < int(kDim); k++) {
 		out << reset << "level" << qSetFieldWidth(2) << k+1 << endl;
 		for(int j = 0; j < int(jDim); j++) {
 			out << reset << "azimuth" << qSetFieldWidth(3) << j+1 << endl;

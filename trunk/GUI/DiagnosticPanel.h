@@ -33,6 +33,7 @@ Q_OBJECT
  public slots:
       void catchLog(const Message& message);
       void pickColor();
+      void testLight();
       void updateVCP(const int newVCP);
  
  private:

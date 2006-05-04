@@ -39,9 +39,13 @@ class VortexPanel:public AbstractPanel
   VortexPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
+
  private:
-  QLineEdit *vortexName;
+  QLineEdit *vortexName;   
+  // Widget used to receive/display hurricane name
+  
   QDoubleSpinBox *latBox, *longBox;
+  // Widgets used to recieve/display hurricane latitude and longitude
 
 };
 
@@ -52,22 +56,30 @@ class RadarPanel:public AbstractPanel
    RadarPanel();
    void updatePanel(const QDomElement panelElement);
    bool updateConfig();
- private:
-   //QLineEdit *radarName;
-   //QDoubleSpinBox *latBox, *longBox;
-   QComboBox *radarFormat;  // *radarName;
-   QDateTimeEdit *startDateTime, *endDateTime;
-   QHash<QString, QString> *radarFormatOptions;
-   // QHash<(Text to be displayed in drop down), (spaceless text for XML)>
-   // Configuration *radars;
-   
-   void fillRadarHash();
-   QHash<QString, QString> *radarNameOptions;
-   // QHash<(Name and Location), (4 char call for XML)>
-   QHash<QString, QPointF> *radarLocations;
-   // QHash<(Name and Location), Point(X = Lon, Y = Lat)>
-  
 
+ private:
+   /* 
+    *  radarName, latBox and longBox are used in this panel but
+    *  declared in AbstractPanel to get them to interact with 
+    *  signal slot operations.
+    *  This panel also uses dir and the browse button which are declared
+    *  in AbstractPanel, to obtain and store the location of incoming 
+    *  radar data, or to obtain the xml input when working with analytic
+    *  models.
+    */
+
+   QComboBox *radarFormat;
+   // Allows selection of the input format for the radar data
+
+   QHash<QString, QString> *radarFormatOptions;
+   // The radarFormatOptions hash is used to relate combobox entries 
+   // to the correct element in the xml file.
+
+   QDateTimeEdit *startDateTime, *endDateTime;
+   // Widgets used to display the start and end date and time for running
+   // the vortrac algorithm
+
+  
 };
 
 class CappiPanel:public AbstractPanel
@@ -77,12 +89,35 @@ class CappiPanel:public AbstractPanel
   CappiPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
+
  private:
+  /*
+   * This panel uses the dir and browse members declared in AbstractPanel
+   * for the location of the cappi output directory.
+   */
+
   QDoubleSpinBox *xDimBox, *yDimBox, *zDimBox, *xGridBox, *yGridBox, *zGridBox;
+  // These boxes take in the lengths of the 3-D grid for mapping radar data 
+  // onto (xDimBox is for length in x dimension etc). The members labeled x, 
+  // y and x GridBoxes are for collecting and editing the distance between
+  // data points in the cappi grid in each dimension.
+
   QDoubleSpinBox *refMinBox, *refMaxBox, *velMinBox, *velMaxBox;
+  // These boxes are used to specify the quality control limits on
+  // the data used in creating the cappi grid
+
   QDoubleSpinBox *advSpeedBox, *advDirBox;
+  // Determines the speed and direction of advection flow
+
   QComboBox *intBox;
+  // Allows the user to select an interpolation method from those listed
+  // in the interpolationMethod hash. This set the interpolation method 
+  // to be used in creating the cappi grid.
+
   QHash<QString, QString> *interpolationMethod;
+  // The interpolationMethod hash is used to relate combobox entries to 
+  // interpolation key words
+
 };
 
 class CenterPanel:public AbstractPanel
@@ -92,12 +127,40 @@ class CenterPanel:public AbstractPanel
   CenterPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
+
  private:
+  /*
+   * This panel uses the dir and browse members declared in AbstractPanel
+   * for the location of the center output directory.
+   * This panel also uses the dataGap members declared in AbstractPanel
+   * for automatically updating the number of input boxes available.
+   */
   QComboBox *geometryBox, *closureBox, *refBox, *velBox, *critBox;
+  // displays the options for each of these control parameters
+  // each ComboBox has a cooresponding hash of possible parameters
+  QHash<QString, QString> *geometryOptions;
+  QHash<QString, QString> *closureOptions;
+  QHash<QString, QString> *reflectivityOptions;
+  QHash<QString, QString> *velocityOptions;
+  QHash<QString, QString> *criteriaOptions;
+  
   QSpinBox *bLBox,*tLBox,*iRBox,*oRBox;
+  // bLBox controls the lowest search level of the cappi
+  // tLBox controls the highest search level of the cappi
+  // iRBox controls the inner search radius
+  // oRBox controls the outer search radius
+
   QSpinBox *iterations, *numPointsBox;
+  // these boxes control/display the maximum number of iteration that the 
+  // centerfinder should attempt, and the number of initial guesses to be 
+  // attempting in finding the center
+
   QDoubleSpinBox *ringBox, *influenceBox,*convergenceBox, *diameterBox;
-  QVBoxLayout *main;
+  // ringBox is associated with the width of the search rings to be used
+  // influenceBox is associated with the radius of influence to be used
+  // convergenceBox is associated with the required convergence
+  // diameterBox is associated with the width of the zone to be searched
+  //  for the vortrex center
 };
 
 class VTDPanel:public AbstractPanel
@@ -107,10 +170,32 @@ class VTDPanel:public AbstractPanel
   VTDPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
+ 
  private:
+  /*
+   * This panel uses the dir and browse members declared in AbstractPanel
+   * for the location of the vtd  output directory.
+   * This panel also uses the dataGap members declared in AbstractPanel
+   * for automatically updating the number of input boxes available.
+   */
+
   QComboBox *geometryBox, *closureBox, *refBox, *velBox;
-  QSpinBox *bLBox,*tLBox,*iRBox, *oRBox;
+  // displays the options for each of these control parameters
+  // each ComboBox has a cooresponding hash of possible parameters
+  QHash<QString, QString> *geometryOptions;
+  QHash<QString, QString> *closureOptions;
+  QHash<QString, QString> *reflectivityOptions;
+  QHash<QString, QString> *velocityOptions;
+  QHash<QString, QString> *criteriaOptions;
+
+  QSpinBox *bLBox, *tLBox, *iRBox, *oRBox;
+  // bLBox controls the lowest search level of the cappi
+  // tLBox controls the highest search level of the cappi
+  // iRBox controls the inner search radius
+  // oRBox controls the outer search radius
+
   QDoubleSpinBox *ringBox;
+  // controls the width of the search rings
 };
 
 class HVVPPanel:public AbstractPanel
@@ -130,6 +215,10 @@ class PressurePanel:public AbstractPanel
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
  private:
+  /*
+   * This panel uses the dir and browse members declared in AbstractPanel
+   * for the location of the directory containing pressure data.
+   */
 };
 
 class GraphicsPanel:public AbstractPanel
@@ -141,9 +230,22 @@ class GraphicsPanel:public AbstractPanel
   bool updateConfig();
  private:
   QDoubleSpinBox *pMaxBox, *pMinBox, *rmwMaxBox, *rmwMinBox;
-  QGroupBox *graphParameters;
-  QRadioButton *manualOverride;
   QDateTimeEdit *beginTime, *endTime;
+  /*
+   * These are used to manipulate the visible limits of the pressure &
+   *   rmw display graph
+   * pMaxBox: maximum pressure displayed on graph
+   * pMinBox: minimum pressure displayed on graph
+   * rmwMaxBox: maximum rmw displayed on graph
+   * rmwMinBox: minimum rmw displayed on graph
+   * beginTime: controls lower time limit on graph
+   * endTime: controls upper time limit displayed on graph
+   */
+
+  QGroupBox *graphParameters;
+  // used to distinguish weither graph limits are adjusted automatically or
+  //   manually.  
+
 };
 
 class QCPanel:public AbstractPanel
@@ -154,10 +256,52 @@ class QCPanel:public AbstractPanel
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
  private:
+  /*
+   * This panel uses the dir and browse members declared in AbstractPanel
+   * for the location of the AWIPS data directory.
+   */
   QRadioButton *vad, *user, *known;
+  /*
+   * These buttons are all mutually exclusive choices which decide how the 
+   * environmental winds should be determined.
+   * vad: uses the VAD algorithm
+   * user: uses user entered winds for environmental winds
+   * known: uses AWIPS data when available
+   */
+
   QSpinBox *bbSegmentSize, *maxFoldCount, *vadLevels, *numCoefficients;
+  QRadioButton *useGVAD;
+  /*
+   * bbSegmentSize handles the number of gates that should be used for 
+   *   averaging in the Bargain & Brown dealiasing algorithm
+   * 
+   * maxFoldCount sets the maximum number of velocity folds before they are
+   *   reported as an error
+   * 
+   * valLevels indicates the number of levels the VAD algorithm should generate
+   *   (used only when the VAD method is used)
+   * 
+   * numCoefficients indicates the number of coefficients used for the VAD
+   *   algorithm fit (used only when the VAD method is used)
+   *
+   * useGVAD indicates whether or not to use GVAD in processing mean winds
+   *   if useGVAD is not checked, the VAD method will be used
+   */
+
   QDoubleSpinBox *velocityThreshold, *spectralThreshold, *windSpeed;
   QDoubleSpinBox *windDirection;
+  /*
+   * velocityThreshold adjusts the minimum absolute value of velocities that 
+   *   will be used for analysis (attempts to remove ground clutter)
+   * spectralThreshold adjusts the minimum spectral width required for a 
+   *   velocities that will be used for analysis
+   * windSpeed is used to adjust the user entered environmental wind speed
+   *   (used only when user entered environmental winds are used)
+   * windDirection is used to adjust the user entered environmental wind 
+   *   direction (used only when user entered environmental winds are used)
+   */
+
+
   
 };
 

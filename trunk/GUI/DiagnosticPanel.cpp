@@ -26,7 +26,16 @@
 
 DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   :QWidget(parent)
+
+  /*
+   * This panel is used to display widgets that provide diagnostic
+   * information on the operational state of the vortrac algorithm.
+   * This includes the vcp, problem indicator and messages, and the time.
+   */
+
 {
+
+  // timer is used to create updates for the display clock
 
   timer = new QTimer(this);
   timer->setSingleShot(false);
@@ -55,7 +64,11 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
 
   //QPushButton *color = new QPushButton("color", this);
   //connect(color, SIGNAL(pressed()), this, SLOT(pickColor()));
+
+  QPushButton *lightButton = new QPushButton("Next Signal Pattern");
+  connect(lightButton, SIGNAL(pressed()), this, SLOT(testLight()));
   
+  // Stoplight used to show operational status of the vortrac algorithm
 
   lights = new StopLight(QSize(225,80), this);
   connect(lights, SIGNAL(log(const Message&)),
@@ -66,9 +79,14 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   lightsLayout->addWidget(lights);
   lightsLayout->addStretch();
 
+  // Displays current radar vcp
+
   QLabel *vcpLabel = new QLabel(tr("Current Radar VCP"));
   vcp = new QLineEdit(QString("No VCP available"));
   vcp->setReadOnly(true);
+
+  // Displays warning message that may accompany the change in stoplight
+  // signal
 
   warning = new QLineEdit;
   warning->setReadOnly(true);
@@ -80,16 +98,20 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   main->addWidget(vcpLabel);
   main->addWidget(vcp);
   
+  main->addStretch();
+
   main->addLayout(lightsLayout);
   main->addWidget(warning);
 
-  main->addStretch();
-
   //main->addWidget(color);
+  main->addWidget(lightButton);
   setLayout(main);
-
-  //  dummy = 0;
+  
+  // Used to set the initial color of the stoplight
+  
   lights->changeColor(6);
+
+  dummy = 0;
 }
 
 DiagnosticPanel::~DiagnosticPanel()
@@ -99,19 +121,10 @@ DiagnosticPanel::~DiagnosticPanel()
 
 void DiagnosticPanel::updateClock()
 {
+  // Updates display clock
   QString displayTime;
   displayTime = QDateTime::currentDateTime().toUTC().toString("hh:mm");
   clock->display(displayTime);
-  /*
-  if(QDateTime::currentDateTime().time().second()%10 == 0){
-    lights->changeColor(dummy);
-    if(dummy < 6)
-      dummy++;
-    else 
-      dummy = 0;
-  }
-  */
-
   update();
 
 }
@@ -131,4 +144,13 @@ void DiagnosticPanel::updateVCP(const int newVCP)
 {
   vcp->clear();
   vcp->insert(QString().setNum(newVCP));
+}
+
+void DiagnosticPanel::testLight()
+{
+  lights->changeColor(dummy);
+  if(dummy < 6)
+    dummy++;
+  else 
+    dummy = 0;
 }

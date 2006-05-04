@@ -157,10 +157,14 @@ bool RadarQC::dealias()
     }
   Message::toScreen(checkPrint);
   */
-  findEnvironmentalWind();
+  if(!findEnvironmentalWind()) {
+    Message::toScreen("Failed in findEnvWind");
+  }
   
-  if(!BB())
-     return false;
+  if(!BB()) {
+    Message::toScreen("Failed in BB");
+    return false;
+  }
   /*
   check = radarData->getRay(35);
   checkVel = check->getVelData();
@@ -199,7 +203,7 @@ void RadarQC::thresholdData()
   }
 
   int numRays = radarData->getNumRays();
-  Message::toScreen("total ray count = "+QString().setNum(numRays));
+  //Message::toScreen("total ray count = "+QString().setNum(numRays));
   Ray* currentRay = new Ray;
   int numVGates;
   for(int i = 0; i < numRays; i++)
@@ -554,11 +558,14 @@ bool RadarQC::findVADStart(bool useGVAD)
   
   //if(vad_ntimes < 5)  goto 230 ?!?!?!
 
+  bool foundVelocity = false;
+
   for(int m = 0; m < vadLevels; m++) {
     if(vadFound[m]) {
       envWind[m] *= (1/sumwt[m]);
       envDir[m] *= (1/sumwt[m]);
       vadRMS[m] = sqrt(1/sumwt[m]);
+      foundVelocity = true;
 
       if(!useGVAD)
 	emit log(Message("M:"+ QString().setNum(m)+" VAD SPEED: "
@@ -573,7 +580,9 @@ bool RadarQC::findVADStart(bool useGVAD)
     else {
       envWind[m] = velNull;
       envDir[m] = velNull;
+      emit log(Message("No VAD Speed Found"));
     }
+
 
   }
 
@@ -596,7 +605,12 @@ bool RadarQC::findVADStart(bool useGVAD)
   delete highVelGate;
   delete lowVelGate;
   delete hasVelData;
-  
+
+  // If none of the VAD levels have values we should be able to return false  
+
+  if(!foundVelocity)
+    return false;
+
   return true;
  
 }
@@ -610,34 +624,35 @@ void RadarQC::vadPrep()
     for(int n = 0; n < numSweeps; n++) {
       Sweep* currentSweep = radarData->getSweep(n);
       int start = currentSweep->getFirstRay();
-      //int stop = currentSweep->getLastRay();
-      //for(int r = start; r <= stop; r++) {
-      int r = start;
-      Ray *currentRay = radarData->getRay(r);
-      int numVBins = currentRay->getVel_numgates();
-      float max_up = 0;
-      float max_low = 0;
-      bool hasHighVel = false;
-      bool hasLowVel = false;
-      for(int v = 0; v < numVBins; v++) {
-	float height = findHeight(currentRay, v);
-	if((height >= m)&&(height < m+1)) {
-	  if((validBinCount[n][v] > max_up)
-	     &&(validBinCount[n][v] < last_count_up[m][n])) {
-	    max_up = validBinCount[n][v];
-	    highVelGate[m][n] = v;
-	    if(max_up > thr) {
-	      hasHighVel = true;
+      int stop = currentSweep->getLastRay();
+      for(int r = start; r <= stop; r++) {
+	int r = start;
+	Ray *currentRay = radarData->getRay(r);
+	int numVBins = currentRay->getVel_numgates();
+	float max_up = 0;
+	float max_low = 0;
+	bool hasHighVel = false;
+	bool hasLowVel = false;
+	for(int v = 0; v < numVBins; v++) {
+	  float height = findHeight(currentRay, v);
+	  if((height >= m)&&(height < m+1)) {
+	    if((validBinCount[n][v] > max_up)
+	       &&(validBinCount[n][v] < last_count_up[m][n])) {
+	      max_up = validBinCount[n][v];
+	      highVelGate[m][n] = v;
+	      if(max_up > thr) {
+		hasHighVel = true;
+	      }
+	    } 
+	  }
+	  if((height >= m-1)&&(height < m)) {
+	    if((validBinCount[n][v] > max_low)
+	       &&(validBinCount[n][v] < last_count_low[m][n])) {
+	      max_low = validBinCount[n][v];
+	      lowVelGate[m][n] = v;
+	      if(max_low > thr)
+		hasLowVel = true;  
 	    }
-	  } 
-	}
-	if((height >= m-1)&&(height < m)) {
-	  if((validBinCount[n][v] > max_low)
-	     &&(validBinCount[n][v] < last_count_low[m][n])) {
-	    max_low = validBinCount[n][v];
-	    lowVelGate[m][n] = v;
-	    if(max_low > thr)
-	      hasLowVel = true;  
 	  }
 	}
 	if(hasHighVel && hasLowVel) {
@@ -987,8 +1002,10 @@ float RadarQC::getStart(Ray *currentRay)
 	startVelocity = envWind[dataHeight]*cos(elevAngle/100.0)
 	  *cos((180.0+envWind[dataHeight]+azimuth)*deg2rad);
       }
-      else 
+      else {
 	startVelocity = velNull;
+	Message::toScreen("Start Velocity = VelNull");
+      }
     }
     else
       startVelocity = velNull;

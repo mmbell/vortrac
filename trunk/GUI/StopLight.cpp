@@ -132,7 +132,7 @@ void StopLight::changeColor(int light)
   if(flashing)
     {
       connect(timer, SIGNAL(timeout()), this, SLOT(repaint()));
-      timer->start(2000);
+      timer->start(30000);
       on = false;
     }
   else 

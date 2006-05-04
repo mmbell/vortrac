@@ -48,10 +48,11 @@ class AnalyticRadar : public RadarData
   float nyqVel;
   float refGateSp;
   float velGateSp;
-  int refNumGates;
-  int velNumGates;
+  int numRefGates;
+  int numVelGates;
   float beamWidth;
-  float elevations[5];
+  float scale;
+  float *elevations;
 
   float vortexLat, vortexLon;
 

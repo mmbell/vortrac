@@ -147,7 +147,7 @@ RadarPanel::RadarPanel()
 	  this, SLOT(catchLog(const Message&)));
   radars->read(QString("vortrac_radarList.xml"));
   QDomNodeList radarList = 
-    radars->getRoot().firstChildElement().childNodes();
+    radars->getRoot().childNodes();
   for (int i = 0; i <= radarList.count()-1; i++) 
     {
       QDomNode curNode = radarList.item(i);
@@ -257,100 +257,6 @@ RadarPanel::RadarPanel()
 	  this, SLOT(radarChanged(const QString&)));
   setPanelChanged(false);
 
-}
-
-void RadarPanel::fillRadarHash()
-{
-  /*
-  radarNameOptions = new QHash<QString, QString>;
-  radarLocations = new QHash<QString, QPointF>;
-  radarNameOptions->insert(QString("Please select a radar"), QString(""));
-  radarLocations->insert(QString("Please select a radar"), QPointF(0.0,0.0));
-  radarNameOptions->insert(QString("RCWF in Taiwan"),QString("RCWF"));
-  radarLocations->insert(QString("RCWF in Taiwan"), QPointF(121.773, 25.073));
-  radarLocations->insert(QString("TJUA in San Juan Puerto Rico"), 
-			 QPointF(-66.078, 18.116));
-  radarLocations->insert(QString("KENX in Albany, NY"), 
-			 QPointF(-74.064, 42.586));
-  radarLocations->insert(QString("Anderson_AFB in Guam"), 
-			 QPointF(144.811,13.453));
-  radarLocations->insert(QString("KFFC in Atlanta, GA"),
-			 QPointF(-84.567, 33.364));
-  radarLocations->insert(QString("KEWX in Austin/San Antonio, TX"),
-			 QPointF(-98.028, 29.704));
-  radarLocations->insert(QString("KBGM in Binghamton, NY"),
-			 QPointF(-75.985, 42.200));
-  radarLocations->insert(QString("KBMX in Birmingham, AL"),
-			 QPointF(-86.770, 33.172));
-  radarLocations->insert(QString("KBOX in Boston, MA"), 
-			 QPointF(-71.137, 41.956));
-  radarLocations->insert(QString("KBRO in Brownsville, TX"),
-			 QPointF(-97.419, 25.916));
-  radarLocations->insert(QString("RKSG in Camp Humphreys, South Korea"),
-			 QPointF(127.021, 36.956));
-  radarLocations->insert(QString("KCLX in Charleston, SC"),
-			 QPointF(-81.042, 32.656));
-  radarLocations->insert(QString("KCAE in Columbia SC"),
-			 QPointF(-81.118, 33.949));
-  radarLocations->insert(QString("KCRP in Corpus Christi, TX"),
-			 QPointF(-97.511,27.784));
-  radarLocations->insert(QString("KDOX at Dover AFB, DE"),
-			 QPointF(-75.440,38.826));
-  radarLocations->insert(QString("KDYX at Dyess AFB, TX"),
-			 QPointF(-99.254, 32.538));
-  radarLocations->insert(QString("KEVX at Eglin AFB, FL"),
-			 QPointF(-85.921, 30.564));
-  radarLocations->insert(QString("KPOE at Fort Polk, LA"),
-			 QPointF(-92.976, 31.156));
-  radarLocations->insert(QString("KCBW in Houlton, ME"),
-			 QPointF(-67.806, 46.039));
-  radarLocations->insert(QString("KHGX in Galveston, TX"),
-			 QPointF(-95.079, 29.742));
-  radarLocations->insert(QString("KJAN in Jackson, MS"),
-			 QPointF(-90.080,32.318));
-  radarLocations->insert(QString("KJAX in JacksonVille, FL"),
-			 QPointF(81.701, 30.485));
-  radarLocations->insert(QString("RODN in Kadena Okinawa, Japan"),
-			 QPointF(127.910, 26.302));
-  radarLocations->insert(QString("KBYX in Key West, FL"),
-			 QPointF(-81.703, 24.598));
-  radarLocations->insert(QString("KLCH in Lake Charles, LA"),
-			 QPointF(-93.216, 30.125));
-  radarLocations->insert(QString("KMXX in Maxwell ARB, AL"),
-			 QPointF(-85.790, 32.537));
-  radarLocations->insert(QString("KMLB in Melbourne, FL"),
-			 QPointF(-80.654, 28.113));
-  radarLocations->insert(QString("KAMX in Miami, FL"),
-			 QPointF(-80.413, 25.611));
-  radarLocations->insert(QString("KMOB in Mobile, AL"),
-			 QPointF(-88.240, 30.679));
-  radarLocations->insert(QString("KVAX at Moody AFB, GA"),
-			 QPointF(-83.390, 30.390));
-  radarLocations->insert(QString("KMHX in Morehead City, NC"),
-			 QPointF(-76.876, 34.776));
-  radarLocations->insert(QString("KLIX in New Orleans, LA"),
-			 QPointF(-89.826, 30.337));
-  radarLocations->insert(QString("KOKX in New York City, NY"),
-			 QPointF(-72.864, 40.866));
-  radarLocations->insert(QString("KAKO, in Richmond, VA"),
-			 QPointF(-77.007, 36.984));
-  radarLocations->insert(QString("KRAX in Raleigh, NC"),
-			 QPointF(-78.490, 35.666));
-  radarLocations->insert(QString("PHKI in South Kauai, HI"),
-			 QPointF(-159.552, 21.894));
-  radarLocations->insert(QString("KLWX in Sterling, VA"),
-			 QPointF(-77.478, 38.975));
-  radarLocations->insert(QString("KTLH in Tallahassee, FL"),
-			 QPointF(-84.329, 30.398));
-  radarLocations->insert(QString("KTBW in Tampa, FL"),
-			 QPointF(-82.402, 27.706 ));
-  radarLocations->insert(QString("KLTX in Wilmington, NC"),
-			 QPointF(-78.429, 33.990));
-  radarLocations->insert(QString("Other Radar...."),
-			 QPointF(0.0, 0.0));
-*/
-
-  
 }
 
 
@@ -488,9 +394,9 @@ CappiPanel::CappiPanel()
 
   QGroupBox *grid = new QGroupBox(tr("Griding Configurations"));
 
-  QLabel *xdim = new QLabel(tr("x-dim"));
-  QLabel *ydim = new QLabel(tr("y-dim"));
-  QLabel *zdim = new QLabel(tr("z-dim"));
+  QLabel *xdim = new QLabel(tr("Length of Grid in X Direction"));
+  QLabel *ydim = new QLabel(tr("Length of Grid in Y Direction"));
+  QLabel *zdim = new QLabel(tr("Length of Grid in Z Direction"));
   xDimBox = new QDoubleSpinBox;
   xDimBox->setDecimals(1);
   xDimBox->setRange(-999,999);
@@ -581,6 +487,8 @@ CappiPanel::CappiPanel()
 			      QString("barnes"));
   interpolationMethod->insert(QString("Select Interpolation Method"), 
 			      QString(""));
+  // add some more of these interpolation method options as nessecary
+
   intBox = new QComboBox;
   QList<QString> options = interpolationMethod->keys();
   for(int i = 0; i < options.count(); i++)
@@ -590,7 +498,6 @@ CappiPanel::CappiPanel()
   QHBoxLayout *interpolationLayout = new QHBoxLayout;
   interpolationLayout->addWidget(interpolation);
   interpolationLayout->addWidget(intBox);
-  //add some more of these
 
   QVBoxLayout *layout = new QVBoxLayout;
   layout->addLayout(cappiDir);
@@ -629,6 +536,8 @@ CappiPanel::CappiPanel()
 	  this, SLOT(valueChanged(const QString&)));
   connect(intBox, SIGNAL(activated(const QString&)), 
 	  this, SLOT(valueChanged(const QString&)));
+  // These connections allow individual widgets to notify the panel when 
+  // a parameter has changed.
 
   setPanelChanged(false);
 }
@@ -777,24 +686,63 @@ CenterPanel::CenterPanel()
   dirLayout->addWidget(browse, 1,3);
 
   QLabel *geometry = new QLabel(tr("Geometry"));
+  geometryOptions = new QHash<QString, QString>;
+  geometryOptions->insert(QString("GBVTD"),
+			      QString("GBVTD"));
+  geometryOptions->insert(QString("Select Geometry"), 
+			      QString(""));
+  // Add additional option here
+
   geometryBox = new QComboBox;
-  geometryBox->addItem(tr("Select Geometry"));
-  geometryBox->addItem(tr("GBVTD"));
+  QList<QString> options = geometryOptions->keys();
+  for(int i = 0; i < options.count(); i++)
+    {
+      geometryBox->addItem(options[i]);
+    }
 
   QLabel *closure = new QLabel(tr("Closure"));
+  closureOptions = new QHash<QString, QString>;
+  closureOptions->insert(QString("Original"), 
+			QString("original"));
+  closureOptions->insert(QString("Select closure assumption"),
+			 QString(""));
+  // Add addtional options here
+
   closureBox = new QComboBox;
-  closureBox->addItem(tr("Select Closure"));
-  closureBox->addItem(tr("Original"));
+  options = closureOptions->keys();
+  for(int i = 0; i < options.count(); i++)
+    {
+      closureBox->addItem(options[i]);
+    }
 
   QLabel *reflectivity = new QLabel(tr("Reflectivity"));
+  reflectivityOptions = new QHash<QString, QString>;
+  reflectivityOptions->insert(QString("DZ"),
+			      QString("DZ"));
+  reflectivityOptions->insert(QString("Select reflectivity"),
+			      QString(""));
+  // Add additional options here
+  
   refBox = new QComboBox;
-  refBox->addItem(tr("Select Reflectivity"));
-  refBox->addItem(tr("DZ"));
+  options = reflectivityOptions->keys();
+  for(int i = 0; i < options.count(); i++)
+    {
+      refBox->addItem(options[i]);
+    }
 
   QLabel *velocity = new QLabel(tr("Velocity"));
+  velocityOptions = new QHash<QString, QString>;
+  velocityOptions->insert(QString("VE"), QString("VE"));
+  velocityOptions->insert(QString("Select Velocity"),
+			  QString(""));
+  // Add additional options here
+
   velBox = new QComboBox;
-  velBox->addItem(tr("Select Velocity"));
-  velBox->addItem(tr("VE"));
+  options = velocityOptions->keys();
+  for(int i = 0; i < options.count(); i++) 
+    {
+      velBox->addItem(options[i]);
+    }
 
   QGroupBox *searchRegion = new QGroupBox(tr("Center Search Limitations"));
   QGridLayout *search = new QGridLayout;
@@ -816,15 +764,15 @@ CenterPanel::CenterPanel()
   search->addWidget(oRBox, 1, 3);
   searchRegion->setLayout(search);
 
-  QGridLayout *options = new QGridLayout;
-  options->addWidget(geometry, 0,0);
-  options->addWidget(geometryBox, 0, 1);
-  options->addWidget(closure, 1,0);
-  options->addWidget(closureBox,1,1);
-  options->addWidget(reflectivity, 0,3);
-  options->addWidget(refBox, 0,4);
-  options->addWidget(velocity, 1,3);
-  options->addWidget(velBox, 1, 4);
+  QGridLayout *optionsLayout = new QGridLayout;
+  optionsLayout->addWidget(geometry, 0,0);
+  optionsLayout->addWidget(geometryBox, 0, 1);
+  optionsLayout->addWidget(closure, 1,0);
+  optionsLayout->addWidget(closureBox,1,1);
+  optionsLayout->addWidget(reflectivity, 0,3);
+  optionsLayout->addWidget(refBox, 0,4);
+  optionsLayout->addWidget(velocity, 1,3);
+  optionsLayout->addWidget(velBox, 1, 4);
 
   dataGapBoxes = QList<QDoubleSpinBox*>();
   QLabel *maxWaveNum = new QLabel(tr("Maximum Wave Number"));
@@ -837,9 +785,19 @@ CenterPanel::CenterPanel()
   createDataGaps();
 
   QLabel *searchCrit = new QLabel(tr("Center finding Criteria"));
+  criteriaOptions = new QHash<QString,QString>;
+  criteriaOptions->insert(QString("Maximum Tangential Velocity"),
+			  QString("MAXVTO"));
+  criteriaOptions->insert(QString(tr("Select Criteria")),
+			  QString(""));
+  // Add additional options here
+	   
   critBox = new QComboBox;
-  critBox->addItem(tr("Select Center Finding Criteria"));
-  critBox->addItem(tr("MAXVT0"));
+  options = criteriaOptions->keys();
+  for(int i = 0; i < options.count(); i++)
+    {
+      critBox->addItem(options[i]);
+    }
   QHBoxLayout *criteriaLayout = new QHBoxLayout;
   criteriaLayout->addWidget(searchCrit);
   criteriaLayout->addWidget(critBox);
@@ -879,9 +837,9 @@ CenterPanel::CenterPanel()
   master->addWidget(numPoints, 2,2);
   master->addWidget(numPointsBox, 2,3);
 
-  main = new QVBoxLayout;
+  QVBoxLayout *main = new QVBoxLayout;
   main->addLayout(dirLayout);
-  main->addLayout(options);
+  main->addLayout(optionsLayout);
   main->addWidget(searchRegion);
   main->addLayout(maxWaveLayout);
   main->addWidget(dataGap);
@@ -980,25 +938,31 @@ void CenterPanel::updatePanel(const QDomElement panelElement)
     if (name == "numpoints") {
       numPointsBox->setValue(parameter.toInt()); }
     if (name == "geometry") {
-      int index = geometryBox->findText(parameter, Qt::MatchStartsWith);
+      int index = geometryBox->findText(geometryOptions->key(parameter), 
+					Qt::MatchStartsWith);
       if (index != -1)
 	geometryBox->setCurrentIndex(index); }
     if (name == "closure") {
-      int index = closureBox->findText(parameter, Qt::MatchStartsWith);
+      int index = closureBox->findText(closureOptions->key(parameter), 
+				       Qt::MatchStartsWith);
       if (index != -1)
 	closureBox->setCurrentIndex(index); }
     if (name == "reflectivity") {
-      int index = refBox->findText(parameter, Qt::MatchStartsWith);
+      int index = refBox->findText(reflectivityOptions->key(parameter), 
+				   Qt::MatchStartsWith);
       if (index != -1)
 	refBox->setCurrentIndex(index); }
     if (name == "velocity") {
-      int index = velBox->findText(parameter, Qt::MatchStartsWith);
+      int index = velBox->findText(velocityOptions->key(parameter), 
+				   Qt::MatchStartsWith);
       if (index != -1)
 	velBox->setCurrentIndex(index); }
     if (name == "search") {
-      int index = critBox->findText(parameter, Qt::MatchStartsWith);
+      int index = critBox->findText(criteriaOptions->key(parameter),
+				    Qt::MatchStartsWith);
       if (index != -1)
 	critBox->setCurrentIndex(index); }
+
     child = child.nextSiblingElement();
   }
  setPanelChanged(false);
@@ -1016,32 +980,30 @@ bool CenterPanel::updateConfig()
 	emit changeDom(element, QString("dir"), dir->text());
       }
       if(element.firstChildElement("geometry").text()
-	 !=geometryBox->currentText()) {
+	 !=geometryOptions->value(geometryBox->currentText())) {
 	emit changeDom(element, QString("geometry"), 
-		       geometryBox->currentText());
+		       geometryOptions->value(geometryBox->currentText()));
       }
       if(element.firstChildElement("closure").text()
-	 !=closureBox->currentText())
+	 !=closureOptions->value(closureBox->currentText()))
 	{
-	  if(closureBox->currentText()==QString("Original"))
-	    emit changeDom(element, QString("closure"), QString("original"));
-	  else 
-	    emit changeDom(element, QString("closure"), 
-			   closureBox->currentText());
+	  emit changeDom(element, QString("closure"), 
+			 closureOptions->value(closureBox->currentText()));
 	}
       if(element.firstChildElement("reflectivity").text()
-	 !=refBox->currentText()) {
+	 !=reflectivityOptions->value(refBox->currentText())) {
 	emit changeDom(element, QString("reflectivity"), 
-		       refBox->currentText());
+		       reflectivityOptions->value(refBox->currentText()));
       }
       if(element.firstChildElement("velocity").text()
-	 !=velBox->currentText()) {
+	 !=velocityOptions->value(velBox->currentText())) {
 	emit changeDom(element, QString("velocity"), 
-		       velBox->currentText());
+		       velocityOptions->value(velBox->currentText()));
       }
       if(element.firstChildElement("search").text()
-	 !=critBox->currentText()) {
-	emit changeDom(element, QString("search"), critBox->currentText());
+	 !=criteriaOptions->value(critBox->currentText())) {
+	emit changeDom(element, QString("search"), 
+		       criteriaOptions->value(critBox->currentText()));
       }
       if(element.firstChildElement("bottomlevel").text().toInt()
 	 !=bLBox->value()) {
@@ -1161,24 +1123,63 @@ VTDPanel::VTDPanel()
   dirLayout->addWidget(browse, 1,3);
 
   QLabel *geometry = new QLabel(tr("Geometry"));
+  geometryOptions = new QHash<QString, QString>;
+  geometryOptions->insert(QString("GBVTD"),
+			  QString("GBVTD"));
+  geometryOptions->insert(QString("Select Geometry"), 
+			  QString(""));
+  // Add additional option here
+  
   geometryBox = new QComboBox;
-  geometryBox->addItem(tr("Select Geometry"));
-  geometryBox->addItem(tr("GBVTD"));
-
+  QList<QString> options = geometryOptions->keys();
+  for(int i = 0; i < options.count(); i++)
+    {
+      geometryBox->addItem(options[i]);
+    }
+  
   QLabel *closure = new QLabel(tr("Closure"));
+  closureOptions = new QHash<QString, QString>;
+  closureOptions->insert(QString("Original"), 
+			QString("original"));
+  closureOptions->insert(QString("Select closure assumption"),
+			 QString(""));
+  // Add addtional options here
+  
   closureBox = new QComboBox;
-  closureBox->addItem(tr("Select Closure"));
-  closureBox->addItem(tr("Original"));
-
+  options = closureOptions->keys();
+  for(int i = 0; i < options.count(); i++)
+    {
+      closureBox->addItem(options[i]);
+    }
+  
   QLabel *reflectivity = new QLabel(tr("Reflectivity"));
+  reflectivityOptions = new QHash<QString, QString>;
+  reflectivityOptions->insert(QString("DZ"),
+			      QString("DZ"));
+  reflectivityOptions->insert(QString("Select reflectivity"),
+			      QString(""));
+  // Add additional options here
+  
   refBox = new QComboBox;
-  refBox->addItem(tr("Select Reflectivity"));
-  refBox->addItem(tr("DZ"));
-
+  options = reflectivityOptions->keys();
+  for(int i = 0; i < options.count(); i++)
+    {
+      refBox->addItem(options[i]);
+    }
+  
   QLabel *velocity = new QLabel(tr("Velocity"));
+  velocityOptions = new QHash<QString, QString>;
+  velocityOptions->insert(QString("VE"), QString("VE"));
+  velocityOptions->insert(QString("Select Velocity"),
+			  QString(""));
+  // Add additional options here
+
   velBox = new QComboBox;
-  velBox->addItem(tr("Select Velocity"));
-  velBox->addItem("VE");
+  options = velocityOptions->keys();
+  for(int i = 0; i < options.count(); i++) 
+    {
+      velBox->addItem(options[i]);
+    }  
 
   QGroupBox *searchRegion = new QGroupBox(tr("VTD Grid Region"));
   QGridLayout *search = new QGridLayout;
@@ -1200,15 +1201,15 @@ VTDPanel::VTDPanel()
   search->addWidget(oRBox, 1, 3);
   searchRegion->setLayout(search);
 
-  QGridLayout *options = new QGridLayout;
-  options->addWidget(geometry, 0,0);
-  options->addWidget(geometryBox, 0, 1);
-  options->addWidget(closure, 1,0);
-  options->addWidget(closureBox,1,1);
-  options->addWidget(reflectivity, 0,3);
-  options->addWidget(refBox, 0,4);
-  options->addWidget(velocity, 1,3);
-  options->addWidget(velBox, 1, 4);
+  QGridLayout *optionsLayout = new QGridLayout;
+  optionsLayout->addWidget(geometry, 0,0);
+  optionsLayout->addWidget(geometryBox, 0, 1);
+  optionsLayout->addWidget(closure, 1,0);
+  optionsLayout->addWidget(closureBox,1,1);
+  optionsLayout->addWidget(reflectivity, 0,3);
+  optionsLayout->addWidget(refBox, 0,4);
+  optionsLayout->addWidget(velocity, 1,3);
+  optionsLayout->addWidget(velBox, 1, 4);
 
   dataGapBoxes = QList<QDoubleSpinBox*>();
   QLabel *maxWaveNum = new QLabel(tr("Maximum Wave Number"));
@@ -1229,7 +1230,7 @@ VTDPanel::VTDPanel()
 
   QVBoxLayout *main = new QVBoxLayout;
   main->addLayout(dirLayout);
-  main->addLayout(options);
+  main->addLayout(optionsLayout);
   main->addWidget(searchRegion);
   main->addLayout(maxWaveLayout);
   main->addWidget(dataGap);
@@ -1303,20 +1304,25 @@ void VTDPanel::updatePanel(const QDomElement panelElement)
 	  dataGapBoxes[i]->setValue(dataGap);
 	}
     }
+
     if (name == "geometry") {
-      int index = geometryBox->findText(parameter, Qt::MatchStartsWith);
+      int index = geometryBox->findText(geometryOptions->key(parameter), 
+					Qt::MatchStartsWith);
       if (index != -1)
 	geometryBox->setCurrentIndex(index); }
     if (name == "closure") {
-      int index = closureBox->findText(parameter, Qt::MatchStartsWith);
+      int index = closureBox->findText(closureOptions->key(parameter), 
+				       Qt::MatchStartsWith);
       if (index != -1)
 	closureBox->setCurrentIndex(index); }
     if (name == "reflectivity") {
-      int index = refBox->findText(parameter, Qt::MatchStartsWith);
+      int index = refBox->findText(reflectivityOptions->key(parameter), 
+				   Qt::MatchStartsWith);
       if (index != -1)
 	refBox->setCurrentIndex(index); }
     if (name == "velocity") {
-      int index = velBox->findText(parameter, Qt::MatchStartsWith);
+      int index = velBox->findText(velocityOptions->key(parameter), 
+				   Qt::MatchStartsWith);
       if (index != -1)
 	velBox->setCurrentIndex(index); }
 
@@ -1337,31 +1343,25 @@ bool VTDPanel::updateConfig()
 	emit changeDom(element, QString("dir"), dir->text());
       }
       if(element.firstChildElement("geometry").text()
-	 !=geometryBox->currentText()) {
+	 !=geometryOptions->value(geometryBox->currentText())) {
 	emit changeDom(element, QString("geometry"), 
-		       geometryBox->currentText());
+		       geometryOptions->value(geometryBox->currentText()));
       }
       if(element.firstChildElement("closure").text()
-	 !=closureBox->currentText())
+	 !=closureOptions->value(closureBox->currentText()))
 	{
-	  if(closureBox->currentText()==QString("Original")) {
-	    if(element.firstChildElement("closure").text()
-	       != QString("original"))
-	      emit changeDom(element, QString("closure"), QString("original"));
-	  }
-	  else 
-	    emit changeDom(element, QString("closure"), 
-			   closureBox->currentText());
+	  emit changeDom(element, QString("closure"), 
+			 closureOptions->value(closureBox->currentText()));
 	}
       if(element.firstChildElement("reflectivity").text()
-	 !=refBox->currentText()) {
+	 !=reflectivityOptions->value(refBox->currentText())) {
 	emit changeDom(element, QString("reflectivity"), 
-		       refBox->currentText());
+		       reflectivityOptions->value(refBox->currentText()));
       }
       if(element.firstChildElement("velocity").text()
-	 !=velBox->currentText()) {
+	 !=velocityOptions->value(velBox->currentText())) {
 	emit changeDom(element, QString("velocity"), 
-		       velBox->currentText());
+		       velocityOptions->value(velBox->currentText()));
       }
       if(element.firstChildElement("bottomlevel").text().toInt()
 	 !=bLBox->value()) {
@@ -1689,6 +1689,10 @@ QCPanel::QCPanel()
   known = new QRadioButton(tr("Use Available AWEPS Data"), findWind);
 
   QFrame *vadParameters = new QFrame;
+
+  useGVAD = new QRadioButton(tr("Use GVAD Algorithm to Find Mean Winds"),
+			     vadParameters);
+
   QLabel *vadLevelsLabel = new QLabel(tr("Number of VAD Levels Used"));
   vadLevels = new QSpinBox;
   vadLevels->setRange(5,50);
@@ -1708,6 +1712,7 @@ QCPanel::QCPanel()
   numCoLayout->addWidget(numCoefficients);
 
   QVBoxLayout *vadLayout = new QVBoxLayout;
+  vadLayout->addWidget(useGVAD);
   vadLayout->addLayout(vadLevelsLayout);
   vadLayout->addLayout(numCoLayout);
   vadParameters->setLayout(vadLayout);
@@ -1910,3 +1915,101 @@ bool QCPanel::updateConfig()
     }
   return true;
 }
+
+/*
+  void RadarPanel::fillRadAubryarHash()
+  {
+
+  
+    Was used before the xml file for radar information was created
+    This is kept on hand for now incase the info in the xml is overwritten
+    
+    radarNameOptions = new QHash<QString, QString>;
+    radarLocations = new QHash<QString, QPointF>;
+    radarNameOptions->insert(QString("Please select a radar"), QString(""));
+    radarLocations->insert(QString("Please select a radar"), QPointF(0.0,0.0));
+    radarNameOptions->insert(QString("RCWF in Taiwan"),QString("RCWF"));
+   radarLocations->insert(QString("RCWF in Taiwan"), QPointF(121.773, 25.073));
+    radarLocations->insert(QString("TJUA in San Juan Puerto Rico"), 
+    QPointF(-66.078, 18.116));
+    radarLocations->insert(QString("KENX in Albany, NY"), 
+    QPointF(-74.064, 42.586));
+    radarLocations->insert(QString("Anderson_AFB in Guam"), 
+    QPointF(144.811,13.453));
+    radarLocations->insert(QString("KFFC in Atlanta, GA"),
+    QPointF(-84.567, 33.364));
+    radarLocations->insert(QString("KEWX in Austin/San Antonio, TX"),
+    QPointF(-98.028, 29.704));
+    radarLocations->insert(QString("KBGM in Binghamton, NY"),
+    QPointF(-75.985, 42.200));
+    radarLocations->insFrom:	
+From:	Lisa Mauger <lmauger@mines.edu>  changeert(QString("KBMX in Birmingham, AL"),
+    QPointF(-86.770, 33.172));
+    radarLocations->insert(QString("KBOX in Boston, MA"), 
+    QPointF(-71.137, 41.956));
+    radarLocations->insert(QString("KBRO in Brownsville, TX"),
+    QPointF(-97.419, 25.916));
+    radarLocations->insert(QString("RKSG in Camp Humphreys, South Korea"),
+    QPointF(127.021, 36.956));
+    radarLocations->insert(QString("KCLX in Charleston, SC"),
+    QPointF(-81.042, 32.656));
+    radarLocations->insert(QString("KCAE in Columbia SC"),
+    QPointF(-81.118, 33.949));
+    radarLocations->insert(QString("KCRP in Corpus Christi, TX"),
+    QPointF(-97.511,27.784));
+    radarLocations->insert(QString("KDOX at Dover AFB, DE"),
+    QPointF(-75.440,38.826));
+    radarLocations->insert(QString("KDYX at Dyess AFB, TX"),
+    QPointF(-99.254, 32.538));
+    radarLocations->insert(QString("KEVX at Eglin AFB, FL"),
+    QPointF(-85.921, 30.564));
+    radarLocations->insert(QString("KPOE at Fort Polk, LA"),
+    QPointF(-92.976, 31.156));
+    radarLocations->insert(QString("KCBW in Houlton, ME"),
+    QPointF(-67.806, 46.039));
+    radarLocations->insert(QString("KHGX in Galveston, TX"),
+    QPointF(-95.079, 29.742));
+    radarLocations->insert(QString("KJAN in Jackson, MS"),
+    QPointF(-90.080,32.318));
+    radarLocations->insert(QString("KJAX in JacksonVille, FL"),
+    QPointF(81.701, 30.485));
+    radarLocations->insert(QString("RODN in Kadena Okinawa, Japan"),
+    QPointF(127.910, 26.302));
+    radarLocations->insert(QString("KBYX in Key West, FL"),
+    QPointF(-81.703, 24.598));
+    radarLocations->insert(QString("KLCH in Lake Charles, LA"),
+    QPointF(-93.216, 30.125));
+    radarLocations->insert(QString("KMXX in Maxwell ARB, AL"),
+    QPointF(-85.790, 32.537));
+    radarLocations->insert(QString("KMLB in Melbourne, FL"),
+    QPointF(-80.654, 28.113));
+    radarLocations->insert(QString("KAMX in Miami, FL"),
+    QPointF(-80.413, 25.611));
+    radarLocations->insert(QString("KMOB in Mobile, AL"),
+    QPointF(-88.240, 30.679));
+    radarLocations->insert(QString("KVAX at Moody AFB, GA"),
+    QPointF(-83.390, 30.390));
+    radarLocations->insert(QString("KMHX in Morehead City, NC"),
+    QPointF(-76.876, 34.776));
+    radarLocations->insert(QString("KLIX in New Orleans, LA"),
+    QPointF(-89.826, 30.337));
+    radarLocations->insert(QString("KOKX in New York City, NY"),
+    QPointF(-72.864, 40.866));
+    radarLocations->insert(QString("KAKO, in Richmond, VA"),
+    QPointF(-77.007, 36.984));
+    radarLocations->insert(QString("KRAX in Raleigh, NC"),
+    QPointF(-78.490, 35.666));
+    radarLocations->insert(QString("PHKI in South Kauai, HI"),
+    QPointF(-159.552, 21.894));
+    radarLocations->insert(QString("KLWX in Sterling, VA"),
+    QPointF(-77.478, 38.975));
+    radarLocations->insert(QString("KTLH in Tallahassee, FL"),
+    QPointF(-84.329, 30.398));
+    radarLocations->insert(QString("KTBW in Tampa, FL"),
+    QPointF(-82.402, 27.706 ));
+    radarLocations->insert(QString("KLTX in Wilmington, NC"),
+    QPointF(-78.429, 33.990));
+    radarLocations->insert(QString("Other Radar...."),
+    QPointF(0.0, 0.0));
+    }
+*/

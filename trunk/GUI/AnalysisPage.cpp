@@ -396,6 +396,10 @@ void AnalysisPage::prepareToClose()
 
 bool AnalysisPage::analyticModel()
 {
+
+  // Creates a rudimentry dialog for editing or confirming the parameters of
+  // the model vortex to be created and sampled by the theoretical radar.
+
   QString modelFile = configData->getParam(configData->getConfig("radar"),
 					   "dir");
   Configuration *modelConfig = new Configuration(this, modelFile);
@@ -404,6 +408,7 @@ bool AnalysisPage::analyticModel()
   QDialog *modelDialog = new QDialog;
   modelDialog->setModal(true);
   QPushButton *run = new QPushButton("Create Analytic Model");
+  run->setDefault(true);
   QPushButton *cancel = new QPushButton("Cancel");
   ConfigTree *configTreeModel = new ConfigTree(modelDialog, modelConfig);
   connect(configTreeModel, SIGNAL(log(const Message&)),

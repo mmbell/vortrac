@@ -21,6 +21,7 @@ class AnalyticGrid : public GriddedData
  
  public:
   AnalyticGrid();
+
   ~AnalyticGrid();
 
   void gridAnalyticData(QDomElement cappiConfig,Configuration* analyticConfig,
@@ -47,6 +48,7 @@ class AnalyticGrid : public GriddedData
   float rmw;
   float envSpeed;
   float envDir;
+  //  float scale;
   QList<float> vT;
   QList<float> vR;
   QList<float> vTAngle;

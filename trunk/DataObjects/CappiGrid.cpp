@@ -31,7 +31,7 @@ CappiGrid::~CappiGrid()
 void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 					float *vortexLat, float *vortexLon)
 {
-  Message::toScreen("IN CAPPI GRID DATA");
+  // Message::toScreen("IN CAPPI GRID DATA");
 
   // Set the output file
   QString cappiPath = cappiConfig.firstChildElement("dir").text();

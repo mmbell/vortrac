@@ -30,38 +30,53 @@
 class AbstractPanel:public QWidget
 {
   Q_OBJECT
-    // AbstractPanel is a model for creating many panels used in the
-    // ConfigurationDialog
+    /*
+     * AbstractPanel is a model for creating many panels used in the
+     * ConfigurationDialog.
+     */
  public:
    AbstractPanel(QWidget *parent = 0);
+ 
    virtual void updatePanel(QDomElement panelElement);
      // Reads in values from the Configuration and writes
      // values from the corresponding section to the panel.
+ 
    virtual bool  updateConfig();
      // Writes current values in the panel to the corresponding section of the 
      // Configuration
 
    QLineEdit *dir;
    QPushButton *browse;
+   // The dir and browse memebers create a generic setup that can be added to
+   // any panel for finding and returning an existing folder location.
+
    QSpinBox *maxWaveNumBox;
    QGroupBox *dataGap;
    QGridLayout *dataGapLayout;
    QList<QDoubleSpinBox*> dataGapBoxes;
    QList<QLabel*> dataGapLabels;
-     // The dir and browse memebers create a generic setup that can be added to
-     // any panel for finding and returning an existing folder location.
+   /*
+    * The above list of members are used for the automatic adjustment of
+    * visible data gap entry boxes which are used for VTD and Center panels
+    */
+ 
    bool checkPanelChanged(){return panelChanged;}
    void setPanelChanged(bool hasChanged);
+
    QDomElement getPanelElement() {return elem;}
    void setElement(QDomElement newElement);
-   void createDataGaps();
    
-   /*
-    *  Used to provide automatic radar latitude and longitude display
-    */
+   void createDataGaps();
+   // Generates the framework nessecary for automatically adjusting data 
+   // gap parameter entry boxes
+   
    QDoubleSpinBox *radarLatBox, *radarLongBox, *radarAltBox;
    QComboBox *radarName;
    Configuration *radars;
+   /*
+    * These members are used to allow the pull down menu to update other
+    * view fields with information on radar latitude, longitude and altitude
+    */
 
  public slots:
    void createDataGaps(const QString& value);
@@ -69,7 +84,9 @@ class AbstractPanel:public QWidget
 
  protected:
    void connectBrowse();
+   // sets the browse button to allow the user to select a directory
    void connectFileBrowse();
+   // sets the browse button to allow the user to select a file
 
  private:
    bool panelChanged;
@@ -86,14 +103,20 @@ class AbstractPanel:public QWidget
    void valueChanged(const QDateTime& dateTime);
      // These slots receive signals when one of the panel's parameters has
      // been changed.
+   
    void getDirectory();
      // Receives the signal emited by the browse button
      // Call's the getExisting Directory Dialog
    void getFileName();
      // Receives the signal emited by the browseFiles button
      // Call's the getOpenFileName QDialog static member
+   
+   // Slots specific to the radar panel implementation
+
    void checkForAnalytic(const QString& format);
+     // checks to see if analytic model is the selected format
    void radarChanged(const QString& text);
+     // allows for automatic updating of stored radar specs
  
 
  signals:
@@ -103,11 +126,15 @@ class AbstractPanel:public QWidget
      // Sends information needed to update the Configuration
    void addDom(const QDomElement &element, const QString &name, 
 	       const QString &value);
-   // Sends information needed to create a new dom element
+     // Sends information needed to create a new dom element
    void removeDom(const QDomElement &element, const QString &name);
-   // Sends information needed to remove a dom element that is no longer needed
+     // Sends information needed to remove a dom element that is 
+     //  no longer needed
+ 
+   // Signals specific to the graphics panel implementation
    void stateChange(const QString &name, const bool change);
-
+     // Updates the graph if changes have been made to the
+     //   viewable limits of the graph
 };
 
 #endif

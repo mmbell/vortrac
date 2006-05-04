@@ -10,6 +10,8 @@
 
 #include "Configuration.h"
 
+#include <QDomText>
+
 
 Configuration::Configuration(QObject *parent, const QString &filename)
   :QObject(parent)
@@ -151,20 +153,63 @@ void Configuration::addDom(const QDomElement &element,
 			   const QString &paramName, 
 			   const QString &paramValue)
 {
-  QString siblingName(paramName);
-  siblingName = siblingName.remove("maxdatagap_");
-  int last = siblingName.toInt();
-  siblingName = QString("maxdatagap_"+QString().setNum(last-1));
+  QString siblingName;
+  if(paramName.contains("maxdatagap_")) {
+    siblingName = paramName;
+    siblingName = siblingName.remove("maxdatagap_");
+    int last = siblingName.toInt();
+    siblingName = QString("maxdatagap_"+QString().setNum(last-1));
 
-  QDomNode newChild(element.firstChildElement(siblingName).cloneNode());
-  QDomElement newChildElement = newChild.toElement();
-  newChildElement.setTagName(paramName);
-  int index = indexForTagName[element.tagName()];
-  QDomNode parentNode = groupList.item(index);
-  parentNode.insertAfter(newChildElement, 
-			 element.lastChildElement(siblingName));
-  setParam(element, paramName, paramValue);
-  emit configChanged();
+    QDomNode newChild(element.firstChildElement(siblingName).cloneNode());
+    QDomElement newChildElement = newChild.toElement();
+    newChildElement.setTagName(paramName);
+    int index = indexForTagName[element.tagName()];
+    QDomNode parentNode = groupList.item(index);
+    parentNode.insertAfter(newChildElement, 
+			   element.lastChildElement(siblingName));
+    setParam(element, paramName, paramValue);
+    emit configChanged();
+  }
+  else {
+    siblingName = element.lastChild().toElement().tagName();
+    QDomElement newChildElement;
+    
+    if(!siblingName.isEmpty()) {
+      QDomNode newChild(element.firstChildElement(siblingName).cloneNode());
+      newChildElement = newChild.toElement();
+      newChildElement.setTagName(paramName);
+    }
+    else {
+      newChildElement = domDoc.createElement(paramName);
+    }
+
+    QDomNode parentNode;
+    if(!indexForTagName.contains(element.tagName())){
+      parentNode = getRoot();  
+      parentNode.appendChild(newChildElement);
+    }
+    else{
+      int index = indexForTagName[element.tagName()];
+      parentNode = groupList.item(index);
+      parentNode.appendChild(newChildElement);
+    }
+    
+    if(!paramValue.isEmpty()) {
+      QDomText paramText = domDoc.createTextNode(paramValue);
+      newChildElement.appendChild(paramText);
+    }
+      
+    indexForTagName.clear();
+    groupList = root.childNodes();
+    for (int i = 0; i <= groupList.count()-1; i++) {
+      QDomNode currNode = groupList.item(i);
+      QDomElement group = currNode.toElement();
+      indexForTagName.insert(group.tagName(), i);
+    }
+    
+    isModified = true;
+    emit configChanged();
+  }
 }
 
 void Configuration::removeDom(const QDomElement &element,

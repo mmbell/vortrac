@@ -11,13 +11,15 @@
 #include "AnalyticRadar.h"
 #include "IO/Message.h"
 #include <math.h>
+#include <stdlib.h>
+#include <time.h>
 
  AnalyticRadar::AnalyticRadar(const QString& radarname, float lat,
 			      float lon, const QString& configFile)
    : RadarData(radarname, lat, lon, configFile)
    
 {
-  //Message::toScreen("Analytic Radar Constructor");
+
   config = new Configuration();
   config->read(configFile);
   QDomElement radar = config->getRoot().firstChildElement("analytic_radar");
@@ -124,7 +126,7 @@ Ray AnalyticRadar::addRay()
 
   //int numRefGates = (int)ceil(furthestPosition/refGateSp);
   
-  int numRefGates = 300;
+  // numRefGates = 100;
   float *ref_data = new float[numRefGates];
   float gateBoundary = 0;
   
@@ -155,8 +157,8 @@ Ray AnalyticRadar::addRay()
   dataType = QString("VE");
   raw_vel_data = data->getSphericalRangeData(dataType,azimAngle, elevAngle);
   //int numVelGates = (int)ceil(furthestPosition/velGateSp);
-  //  int gateNum = 0;
-  int numVelGates = 300;
+  // int gateNum = 0;
+  // int numVelGates = 100;
   float *vel_data = new float[numVelGates];
   float *sw_data = new float[numVelGates];
   gateBoundary = 0;
@@ -177,7 +179,14 @@ Ray AnalyticRadar::addRay()
 	sw_data[gateNum] = -999;
       }
       else {
+	
 	vel_data[gateNum] = velSum*cos(elevAngle*deg2rad)/(float)count;
+
+	// Add in noise factor, method borrowed from analyticTC
+	
+	srand(time(NULL));  // initializes random number generator
+	float noise = rand()%1000/1000.0 -.5;
+	vel_data[gateNum]+= scale*noise;
 
 	float *sw_points = new float[count];
 	int countAgain = 0;
@@ -210,18 +219,6 @@ Ray AnalyticRadar::addRay()
     } 
     gateBoundary+=velGateSp;
   }
-
-  
-  /*
-  if(numRays == 5) {
-    Message::toScreen("RAY #:"+QString().setNum(numRays)+" azimuth "+QString().setNum(azimAngle)+" #refGates: "+QString().setNum(numRefGates)+" midRefValue "+QString().setNum(ref_data[numRefGates/2])+" #velGates: "+QString().setNum(numVelGates)+" midVelValue "+QString().setNum(vel_data[numVelGates/2]));
-    
-    QString print;
-    for(int p = 0; p < numVelGates; p+=2)
-      print+= " "+QString().setNum(vel_data[p]);
-    Message::toScreen("RAY #:"+QString().setNum(numRays)+" azimuth "+QString().setNum(azimAngle)+print);
-  }
-  */
     
   newRay->setRefData( ref_data );
   newRay->setVelData( vel_data );
@@ -231,7 +228,7 @@ Ray AnalyticRadar::addRay()
   newRay->setRef_gatesp( 1000*refGateSp );
   newRay->setVel_gatesp( 1000*velGateSp );  
  
-  //newRay->setTime( );
+  //newRay->setTi<me( );
   //newRay->setDate( );
  
   // Need more info about how these values are used before filling
@@ -261,8 +258,6 @@ bool AnalyticRadar::skipReadVolume()
 
 bool AnalyticRadar::readVolumeAnalytic()
 {
-    
-  //testing Message::toScreen("In AnalyticRadar readVolumeAnalytic");
 
   // This section creates a griddedData to be sampled by the theoretical
   // radar and go through all the RadarQC
@@ -272,10 +267,6 @@ bool AnalyticRadar::readVolumeAnalytic()
 
 
   QDomElement radar = config->getRoot().firstChildElement("analytic_radar");
-  // if(radar.isNull())
-  //  Message::toScreen("Null Element");
-  //else
-  //  Message::toScreen("I have no idea");
 
   radarLat =  masterRoot.firstChildElement("radar").firstChildElement("lat").text().toFloat();
   radarLon =  masterRoot.firstChildElement("radar").firstChildElement("lon").text().toFloat(); 
@@ -287,6 +278,10 @@ bool AnalyticRadar::readVolumeAnalytic()
   refGateSp = config->getParam(radar, "refgatesp").toFloat();
   velGateSp = config->getParam(radar, "velgatesp").toFloat();
   beamWidth = config->getParam(radar, "beamwidth").toFloat();
+  scale = config->getParam(radar, "noise").toFloat();
+  float numGates = config->getParam(radar, "numgates").toInt();
+  int totNumSweeps = config->getParam(radar, "numsweeps").toInt();
+  
   QString sendToDealias = config->getParam(radar, "dealiasdata");
   if((sendToDealias == "true")||(sendToDealias == "True")
      ||(sendToDealias=="TRUE")){
@@ -295,6 +290,9 @@ bool AnalyticRadar::readVolumeAnalytic()
   else
     isDealiased(true);
 
+  numRefGates = numGates;
+  numVelGates = numGates;
+  
   radarDateTime = QDateTime::currentDateTime();
 
   radarName = QString("Analytic Radar"); 
@@ -310,29 +308,35 @@ bool AnalyticRadar::readVolumeAnalytic()
   // Sample with theoretical radar
   // VCP 0 : flat cappi sample
 
-  //testing Message::toScreen("In make radarVolume part of readVolumeAnalytic");
-
   vcp = 32;
 
-  int totNumSweeps = 1;
   int numRaysPerSweep = (int)floor(360.0/beamWidth);
   //testing Message::toScreen(QString().setNum(totNumSweeps*numRaysPerSweep));
-  elevations[0] = 0;
-  /*
-  elevations[0] = 0.5;
-  elevations[1] = 1.5;
-  elevations[2] = 2.5;
-  elevations[3] = 3.5;
-  elevations[4] = 4.5;
-  */
+
+  elevations = new float[totNumSweeps];
+
+  elevations[0]  = 0;
+  if(totNumSweeps > 1) {
+    elevations[1] = 0.5;
+    if(totNumSweeps > 2) {
+      elevations[1] = 1.5;
+      if(totNumSweeps > 3) {
+	elevations[2] = 2.5;
+	if(totNumSweeps > 4) {
+	  elevations[3] = 3.5;
+	  if(totNumSweeps > 5) {
+	    elevations[4] = 4.5;
+	  }}}}}
+  
   Sweeps = new Sweep[totNumSweeps];
   Rays = new Ray[totNumSweeps*numRaysPerSweep]; 
 
   for(int n = 0; n < totNumSweeps; n++) {
     //testing Message::toScreen("Trying to Make Sweep Number "+QString().setNum(n));
+    Message::toScreen("Made Sweep "+QString().setNum(n)+" of "+QString().setNum(totNumSweeps-1));
     Sweeps[numSweeps] = addSweep();
     for( int r = 0; r < numRaysPerSweep; r++) {
-      //Message::toScreen("Trying to Make Ray Number "+QString().setNum(r));
+      // Message::toScreen("Trying to Make Ray Number "+QString().setNum(r));
       Rays[numRays] = addRay();
     }  
     Sweeps[n].setLastRay(numRays-1);
