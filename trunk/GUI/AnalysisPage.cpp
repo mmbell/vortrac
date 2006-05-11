@@ -17,6 +17,9 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   : QWidget(parent)
 {
 
+  QFont f("Helvetica", 13, QFont::Bold);
+  setFont(f);
+
   statusLog = new Log();
   
   connect(this, SIGNAL(log(const Message&)),
@@ -59,8 +62,14 @@ AnalysisPage::AnalysisPage(QWidget *parent)
  
   QLabel *pressureLabel = new QLabel(tr("Current Pressure (mb):"));
   QLCDNumber *currPressure = new QLCDNumber;
+  currPressure->display(917);
+  currPressure->setSegmentStyle(QLCDNumber::Flat);
+  currPressure->resize(100,100);
   QLabel *rmwLabel = new QLabel(tr("Current RMW (km):"));
   QLCDNumber *currRMW = new QLCDNumber;
+  currRMW->display(16);
+  currRMW->setSegmentStyle(QLCDNumber::Flat);
+  currRMW->resize(100,100);
   
   QGroupBox *pressureGraph = new QGroupBox;
   
@@ -75,7 +84,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   TestGraph *tester = new TestGraph;
 
   connect(example, SIGNAL(clicked()), 
-	  tester, SLOT(examplePlot()));
+	  tester, SLOT(listPlot()));
   connect(tester, SIGNAL(listChanged(QList<VortexData>*)), 
 	  graph, SLOT(newInfo(QList<VortexData>*)));
   connect(tester, SIGNAL(dropListChanged(QList<VortexData>*)), 
@@ -117,23 +126,26 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 
   // Lay them out
   QHBoxLayout *lcdLayout = new QHBoxLayout;
+  lcdLayout->addStretch();
   lcdLayout->addWidget(pressureLabel);
   lcdLayout->addWidget(currPressure);
+  lcdLayout->addStretch();
   lcdLayout->addWidget(rmwLabel);
-
   lcdLayout->addWidget(currRMW);
+  lcdLayout->addStretch();
 
   QHBoxLayout *runLayout = new QHBoxLayout;
   runLayout->addWidget(progressBar);
   runLayout->addWidget(runButton);
   runLayout->addWidget(abortButton);
 
-  QVBoxLayout *displayPanel = new QVBoxLayout;
-  displayPanel->addLayout(lcdLayout);
-  displayPanel->addWidget(pressureGraph);
-  displayPanel->addWidget(hLine);
-  displayPanel->addWidget(statusText);
-  displayPanel->addLayout(runLayout);
+  QGridLayout *displayPanel = new QGridLayout;
+  displayPanel->addLayout(lcdLayout,0,0);
+  displayPanel->addWidget(pressureGraph,1,0);
+  displayPanel->addWidget(hLine,2,0);
+  displayPanel->addWidget(statusText,3,0);
+  displayPanel->addLayout(runLayout,4,0);
+  displayPanel->setRowMinimumHeight(0,50);
 
   QHBoxLayout *display = new QHBoxLayout;
   display->addWidget(diagPanel);

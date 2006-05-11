@@ -47,7 +47,7 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
  
   clock = new QLCDNumber(clockBox);
   clock->setSegmentStyle(QLCDNumber::Flat);
-  clock->resize(210,150);
+  clock->resize(150,100);
 
   QGridLayout *clockLayout = new QGridLayout;
   clockLayout->addWidget(clock,0,1,1,1);
@@ -82,7 +82,8 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   // Displays current radar vcp
 
   QLabel *vcpLabel = new QLabel(tr("Current Radar VCP"));
-  vcp = new QLineEdit(QString("No VCP available"));
+  //  vcp = new QLineEdit(QString("No VCP available")); 
+  vcp = new QLineEdit(QString("121"));
   vcp->setReadOnly(true);
 
   // Displays warning message that may accompany the change in stoplight

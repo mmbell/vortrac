@@ -187,7 +187,7 @@ void RadarQC::thresholdData()
    *  and removes velocity data that does not exceed certain spectral
    *  and velocity thresholds. This improves data quality in order to 
    *  improve the preformance of the following quality control routines
-   *  This method also calculates the number of valid gate, which is used
+   *  This method also calculates the number of valid gates, which is used
    *  in the VAD and GVAD methods.
    */
 
@@ -216,7 +216,8 @@ void RadarQC::thresholdData()
       for (int j = 0; j < numVGates; j++)
 	{
 	  if((swGates[j] > specWidthLimit)||
-	     (fabs(vGates[j]) < velThresholdLimit)) {
+	     (fabs(vGates[j]) < velThresholdLimit)) 
+	    /* Add reflectivity thresholding here*/{
 	    vGates[j] = velNull;
 	  }
 	  

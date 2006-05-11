@@ -36,6 +36,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   // Set the output file
   QString cappiPath = cappiConfig.firstChildElement("dir").text();
   QString cappiFile = radarData->getDateTimeString();
+  Message::toScreen(cappiFile);
   cappiFile.replace(QString(":"),QString("_"));
   outFileName = cappiPath + "/" + cappiFile;
 

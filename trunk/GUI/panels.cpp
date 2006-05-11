@@ -27,7 +27,8 @@ VortexPanel::VortexPanel()
   
   QRadioButton *hurricane = new QRadioButton(tr("Hurricane"), stormType);
   QRadioButton *tStorm = new QRadioButton(tr("Tropical Storm"), stormType);
-  QRadioButton *tDepression = new QRadioButton(tr("Tropical Depression"), stormType);
+  QRadioButton *tDepression = new QRadioButton(tr("Tropical Depression"), 
+					       stormType);
   QVBoxLayout *stormTypeLayout = new QVBoxLayout;
   stormTypeLayout->addWidget(hurricane);
   stormTypeLayout->addWidget(tStorm);
@@ -1917,7 +1918,7 @@ bool QCPanel::updateConfig()
 }
 
 /*
-  void RadarPanel::fillRadAubryarHash()
+  void RadarPanel::fillRadarHash()
   {
 
   

@@ -346,7 +346,7 @@ void AnalyticGrid::writeAsi()
 	id[163] = (int)iGridsp * 1000;
 	id[164] = 1;
   
-	// Y Header
+	// Y Headerhttps://webapps.fanda.ucar.edu/hrisConnect/Admin/Logoff.aspx
 	id[165] = (int)(ymin * jGridsp * 100);
 	id[166] = (int)(ymax * jGridsp * 100);
 	id[167] = (int)jDim;

@@ -291,8 +291,10 @@ class QCPanel:public AbstractPanel
   QDoubleSpinBox *velocityThreshold, *spectralThreshold, *windSpeed;
   QDoubleSpinBox *windDirection;
   /*
-   * velocityThreshold adjusts the minimum absolute value of velocities that 
+   * velocityMinimum adjusts the minimum absolute value of velocities that 
    *   will be used for analysis (attempts to remove ground clutter)
+   * velocityMaximum adjusts the maximum absolute value of velocities that 
+   *   will be used for analysis (attempts to remove erronous data)
    * spectralThreshold adjusts the minimum spectral width required for a 
    *   velocities that will be used for analysis
    * windSpeed is used to adjust the user entered environmental wind speed

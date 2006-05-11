@@ -19,15 +19,18 @@ class TestGraph:public QWidget
 {
 Q_OBJECT
 public:
-TestGraph(QWidget *parent = 0);
+  TestGraph(QWidget *parent = 0);
   void examplePlotNumbers(QList<VortexData> *VortexPointer,
 			  QList<VortexData> *dropPointer, 
 			  int number_of_VortexData);
-  // This function allows us to plot sample data points;
+  void listPlotNumbers(QString fileName,QList<VortexData> *VortexPointer,
+		       QList<VortexData> *dropPointer);
+  // These function allows us to plot sample data points;
   // All the data points viewed on the graph are generated within this function
 
   public slots:
     void examplePlot();
+    void listPlot(); 
 
   signals:
   void listChanged(QList<VortexData> *glist);

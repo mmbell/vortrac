@@ -79,7 +79,7 @@
    </graphics>
    <qc>
       <wind_method>vad</wind_method>
-      <vel_threshold>1.0</vel_threshold>
+      <vel_min>1.0</vel_min>
       <vel_max>100</vel_max>
       <ref_max>65</ref_max>
       <ref_min>-15</ref_min>
