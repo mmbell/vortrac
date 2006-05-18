@@ -764,6 +764,7 @@ void GraphFace::updateImage()
   painter->save();
  
   painter->rotate(270);
+  painter->setPen(pressurePen);
   painter->drawText(QRectF(0, -1*LEFT_MARGIN_WIDTH, graph_height,
 			   .3*LEFT_MARGIN_WIDTH), tr("Central Pressure (mb)"), 
 		    QTextOption(Qt::AlignCenter));
@@ -772,6 +773,7 @@ void GraphFace::updateImage()
   painter->save();
   painter->translate(graph_width+RIGHT_MARGIN_WIDTH, -1*graph_height);
   painter->rotate(90);
+  painter->setPen(rmwPen);
   painter->drawText(QRectF(0,0,graph_height,.4*RIGHT_MARGIN_WIDTH), 
 		    tr("Radius of Maximum Wind (km)"), 
 		    QTextOption(Qt::AlignCenter)); 

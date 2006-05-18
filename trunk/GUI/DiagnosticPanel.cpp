@@ -65,8 +65,8 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   //QPushButton *color = new QPushButton("color", this);
   //connect(color, SIGNAL(pressed()), this, SLOT(pickColor()));
 
-  QPushButton *lightButton = new QPushButton("Next Signal Pattern");
-  connect(lightButton, SIGNAL(pressed()), this, SLOT(testLight()));
+  //QPushButton *lightButton = new QPushButton("Next Signal Pattern");
+  //connect(lightButton, SIGNAL(pressed()), this, SLOT(testLight()));
   
   // Stoplight used to show operational status of the vortrac algorithm
 
@@ -82,8 +82,8 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   // Displays current radar vcp
 
   QLabel *vcpLabel = new QLabel(tr("Current Radar VCP"));
-  //  vcp = new QLineEdit(QString("No VCP available")); 
-  vcp = new QLineEdit(QString("121"));
+  vcp = new QLineEdit(QString("No VCP available")); 
+  //vcp = new QLineEdit(QString("121"));
   vcp->setReadOnly(true);
 
   // Displays warning message that may accompany the change in stoplight
@@ -105,7 +105,7 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   main->addWidget(warning);
 
   //main->addWidget(color);
-  main->addWidget(lightButton);
+  //main->addWidget(lightButton);
   setLayout(main);
   
   // Used to set the initial color of the stoplight

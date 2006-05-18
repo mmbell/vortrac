@@ -17,7 +17,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   : QWidget(parent)
 {
 
-  QFont f("Helvetica", 13, QFont::Bold);
+  QFont f("Helvetica", 12, QFont::Bold);
   setFont(f);
 
   statusLog = new Log();
@@ -61,13 +61,13 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   // Construct Analysis Page Layout
  
   QLabel *pressureLabel = new QLabel(tr("Current Pressure (mb):"));
-  QLCDNumber *currPressure = new QLCDNumber;
-  currPressure->display(917);
+  currPressure = new QLCDNumber;
+  //currPressure->display(917);
   currPressure->setSegmentStyle(QLCDNumber::Flat);
   currPressure->resize(100,100);
   QLabel *rmwLabel = new QLabel(tr("Current RMW (km):"));
-  QLCDNumber *currRMW = new QLCDNumber;
-  currRMW->display(16);
+ currRMW = new QLCDNumber;
+  //currRMW->display(16);
   currRMW->setSegmentStyle(QLCDNumber::Flat);
   currRMW->resize(100,100);
   

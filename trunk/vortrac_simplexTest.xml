@@ -22,7 +22,7 @@
         <dir>workingDirs/cappi/</dir>
         <xdim>200.0</xdim>
         <ydim>200.0</ydim>
-        <zdim>5</zdim>
+        <zdim>5.0</zdim>
         <xgridsp>1.0</xgridsp>
         <ygridsp>1.0</ygridsp>
         <zgridsp>1.0</zgridsp>
@@ -40,9 +40,6 @@
         <toplevel>5</toplevel>
         <innerradius>5</innerradius>
         <outerradius>20</outerradius>
-        <maxwavenumber>1</maxwavenumber>
-        <maxdatagap_0>180</maxdatagap_0>
-        <maxdatagap_1>120</maxdatagap_1>
         <ringwidth>1.0</ringwidth>
         <search>MAXVT0</search>
         <influenceradius>4.0</influenceradius>
@@ -50,6 +47,9 @@
         <maxiterations>60</maxiterations>
         <boxdiameter>12.0</boxdiameter>
         <numpoints>16</numpoints>
+        <maxwavenumber>1</maxwavenumber>
+        <maxdatagap wavenum="0">180</maxdatagap>
+        <maxdatagap wavenum="1">120</maxdatagap>
     </center>
     <vtd>
         <dir>/path/to/vtd/output</dir>
@@ -61,10 +61,10 @@
         <toplevel>5</toplevel>
         <innerradius>1</innerradius>
         <outerradius>60</outerradius>
-        <maxwavenumber>1</maxwavenumber>
-        <maxdatagap_0>180</maxdatagap_0>
-        <maxdatagap_1>120</maxdatagap_1>
         <ringwidth>1.0</ringwidth>
+        <maxwavenumber>1</maxwavenumber>
+        <maxdatagap wavenum="0">180</maxdatagap>
+        <maxdatagap wavenum="1">120</maxdatagap>
     </vtd>
     <hvvp/>
     <pressure>
@@ -79,7 +79,10 @@
     </graphics>
     <qc>
         <wind_method>user</wind_method>
-        <vel_threshold>1.0</vel_threshold>
+        <vel_min>1.0</vel_min>
+        <vel_max>100</vel_max>
+        <ref_min>-15</ref_min>
+        <ref_max>65</ref_max>
         <sw_threshold>10.0</sw_threshold>
         <bbcount>30</bbcount>
         <maxfold>4</maxfold>

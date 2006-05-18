@@ -261,15 +261,15 @@ void RadarListDialog::savePressed()
     QString name = newRadarName->text().left(4);
     emit addDom(radars->getRoot(), name, QString());
     QDomElement newDom = radars->getRoot().firstChildElement(name);
-    Message::toScreen("Changing the other elements= "+newDom.tagName());
-    emit changeDom(newDom, QString("text"),
-		   name+" in "+newRadarLocation->text());
-    emit changeDom(newDom, QString("longitude"), 
-		   QString().setNum(newRadarLon->value()));
-    emit changeDom(newDom, QString("latitude"), 
-		   QString().setNum(newRadarLat->value()));
-    emit changeDom(newDom, QString("altitude"), 
-		   QString().setNum(newRadarAlt->value()));
+    emit addDom(newDom, QString("text"),
+		name+" in "+newRadarLocation->text());
+    emit addDom(newDom, QString("longitude"), 
+		QString().setNum(newRadarLon->value()));
+    emit addDom(newDom, QString("latitude"), 
+		QString().setNum(newRadarLat->value()));
+    emit addDom(newDom, QString("altitude"), 
+		QString().setNum(newRadarAlt->value()));
+ 
   }
 
   // Attempts to save changes made to the configuration perminant in the 

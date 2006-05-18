@@ -186,6 +186,8 @@ void AbstractPanel::radarChanged(const QString& text)
 
     QDomNodeList radarList = 
       radars->getRoot().childNodes();
+    radarName->clear();
+
     for (int i = 0; i <= radarList.count()-1; i++) 
       {
 	QDomNode curNode = radarList.item(i);

@@ -245,12 +245,32 @@ void ConfigurationDialog::connectPanel(AbstractPanel* currPanel)
 				      const QString&, const QString&)), 
 	  configData, SLOT(setParam(const QDomElement&, 
 				    const QString&, const QString&)));
+  connect(currPanel, SIGNAL(changeDom(const QDomElement&, const QString&, 
+				      const QString&, const QString&, 
+				      const QString&)), 
+	  configData, SLOT(setParam(const QDomElement&, const QString&, 
+				    const QString&, const QString&,
+				    const QString&)));
+  
   connect(currPanel, SIGNAL(addDom(const QDomElement&, const QString&, 
 				   const QString&)), 
 	  configData, SLOT(addDom(const QDomElement&, const QString&, 
 				  const QString&)));
+
+  connect(currPanel, SIGNAL(addDom(const QDomElement&, const QString&, 
+				   const QString&, const QString&,
+				   const QString&)), 
+	  configData, SLOT(addDom(const QDomElement&, const QString&, 
+				  const QString&, const QString&,
+				  const QString&)));
+
   connect(currPanel, SIGNAL(removeDom(const QDomElement&, const QString&)),
 	  configData, SLOT(removeDom(const QDomElement&, const QString&)));
+
+  connect(currPanel, SIGNAL(removeDom(const QDomElement&, const QString&,
+				      const QString&, const QString&)),
+	  configData, SLOT(removeDom(const QDomElement&, const QString&,
+				     const QString&, const QString&)));
 }
 
 void ConfigurationDialog::stateChanged(const QString& name, const bool change)

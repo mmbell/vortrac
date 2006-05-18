@@ -124,9 +124,7 @@ Ray AnalyticRadar::addRay()
       furthestPosition = raw_ref_positions[z];
   }
 
-  //int numRefGates = (int)ceil(furthestPosition/refGateSp);
-  
-  // numRefGates = 100;
+ 
   float *ref_data = new float[numRefGates];
   float gateBoundary = 0;
   
@@ -156,9 +154,6 @@ Ray AnalyticRadar::addRay()
   float *raw_vel_data = new float[numPoints];
   dataType = QString("VE");
   raw_vel_data = data->getSphericalRangeData(dataType,azimAngle, elevAngle);
-  //int numVelGates = (int)ceil(furthestPosition/velGateSp);
-  // int gateNum = 0;
-  // int numVelGates = 100;
   float *vel_data = new float[numVelGates];
   float *sw_data = new float[numVelGates];
   gateBoundary = 0;
@@ -183,10 +178,19 @@ Ray AnalyticRadar::addRay()
 	vel_data[gateNum] = velSum*cos(elevAngle*deg2rad)/(float)count;
 
 	// Add in noise factor, method borrowed from analyticTC
+	// the variable noiseScale changes the relative magnetude of the noise
+	// while the variable noisyGates holds the relative percentage of
+	// gates that noise is applied to.
 	
-	srand(time(NULL));  // initializes random number generator
-	float noise = rand()%1000/1000.0 -.5;
-	vel_data[gateNum]+= scale*noise;
+	//srand(time(NULL));  // initializes random number generator
+	int percentOfGates = int(float(rand())/(RAND_MAX*.01));
+	//Message::toScreen("Random gate = "+QString().setNum(percentOfGates));
+	if(percentOfGates < noisyGates) {
+	  //Message::toScreen("Got Noise");
+	  srand(time(NULL));  // reinitializes random number generator
+	  float noise = rand()%1000/1000.0 -.5;
+	  vel_data[gateNum]+= noiseScale*noise;
+	}
 
 	float *sw_points = new float[count];
 	int countAgain = 0;
@@ -278,7 +282,8 @@ bool AnalyticRadar::readVolumeAnalytic()
   refGateSp = config->getParam(radar, "refgatesp").toFloat();
   velGateSp = config->getParam(radar, "velgatesp").toFloat();
   beamWidth = config->getParam(radar, "beamwidth").toFloat();
-  scale = config->getParam(radar, "noise").toFloat();
+  noiseScale = config->getParam(radar, "noiseScale").toFloat();
+  noisyGates = config->getParam(radar, "percent_noisy_gates").toFloat();
   float numGates = config->getParam(radar, "numgates").toInt();
   int totNumSweeps = config->getParam(radar, "numsweeps").toInt();
   

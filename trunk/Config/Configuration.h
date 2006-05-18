@@ -26,24 +26,63 @@ class Configuration:public QObject
  public:
   Configuration(QObject *parent = 0,const QString &filename = QString());
   ~Configuration();
+  
   QDomElement getRoot();
   bool read(const QString &filename);
   bool write(const QString &filename);
+  
   QDomElement getConfig(const QString &configName);
+  
   const QString getParam(const QDomElement &element,
 			 const QString &paramName);
+  
+  const QString getParam(const QDomElement &element,
+			 const QString &paramName,
+			 const QString &attribName,
+			 const QString &attribValue);
+
+  const QString getAttribute(const QDomElement &element,
+			     const QString &paramName,
+			     const QString &attribName);
   bool checkModified() { return isModified; }
   
  public slots:
    void catchLog(const Message& message);
+
    void setParam(const QDomElement &element,
-		  const QString &paramName, 
-		  const QString &paramValue);
-  void addDom(const QDomElement &element,
-	      const QString &paramName,
-	      const QString &paramValue);
-  void removeDom(const QDomElement &element,
-		 const QString &paramName);
+		 const QString &paramName, 
+		 const QString &paramValue);
+   
+   void setParam(const QDomElement &element,
+		 const QString &paramName, 
+		 const QString &paramValue,
+		 const QString &attribName,
+		 const QString &attribValue);
+
+   void addDom(const QDomElement &element,
+	       const QString &paramName,
+	       const QString &paramValue);
+
+   void addDom(const QDomElement &element,
+	       const QString &paramName,
+	       const QString &paramValue,
+	       const QString &attribName,
+	       const QString &attribValue);
+
+   void removeDom(const QDomElement &element,
+		  const QString &paramName);
+
+   void removeDom(const QDomElement &element,
+		  const QString &paramName,
+		  const QString &attribName,
+		  const QString &attribValue);
+   
+   void setAttribute(const QDomElement &element,
+		     const QString &paramName,
+		     const QString &attribName,
+		     const QString &attibValue);
+   
+   
 
  private:
   QDomDocument domDoc;
@@ -52,6 +91,13 @@ class Configuration:public QObject
   QHash<QString, int> indexForTagName;
   bool isModified;
 
+  const QDomElement getElement(const QDomElement &element,
+			       const QString &paramName);
+
+  const QDomElement getElementWithAttrib(const QDomElement &element,
+					 const QString &paramName,
+					 const QString &attribName,
+					 const QString &attribValue);
 
  signals:
   void log(const Message& message);

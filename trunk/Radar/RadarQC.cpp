@@ -50,8 +50,10 @@ void RadarQC::getConfig(QDomElement qcConfig)
 
   if(!qcConfig.isNull()) {
 
-    velThresholdLimit = 
-      qcConfig.firstChildElement("vel_threshold").text().toFloat();
+    velMin = qcConfig.firstChildElement("vel_min").text().toFloat();
+    velMax = qcConfig.firstChildElement("vel_max").text().toFloat();
+    refMin = qcConfig.firstChildElement("ref_min").text().toFloat();
+    refMax = qcConfig.firstChildElement("ref_max").text().toFloat();
     specWidthLimit = 
       qcConfig.firstChildElement("sw_threshold").text().toFloat();
     numVGatesAveraged = qcConfig.firstChildElement("bbcount").text().toInt();
@@ -90,7 +92,10 @@ void RadarQC::getConfig(QDomElement qcConfig)
 	   */
 	  
 	  emit log(Message("Environmental Wind Method Not Specified for VAD"));
-	  velThresholdLimit = 1;
+	  velMin = 1;
+	  velMax = 100;
+	  refMin = -15;
+	  refMax = 100;
 	  specWidthLimit = 10;
 	  numVGatesAveraged = 50;
 	  maxFold = 4;
@@ -104,7 +109,11 @@ void RadarQC::getConfig(QDomElement qcConfig)
   }
   // Set default parameters if configuration data is not available
   else {
-    velThresholdLimit = 1;
+    emit log(Message("RadarQC: Quality Control Element is Not Valid, Using Default Parameters"));
+    velMin = 1;
+    velMax = 100;
+    refMin = -15;
+    refMax = 100;
     specWidthLimit = 10;
     numVGatesAveraged = 50;
     maxFold = 4;
@@ -184,9 +193,9 @@ void RadarQC::thresholdData()
 {
   /*  
    *  This method iterates through each Ray of the RadarData volume,
-   *  and removes velocity data that does not exceed certain spectral
+   *  and removes velocity data that exceeds spectral width, reflectivity
    *  and velocity thresholds. This improves data quality in order to 
-   *  improve the preformance of the following quality control routines
+   *  improve the preformance of the following quality control routines.
    *  This method also calculates the number of valid gates, which is used
    *  in the VAD and GVAD methods.
    */
@@ -213,30 +222,25 @@ void RadarQC::thresholdData()
       numVGates = currentRay->getVel_numgates();
       float *vGates = currentRay->getVelData();
       float *swGates = currentRay->getSwData();
+      float *refGates = currentRay->getRefData();
       for (int j = 0; j < numVGates; j++)
 	{
 	  if((swGates[j] > specWidthLimit)||
-	     (fabs(vGates[j]) < velThresholdLimit)) 
-	    /* Add reflectivity thresholding here*/{
-	    vGates[j] = velNull;
-	  }
-	  
-	  //if(swGates[j] > specWidthLimit){
-	    //if(i == 35)
-	    //Message::toScreen("specLimit fail v= "+QString().setNum(vGates[j])+" sw= "+QString().setNum(swGates[j]));
-	  //  vGates[j]= velNull;
-	  //}
-	  //  if(fabs(vGates[j]) < velThresholdLimit) {
-	  //  if(i==35)
-	  //Message::toScreen("velLimit fail"+QString().setNum(fabs(vGates[j])));
-	  //  vGates[j] = velNull;
-	  //}
+	     (fabs(vGates[j]) < velMin) ||
+	     (fabs(vGates[j]) > velMax) ||
+	     (refGates[j] < refMin) ||
+	     (refGates[j] > refMax))
+	    {
+	      vGates[j] = velNull;
+	    }
 	  if(vGates[j]!=velNull) {
 	    validBinCount[sweepIndex][j]++;
 	  }
 	}
     }
 }
+
+
 
 bool RadarQC::terminalVelocity()
 {
@@ -297,14 +301,15 @@ float RadarQC::findHeight(Ray *currentRay, int gateIndex)
 
   /*
    *  The method calculates the height of gate in a ray, 
-   *  relative to the absolute height of the radar.
+   *  relative to the absolute height of the radar in km.
    */
 
   float range = gateIndex/4.0 - 0.375;
   float elevAngle = currentRay->getElevation();
-  // This height is relative to the height of the radar
+  // This height is relative to the height of the radar.
   float height = radarData->radarBeamHeight(range, elevAngle);
   return height;
+
 }
 
 bool RadarQC::findEnvironmentalWind()
@@ -317,16 +322,23 @@ bool RadarQC::findEnvironmentalWind()
   /*
   if(useAWIPSWinds) {
     //not implemented
+    return false
   }
   */
   if(useUserWinds) {
     // Do nothing move straight to BB
+    return true;
   }
 
   if(useVADWinds) {
+
+    // Attempt to use GVAD algorithm to determine 
+    //  environmental winds
     bool useGVAD = false;
     if(findVADStart(useGVAD)) 
       return true;
+    // If GVAD fails attempt to use the VAD algorithm to 
+    //   determine environmental winds.
     else {
      if(findVADStart(!useGVAD))
        return true;
@@ -581,7 +593,7 @@ bool RadarQC::findVADStart(bool useGVAD)
     else {
       envWind[m] = velNull;
       envDir[m] = velNull;
-      emit log(Message("No VAD Speed Found"));
+      emit log(Message("M:"+QString().setNum(m)+" No VAD Speed Found"));
     }
 
 
@@ -627,7 +639,7 @@ void RadarQC::vadPrep()
       int start = currentSweep->getFirstRay();
       int stop = currentSweep->getLastRay();
       for(int r = start; r <= stop; r++) {
-	int r = start;
+	//int r = start;
 	Ray *currentRay = radarData->getRay(r);
 	int numVBins = currentRay->getVel_numgates();
 	float max_up = 0;
@@ -675,6 +687,8 @@ void RadarQC::vadPrep()
     }
   }
 }
+
+
 
 bool RadarQC::VAD(float* &vel, Sweep* &currentSweep, 
 		  float &speed, float &direction, float &rms)

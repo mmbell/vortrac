@@ -24,9 +24,10 @@
      <velgatesp>1</velgatesp>
      <refgatesp>1</refgatesp>
      <beamwidth>1</beamwidth>
-     <nyquistVel>70</nyquistVel>
+     <nyquistVel>35</nyquistVel>
      <dealiasdata>true</dealiasdata>
-     <noise>0</noise>
+     <noiseScale>10</noiseScale>
+     <percent_noisy_gates>0</percent_noisy_gates>
      <numgates>300</numgates>
      <numsweeps>1</numsweeps>
      <sweep0>0</sweep0>

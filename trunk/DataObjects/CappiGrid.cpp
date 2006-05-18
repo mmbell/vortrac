@@ -36,26 +36,24 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   // Set the output file
   QString cappiPath = cappiConfig.firstChildElement("dir").text();
   QString cappiFile = radarData->getDateTimeString();
-  Message::toScreen(cappiFile);
   cappiFile.replace(QString(":"),QString("_"));
   outFileName = cappiPath + "/" + cappiFile;
 
   //testing Message::toScreen("OutputFile = "+outFileName);
   
-  // Get the dimensions from the configuration
+  // Get the dimensions from the configuration 
+  // all dimensions are in units of cappi grid points
   iDim = cappiConfig.firstChildElement("xdim").text().toFloat();
   jDim = cappiConfig.firstChildElement("ydim").text().toFloat();
   kDim = cappiConfig.firstChildElement("zdim").text().toFloat();
+  // all grid spacings are in units of km
   iGridsp = cappiConfig.firstChildElement("xgridsp").text().toFloat();
   jGridsp = cappiConfig.firstChildElement("ygridsp").text().toFloat();
   kGridsp = cappiConfig.firstChildElement("zgridsp").text().toFloat();
 
+
   // Get the relative center and expand the grid around it
   relDist = new float[2];
-  
-  //testing Message::toScreen("vortexLat = "+QString().setNum(*vortexLat)+" "+QString().setNum(*vortexLon));
-
-  //testing Message::toScreen("radarLat = "+QString().setNum(*radarData->getRadarLat())+" "+QString().setNum(*radarData->getRadarLon()));
 
   relDist = relEarthLocation(radarData->getRadarLat(), 
 			     radarData->getRadarLon(),
@@ -73,16 +71,18 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   float rXDistance =  0;
   float rYDistance =  0;
 
+  // connects the (0,0) point on the cappi grid, to the latitude and
+  // longitude of the radar.
+
   setZeroLocation(radarData->getRadarLat(), radarData->getRadarLon(),
 		  &rXDistance,&rYDistance);
+
+  // Defines iteration indexes for cappi grid
 
   xmin = nearbyintf(relDist[0] - (iDim/2)*iGridsp);
   xmax = nearbyintf(relDist[0] + (iDim/2)*iGridsp);
   ymin = nearbyintf(relDist[1] - (jDim/2)*jGridsp);
   ymax = nearbyintf(relDist[1] + (jDim/2)*jGridsp);
-
-  //  Message::toScreen("xmax = "+QString().setNum(xmax)+" xmin "+QString().setNum(xmin));
-  //  Message::toScreen("ymax = "+QString().setNum(ymax)+" ymin "+QString().setNum(ymin));
 
   latReference = *radarData->getRadarLat();
   lonReference = *radarData->getRadarLon();

@@ -123,11 +123,22 @@ class AbstractPanel:public QWidget
    void log(const Message& message);
    void changeDom(const QDomElement &element, const QString &name, 
 		  const QString &value);
+
+   void changeDom(const QDomElement &element, const QString &name,
+		  const QString &value, const QString &aname, 
+		  const QString &avalue);
      // Sends information needed to update the Configuration
+
    void addDom(const QDomElement &element, const QString &name, 
 	       const QString &value);
+   void addDom(const QDomElement &element, const QString &name,
+	       const QString &value, const QString& aname,
+	       const QString &avalue);
      // Sends information needed to create a new dom element
+
    void removeDom(const QDomElement &element, const QString &name);
+   void removeDom(const QDomElement &element, const QString &name, 
+		  const QString &aname, const QString &avalue);
      // Sends information needed to remove a dom element that is 
      //  no longer needed
  

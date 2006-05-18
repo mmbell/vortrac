@@ -88,6 +88,8 @@ class AnalysisPage : public QWidget
   ConfigurationDialog *configDialog;
   QString workingDirectory;
   QString imageFileName;
+  QLCDNumber *currPressure;
+  QLCDNumber *currRMW;
 
   bool analyticModel();
 

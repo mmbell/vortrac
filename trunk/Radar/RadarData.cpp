@@ -96,8 +96,9 @@ float RadarData::radarBeamHeight(float &distance, float elevation)
   float height = sqrt(distance * distance + REsq 
 		      + 2.0 * distance * RE * sin(elevRadians)) - RE;
   // height+=altitude;
-  return height; 
 
+  return height; 
+  // returns height in km
 }
 
 void RadarData::setAltitude(const float newAltitude)

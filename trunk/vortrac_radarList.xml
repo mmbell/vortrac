@@ -258,16 +258,4 @@
         <latitude>0.0</latitude>
         <altitude>0.0</altitude>
     </OTHER>
-    <LISA>
-        <text>LISA in Boulder, CO</text>
-        <longitude>20</longitude>
-        <latitude>10</latitude>
-        <altitude>30</altitude>
-    </LISA>
-    <MIKE>
-        <text>MIKE in office</text>
-        <longitude>5</longitude>
-        <latitude>4</latitude>
-        <altitude>6</altitude>
-    </MIKE>
 </vortrac>

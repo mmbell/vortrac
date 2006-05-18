@@ -40,9 +40,6 @@
      <toplevel>5</toplevel>
      <innerradius>5</innerradius>
      <outerradius>20</outerradius>
-     <maxwavenumber>1</maxwavenumber>
-       <maxdatagap_0>180</maxdatagap_0>
-       <maxdatagap_1>120</maxdatagap_1>
      <ringwidth>1.0</ringwidth>
      <search>MAXVT0</search>
      <influenceradius>4.0</influenceradius>
@@ -50,6 +47,9 @@
      <maxiterations>60</maxiterations>
      <boxdiameter>12.0</boxdiameter>
      <numpoints>16</numpoints>
+     <maxwavenumber>1</maxwavenumber>
+     <maxdatagap wavenum="0">180</maxdatagap>
+     <maxdatagap wavenum="1">120</maxdatagap>
    </center>
    <vtd>
      <dir>/path/to/vtd/output</dir>
@@ -61,10 +61,10 @@
      <toplevel>5</toplevel>
      <innerradius>1</innerradius>
      <outerradius>60</outerradius>
-     <maxwavenumber>1</maxwavenumber>
-	<maxdatagap_0>180</maxdatagap_0>
-	<maxdatagap_1>120</maxdatagap_1>
      <ringwidth>1.0</ringwidth>
+     <maxwavenumber>1</maxwavenumber>
+     <maxdatagap wavenum="0">180</maxdatagap>
+     <maxdatagap wavenum="1">120</maxdatagap>
    </vtd>
    <hvvp></hvvp>
    <pressure>

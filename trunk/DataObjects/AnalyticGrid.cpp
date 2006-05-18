@@ -37,7 +37,7 @@ AnalyticGrid::AnalyticGrid()
   sphericalElevationSpacing = 3;
   // Spacing between elevation angle measurements in degrees
 
-  testRange();
+  //testRange();
 
 }
 
@@ -67,8 +67,14 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
 
   // Get the dimensions from the configuration
   iDim = cappiConfig.firstChildElement("xdim").text().toFloat();
+  // iDim: Number of data points running on the i-axis
+
   jDim = cappiConfig.firstChildElement("ydim").text().toFloat();
+  // jDim: Number of data points running on the j-axis
+
   kDim = cappiConfig.firstChildElement("zdim").text().toFloat();
+  // kDim: Number of data points running on the k-axis
+
   xmin = ymin = zmin = 0;
   xmax = xmin+iDim;
   ymax = ymin+jDim;
@@ -171,12 +177,12 @@ void AnalyticGrid::gridWindFieldData()
    */
 
   //QTextStream out(stdout);
-
+  for(int k = 0; k < kDim; k++) {
     for(int j = jDim - 1; j >= 0; j--) {
       for(int i = iDim - 1; i >= 0; i--) {
 	for(int a = 0; a < 3; a++) {
 	  // zero out all the points
-	  dataGrid[a][i][j][0] = 0;
+	  dataGrid[a][i][j][k] = 0;
 	}
 
 	float vx = 0;
@@ -276,10 +282,10 @@ void AnalyticGrid::gridWindFieldData()
 	// Sample in direction of radar
 	if(radR != 0) {
       
-	  dataGrid[1][i][j][0] = -(delRX*vx-delRY*vy)/radR;
+	  dataGrid[1][i][j][k] = -(delRX*vx-delRY*vy)/radR;
 	}      	
-	dataGrid[0][i][j][0] = ref;
-	dataGrid[2][i][j][0] = -999;
+	dataGrid[0][i][j][k] = ref;
+	dataGrid[2][i][j][k] = -999;
 
 	// out << "("<<QString().setNum(i)<<","<<QString().setNum(j)<<")";
 	//out << int (dataGrid[0][i][j]) << " ";
@@ -287,7 +293,7 @@ void AnalyticGrid::gridWindFieldData()
       }
       // out << endl;
     } 
-
+  }
 }
 
 void AnalyticGrid::writeAsi()
@@ -400,7 +406,7 @@ void AnalyticGrid::writeAsi()
 			  out << reset << left << fieldNames.at(n) << endl;
 				int line = 0;
 				for (int i = 0; i < int(iDim);  i++){
-				    out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << dataGrid[n][i][j][0];
+				    out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << dataGrid[n][i][j][k];
 					line++;
 					if (line == 8) {
 						out << endl;

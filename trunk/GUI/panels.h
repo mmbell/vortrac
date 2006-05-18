@@ -102,10 +102,6 @@ class CappiPanel:public AbstractPanel
   // y and x GridBoxes are for collecting and editing the distance between
   // data points in the cappi grid in each dimension.
 
-  QDoubleSpinBox *refMinBox, *refMaxBox, *velMinBox, *velMaxBox;
-  // These boxes are used to specify the quality control limits on
-  // the data used in creating the cappi grid
-
   QDoubleSpinBox *advSpeedBox, *advDirBox;
   // Determines the speed and direction of advection flow
 
@@ -270,7 +266,7 @@ class QCPanel:public AbstractPanel
    */
 
   QSpinBox *bbSegmentSize, *maxFoldCount, *vadLevels, *numCoefficients;
-  QRadioButton *useGVAD;
+ 
   /*
    * bbSegmentSize handles the number of gates that should be used for 
    *   averaging in the Bargain & Brown dealiasing algorithm
@@ -283,18 +279,20 @@ class QCPanel:public AbstractPanel
    * 
    * numCoefficients indicates the number of coefficients used for the VAD
    *   algorithm fit (used only when the VAD method is used)
-   *
-   * useGVAD indicates whether or not to use GVAD in processing mean winds
-   *   if useGVAD is not checked, the VAD method will be used
    */
 
-  QDoubleSpinBox *velocityThreshold, *spectralThreshold, *windSpeed;
+  QDoubleSpinBox *velocityMinimum, *velocityMaximum, *spectralThreshold;
+  QDoubleSpinBox *reflectivityMinimum, *reflectivityMaximum, *windSpeed;
   QDoubleSpinBox *windDirection;
   /*
    * velocityMinimum adjusts the minimum absolute value of velocities that 
    *   will be used for analysis (attempts to remove ground clutter)
    * velocityMaximum adjusts the maximum absolute value of velocities that 
-   *   will be used for analysis (attempts to remove erronous data)
+   *   will be used for analysis (attempts to remove erroneous data)
+   * reflectivityMinimum adjusts the minimum value of reflectivity that 
+   *   will be used for analysis (attempts to remove erroneous data)
+   * reflectivityMaximum adjusts the maximum value of reflectivity that 
+   *   will be used for analysis (attempts to remove erroneous data)
    * spectralThreshold adjusts the minimum spectral width required for a 
    *   velocities that will be used for analysis
    * windSpeed is used to adjust the user entered environmental wind speed

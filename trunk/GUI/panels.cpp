@@ -176,7 +176,7 @@ RadarPanel::RadarPanel()
   longitude->addWidget(longLabel);
   longitude->addWidget(radarLongBox);
 
-  QLabel *altLabel = new QLabel(tr("Radar Altitude in meters:"));
+  QLabel *altLabel = new QLabel(tr("Radar Altitude (meters):"));
   radarAltBox = new QDoubleSpinBox();
   radarAltBox->setDecimals(3);
   radarAltBox->setRange(-999, 999);
@@ -395,30 +395,33 @@ CappiPanel::CappiPanel()
 
   QGroupBox *grid = new QGroupBox(tr("Griding Configurations"));
 
-  QLabel *xdim = new QLabel(tr("Length of Grid in X Direction"));
-  QLabel *ydim = new QLabel(tr("Length of Grid in Y Direction"));
-  QLabel *zdim = new QLabel(tr("Length of Grid in Z Direction"));
+  QLabel *xdim = new QLabel(tr("Grid Length in X Direction (km)"));
+  QLabel *ydim = new QLabel(tr("Grid Length in Y Direction (km)"));
+  QLabel *zdim = new QLabel(tr("Grid Length in Z Direction (km)"));
   xDimBox = new QDoubleSpinBox;
   xDimBox->setDecimals(1);
-  xDimBox->setRange(-999,999);
+  xDimBox->setRange(0,1000000);
   yDimBox = new QDoubleSpinBox;
   yDimBox->setDecimals(1);
-  yDimBox->setRange(-999,999);
+  yDimBox->setRange(0,1000000);
   zDimBox = new QDoubleSpinBox;
   zDimBox->setDecimals(1);
-  zDimBox->setRange(-999,999);
+  zDimBox->setRange(0,1000000);
 
-  QLabel *xGrid = new QLabel(tr("X Grid Spacing"));
+  QLabel *xGrid = new QLabel(tr("X Grid Spacing (km)"));
   xGridBox = new QDoubleSpinBox;
   xGridBox->setDecimals(1);
+  xGridBox->setRange(0,10000);
 
-  QLabel *yGrid = new QLabel(tr("Y Grid Spacing"));
+  QLabel *yGrid = new QLabel(tr("Y Grid Spacing (km)"));
   yGridBox = new QDoubleSpinBox;
   yGridBox->setDecimals(1);
+  yGridBox->setRange(0,10000);
 
-  QLabel *zGrid = new QLabel(tr("Z Grid Spacing"));
+  QLabel *zGrid = new QLabel(tr("Z Grid Spacing (km)"));
   zGridBox = new QDoubleSpinBox;
   zGridBox->setDecimals(1);
+  zGridBox->setRange(0,10000);
 
   QGridLayout *gridLayout = new QGridLayout;
   gridLayout->addWidget(xdim, 0, 0);
@@ -435,45 +438,16 @@ CappiPanel::CappiPanel()
   gridLayout->addWidget(zGridBox, 3, 2);
   grid->setLayout(gridLayout);
 
-  QGroupBox *MaxMin = new QGroupBox(tr("Threshold Extrema"));
-
-  QLabel *refMin = new QLabel(tr("Reflectivity Minimum"));
-  refMinBox = new QDoubleSpinBox;
-  refMinBox->setDecimals(1);
-  refMinBox->setRange(-100,100);
-
-  QLabel *refMax = new QLabel(tr("Reflectivity Maximum"));
-  refMaxBox = new QDoubleSpinBox;
-  refMaxBox->setDecimals(1);
-  refMaxBox->setRange(-100,100);
-
-  QLabel *velMin = new QLabel(tr("Velocity Minimum"));
-  velMinBox = new QDoubleSpinBox;
-  velMinBox->setDecimals(1);
-  velMinBox->setRange(-500, 500);
-
-  QLabel *velMax = new QLabel(tr("Velocity Maximum"));
-  velMaxBox = new QDoubleSpinBox;
-  velMaxBox->setDecimals(1);
-  velMaxBox->setRange(-500,500);
-
-  QGridLayout *minmax = new QGridLayout;
-  minmax->addWidget(refMin, 0,0);
-  minmax->addWidget(refMinBox, 0, 1);
-  minmax->addWidget(refMax, 1, 0);
-  minmax->addWidget(refMaxBox, 1, 1);
-  minmax->addWidget(velMin, 0, 2);
-  minmax->addWidget(velMinBox, 0, 3);
-  minmax->addWidget(velMax, 1, 2);
-  minmax->addWidget(velMaxBox, 1, 3);
-  MaxMin->setLayout(minmax);
-
-  QLabel *advSpeedLabel = new QLabel(tr("Advection Speed"));
+  // These need to be changed to U & V parameters !!!
+  QLabel *advSpeedLabel = new QLabel(tr("Advection Speed (m/s)"));
   advSpeedBox = new QDoubleSpinBox;
   advSpeedBox->setDecimals(1);
-  QLabel *advDirLabel = new QLabel(tr("Advection Direction"));
+  advSpeedBox->setRange(0,50000);
+  QLabel *advDirLabel = new QLabel(tr("Advection Direction (deg from North)"));
   advDirBox = new QDoubleSpinBox;
   advDirBox->setDecimals(1);
+  advDirBox->setRange(0,359.99);
+
   QHBoxLayout *adv = new QHBoxLayout;
   adv->addWidget(advSpeedLabel);
   adv->addWidget(advSpeedBox);
@@ -503,7 +477,6 @@ CappiPanel::CappiPanel()
   QVBoxLayout *layout = new QVBoxLayout;
   layout->addLayout(cappiDir);
   layout->addWidget(grid);
-  layout->addWidget(MaxMin);
   layout->addLayout(adv);
   layout->addLayout(interpolationLayout);
   layout->addStretch(1);
@@ -522,14 +495,6 @@ CappiPanel::CappiPanel()
   connect(yGridBox, SIGNAL(valueChanged(const QString&)), 
 	  this, SLOT(valueChanged(const QString&)));
   connect(zGridBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
-  connect(refMinBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&))); 
-  connect(refMaxBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
-  connect(velMinBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
-  connect(velMaxBox, SIGNAL(valueChanged(const QString&)), 
 	  this, SLOT(valueChanged(const QString&)));
   connect(advSpeedBox, SIGNAL(valueChanged(const QString&)), 
 	  this, SLOT(valueChanged(const QString&))); 
@@ -570,14 +535,6 @@ void CappiPanel::updatePanel(const QDomElement panelElement)
       yGridBox->setValue(parameter.toDouble()); }
     if (name == "zgridsp") {
       zGridBox->setValue(parameter.toDouble()); }
-    if (name == "ref_min") {
-      refMinBox->setValue(parameter.toDouble()); }
-    if (name == "ref_max") {
-      refMaxBox->setValue(parameter.toDouble()); }
-    if (name == "vel_min") {
-      velMinBox->setValue(parameter.toDouble()); }
-    if (name == "vel_max") {
-      velMaxBox->setValue(parameter.toDouble()); }
     if (name == "adv_speed") {
       advSpeedBox->setValue(parameter.toDouble()); }
     if( name == "adv_dir") {
@@ -633,26 +590,6 @@ bool CappiPanel::updateConfig()
 	 !=zGridBox->value()) {
 	emit changeDom(element, QString("zgridsp"), 
 		       QString().setNum(zGridBox->value()));
-      }
-      if(element.firstChildElement("ref_min").text().toDouble()
-	 !=refMinBox->value()) {
-	emit changeDom(element, QString("ref_min"), 
-		       QString().setNum(refMinBox->value()));
-      }
-      if(element.firstChildElement("ref_max").text().toDouble()
-	 !=refMaxBox->value()) {
-	emit changeDom(element, QString("ref_max"), 
-		       QString().setNum(refMaxBox->value()));
-      }
-      if(element.firstChildElement("vel_min").text().toDouble()
-	 !=velMinBox->value()) {
-	emit changeDom(element, QString("vel_min"), 
-		       QString().setNum(velMinBox->value()));
-      }
-      if(element.firstChildElement("vel_max").text().toDouble()
-	 !=velMaxBox->value()) {
-	emit changeDom(element, QString("vel_max"), 
-		       QString().setNum(velMaxBox->value()));
       }
       if(element.firstChildElement("adv_speed").text().toDouble()
 	 !=advSpeedBox->value()) {
@@ -920,19 +857,15 @@ void CenterPanel::updatePanel(const QDomElement panelElement)
       iRBox->setValue(parameter.toInt()); }
     if (name == "outerradius") {
       oRBox->setValue(parameter.toInt()); }
-    
     if (name == "maxwavenumber") {
       maxWaveNumBox->setValue(parameter.toInt()); 
-      if(parameter.toInt() != dataGapBoxes.count()-1)
-	{
+      if(parameter.toInt() != dataGapBoxes.count()-1) {
 	  createDataGaps();
 	}
-      for(int i = 0; i <dataGapBoxes.count(); i++)
-	{
-	  QString tagname("maxdatagap_"+QString().setNum(i));
-	  double dataGap = panelElement.firstChildElement(tagname).text().toDouble();
-	  dataGapBoxes[i]->setValue(dataGap);
-	}
+    }
+    if(name == "maxdatagap") {
+      int waveNum = child.attribute("wavenum").toInt();
+      dataGapBoxes[waveNum]->setValue(parameter.toInt());
     }
     if (name == "maxiterations") {
       iterations->setValue(parameter.toInt()); }
@@ -1034,49 +967,32 @@ bool CenterPanel::updateConfig()
 
 	emit changeDom(element, QString("maxwavenumber"), 
 		       QString().setNum(maxWaveNumBox->value()));
-	
-	if (box<elem) {
-	  for (int i=0;i<=elem;i++)
-	    {
-	      QString tagname("maxdatagap_"+QString().setNum(i));
-	      if(i<=box) {
-		if (element.firstChildElement(tagname).text().toInt()
-		    !=dataGapBoxes[i]->value()) {
-		  emit changeDom(element, tagname, 
-				 QString().setNum(dataGapBoxes[i]->value())); }}
-	      else {
-		emit removeDom(element, tagname);
-	      }
+	if(box < elem) {
+	  QList<QDomElement> dataGapElements;
+	  QDomElement dataGapChild = element.firstChildElement("maxdatagap");
+	  while(!dataGapChild.isNull()&&
+		(dataGapChild.tagName() == QString("maxdatagap"))) {
+	    int waveNum = dataGapChild.attribute("wavenum").toInt();
+	    if(waveNum > box) {
+	      emit removeDom(element, QString("maxdatagap"), 
+			     QString("wavenum"), QString().setNum(waveNum));
 	    }
+	    else {
+	      emit changeDom(element, QString("maxdatagap"), 
+			     QString().setNum(dataGapBoxes[waveNum]->value()),
+			     QString("wavenum"), QString().setNum(waveNum));
+	    }
+	    dataGapChild = dataGapChild.nextSiblingElement("maxdatagap");
+	  }
 	}
 	else {
-	  for (int i=0;i<=box;i++)
-	    {
-	      QString tagname("maxdatagap_"+QString().setNum(i));
-	      if(i<=elem) {
-		if (element.firstChildElement(tagname).text().toInt()
-		    !=dataGapBoxes[i]->value()) {
-		  emit changeDom(element, tagname, 
-				 QString().setNum(dataGapBoxes[i]->value())); }}
-	      else {
-		emit addDom(element, tagname, 
-			    QString().setNum(dataGapBoxes[i]->value()));
-	      }
-	    }
+	  for(int waveNum = elem+1; waveNum <= box; waveNum++) {
+	    emit addDom(element, QString("maxdatagap"), 
+			QString().setNum(dataGapBoxes[waveNum]->value()),
+			QString("wavenum"), QString().setNum(waveNum));
+	  }
 	}
       }
-      else 
-	{
-	  int elem = element.firstChildElement("maxwavenumber").text().toInt();
-	  for(int i=0;i<=elem; i++)
-	    {
-	      QString tagname("maxdatagap_"+QString().setNum(i));
-	      if(element.firstChildElement(tagname).text().toFloat()
-		 != dataGapBoxes[i]->value()) {
-		emit changeDom(element, tagname, 
-			       QString().setNum(dataGapBoxes[i]->value())); }
-	    }
-	}
       if(element.firstChildElement("ringwidth").text().toDouble()
 	 !=ringBox->value()) {
 	emit changeDom(element, QString("ringwidth"), 
@@ -1294,18 +1210,11 @@ void VTDPanel::updatePanel(const QDomElement panelElement)
       oRBox->setValue(parameter.toInt()); }
     if (name == "maxwavenumber") {
       maxWaveNumBox->setValue(parameter.toInt()); 
-      if(parameter.toInt() != dataGapBoxes.count()-1)
-	{
-	  createDataGaps();
-	}
-      for(int i = 0; i <dataGapBoxes.count(); i++)
-	{
-	  QString tagname("maxdatagap_"+QString().setNum(i));
-	  double dataGap = panelElement.firstChildElement(tagname).text().toDouble();
-	  dataGapBoxes[i]->setValue(dataGap);
-	}
-    }
-
+      if(parameter.toInt() != dataGapBoxes.count()-1) {
+	createDataGaps();  } }
+    if(name == "maxdatagap") {
+      int waveNum = child.attribute("wavenum").toInt();
+      dataGapBoxes[waveNum]->setValue(parameter.toInt()); }
     if (name == "geometry") {
       int index = geometryBox->findText(geometryOptions->key(parameter), 
 					Qt::MatchStartsWith);
@@ -1389,52 +1298,35 @@ bool VTDPanel::updateConfig()
 	
 	int box = maxWaveNumBox->value();
 	int elem = element.firstChildElement("maxwavenumber").text().toInt();
-	
+
 	emit changeDom(element, QString("maxwavenumber"), 
 		       QString().setNum(maxWaveNumBox->value()));
-	
-	if (box<elem) {
-	  for (int i=0;i<=elem;i++)
-	    {
-	      QString tagname("maxdatagap_"+QString().setNum(i));
-	      if(i<=box) {
-		if (element.firstChildElement(tagname).text().toInt()
-		    !=dataGapBoxes[i]->value()) {
-		  emit changeDom(element, tagname, 
-				 QString().setNum(dataGapBoxes[i]->value())); }}
-	      else {
-		emit removeDom(element, tagname);
-	      }
+	if(box < elem) {
+	  QList<QDomElement> dataGapElements;
+	  QDomElement dataGapChild = element.firstChildElement("maxdatagap");
+	  while(!dataGapChild.isNull()&&
+		(dataGapChild.tagName() == QString("maxdatagap"))) {
+	    int waveNum = dataGapChild.attribute("wavenum").toInt();
+	    if(waveNum > box) {
+	      emit removeDom(element, QString("maxdatagap"), 
+			     QString("wavenum"), QString().setNum(waveNum));
 	    }
+	    else {
+	      emit changeDom(element, QString("maxdatagap"), 
+			     QString().setNum(dataGapBoxes[waveNum]->value()),
+			     QString("wavenum"), QString().setNum(waveNum));
+	    }
+	    dataGapChild = dataGapChild.nextSiblingElement("maxdatagap");
+	  }
 	}
 	else {
-	  for (int i=0;i<=box;i++)
-	    {
-	      QString tagname("maxdatagap_"+QString().setNum(i));
-	      if(i<=elem) {
-		if (element.firstChildElement(tagname).text().toInt()
-		    !=dataGapBoxes[i]->value()) {
-		  emit changeDom(element, tagname, 
-				 QString().setNum(dataGapBoxes[i]->value())); }}
-	      else {
-		emit addDom(element, tagname, 
-			    QString().setNum(dataGapBoxes[i]->value()));
-	      }
-	    }
+	  for(int waveNum = elem+1; waveNum <= box; waveNum++) {
+	    emit addDom(element, QString("maxdatagap"), 
+			QString().setNum(dataGapBoxes[waveNum]->value()),
+			QString("wavenum"), QString().setNum(waveNum));
+	  }
 	}
       }
-      else 
-	{
-	  int elem = element.firstChildElement("maxwavenumber").text().toInt();
-	  for(int i=0;i<=elem; i++)
-	    {
-	      QString tagname("maxdatagap_"+QString().setNum(i));
-	      if(element.firstChildElement(tagname).text().toFloat()
-		 != dataGapBoxes[i]->value()) {
-		emit changeDom(element, tagname, 
-			       QString().setNum(dataGapBoxes[i]->value())); }
-	    }
-	}
       if(element.firstChildElement("ringwidth").text().toDouble()
 	 !=ringBox->value()) {
 	emit changeDom(element, QString("ringwidth"), 
@@ -1651,13 +1543,31 @@ QCPanel::QCPanel()
 {
   QGroupBox *qcParameters = new QGroupBox(tr("Quality Control Parameters"));
   
-  QLabel *velThresLabel = new QLabel(tr("Ignore Velocities With Magnitude Less Than:"));
-  velocityThreshold = new QDoubleSpinBox;
-  velocityThreshold->setDecimals(3);
-  velocityThreshold->setRange(0,10);
-  velocityThreshold->setValue(1);
+  QLabel *velMinThresLabel = new QLabel(tr("Ignore Velocities With Magnitude Less Than (km/s)"));
+  velocityMinimum = new QDoubleSpinBox;
+  velocityMinimum->setDecimals(3);
+  velocityMinimum->setRange(0,10);
+  velocityMinimum->setValue(1);
+
+  QLabel *velMaxThresLabel = new QLabel(tr("Ignore Velocities With Magnitude Greater Than (km/s)"));
+  velocityMaximum = new QDoubleSpinBox;
+  velocityMaximum->setDecimals(3);
+  velocityMaximum->setRange(0,999);
+  velocityMaximum->setValue(100);
+
+  QLabel *refMinThresLabel = new QLabel(tr("Ignore Gates With Reflectivity Less Than (dBz)"));
+  reflectivityMinimum = new QDoubleSpinBox;
+  reflectivityMinimum->setDecimals(3);
+  reflectivityMinimum->setRange(-500,500);
+  reflectivityMinimum->setValue(-15);
  
-  QLabel *specThresLabel = new QLabel(tr("Ignore Gates With Spectral Width Greater Than:"));
+  QLabel *refMaxThresLabel = new QLabel(tr("Ignore Gates With Reflectivity Greater Than (dBz)"));
+  reflectivityMaximum = new QDoubleSpinBox;
+  reflectivityMaximum->setDecimals(3);
+  reflectivityMaximum->setRange(-500,500);
+  reflectivityMaximum->setValue(65);
+
+  QLabel *specThresLabel = new QLabel(tr("Ignore Gates With Spectral Width Greater Than"));
   spectralThreshold = new QDoubleSpinBox;
   spectralThreshold->setDecimals(2);
   spectralThreshold->setRange(0,50);
@@ -1674,14 +1584,20 @@ QCPanel::QCPanel()
   maxFoldCount->setValue(4);
 
   QGridLayout *paramLayout = new QGridLayout;
-  paramLayout->addWidget(velThresLabel,0,0,1,3);
-  paramLayout->addWidget(velocityThreshold,0,2,1,1);
-  paramLayout->addWidget(specThresLabel,1,0,1,3);
-  paramLayout->addWidget(spectralThreshold,1,2,1,1);
-  paramLayout->addWidget(bbLabel,2,0,1,3);
-  paramLayout->addWidget(bbSegmentSize,2,2,1,1);
-  paramLayout->addWidget(maxFoldLabel,3,0,1,3);
-  paramLayout->addWidget(maxFoldCount,3,2,1,1);
+  paramLayout->addWidget(velMinThresLabel,0,0,1,3);
+  paramLayout->addWidget(velocityMinimum,0,2,1,1);
+  paramLayout->addWidget(velMaxThresLabel,1,0,1,3);
+  paramLayout->addWidget(velocityMaximum, 1,2,1,1);
+  paramLayout->addWidget(refMinThresLabel,2,0,1,3);
+  paramLayout->addWidget(reflectivityMinimum,2,2,1,1);
+  paramLayout->addWidget(refMaxThresLabel, 3,0,1,3);
+  paramLayout->addWidget(reflectivityMaximum, 3,2,1,1);
+  paramLayout->addWidget(specThresLabel,4,0,1,3);
+  paramLayout->addWidget(spectralThreshold,4,2,1,1);
+  paramLayout->addWidget(bbLabel,5,0,1,3);
+  paramLayout->addWidget(bbSegmentSize,5,2,1,1);
+  paramLayout->addWidget(maxFoldLabel,6,0,1,3);
+  paramLayout->addWidget(maxFoldCount,6,2,1,1);
   qcParameters->setLayout(paramLayout);
 
   QGroupBox *findWind = new QGroupBox(tr("Method For Finding Reference Wind"));
@@ -1690,9 +1606,6 @@ QCPanel::QCPanel()
   known = new QRadioButton(tr("Use Available AWEPS Data"), findWind);
 
   QFrame *vadParameters = new QFrame;
-
-  useGVAD = new QRadioButton(tr("Use GVAD Algorithm to Find Mean Winds"),
-			     vadParameters);
 
   QLabel *vadLevelsLabel = new QLabel(tr("Number of VAD Levels Used"));
   vadLevels = new QSpinBox;
@@ -1713,7 +1626,6 @@ QCPanel::QCPanel()
   numCoLayout->addWidget(numCoefficients);
 
   QVBoxLayout *vadLayout = new QVBoxLayout;
-  vadLayout->addWidget(useGVAD);
   vadLayout->addLayout(vadLevelsLayout);
   vadLayout->addLayout(numCoLayout);
   vadParameters->setLayout(vadLayout);
@@ -1721,7 +1633,7 @@ QCPanel::QCPanel()
 
   QFrame *userParameters = new QFrame;
  
-  QLabel *windSpeedLabel = new QLabel(tr("Wind Speed"));
+  QLabel *windSpeedLabel = new QLabel(tr("Wind Speed (km/s)"));
   windSpeed = new QDoubleSpinBox;
   windSpeed->setDecimals(2);
   windSpeed->setRange(0, 200);
@@ -1730,7 +1642,7 @@ QCPanel::QCPanel()
   windSpeedLayout->addWidget(windSpeedLabel);
   windSpeedLayout->addWidget(windSpeed);
 
-  QLabel *windDirectionLabel = new QLabel(tr("Wind Direction"));
+  QLabel *windDirectionLabel = new QLabel(tr("Wind Direction (degrees from North)"));
   windDirection = new QDoubleSpinBox;
   windDirection->setDecimals(1);
   windDirection->setRange(0, 359.9);
@@ -1779,7 +1691,13 @@ QCPanel::QCPanel()
 	  this, SLOT(valueChanged(const QString&)));
   connect(maxFoldCount, SIGNAL(valueChanged(const QString&)),
 	  this, SLOT(valueChanged(const QString&)));
-  connect(velocityThreshold, SIGNAL(valueChanged(const QString&)),
+  connect(velocityMinimum, SIGNAL(valueChanged(const QString&)),
+	  this, SLOT(valueChanged(const QString&)));
+  connect(velocityMaximum, SIGNAL(valueChanged(const QString&)),
+	  this, SLOT(valueChanged(const QString&)));
+  connect(reflectivityMinimum, SIGNAL(valueChanged(const QString&)),
+	  this, SLOT(valueChanged(const QString&)));
+  connect(reflectivityMaximum, SIGNAL(valueChanged(const QString&)),
 	  this, SLOT(valueChanged(const QString&)));
   connect(spectralThreshold, SIGNAL(valueChanged(const QString&)),
 	  this, SLOT(valueChanged(const QString&)));
@@ -1827,8 +1745,14 @@ void QCPanel::updatePanel(const QDomElement panelElement)
 	user->setChecked(true);
       if(parameter == "known")
 	known->setChecked(true); }
-    if(name == "vel_threshold") {
-      velocityThreshold->setValue(parameter.toDouble()); }
+    if(name == "vel_min") {
+      velocityMinimum->setValue(parameter.toDouble()); }
+    if(name == "vel_max") {
+      velocityMaximum->setValue(parameter.toDouble()); }
+    if(name == "ref_min") {
+      reflectivityMinimum->setValue(parameter.toDouble()); }
+    if(name == "ref_max") {
+      reflectivityMaximum->setValue(parameter.toDouble()); }
     if(name == "sw_threshold") {
       spectralThreshold->setValue(parameter.toDouble()) ; }
     if(name == "bbcount") {
@@ -1856,10 +1780,25 @@ bool QCPanel::updateConfig()
   QDomElement element = getPanelElement();
   if (checkPanelChanged()) 
     {
-      if(element.firstChildElement("vel_threshold").text().toDouble()
-	!=velocityThreshold->value()) {
-	emit changeDom(element, QString("vel_threshold"), 
-		       QString().setNum(velocityThreshold->value()));
+      if(element.firstChildElement("vel_min").text().toDouble()
+	!=velocityMinimum->value()) {
+	emit changeDom(element, QString("vel_min"), 
+		       QString().setNum(velocityMinimum->value()));
+      }
+      if(element.firstChildElement("vel_max").text().toDouble()
+	 !=velocityMaximum->value()) {
+	emit changeDom(element, QString("vel_max"), 
+		       QString().setNum(velocityMaximum->value()));
+      }
+      if(element.firstChildElement("ref_min").text().toDouble()
+	!=reflectivityMinimum->value()) {
+	emit changeDom(element, QString("ref_min"), 
+		       QString().setNum(reflectivityMinimum->value()));
+      }
+      if(element.firstChildElement("ref_max").text().toDouble()
+	 !=reflectivityMaximum->value()) {
+	emit changeDom(element, QString("ref_max"), 
+		       QString().setNum(reflectivityMaximum->value()));
       }
       if(element.firstChildElement("sw_threshold").text().toDouble()
 	 !=spectralThreshold->value()) {
@@ -1930,7 +1869,8 @@ bool QCPanel::updateConfig()
     radarNameOptions->insert(QString("Please select a radar"), QString(""));
     radarLocations->insert(QString("Please select a radar"), QPointF(0.0,0.0));
     radarNameOptions->insert(QString("RCWF in Taiwan"),QString("RCWF"));
-   radarLocations->insert(QString("RCWF in Taiwan"), QPointF(121.773, 25.073));
+    radarLocations->insert(QString("RCWF in Taiwan"), 
+                           QPointF(121.773, 25.073));
     radarLocations->insert(QString("TJUA in San Juan Puerto Rico"), 
     QPointF(-66.078, 18.116));
     radarLocations->insert(QString("KENX in Albany, NY"), 
@@ -1943,8 +1883,7 @@ bool QCPanel::updateConfig()
     QPointF(-98.028, 29.704));
     radarLocations->insert(QString("KBGM in Binghamton, NY"),
     QPointF(-75.985, 42.200));
-    radarLocations->insFrom:	
-From:	Lisa Mauger <lmauger@mines.edu>  changeert(QString("KBMX in Birmingham, AL"),
+    radarLocations->insert(QString("KBMX in Birmingham, AL"),
     QPointF(-86.770, 33.172));
     radarLocations->insert(QString("KBOX in Boston, MA"), 
     QPointF(-71.137, 41.956));
