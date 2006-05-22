@@ -741,7 +741,7 @@ bool RadarQC::VAD(float* &vel, Sweep* &currentSweep,
   stError = new float[numCoEff];
 
   if(!lls(numCoEff, numData, X, Y, stDeviation, coEff, stError)) {
-    // emit log(Message("Failed in lls"));
+    emit log(Message("Failed in lls"));
     return false;
   }
 
@@ -1175,7 +1175,7 @@ bool RadarQC::lls(const int &numCoEff,const int &numData,
    */
 
   if(numData < numCoEff) {
-    //emit log(Message("Least Squares: Not Enough Data"));
+    emit log(Message("Least Squares: Not Enough Data"));
     return false;
   }
   // We need at least one more data point than coefficient in order to
@@ -1234,8 +1234,10 @@ bool RadarQC::lls(const int &numCoEff,const int &numData,
   }
   */
 
-  if(!leastSquaresRegression(AA,BB, numCoEff, 1))
+  if(!leastSquaresRegression(AA,BB, numCoEff, 1)) {
     emit log(Message("Least Squares Fit Failed"));
+    return false;
+  }
   
   /* 
   Message::toScreen("CHECK: coeff[0] = "+QString().setNum(coEff[0])+" coeff[1] = "
@@ -1249,7 +1251,7 @@ bool RadarQC::lls(const int &numCoEff,const int &numData,
   for(int i = 0; i < numCoEff; i++) {
     coEff[i] = BB[i][0];
     for(int j = 0; j < numCoEff; j++) {
-      Ainv[i][j] = A[i][j];
+      Ainv[i][j] = AA[i][j];
     }
   }
   
@@ -1572,7 +1574,6 @@ bool RadarQC::leastSquaresRegression(float **a, float **b, int n, int m)
 
   return true;
 }
-
 
 
 void RadarQC::printMatrix(float **A, int M, int N)

@@ -5,27 +5,36 @@
      <dir>/location/of/MM5/Data</dir>
   </mm5>
   <wind_field>
-     <rmw>30</rmw>
-     <vt0>70</vt0>
-     <vr0>1</vr0>        
+     <rmw>20</rmw>
+     <vt0>50</vt0>
+     <vr0>0</vr0>        
      <vt1>0</vt1>
      <vt1angle>0</vt1angle>
      <vr1>0</vr1>
      <vr1angle>0</vr1angle>
-     <vt2>0</vt2>
-     <vt2angle>90</vt2angle>
+     <vt2>0.1</vt2>
+     <vt2angle>45</vt2angle>
      <vr2>0</vr2>
      <vr2angle>0</vr2angle>
      <env_speed>0</env_speed>
      <env_dir>0</env_dir>
   </wind_field>
+  <lamb>
+     <disturbance>3</disturbance>
+     <amplitude>7.1</amplitude>
+     <angle>45</angle>
+  </lamb>
+  <deformation>
+     <magnitude>.2</magnitude>
+     <dialation_axis>45</dialation_axis>
+  </deformation>
   <analytic_radar>
      <sample>true</sample>
      <velgatesp>1</velgatesp>
      <refgatesp>1</refgatesp>
      <beamwidth>1</beamwidth>
-     <nyquistVel>35</nyquistVel>
-     <dealiasdata>true</dealiasdata>
+     <nyquistVel>100</nyquistVel>
+     <dealiasdata>false</dealiasdata>
      <noiseScale>10</noiseScale>
      <percent_noisy_gates>0</percent_noisy_gates>
      <numgates>300</numgates>

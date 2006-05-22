@@ -148,11 +148,11 @@ int Ray::getFirst_vel_gate() {
   return first_vel_gate ;
 }
 
-int Ray::getRef_gatesp() {
+float Ray::getRef_gatesp() {
   return ref_gatesp ;
 }
 
-int Ray::getVel_gatesp() {
+float Ray::getVel_gatesp() {
   return vel_gatesp ;
 }
 

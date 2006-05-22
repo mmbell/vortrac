@@ -284,7 +284,7 @@ bool AnalyticRadar::readVolumeAnalytic()
   beamWidth = config->getParam(radar, "beamwidth").toFloat();
   noiseScale = config->getParam(radar, "noiseScale").toFloat();
   noisyGates = config->getParam(radar, "percent_noisy_gates").toFloat();
-  float numGates = config->getParam(radar, "numgates").toInt();
+  int numGates = config->getParam(radar, "numgates").toInt();
   int totNumSweeps = config->getParam(radar, "numsweeps").toInt();
   
   QString sendToDealias = config->getParam(radar, "dealiasdata");
@@ -346,6 +346,8 @@ bool AnalyticRadar::readVolumeAnalytic()
     }  
     Sweeps[n].setLastRay(numRays-1);
   }
+
+  Message::toScreen("Left Analytic Radar");
 
   return true;
 }

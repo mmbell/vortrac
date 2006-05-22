@@ -439,20 +439,20 @@ CappiPanel::CappiPanel()
   grid->setLayout(gridLayout);
 
   // These need to be changed to U & V parameters !!!
-  QLabel *advSpeedLabel = new QLabel(tr("Advection Speed (m/s)"));
-  advSpeedBox = new QDoubleSpinBox;
-  advSpeedBox->setDecimals(1);
-  advSpeedBox->setRange(0,50000);
-  QLabel *advDirLabel = new QLabel(tr("Advection Direction (deg from North)"));
-  advDirBox = new QDoubleSpinBox;
-  advDirBox->setDecimals(1);
-  advDirBox->setRange(0,359.99);
+  QLabel *advUWindLabel = new QLabel(tr("Zonal Advection Wind (m/s)"));
+  advUWindBox = new QDoubleSpinBox;
+  advUWindBox->setDecimals(1);
+  advUWindBox->setRange(0,50000);
+  QLabel *advVWindLabel = new QLabel(tr("Meridional Advection Wind (m/s)"));
+  advVWindBox = new QDoubleSpinBox;
+  advVWindBox->setDecimals(1);
+  advVWindBox->setRange(0,359.99);
 
   QHBoxLayout *adv = new QHBoxLayout;
-  adv->addWidget(advSpeedLabel);
-  adv->addWidget(advSpeedBox);
-  adv->addWidget(advDirLabel);
-  adv->addWidget(advDirBox);
+  adv->addWidget(advUWindLabel);
+  adv->addWidget(advUWindBox);
+  adv->addWidget(advVWindLabel);
+  adv->addWidget(advVWindBox);
 
   QLabel *interpolation = new QLabel(tr("Interpolation"));
   interpolationMethod = new QHash<QString, QString>;
@@ -496,9 +496,9 @@ CappiPanel::CappiPanel()
 	  this, SLOT(valueChanged(const QString&)));
   connect(zGridBox, SIGNAL(valueChanged(const QString&)), 
 	  this, SLOT(valueChanged(const QString&)));
-  connect(advSpeedBox, SIGNAL(valueChanged(const QString&)), 
+  connect(advUWindBox, SIGNAL(valueChanged(const QString&)), 
 	  this, SLOT(valueChanged(const QString&))); 
-  connect(advDirBox, SIGNAL(valueChanged(const QString&)), 
+  connect(advVWindBox, SIGNAL(valueChanged(const QString&)), 
 	  this, SLOT(valueChanged(const QString&)));
   connect(intBox, SIGNAL(activated(const QString&)), 
 	  this, SLOT(valueChanged(const QString&)));
@@ -535,10 +535,10 @@ void CappiPanel::updatePanel(const QDomElement panelElement)
       yGridBox->setValue(parameter.toDouble()); }
     if (name == "zgridsp") {
       zGridBox->setValue(parameter.toDouble()); }
-    if (name == "adv_speed") {
-      advSpeedBox->setValue(parameter.toDouble()); }
-    if( name == "adv_dir") {
-      advDirBox->setValue(parameter.toDouble()); }
+    if (name == "adv_u") {
+      advUWindBox->setValue(parameter.toDouble()); }
+    if( name == "adv_v") {
+      advVWindBox->setValue(parameter.toDouble()); }
     if (name == "interpolation") {
       int index = intBox->findText(interpolationMethod->key(parameter),
 				   Qt::MatchStartsWith);
@@ -591,15 +591,15 @@ bool CappiPanel::updateConfig()
 	emit changeDom(element, QString("zgridsp"), 
 		       QString().setNum(zGridBox->value()));
       }
-      if(element.firstChildElement("adv_speed").text().toDouble()
-	 !=advSpeedBox->value()) {
-	emit changeDom(element, QString("adv_speed"), 
-		       QString().setNum(advSpeedBox->value()));
+      if(element.firstChildElement("adv_u").text().toDouble()
+	 !=advUWindBox->value()) {
+	emit changeDom(element, QString("adv_u"), 
+		       QString().setNum(advUWindBox->value()));
       }
-      if(element.firstChildElement("adv_dir").text().toDouble()
-	 !=advDirBox->value()) {
-	emit changeDom(element, QString("adv_dir"), 
-		       QString().setNum(advDirBox->value()));
+      if(element.firstChildElement("adv_v").text().toDouble()
+	 !=advVWindBox->value()) {
+	emit changeDom(element, QString("adv_v"), 
+		       QString().setNum(advVWindBox->value()));
       }
       if(element.firstChildElement("interpolation").text()
 	 !=interpolationMethod->value(intBox->currentText())) 
@@ -684,13 +684,13 @@ CenterPanel::CenterPanel()
 
   QGroupBox *searchRegion = new QGroupBox(tr("Center Search Limitations"));
   QGridLayout *search = new QGridLayout;
-  QLabel *bottomLevel = new QLabel(tr("Bottom Level"));
+  QLabel *bottomLevel = new QLabel(tr("Bottom Level (km)"));
   bLBox = new QSpinBox;
-  QLabel *topLevel = new QLabel(tr("Top Level"));
+  QLabel *topLevel = new QLabel(tr("Top Level (km)"));
   tLBox = new QSpinBox;
-  QLabel *innerRad = new QLabel(tr("Inner Radius"));
+  QLabel *innerRad = new QLabel(tr("Inner Radius (km)"));
   iRBox = new QSpinBox;
-  QLabel *outerRad = new QLabel(tr("Outer Radius"));
+  QLabel *outerRad = new QLabel(tr("Outer Radius (km)"));
   oRBox = new QSpinBox;
   search->addWidget(bottomLevel, 0,0);
   search->addWidget(bLBox, 0, 1);
@@ -740,11 +740,11 @@ CenterPanel::CenterPanel()
   criteriaLayout->addWidget(searchCrit);
   criteriaLayout->addWidget(critBox);
 
-  QLabel *ringWidth = new QLabel(tr("Width of Search Rings"));
+  QLabel *ringWidth = new QLabel(tr("Width of Search Rings (km)"));
   ringBox = new QDoubleSpinBox;
   ringBox->setDecimals(1);
 
-  QLabel *influenceRadius = new QLabel(tr("Radius of Influence"));
+  QLabel *influenceRadius = new QLabel(tr("Radius of Influence (km)"));
   influenceBox = new QDoubleSpinBox;
   influenceBox->setDecimals(1);
 
@@ -1100,13 +1100,13 @@ VTDPanel::VTDPanel()
 
   QGroupBox *searchRegion = new QGroupBox(tr("VTD Grid Region"));
   QGridLayout *search = new QGridLayout;
-  QLabel *bottomLevel = new QLabel(tr("Bottom Level"));
+  QLabel *bottomLevel = new QLabel(tr("Bottom Level (km)"));
   bLBox = new QSpinBox;
-  QLabel *topLevel = new QLabel(tr("Top Level"));
+  QLabel *topLevel = new QLabel(tr("Top Level (km)"));
   tLBox = new QSpinBox;
-  QLabel *innerRad = new QLabel(tr("Inner Radius"));
+  QLabel *innerRad = new QLabel(tr("Inner Radius (km)"));
   iRBox = new QSpinBox;
-  QLabel *outerRad = new QLabel(tr("Outer Radius"));
+  QLabel *outerRad = new QLabel(tr("Outer Radius (km)"));
   oRBox = new QSpinBox;
   search->addWidget(bottomLevel, 0,0);
   search->addWidget(bLBox, 0, 1);
@@ -1425,21 +1425,21 @@ GraphicsPanel::GraphicsPanel()
   graphParameters->setCheckable(true);
   QGridLayout *graph = new QGridLayout;
   
-  QLabel *pMax = new QLabel(tr("Maximum Pressure"));
+  QLabel *pMax = new QLabel(tr("Maximum Pressure (mb)"));
   pMaxBox = new QDoubleSpinBox;
   pMaxBox->setRange(0,2000);
   pMaxBox->setDecimals(1);
   
-  QLabel *pMin = new QLabel(tr("Minimum Pressure"));
+  QLabel *pMin = new QLabel(tr("Minimum Pressure (mb)"));
   pMinBox = new QDoubleSpinBox;
   pMinBox->setRange(0, 2000);
   pMinBox->setDecimals(1);
   
-  QLabel *rmwMax = new QLabel(tr("Maximum RMW"));
+  QLabel *rmwMax = new QLabel(tr("Maximum RMW (km)"));
   rmwMaxBox = new QDoubleSpinBox;
   rmwMaxBox->setDecimals(1);
   
-  QLabel *rmwMin = new QLabel(tr("Minimum RMW"));
+  QLabel *rmwMin = new QLabel(tr("Minimum RMW (km)"));
   rmwMinBox = new QDoubleSpinBox;
   rmwMinBox->setDecimals(1);
   
@@ -1658,7 +1658,7 @@ QCPanel::QCPanel()
   userParameters->hide();
 
   QFrame *knownParameters = new QFrame;
-  QLabel *knownDirLabel = new QLabel(tr("AWEPS Data Directory"));
+  QLabel *knownDirLabel = new QLabel(tr("AWIPS Data Directory"));
   dir = new QLineEdit();
   browse = new QPushButton("Browse..");
   connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));

@@ -47,8 +47,8 @@ public:
      they should be ints, I get the impression we are getting a value in feet
      meters ... etc -LM
   */
-  int getRef_gatesp();
-  int getVel_gatesp();
+  float getRef_gatesp();
+  float getVel_gatesp();
   
   int getRef_numgates();
   int getVel_numgates();

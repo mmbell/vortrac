@@ -29,6 +29,7 @@ HEADERS += DataObjects/PressureData.h \
            GUI/DiagnosticPanel.h \
            GUI/RadarListDialog.h \
            GUI/StopLight.h \
+           HVVP/Hvvp.h \
            IO/Message.h \
            IO/Log.h \
            Radar/RadarFactory.h \
@@ -62,6 +63,7 @@ SOURCES += main.cpp \
            GUI/DiagnosticPanel.cpp \
            GUI/RadarListDialog.cpp \
            GUI/StopLight.cpp \
+           HVVP/Hvvp.cpp \
            IO/Message.cpp \
            IO/Log.cpp \
            Radar/RadarFactory.cpp \

@@ -102,7 +102,7 @@ class CappiPanel:public AbstractPanel
   // y and x GridBoxes are for collecting and editing the distance between
   // data points in the cappi grid in each dimension.
 
-  QDoubleSpinBox *advSpeedBox, *advDirBox;
+  QDoubleSpinBox *advUWindBox, *advVWindBox;
   // Determines the speed and direction of advection flow
 
   QComboBox *intBox;

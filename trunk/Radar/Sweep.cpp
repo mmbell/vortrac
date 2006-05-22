@@ -92,11 +92,11 @@ int Sweep::getFirst_vel_gate() {
   return first_vel_gate ;
 }
 
-int Sweep::getRef_gatesp() {
+float Sweep::getRef_gatesp() {
   return ref_gatesp ;
 }
 
-int Sweep::getVel_gatesp() {
+float Sweep::getVel_gatesp() {
   return vel_gatesp ;
 }
 

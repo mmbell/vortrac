@@ -26,8 +26,8 @@
      <xgridsp>1.0</xgridsp>
      <ygridsp>1.0</ygridsp>
      <zgridsp>1.0</zgridsp>
-     <adv_speed>0.0</adv_speed>
-     <adv_dir>0.0</adv_dir>
+     <adv_u>0.0</adv_u>
+     <adv_v>0.0</adv_v>
      <interpolation>bilinear</interpolation>
   </cappi>
   <center>

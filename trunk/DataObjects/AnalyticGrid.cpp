@@ -45,22 +45,10 @@ AnalyticGrid::~AnalyticGrid()
 {
 }
 
-void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
-				    Configuration* analyticConfig, 
-				    float *vortexLat, float *vortexLon,
-				    float *radarLat, float *radarLon)
-  
-  /* 
-   * Retreives information from the analytic vortex configuration xml file
-   * and the cappi portion of the master configuration xml file. 
-   * Determines the desired model vortex with necessary parameters 
-   * from the configuration information and creates and populates a cartesian
-   * grid of data points.
-   */
-
+bool AnalyticGrid::getConfigInfo(QDomElement cappiConfig,
+				 Configuration* analyticConfig)
 {
-
-  // Set the output file
+ // Set the output file
   QString filePath = cappiConfig.firstChildElement("dir").text();
   QString fileName("analyticModel");
   outFileName = filePath + "/" + fileName;
@@ -87,53 +75,70 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
   QString sourceString = analyticConfig->getRoot().firstChildElement("source").text();
   
   QDomElement radar = analyticConfig->getRoot().firstChildElement("analytic_radar");
+  
+  float *radLocation  = new float[2];
+  radLocation = relEarthLocation(vLat,vLon,rLat,rLon);
+  
+  centX = iDim/2*iGridsp;  // x coordinate of storm center on grid
+  centY = jDim/2*jGridsp;  // y coordinate of storm center on grid
+  
+  // Connects the gridded dimensions on the cappi with the correct latitude
+  // and longitude coordinates for the area
+  setZeroLocation(vLat, vLon, &centX, &centY);
+  
+  radX = centX+radLocation[0];  // x coordinate of radar on grid
+  radY = centY+radLocation[1];  // y coordinate of radar on grid
+  
+  //testing Message::toScreen("RadX,Y ="+QString().setNum(radX)+", "+QString().setNum(radY)+"  VortX,Y ="+QString().setNum(centX)+", "+QString().setNum(centY));
+  
   if (sourceString == QString("wind_field")) {
     // This indicates that the analytic storm will be constructed from 
     // a series of overlayed wind fields from the specifications in 
     // the default analytic xml file
     
-    QDomElement winds = analyticConfig->getRoot().firstChildElement("wind_field");
+    source = windFields;
+  }
+  if (sourceString == QString("lamb")) {
+    source = lamb;
+  }
+  if(sourceString == QString("deformation")) {
+    source = deformation;
+  }
+  if (sourceString == QString("mm5")) {
+    source = mm5;
+    // Not implemented
+  }
+   
 
-    float *radLocation  = new float[2];
-    radLocation = relEarthLocation(vortexLat,vortexLon,radarLat,radarLon);
+  // Get the needed configuration parameters
 
-    centX = iDim/2*iGridsp;  // x coordinate of storm center on grid
-    centY = jDim/2*jGridsp;  // y coordinate of storm center on grid
+  if((source == windFields)||(source == lamb)||(source == deformation)) {
 
-    // Connects the gridded dimensions on the cappi with the correct latitude
-    // and longitude coordinates for the area
-    setZeroLocation(vortexLat, vortexLon, &centX, &centY);
-
-    radX = centX+radLocation[0];  // x coordinate of radar on grid
-    radY = centY+radLocation[1];  // y coordinate of radar on grid
-
-    //testing Message::toScreen("RadX,Y ="+QString().setNum(radX)+", "+QString().setNum(radY)+"  VortX,Y ="+QString().setNum(centX)+", "+QString().setNum(centY));
+    QDomElement winds =analyticConfig->getRoot().firstChildElement("wind_field");
     
     // radius of maximum wind for analytic storm
     rmw = analyticConfig->getParam(winds, "rmw").toFloat();
-
+    
     // speed and direction of mean environmental wind 
     envSpeed = analyticConfig->getParam(winds, "env_speed").toFloat();
     envDir = analyticConfig->getParam(winds, "env_dir").toFloat();
-    
-   
-    //    scale = analyticConfig->getParam(radar, "noise").toFloat();
 
-     for(int v = 0; v < 3; v++) {
-      QString tan("vt");
-      tan+=QString().setNum(v);
-      QString rad("vr");
-      rad+=QString().setNum(v);
-      QString tanAngle = tan+QString("angle");
-      QString radAngle = rad+QString("angle");
-      
-      if(v == 0) {
-	vT.append(analyticConfig->getParam(winds, tan).toFloat());
-	vR.append(analyticConfig->getParam(winds, rad).toFloat()); 
-	vTAngle.append(0);
-	vRAngle.append(0);
-      }
-      else {
+    QString tan("vt"+QString().setNum(0));
+    QString rad("vr"+QString().setNum(0));
+    QString tanAngle = tan+QString("angle");
+    QString radAngle = rad+QString("angle");   
+    vT.append(analyticConfig->getParam(winds, tan).toFloat());
+    vR.append(analyticConfig->getParam(winds, rad).toFloat()); 
+    vTAngle.append(0);
+    vRAngle.append(0); 
+    
+    if(source == windFields) {
+      for(int v = 1; v < 3; v++) {
+	QString tan("vt"+QString().setNum(v));
+	QString rad("vr"+QString().setNum(v));
+	QString tanAngle = tan+QString("angle");
+	QString radAngle = rad+QString("angle");
+	
 	vT.append(analyticConfig->getParam(winds, tan).toFloat()*vT[0]);
 	vR.append(analyticConfig->getParam(winds, rad).toFloat()*vR[0]); 
 	vTAngle.append(analyticConfig->getParam(winds, 
@@ -141,25 +146,93 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
 	vRAngle.append(analyticConfig->getParam(winds, 
 						radAngle).toFloat()*deg2rad);
       }
+    }
+    else {
+      if(source == lamb) {
+	
+      // Analytic Storm based on Lamb Model
       
+      QDomElement lamb = analyticConfig->getRoot().firstChildElement("lamb");
+      vorDisturbance = analyticConfig->getParam(lamb, "disturbance").toFloat();
+      lambAmplitude = analyticConfig->getParam(lamb, "amplitude").toFloat();
+      lambAngle = analyticConfig->getParam(lamb, "angle").toFloat()*deg2rad;
+
+      }
+      else {
+	if (source == deformation) {
+
+	  // Analytic storm based on deformation field model
+
+	  QDomElement defElement = analyticConfig->getConfig("deformation");
+	  defMagnitude = analyticConfig->getParam(defElement, 
+						  "magnitude").toFloat();
+	  Message::toScreen("deformation magnitude ="+QString().setNum(defMagnitude));
+	  dialationAxis = analyticConfig->getParam(defElement, 
+						  "dialation_axis").toFloat();
+	  Message::toScreen("deformation axis ="+QString().setNum(dialationAxis));
+	  dialationAxis *=deg2rad;
+	}
+      }
     }
     
-    // Message::toScreen("EnvirWinds: "+QString().setNum(envSpeed));
-    //Message::toScreen("Beginning Velocity Assignment");
-    //Message::toScreen("Vortex Center = ("+QString().setNum(centX)+","+QString().setNum(centY)+")");
-    //Message::toScreen("Radar Center = ("+QString().setNum(radX)+","+QString().setNum(radY)+")");
-
-    gridWindFieldData();
-
+    /*
+     * All the angle measurements that come in from the analytic configuration
+     *   xml file are in meterological coordinates (degrees clockwise from north)
+     *
+     */
   }
-  
-  if (sourceString == "mm5") {
-    source = mm5;
-    
+  else {
+    if(source == mm5) {
+      Message::toScreen("MM5 models not yet implemented");
+      return false;
+    }
   }
+
 
   // Set the initial field names
   fieldNames << "DZ" << "VE" << "SW";
+
+  return true;
+
+}
+
+void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
+				    Configuration* analyticConfig, 
+				    float *vortexLat, float *vortexLon,
+				    float *radarLat, float *radarLon)
+  
+  /* 
+   * Retreives information from the analytic vortex configuration xml file
+   * and the cappi portion of the master configuration xml file. 
+   * Determines the desired model vortex with necessary parameters 
+   * from the configuration information and creates and populates a cartesian
+   * grid of data points.
+   *
+   */
+
+{
+  vLat = vortexLat; 
+  vLon = vortexLon;
+  rLat = radarLat;
+  rLon = radarLon;
+
+  getConfigInfo(cappiConfig, analyticConfig);
+  
+  if (source == windFields) { 
+    gridWindFieldData();
+  }
+  
+  if (source == lamb) {
+    gridLambData();
+    Message::toScreen("Hit Enum to Lamb");
+  }
+  if (source == deformation) {
+    gridDefFieldData();
+    Message::toScreen("Hit Enum to Def");
+  }
+  if (source == mm5) {
+        
+  }
 
 }
 
@@ -178,8 +251,8 @@ void AnalyticGrid::gridWindFieldData()
 
   //QTextStream out(stdout);
   for(int k = 0; k < kDim; k++) {
-    for(int j = jDim - 1; j >= 0; j--) {
-      for(int i = iDim - 1; i >= 0; i--) {
+    for(int j = int(jDim) - 1; j >= 0; j--) {
+      for(int i = int(iDim) - 1; i >= 0; i--) {
 	for(int a = 0; a < 3; a++) {
 	  // zero out all the points
 	  dataGrid[a][i][j][k] = 0;
@@ -224,27 +297,6 @@ void AnalyticGrid::gridWindFieldData()
 	    } 
 	  }
 	}
-	/*
-	if(r>rmw) {
-	  for(int a = 0; a < vR.count(); a++) {
-	    float radialV = vR[a]*cos(a*(Pi-theta+vRAngle[a]))*(rmw/r);
-	    vx+=radialV *(delX/r);
-	    vy+=radialV *(delY/r);
-	    ref+=radialV;
-	  }
-	}
-	else {
-	  if(r!=0) {
-	    for(int a = 0; a < vR.count(); a++) {
-	      float radialV = vR[a]*cos(a*(Pi-theta+vRAngle[a]))*(r/rmw);
-	      vx+=radialV*(delX/r);
-	      vy+=radialV*(delY/r);
-	      ref+=radialV;
-	    }
-	  }
-	}
-	*/
-
 	if(r>rmw) {
 	  for(int a = 0; a < vR.count(); a++) {
 	    float radialV = vR[a]*-c2*sqrt(r-rmw)*(rmw/r);
@@ -295,6 +347,271 @@ void AnalyticGrid::gridWindFieldData()
     } 
   }
 }
+
+void AnalyticGrid::gridLambData()
+{
+
+  Message::toScreen("Got into GridLambField");
+
+  // Initializes all data fields
+
+  for(int k = 0; k < kDim; k++) {
+    for(int j = int(jDim) - 1; j >= 0; j--) {
+      for(int i = int(iDim) - 1; i >= 0; i--) {
+	for(int a = 0; a < 3; a++) {
+	  // zero out all the points
+	  dataGrid[a][i][j][k] = 0;
+	}
+
+	float vx = 0;
+	float vy = 0;
+	float ref = 0;
+	float delX, delY, r, theta, delRX, delRY, radR;
+	delX = centX-(iGridsp*i);
+	delY = centY-(jGridsp*j);
+	r = sqrt(delX*delX+delY*delY);
+	theta = atan2(delX,delY);
+	delRX = radX-(iGridsp*i);
+	delRY = radY-(jGridsp*j);
+	radR = sqrt(delRX*delRX+delRY*delRY);
+	float c1 = .1;
+	float c2 = 3;
+
+	// Add in tangential wind structure
+
+	/* The storm velocity is calculated at each point according to the
+	 * relative position of the storm. A vector is drawn from the point
+	 * of interest to the 
+	 */
+
+	if(r>rmw) {
+	  float tangentialV =  vT[0]*(rmw/r);
+	  vx +=tangentialV*(delY/r);
+	  vy +=tangentialV*(delX/r);
+	  ref += tangentialV;
+	}
+	else {
+	  if(r!=0) {
+	    float tangentialV =vT[0]*(r/rmw);
+	    vx+=tangentialV*(delY/r);
+	    vy+=tangentialV*(delX/r);
+	    ref+=tangentialV;
+	  }
+	}
+
+	// Add in radial wind structure
+
+	if(r>rmw) {
+	  float radialV = vR[0]*-c2*sqrt(r-rmw)*(rmw/r);
+	  vx+=radialV *(-delX/r);
+	  vy+=radialV *(delY/r);
+	  ref+=radialV;
+	}
+	else {
+	  if(r!=0) {
+	    float radialV = vR[0]*c1*sqrt((rmw-r)*r);
+	    vx+=radialV*(-delX/r);
+	    vy+=radialV*(delY/r);
+	    ref+=radialV;
+	  }
+	}
+
+	// Add in environmental wind structure
+	
+   /* The angle used here, envDir, is the angle that the environmental wind 
+    * is coming from according to the azimuthal, or meterological convention
+    * (0 north, clockwise)
+    */
+
+	float vex = envSpeed*sin(Pi+(envDir)*deg2rad);
+	float vey = envSpeed*cos(Pi+(envDir)*deg2rad);
+	vx += vex;
+	vy += vey;
+	
+
+	// Add in winds created from vorticity disturbance
+
+     /*
+      * The tangential and radial wind contributions from a vorticity disturbance
+      *   are taken from Doppler Velocity Signatures of Idealized Elliptical 
+      *   Vortices. Lee, Harasti, Bell, Jou, Change (Not yet published)?
+      */
+	
+	// radial winds
+
+	float mathAz = .25*Pi-theta;
+	if(mathAz < 0)
+	  mathAz += 2*Pi;
+	
+	float vrl;
+	float rEll = rmw+vorDisturbance*cos(2*(mathAz+lambAngle));
+	if(r>rEll) {
+	  vrl = .5*(rmw*rmw*rmw/(r*r*r))*vorDisturbance*sin(2*(mathAz+lambAngle));
+	  ref += vrl;
+	  vx+=vrl*(-delX/r);
+	  vy+=vrl*(delY/r);
+	}
+	else {
+	  if(r!=0) {
+	    vrl = .5*r*(vorDisturbance/rmw)*sin(2*(mathAz+lambAngle)); 
+	    ref += vrl;
+	    vx+=vrl*(-delX/r);
+	    vy+=vrl*(delY/r);
+	  }
+	}
+
+	// tangential winds
+
+	float vtl;
+	if(r>rEll) {
+	  vtl = 1-vorDisturbance*(rmw/(r*r))*cos(2*(mathAz+lambAngle));
+	  vtl *= .5*(rmw*rmw/r);
+
+	  ref += vrl;
+	  vx+=vrl*(-delX/r);
+	  vy+=vrl*(delY/r);
+	}
+	else {
+	  if(r!=0) {
+	    vtl = .5*r*(1+(vorDisturbance/rmw)*cos(2*(mathAz+lambAngle)));
+	    ref += vrl;
+	    vx+=vrl*(-delX/r);
+	    vy+=vrl*(delY/r);
+	  }
+	}
+
+	// Sample in direction of radar
+	if(radR != 0) {
+	  
+	  dataGrid[1][i][j][k] = -(delRX*vx-delRY*vy)/radR;
+	}      	
+	dataGrid[0][i][j][k] = ref;
+	dataGrid[2][i][j][k] = -999;
+
+      }
+    } 
+  }
+  Message::toScreen("Finished grid Lamb data");
+}
+
+
+void AnalyticGrid::gridDefFieldData()
+{
+
+  Message::toScreen("Got into GridDefField");
+
+  // Initializes all data fields
+
+  for(int k = 0; k < kDim; k++) {
+    for(int j = int(jDim) - 1; j >= 0; j--) {
+      for(int i = int(iDim) - 1; i >= 0; i--) {
+	for(int a = 0; a < 3; a++) {
+	  // zero out all the points
+	  dataGrid[a][i][j][k] = 0;
+	}
+
+	float vx = 0;
+	float vy = 0;
+	float ref = 0;
+	float delX, delY, r, theta, delRX, delRY, radR;
+	delX = centX-(iGridsp*i);
+	delY = centY-(jGridsp*j);
+	r = sqrt(delX*delX+delY*delY);
+	theta = atan2(delX,delY);
+	delRX = radX-(iGridsp*i);
+	delRY = radY-(jGridsp*j);
+	radR = sqrt(delRX*delRX+delRY*delRY);
+	float c1 = .1;
+	float c2 = 3;
+
+	// Add in tangential wind structure
+
+	/* The storm velocity is calculated at each point according to the
+	 * relative position of the storm. A vector is drawn from the point
+	 * of interest to the 
+	 */
+
+	if(r>rmw) {
+	  float tangentialV =  vT[0]*(rmw/r);
+	  vx +=tangentialV*(delY/r);
+	  vy +=tangentialV*(delX/r);
+	  ref += tangentialV;
+	}
+	else {
+	  if(r!=0) {
+	    float tangentialV =vT[0]*(r/rmw);
+	    vx+=tangentialV*(delY/r);
+	    vy+=tangentialV*(delX/r);
+	    ref+=tangentialV;
+	  }
+	}
+
+	// Add in radial wind structure
+
+	if(r>rmw) {
+	  float radialV = vR[0]*-c2*sqrt(r-rmw)*(rmw/r);
+	  vx+=radialV *(-delX/r);
+	  vy+=radialV *(delY/r);
+	  ref+=radialV;
+	}
+	else {
+	  if(r!=0) {
+	    float radialV = vR[0]*c1*sqrt((rmw-r)*r);
+	    vx+=radialV*(-delX/r);
+	    vy+=radialV*(delY/r);
+	    ref+=radialV;
+	  }
+	}
+
+	// Add in environmental wind structure
+	
+   /* The angle used here, envDir, is the angle that the environmental wind 
+    * is coming from according to the azimuthal, or meterological convention
+    * (0 north, clockwise)
+    */
+
+	float vex = envSpeed*sin(Pi+(envDir)*deg2rad);
+	float vey = envSpeed*cos(Pi+(envDir)*deg2rad);
+	vx += vex;
+	vy += vey;
+	
+
+	// Add in winds from deformation field
+
+     /*
+      * The U and V wind contributions from a deformation field
+      *   are taken from Doppler Velocity Signatures of Idealized Elliptical 
+      *   Vortices. Lee, Harasti, Bell, Jou, Change (Not yet published)?
+      */
+       
+	
+	float uDef = 0;
+	uDef += -0.5*defMagnitude*(delX*cos(2*dialationAxis));
+	uDef += -0.5*defMagnitude*(delY*sin(2*dialationAxis));
+	float vDef = 0;
+	vDef += 0.5*defMagnitude*(-1*delX*sin(2*dialationAxis));
+	vDef += 0.5*defMagnitude*(delY*cos(2*dialationAxis));
+	vx += uDef;
+	vy += vDef;
+       	ref += sqrt(uDef*uDef+vDef*vDef);
+	
+
+
+	// Sample in direction of radar
+	if(radR != 0) {
+	  
+	  dataGrid[1][i][j][k] = -(delRX*vx-delRY*vy)/radR;
+	}      	
+	dataGrid[0][i][j][k] = ref;
+	dataGrid[2][i][j][k] = -999;
+
+      }
+    } 
+  }
+  Message::toScreen("Finished grid deformation data");
+}
+
+
 
 void AnalyticGrid::writeAsi()
 { 

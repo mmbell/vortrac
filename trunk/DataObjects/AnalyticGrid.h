@@ -29,6 +29,8 @@ class AnalyticGrid : public GriddedData
 			float *radarLon);
 
   void gridWindFieldData();
+  void gridLambData();
+  void gridDefFieldData();
   
   void writeAsi();
   void testRange();
@@ -36,7 +38,9 @@ class AnalyticGrid : public GriddedData
  private:
   enum InfoSource {
     mm5,
-    windFields
+    deformation,
+    windFields,
+    lamb
   };
 
   InfoSource source;
@@ -58,12 +62,20 @@ class AnalyticGrid : public GriddedData
   float ymin, ymax;
   float zmin, zmax;
   
+  float vorDisturbance;
+  float lambAmplitude;
+  float lambAngle;
 
+  float defMagnitude;
+  float dialationAxis;
 
   float latReference, lonReference;
   QString outFileName;
   float* relDist;
+
+  float *vLat, *vLon, *rLat, *rLon;
   
+  bool getConfigInfo(QDomElement cappiConfig,Configuration* analyticConfig);
   
   
 };

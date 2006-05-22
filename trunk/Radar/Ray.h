@@ -56,8 +56,8 @@ class Ray
   float getNyquist_vel();
   int getFirst_ref_gate();
   int getFirst_vel_gate();
-  int getRef_gatesp();
-  int getVel_gatesp();
+  float getRef_gatesp();
+  float getVel_gatesp();
   int getRef_numgates();
   int getVel_numgates();
   int getVcp();
