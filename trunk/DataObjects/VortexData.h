@@ -11,6 +11,7 @@
 #ifndef VORTEXDATA_H
 #define VORTEXDATA_H
 
+#include "Coefficient.h"
 #include<QDateTime>
 
 class VortexData
@@ -18,51 +19,70 @@ class VortexData
 
  public:
   VortexData();
+  VortexData(const VortexData &other);
   ~VortexData();
+  void printString();
 
   float getLat();
-  float getLat(const int& i);
-  void setLat(const int& index, const float& longitude);
+  float getLat(const int& i) const;
+  void setLat(const int& index, const float& latitude);
   void setLat(const float a[], const int& howMany);
 
   float getLon();
-  float getLon(const int& i);
+  float getLon(const int& i) const;
   void setLon(const int& index,const float& longitude);
   void setLon(const float a[], const int& howMany);
 
-  float getAltitude(const int& i);
+  float getAltitude(const int& i) const;
   void setAltitude(const int& index, const float& altitude);
   void setAltitude(const float a[], const int& howMany);
-  float getAltitudeUncertainty(const int& i);
-  void setAltUncertainty(const int& index, const float& dAltitude);
-  void setAltUncertainty(const float a[], const int& howMany);
 
-  QDateTime getTime();
+  QDateTime getTime() const;
   void setTime(const QDateTime& radartime);
 
   float getRMW();
-  float getRMW(const int& i);
+  float getRMW(const int& i) const;
   void setRMW(const int& index, const float& new_rmw);
   void setRMW(const float a[], const int& howMany);
   float getRMWUncertainty();
-  float getRMWUncertainty(const int& i);
+  float getRMWUncertainty(const int& i) const;
   void setRMWUncertainty(const int& index, const float& dRMW);
   void setRMWUncertainty(const float a[], const int& howMany);
 
-  float getPressure();
+  float getPressure() const;
   void setPressure(const float& pressure);
-  float getPressureUncertainty();
+  float getPressureUncertainty() const;
   void setPressureUncertainty(const float& dPressure);
 
-  int getNumCCenters(const int& i);
-  void setNumCCenters(const int& index, const int& number);
-  void setNumCCenters(const int a[], const int& howMany);
+  int getNumConvergingCenters(const int& i)const;
+  void setNumConvergingCenters(const int& index, const int& number);
+  void setNumConvergingCenters(const int a[], const int& howMany);
 
-  float getWindCoefficents(const int& level, const int& radius, const int& waveNumber);
-  void setWindCoefficents(const int& level, const int& radius, const int& waveNumber, const float&coefficent);
-  float getReflectivityCoefficents(const int& level, const int& radius, const int& waveNumber);
-  void setReflectivityCoefficents(const int& level, const int& radius, const int& waveNumber, const float&coefficent);
+  float getCenterStdDev(const int& i) const;
+  void setCenterStdDev(const int& index, const float& number);
+  void setCenterStdDev(const float a[], const int& howMany);
 
+  Coefficient getTangential(const int& lev, const int& rad, 
+				const int& waveNum) const;
+  void setTangential(const int& lev, const int& rad, 
+			  const int& waveNum, const Coefficient &coefficient);
+  Coefficient getRadial(const int& lev, const int& rad, 
+			    const int& waveNum) const;
+  void setRadial(const int& lev, const int& rad, 
+		      const int& waveNum, const Coefficient &coefficient);
+  Coefficient getReflectivity(const int& lev, const int& rad,
+			      const int& waveNum) const;
+  void setReflectivity(const int& lev, const int& rad, const int& waveNum,
+		       const Coefficient& coefficient);
+
+  void operator = (const VortexData &other);
+  bool operator ==(const VortexData &other);
+  bool operator < (const VortexData &other);
+  bool operator > (const VortexData &other);
+
+  int getNumLevels() const {return numLevels;}
+  int getNumRadii() const {return numRadii;}
+  int getNumWaveNum() const {return numWaveNum;}
 
  private:
   static const int numLevels = 15;
@@ -72,8 +92,7 @@ class VortexData
   float centerLatitude[numLevels];
   float centerLongitude[numLevels];
   float centerAltitude[numLevels];
-  float centerAltUncertainty[numLevels];
-
+  
   QDateTime time;
 
   float RMW[numLevels];
@@ -82,11 +101,16 @@ class VortexData
   float centralPressure;
   float centralPressureUncertainty;
 
-  int numCCenters[numLevels];
-
-  float windCoefficents[numLevels][numRadii][numWaveNum];
-  float reflectivityCoefficents[numLevels][numRadii][numWaveNum];
-
+  int numConvergingCenters[numLevels];
+  float centerStdDeviation[numLevels];
+  
+  Coefficient radialWinds[numLevels][numRadii][2*numWaveNum];
+  Coefficient tangentialWinds[numLevels][numRadii][2*numWaveNum];
+  Coefficient reflectivity[numLevels][numRadii][2*numWaveNum];
+  
 };
 
+
 #endif
+
+

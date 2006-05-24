@@ -56,7 +56,38 @@ void PollThread::run()
   connect(dataSource, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
 
-  vortexList = new QList<VortexData>;
+  QString file("/scr/science40/mauger/Working/trunk/vortrac_defaultVortexDataStorage.xml");
+  vortexList = new VortexList(file);
+  /*
+  // Testing VortexList ------------------------------------------------------
+  Message::toScreen("initial Count: "+QString().setNum(vortexList->count()));
+  vortexList->value(1).printString();
+
+  Message::toScreen(" easy empty one down ");
+
+  VortexData test;
+  test.setTime(QDateTime::currentDateTime());
+  test.setLat(0,7.0);
+  test.setLon(0,7.0);
+  test.setAltitude(0,7.0);
+  test.setPressure(7);
+  test.setPressureUncertainty(7);
+  test.setRMW(0, 7.0);
+  test.setRMWUncertainty(0, 7.0);
+  test.setNumConvergingCenters(0, 7);
+  test.setCenterStdDev(0,7.0);
+
+  test.printString();
+
+  vortexList->append(test);
+
+  Message::toScreen("next Count: "+QString().setNum(vortexList->count()));
+  
+  //vortexList->value(1).printString();
+
+  //--------------------------------------------------------------------------
+  */
+
   analysisThread.setVortexList(vortexList);
 
 	// Begin polling loop

@@ -19,7 +19,7 @@
 #include "Radar/RadarData.h"
 #include "IO/Message.h"
 #include "Config/Configuration.h"
-#include "DataObjects/VortexData.h"
+#include "DataObjects/VortexList.h"
 #include "DataObjects/GriddedFactory.h"
 #include "SimplexThread.h"
 
@@ -32,7 +32,7 @@ class AnalysisThread : public QThread
      ~AnalysisThread();
      void analyze(RadarData *dataVolume, Configuration *configPtr);
      void setConfig(Configuration *configPtr);
-     void setVortexList(QList<VortexData> *archivePtr);
+     void setVortexList(VortexList *archivePtr);
 
  public slots:
      void catchLog(const Message& message);
@@ -53,7 +53,7 @@ class AnalysisThread : public QThread
      RadarData *radarVolume;
 	 GriddedFactory gridFactory;
 	 SimplexThread simplexThread;
-     QList<VortexData> *vortexList;
+     VortexList *vortexList;
      void archiveAnalysis();
      float vortexLat, vortexLon;
 

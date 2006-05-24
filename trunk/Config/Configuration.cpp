@@ -46,6 +46,11 @@ QDomElement Configuration::getRoot()
   return domDoc.documentElement();
 }
 
+QDomNodeList* Configuration::getGroupList()
+{
+  return &groupList;
+}
+
 bool Configuration::read(const QString &filename)
 {
   // Read in an existing configuration from an XML file
@@ -129,6 +134,34 @@ QDomElement Configuration::getConfig(const QString &configName)
 
   return child;
 
+}
+
+QDomElement Configuration::getConfig(const QString &configName,
+				     const QString &attribName,
+				     const QString &attribValue)
+{
+
+  /*
+   * Returns a config element with the specified tagName, if one does not exist
+   *   a null element is returned. Config elements are first layer elements in 
+   *   a configuration object, all other elements are simply elements. The names
+   *   and indexes of all first layer elements (those that are direct children
+   *   of the vortrac element) are kept in the indexForTagName hash.
+   *
+   */
+
+  QList<int> checkThese = indexForTagName.values(configName);
+  for(int i = 0; i < checkThese.count(); i++) {
+    QDomElement child = groupList.item(checkThese[i]).toElement();
+    if(!child.isNull()) {
+      if(child.attribute(attribName)==attribValue) {
+	return child;
+      }
+    }
+  }
+  emit log(Message("Null Node!"));
+  QDomElement child;
+  return child;
 }
 
 const QString Configuration::getParam(const QDomElement &element,

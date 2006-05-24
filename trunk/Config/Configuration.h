@@ -12,6 +12,7 @@
 #define CONFIGURATION_H
 
 #include <QDomDocument>
+#include <QDomNodeList>
 #include <QString>
 #include <QFile>
 #include <QTextStream>
@@ -28,10 +29,14 @@ class Configuration:public QObject
   ~Configuration();
   
   QDomElement getRoot();
+  QDomNodeList* getGroupList();
   bool read(const QString &filename);
   bool write(const QString &filename);
   
   QDomElement getConfig(const QString &configName);
+  QDomElement getConfig(const QString &configName,
+			const QString &attribName,
+			const QString &attribValue);
   
   const QString getParam(const QDomElement &element,
 			 const QString &paramName);
@@ -45,6 +50,14 @@ class Configuration:public QObject
 			     const QString &paramName,
 			     const QString &attribName);
   bool checkModified() { return isModified; }
+
+  const QDomElement getElement(const QDomElement &element,
+			       const QString &paramName);
+
+  const QDomElement getElementWithAttrib(const QDomElement &element,
+					 const QString &paramName,
+					 const QString &attribName,
+					 const QString &attribValue);
   
  public slots:
    void catchLog(const Message& message);
@@ -90,15 +103,7 @@ class Configuration:public QObject
   QDomNodeList groupList;
   QHash<QString, int> indexForTagName;
   bool isModified;
-
-  const QDomElement getElement(const QDomElement &element,
-			       const QString &paramName);
-
-  const QDomElement getElementWithAttrib(const QDomElement &element,
-					 const QString &paramName,
-					 const QString &attribName,
-					 const QString &attribValue);
-
+		
  signals:
   void log(const Message& message);
   void configChanged();

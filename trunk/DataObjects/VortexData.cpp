@@ -9,6 +9,7 @@
  */
 
 #include "VortexData.h"
+#include <QTextStream>
 
 VortexData::VortexData()
 {
@@ -17,16 +18,50 @@ VortexData::VortexData()
       centerLatitude[i] = 0;
       centerLongitude[i] = 0;
       centerAltitude[i] = 0;
-      centerAltUncertainty[i] = 0;
       RMW[i] = 0;
       RMWUncertainty[i] = 0;
-      numCCenters[i] = 0;
+      numConvergingCenters[i] = 0;
+      centerStdDeviation[i] = 0;
+      for(int j = 0; j < numRadii; j++) {
+	for(int k = 0; k < 2*numWaveNum; k++) {
+	  radialWinds[i][j][k] = Coefficient();
+	  tangentialWinds[i][j][k] = Coefficient();
+	  reflectivity[i][j][k] = Coefficient();
+	}
+      }
     }
 
   time = QDateTime();
 
   centralPressure = 0;
   centralPressureUncertainty = 0;
+
+}
+
+VortexData::VortexData(const VortexData &other) 
+{
+  
+  for(int i = 0; i < numLevels; i++)
+    {
+      centerLatitude[i] = other.centerLatitude[i];
+      centerLongitude[i] = other.centerLongitude[i];
+      centerAltitude[i] = other.centerAltitude[i];
+      RMW[i] = other.RMW[i];
+      RMWUncertainty[i] = other.RMWUncertainty[i];
+      numConvergingCenters[i] = other.numConvergingCenters[i];
+      centerStdDeviation[i] = other.centerStdDeviation[i];
+      for(int j = 0; j < numRadii; j++) {
+	for(int k = 0; k < 2*numWaveNum; k++) {
+	  radialWinds[i][j][k] = other.getRadial(i,j,k);
+	  tangentialWinds[i][j][k] = other.getTangential(i,j,k);
+	  reflectivity[i][j][k] = other.getReflectivity(i,j,k);
+	}
+      }
+    }
+
+  time = other.time;
+  centralPressure = other.centralPressure;
+  centralPressureUncertainty = other.centralPressureUncertainty;
 
 }
 
@@ -39,7 +74,7 @@ float VortexData::getLat()
   return centerLatitude[0];
 }
 
-float VortexData::getLat(const int& i)
+float VortexData::getLat(const int& i) const
 {
   if (i < numLevels)
     return centerLatitude[i];
@@ -63,7 +98,7 @@ float VortexData::getLon()
   return centerLongitude[0];
 }
 
-float VortexData::getLon(const int& i)
+float VortexData::getLon(const int& i) const
 {
   if (i < numLevels)
     return centerLongitude[i];
@@ -82,7 +117,7 @@ void VortexData::setLon(const float a[], const int& howMany)
     centerLongitude[i] = a[i];
 }
 
-float VortexData::getAltitude(const int& i)
+float VortexData::getAltitude(const int& i) const
 {
   if (i < numLevels)
     return centerAltitude[i];
@@ -102,26 +137,7 @@ void VortexData::setAltitude(const float a[],const int& howMany)
     centerAltitude[i] = a[i];
 }
 
-float VortexData::getAltitudeUncertainty(const int& i)
-{
-  if (i < numLevels)
-    return centerAltUncertainty[i];
-  return centerAltUncertainty[0];
-}
-
-void VortexData::setAltUncertainty(const int& index, const float& dAltitude)
-{
-  if (index < numLevels)
-    centerAltUncertainty[index] = dAltitude;
-}
-
-void VortexData::setAltUncertainty(const float a[], const int& howMany)
-{
-  for ( int i = 0; i < howMany; i++)
-    centerAltUncertainty[i] = a[i];
-}
-
-QDateTime VortexData::getTime()
+QDateTime VortexData::getTime() const
 {
   return time;
 }
@@ -137,7 +153,7 @@ float VortexData::getRMW()
   return RMW[0];
 }
 
-float VortexData::getRMW(const int& i)
+float VortexData::getRMW(const int& i) const
 {
   if (i < numLevels)
     return RMW[i];
@@ -161,7 +177,7 @@ float VortexData::getRMWUncertainty()
   return RMWUncertainty[0];
 }
 
-float VortexData::getRMWUncertainty(const int& i)
+float VortexData::getRMWUncertainty(const int& i) const
 {
   if(i < numLevels)
     return RMWUncertainty[i];
@@ -181,7 +197,7 @@ void VortexData::setRMWUncertainty(const float a[], const int& howMany)
 }
 
 
-float VortexData::getPressure()
+float VortexData::getPressure() const
 {
   return centralPressure;
 }
@@ -191,7 +207,7 @@ void VortexData::setPressure(const float& pressure)
   centralPressure = pressure;
 }
 
-float VortexData::getPressureUncertainty()
+float VortexData::getPressureUncertainty() const
 {
   return centralPressureUncertainty;
 }
@@ -201,47 +217,154 @@ void VortexData::setPressureUncertainty(const float& dPressure)
   centralPressureUncertainty = dPressure;
 }
 
-int VortexData::getNumCCenters(const int& i)
+int VortexData::getNumConvergingCenters(const int& i) const
 {
   if(i < numLevels)
-    return numCCenters[i];
-  return numCCenters[0];
+    return numConvergingCenters[i];
+  return numConvergingCenters[0];
 }
 
-void VortexData::setNumCCenters(const int& index, const int& number)
+void VortexData::setNumConvergingCenters(const int& index, const int& number)
 {
-  numCCenters[index] = number;
+  numConvergingCenters[index] = number;
 }
 
-void VortexData::setNumCCenters(const int a[], const int& howMany)
+void VortexData::setNumConvergingCenters(const int a[], const int& howMany)
 {
   for(int i = 0; i < howMany; i++)
-    numCCenters[i] = a[i];
+    numConvergingCenters[i] = a[i];
 }
 
-
-float VortexData::getWindCoefficents(const int& level, const int& radius, const int& waveNumber)
+float VortexData::getCenterStdDev(const int& i) const
 {
-  if ((level < numLevels)&&(radius<numRadii)&&(waveNumber< numWaveNum))
-    return windCoefficents[level][radius][waveNumber];
-  return 0;
+  if(i < numLevels)
+    return centerStdDeviation[i];
+  return centerStdDeviation[0];
 }
 
-void VortexData::setWindCoefficents(const int& level, const int& radius, const int& waveNumber, const float& coefficent)
+void VortexData::setCenterStdDev(const int& index, const float& number)
 {
-  if ((level < numLevels)&&(radius<numRadii)&&(waveNumber< numWaveNum))
-    windCoefficents[level][radius][waveNumber] = coefficent;
+  centerStdDeviation[index] = number;
 }
 
-float VortexData::getReflectivityCoefficents(const int& level, const int& radius, const int& waveNumber)
+void VortexData::setCenterStdDev(const float a[], const int& howMany)
 {
-  if ((level < numLevels)&&(radius<numRadii)&&(waveNumber< numWaveNum))
-    return reflectivityCoefficents[level][radius][waveNumber];
-  return 0;
+  for(int i = 0; i < howMany; i++)
+    centerStdDeviation[i]=a[i];
 }
 
-void VortexData::setReflectivityCoefficents(const int& level, const int& radius, const int& waveNumber, const float& coefficent)
+Coefficient VortexData::getTangential(const int& lev, const int& rad, 
+			  const int& waveNum) const
 {
-  if ((level < numLevels)&&(radius<numRadii)&&(waveNumber< numWaveNum))
-    reflectivityCoefficents[level][radius][waveNumber] = coefficent;
+  return tangentialWinds[lev][rad][waveNum];
+}
+
+void VortexData::setTangential(const int& lev, const int& rad, 
+		   const int& waveNum, const Coefficient &coefficient)
+{
+  tangentialWinds[lev][rad][waveNum] = coefficient;
+}
+
+Coefficient VortexData::getRadial(const int& lev, const int& rad, 
+		      const int& waveNum) const
+{
+  return radialWinds[lev][rad][waveNum];
+}
+
+void VortexData::setRadial(const int& lev, const int& rad, 
+	       const int& waveNum, const Coefficient &coefficient)
+{
+  radialWinds[lev][rad][waveNum] = coefficient;
+}
+
+Coefficient VortexData::getReflectivity(const int& lev, const int& rad,
+					const int& waveNum) const
+{
+  return reflectivity[lev][rad][waveNum];
+}
+
+void VortexData::setReflectivity(const int& lev, const int& rad, 
+				 const int& waveNum,
+				 const Coefficient& coefficient)
+{
+  reflectivity[lev][rad][waveNum] = coefficient;
+}
+
+bool VortexData::operator ==(const VortexData &other)
+{
+  if(this->time == other.time)
+    return true;
+  return false;
+}
+
+bool VortexData::operator < (const VortexData &other)
+{
+  if(this->time < other.time)
+    return true;
+  return false;
+}
+
+bool VortexData::operator > (const VortexData &other)
+{
+  if(this->time > other.time)
+    return true;
+  return false;
+}
+
+void VortexData:: operator = (const VortexData &other)
+{
+ 
+  for(int i = 0; i < numLevels; i++)
+    {
+      centerLatitude[i] = other.centerLatitude[i];
+      centerLongitude[i] = other.centerLongitude[i];
+      centerAltitude[i] = other.centerAltitude[i];
+      RMW[i] = other.RMW[i];
+      RMWUncertainty[i] = other.RMWUncertainty[i];
+      numConvergingCenters[i] = other.numConvergingCenters[i];
+      centerStdDeviation[i] = other.centerStdDeviation[i];
+      for(int j = 0; j < numRadii; j++) {
+	for(int k = 0; k < 2*numWaveNum; k++) {
+	  radialWinds[i][j][k] = other.getRadial(i,j,k);
+	  tangentialWinds[i][j][k] = other.getTangential(i,j,k);
+	  reflectivity[i][j][k] = other.getReflectivity(i,j,k);
+	}
+      }
+    }
+
+  time = other.time;
+  centralPressure = other.centralPressure;
+  centralPressureUncertainty = other.centralPressureUncertainty;
+}
+
+void VortexData::printString()
+{
+  QTextStream out(stdout);
+  out<< endl;
+  out<< "Printing VortexData Time = "+getTime().toString()<< endl;
+  out<< "  time: "+getTime().toString() << endl;
+  out<< "  pressure: "+QString().setNum(getPressure()) << endl;
+  out<< "  pressure uncertainty: ";
+  out<<              QString().setNum(getPressureUncertainty())<<endl;
+  for(int i = 0; i < 2; i++) {
+    QString ii = QString().setNum(i);
+    out<<"  altitude @ level:"+ii+": "+QString().setNum(getAltitude(i)) <<endl;
+    out<<"  latitude @ level:"+ii+": "+QString().setNum(getLat(i)) << endl;
+    out<<"  longitude @ level:"+ii+": "+QString().setNum(getLon(i)) << endl;
+    out<<"  rmw @ level:"+ii+": "+QString().setNum(getRMW(i)) << endl;
+    out<<"  rmw uncertainty @ level:"+ii+": ";
+    out<<         QString().setNum(getRMWUncertainty(i)) << endl;
+    out<<"  NumConvCenters @ level:"+ii+": ";
+    out<<         QString().setNum(getNumConvergingCenters(i)) << endl;
+    out<<"  CenterStdDev @ level:"+ii+": ";
+    out<<         QString().setNum(getCenterStdDev(i)) << endl;
+    out<<"  reflectivity @ level:"+ii+": ";
+    out<<         QString().setNum(getReflectivity(i,0,0).getValue()) << endl;
+    out<<"  tangential Winds @ level:"+ii+": ";
+    out<<         QString().setNum(getTangential(i,0,0).getValue()) << endl;
+    out<<"  radial Winds @ level:"+ii+": ";
+    out<<         QString().setNum(getRadial(i,0,0).getValue()) << endl;
+    out<<"  ----------------------------------------------------------" <<endl;
+  }
+  
 }

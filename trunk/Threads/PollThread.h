@@ -18,7 +18,7 @@
 #include "Radar/RadarFactory.h"
 #include "AnalysisThread.h"
 #include "Config/Configuration.h"
-#include "DataObjects/VortexData.h"
+#include "DataObjects/VortexList.h"
 
 #include <QTextStream>
 
@@ -49,7 +49,7 @@ class PollThread : public QThread
 	bool abort;
 	RadarFactory *dataSource;
 	Configuration *configData;
-	QList<VortexData> *vortexList;
+	VortexList *vortexList;
 	AnalysisThread analysisThread;
 
 };

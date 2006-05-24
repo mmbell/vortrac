@@ -46,7 +46,7 @@ void AnalysisThread::setConfig(Configuration *configPtr)
 
 }
 
-void AnalysisThread::setVortexList(QList<VortexData> *archivePtr)
+void AnalysisThread::setVortexList(VortexList *archivePtr)
 {
 
   vortexList = archivePtr;
@@ -112,6 +112,7 @@ void AnalysisThread::run()
 		  
 		// Check the vortex list for a current center
 		if (!vortexList->isEmpty()) {
+		  vortexList->timeSort();
 		  vortexLat = vortexList->last().getLat();
 		  vortexLon = vortexList->last().getLon();
 		} else {

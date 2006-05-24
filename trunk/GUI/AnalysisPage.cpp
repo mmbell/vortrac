@@ -177,6 +177,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   connect(this, SIGNAL(saveGraphImage(const QString&)),
 	   graph, SLOT(saveImage(const QString&)));
   
+  
 }
 
 AnalysisPage::~AnalysisPage()
