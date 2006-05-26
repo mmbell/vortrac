@@ -55,7 +55,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   // Get the relative center and expand the grid around it
   relDist = new float[2];
 
-  relDist = relEarthLocation(radarData->getRadarLat(), 
+  relDist = getCartesianPoint(radarData->getRadarLat(), 
 			     radarData->getRadarLon(),
 			     vortexLat, vortexLon);
   /*
@@ -74,7 +74,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   // connects the (0,0) point on the cappi grid, to the latitude and
   // longitude of the radar.
 
-  setZeroLocation(radarData->getRadarLat(), radarData->getRadarLon(),
+  setLatLonOrigin(radarData->getRadarLat(), radarData->getRadarLon(),
 		  &rXDistance,&rYDistance);
 
   // Defines iteration indexes for cappi grid

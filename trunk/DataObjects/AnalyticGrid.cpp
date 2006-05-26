@@ -77,14 +77,14 @@ bool AnalyticGrid::getConfigInfo(QDomElement cappiConfig,
   QDomElement radar = analyticConfig->getRoot().firstChildElement("analytic_radar");
   
   float *radLocation  = new float[2];
-  radLocation = relEarthLocation(vLat,vLon,rLat,rLon);
+  radLocation = getCartesianPoint(vLat,vLon,rLat,rLon);
   
   centX = iDim/2*iGridsp;  // x coordinate of storm center on grid
   centY = jDim/2*jGridsp;  // y coordinate of storm center on grid
   
   // Connects the gridded dimensions on the cappi with the correct latitude
   // and longitude coordinates for the area
-  setZeroLocation(vLat, vLon, &centX, &centY);
+  setLatLonOrigin(vLat, vLon, &centX, &centY);
   
   radX = centX+radLocation[0];  // x coordinate of radar on grid
   radY = centY+radLocation[1];  // y coordinate of radar on grid
@@ -109,11 +109,8 @@ bool AnalyticGrid::getConfigInfo(QDomElement cappiConfig,
     // Not implemented
   }
    
-
   // Get the needed configuration parameters
-
   if((source == windFields)||(source == lamb)||(source == deformation)) {
-
     QDomElement winds =analyticConfig->getRoot().firstChildElement("wind_field");
     
     // radius of maximum wind for analytic storm

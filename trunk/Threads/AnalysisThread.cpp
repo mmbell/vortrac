@@ -159,7 +159,7 @@ void AnalysisThread::run()
 		VortexData *vortexdata = new VortexData(); 
 		
 		// Find Center
-		simplexThread.findCenter(configData->getConfig("center"), gridData);
+		simplexThread.findCenter(configData->getConfig("center"), gridData, &vortexLat, &vortexLon);
 
 /*
 		

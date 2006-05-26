@@ -33,12 +33,16 @@ class GriddedData
   void setKdim(const int& dim);
   int getCoordSystem() { return coordSystem; }
   float fixAngle(float angle);
-  void setZeroLocation(float *knownLat, float *knownLon, float *relX, 
+  void setLatLonOrigin(float *knownLat, float *knownLon, float *relX, 
 		       float *relY);
-  float* relEarthLocation(float *originLat, float *originLon,
+  void setCartesianReferencePoint(int ii, int jj, int kk); 
+  void setAbsoluteReferencePoint(float Lat, float Lon, float Height);
+  float* getCartesianPoint(float *Lat, float *Lon,
 		     float *relLat, float* relLon);
-  float* absLocation(float *originLat, float *originLon,
-		     float *relX, float *relY);
+  float getRefPointI();
+  float getRefPointJ();
+  float getRefPointK();
+			 
   // Return a 1D array of values
   float* getNativeData();
   float* getCartesianData();
@@ -56,8 +60,6 @@ class GriddedData
 
   int getFieldIndex(QString& fieldName);
 
-  void setCartesianReferencePoint(int ii, int jj, int kk); 
-  void setAbsoluteReferencePoint(float Lat, float Lon, float Height);
 
   /* Needed a reference point before we could redo coordinate systems. -LM */
 
@@ -126,8 +128,8 @@ class GriddedData
   float refPointK;
 
   // Latitude and Longitude Coordinates for the i = 0, j= 0, k = 0, point
-  float zeroLat;
-  float zeroLon;
+  float originLat;
+  float originLon;
   
   /* I don't think we still need these enumeration values -LM */
 

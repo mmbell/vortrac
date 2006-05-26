@@ -34,8 +34,8 @@ GriddedData::GriddedData()
   refPointI = 0;
   refPointJ = 0;
   refPointK = 0;
-  zeroLat = 0;
-  zeroLon = 0;
+  originLat = 0;
+  originLon = 0;
 
 }
 
@@ -62,28 +62,8 @@ void GriddedData::setKdim(const int& dim)
   kDim = dim;
 }
 
-float* GriddedData::relEarthLocation(float *originLat, float *originLon,
-				float *relLat, float *relLon)
-{
 
-  // Thanks to Peter Dodge for some code used here
-  float originLatRadians = *originLat * acos(-1.0)/180.0;
-  float fac_lat = 111.13209 - 0.56605 * cos(2.0 * originLatRadians)
-    + 0.00012 * cos(4.0 * originLatRadians) - 0.000002 * cos(6.0 * originLatRadians);
-  float fac_lon = 111.41513 * cos(originLatRadians)
-    - 0.09455 * cos(3.0 * originLatRadians) + 0.00012 * cos(5.0 * originLatRadians);
-
-  float relX = (*relLon - *originLon) * fac_lon;
-  float relY = (*relLat - *originLat) * fac_lat;
-
-  float *relArray = new float[2];
-  relArray[0] = relX;
-  relArray[1] = relY;
-  return relArray;
-
-}
-
-void GriddedData::setZeroLocation(float *knownLat, float *knownLon,
+void GriddedData::setLatLonOrigin(float *knownLat, float *knownLon,
 		    float *relX, float *relY)
 {
   // takes a Lat Lon point and its cooresponding grid coordinates in km
@@ -96,8 +76,8 @@ void GriddedData::setZeroLocation(float *knownLat, float *knownLon,
   float fac_lon = 111.41513 * cos(knownLatRadians)
     - 0.09455 * cos(3.0 * knownLatRadians) + 0.00012 * cos(5.0 * knownLatRadians);
 
-  zeroLon = *knownLon-*relX/fac_lon;
-  zeroLat = *knownLat-*relY/fac_lat;
+  originLon = *knownLon-*relX/fac_lon;
+  originLat = *knownLat-*relY/fac_lat;
 
   // testing Message::toScreen("Set Zero: ZeroLat = "+QString().setNum(zeroLat)+" ZeroLon = "+QString().setNum(zeroLon));
   
@@ -133,7 +113,7 @@ void GriddedData::setAbsoluteReferencePoint(float Lat, float Lon, float Height)
   // Overloaded version of setCartesianReferencePoint used when Latitude and 
   // Longitude data is known. 
 
-  float *locations = relEarthLocation(&zeroLat, &zeroLon, &Lat, &Lon);
+  float *locations = getCartesianPoint(&originLat, &originLon, &Lat, &Lon);
   // Floor is used to round to the nearest integer
   refPointI = floor(locations[0]/iGridsp +.5);
   refPointJ = floor(locations[1]/jGridsp +.5);
@@ -142,6 +122,41 @@ void GriddedData::setAbsoluteReferencePoint(float Lat, float Lon, float Height)
 
 }
 
+float* GriddedData::getCartesianPoint(float *Lat, float *Lon,
+				float *relLat, float *relLon)
+{
+
+  // Thanks to Peter Dodge for some code used here
+  float LatRadians = *Lat * acos(-1.0)/180.0;
+  float fac_lat = 111.13209 - 0.56605 * cos(2.0 * LatRadians)
+    + 0.00012 * cos(4.0 * LatRadians) - 0.000002 * cos(6.0 * LatRadians);
+  float fac_lon = 111.41513 * cos(LatRadians)
+    - 0.09455 * cos(3.0 * LatRadians) + 0.00012 * cos(5.0 * LatRadians);
+
+  float relX = (*relLon - *Lon) * fac_lon;
+  float relY = (*relLat - *Lat) * fac_lat;
+
+  float *relArray = new float[2];
+  relArray[0] = relX;
+  relArray[1] = relY;
+  return relArray;
+
+}
+
+float GriddedData::getRefPointI ()
+{
+	return refPointI;
+}
+
+float GriddedData::getRefPointJ ()
+{
+	return refPointJ;
+}
+
+float GriddedData::getRefPointK ()
+{
+	return refPointK;
+}
 
 int GriddedData::getFieldIndex(QString& fieldName)
 {
