@@ -144,7 +144,10 @@ void SimplexThread::run()
 					RefJ = RefJ + float(point/int(boxRowLength)) * boxIncr;
 
 					// Initialize vertices
-					float** vertex = new float*[2];
+					float** vertex = new float*[3];
+					vertex[0] = new float[2];
+					vertex[1] = new float[2];
+					vertex[2] = new float[2];
 					float* VT = new float[3];
 					float* vertexSum = new float[2];
 					float sqr32 = 0.866025;
@@ -160,14 +163,13 @@ void SimplexThread::run()
 					
 					for (int v=0; v <= 2; v++) {				
 						// Get the data
-					        gridData->setCartesianReferencePoint(int(vertex[v][0]),int(vertex[v][1]),int(RefK));
+						gridData->setCartesianReferencePoint(int(vertex[v][0]),int(vertex[v][1]),int(RefK));
 						int numData = gridData->getCylindricalAzimuthLength(radius, height);
 						float* ringData = gridData->getCylindricalAzimuthData(velField, radius, height);
 						float* ringAzimuths = gridData->getCylindricalAzimuthPosition(radius, height);
-						float thetaT = atan2(vertex[v][1],vertex[v][0]);
 						
 						// Call gbvtd
-						if (vtd->analyzeRing(vertex[v][0], vertex[v][1], radius, numData, ringData,
+						if (vtd->analyzeRing(vertex[v][0], vertex[v][1], radius, height, numData, ringData,
 											 ringAzimuths, vtdCoeffs, vtdStdDev)) {
 							if (vtdCoeffs[0].getParameter() == "VTC0") {
 								VT[v] = -(vtdCoeffs[0].getValue());
@@ -175,7 +177,7 @@ void SimplexThread::run()
 								emit log(Message("Error retrieving VTC0 in simplex!"));
 							} 
 						} else {
-							emit log(Message("Error retrieving VTC0 in simplex!"));
+							emit log(Message("VTD failed!"));
 						}
 
 					}
@@ -230,17 +232,21 @@ void SimplexThread::run()
 									if (v != low) {
 										for (int i=0; i<=1; i++) 
 											vertex[v][i] = vertexSum[i] = 0.5*(vertex[v][i] + vertex[low][i]);
-											gridData->setCartesianReferencePoint(int(vertex[v][0]),int(vertex[v][1]),int(RefK));
-											int numData = gridData->getCylindricalAzimuthLength(radius, height);
-											float* ringData = gridData->getCylindricalAzimuthData(velField, radius, height);
-											float* ringAzimuths = gridData->getCylindricalAzimuthPosition(radius, height);
-										
+										gridData->setCartesianReferencePoint(int(vertex[v][0]),int(vertex[v][1]),int(RefK));
+										int numData = gridData->getCylindricalAzimuthLength(radius, height);
+										float* ringData = gridData->getCylindricalAzimuthData(velField, radius, height);
+										float* ringAzimuths = gridData->getCylindricalAzimuthPosition(radius, height);
+									
 										// Call gbvtd
-										//gbvtd(numData, ringData, ringAzimuths, vtdCoeffs, stdDev);
-										if (vtdCoeffs[0].getParameter() == "VTC0") {
-											VT[v] = -(vtdCoeffs[0].getValue());
+										if (vtd->analyzeRing(vertex[v][0], vertex[v][1], radius, height, numData, ringData,
+															 ringAzimuths, vtdCoeffs, vtdStdDev)) {
+											if (vtdCoeffs[0].getParameter() == "VTC0") {
+												VT[v] = -(vtdCoeffs[0].getValue());
+											} else {
+												emit log(Message("Error retrieving VTC0 in simplex!"));
+											} 
 										} else {
-											emit log(Message("Error retrieving VTC0 in simplex!"));
+											emit log(Message("VTD failed!"));
 										}
 									}
 								}
@@ -392,7 +398,7 @@ float SimplexThread::simplexTest(float**& vertex,float*& VT,float*& vertexSum,
 	float* ringAzimuths = gridData->getCylindricalAzimuthPosition(radius, height);
 	
 	// Call gbvtd
-	if (vtd->analyzeRing(vertexTest[0], vertexTest[1], radius, numData, ringData,
+	if (vtd->analyzeRing(vertexTest[0], vertexTest[1], radius, height, numData, ringData,
 						 ringAzimuths, vtdCoeffs, vtdStdDev)) {
 		if (vtdCoeffs[0].getParameter() == "VTC0") {
 			VTtest = -(vtdCoeffs[0].getValue());
@@ -400,7 +406,7 @@ float SimplexThread::simplexTest(float**& vertex,float*& VT,float*& vertexSum,
 			emit log(Message("Error retrieving VTC0 in simplex!"));
 		} 
 	} else {
-		emit log(Message("Error retrieving VTC0 in simplex!"));
+		emit log(Message("VTD failed!"));
 	}
 	// If its a better point than the worst, replace it
 	if (VTtest < VT[high]) {
