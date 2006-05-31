@@ -56,26 +56,44 @@ void PollThread::run()
   connect(dataSource, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
 
-  QString file("/scr/science40/mauger/Working/trunk/vortrac_defaultVortexDataStorage.xml");
-  vortexList = new VortexList(file);
+  //QString file("/scr/science40/mauger/Working/trunk/LisaList.xml");
+  QString file("vortrac_defaultVortexListStorage.xml");
+
+  vortexConfig = new Configuration(0, QString());
+  //  QString newWorkingDirectory = "/scr/science40/mauger/WorkingDir/trunk/";
+  QString newWorkingDirectory = QString("");
+  //vortexList->setNewWorkingDirectory(newWorkingDirectory);
+  
+  //vortexConfig->read(file);
+  connect(vortexConfig, SIGNAL(log(const Message&)), 
+	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+ 
+  vortexConfig = new Configuration(0, file);
+  
+  vortexList = new VortexList(vortexConfig);
+  vortexList->open();
   /*
   // Testing VortexList ------------------------------------------------------
-  Message::toScreen("initial Count: "+QString().setNum(vortexList->count()));
-  vortexList->value(1).printString();
+  //vortexList->value(0).printString();
 
-  Message::toScreen(" easy empty one down ");
-
-  VortexData test;
-  test.setTime(QDateTime::currentDateTime());
-  test.setLat(0,7.0);
-  test.setLon(0,7.0);
-  test.setAltitude(0,7.0);
+  
+  VortexData test(15,2,2);
   test.setPressure(7);
   test.setPressureUncertainty(7);
-  test.setRMW(0, 7.0);
-  test.setRMWUncertainty(0, 7.0);
-  test.setNumConvergingCenters(0, 7);
-  test.setCenterStdDev(0,7.0);
+  test.setTime(QDateTime::currentDateTime());
+  for(int i = 0; i < 3; i++ ){
+	test.setLat(i,7.0);
+	test.setLon(i,7.0);
+	test.setAltitude(i,7.0);
+	test.setRMW(i, 7.0);
+	test.setRMWUncertainty(i, 7.0);
+	test.setNumConvergingCenters(i, 7);
+	test.setCenterStdDev(i,7.0);
+	Coefficient coeff(6,6,6,"VTCO");
+	Coefficient coeff2(5,5,5,"VRCO");
+	test.setCoefficient(i,0,0,coeff);
+	test.setCoefficient(i,1,0,coeff2);
+  }
 
   test.printString();
 
@@ -83,10 +101,17 @@ void PollThread::run()
 
   Message::toScreen("next Count: "+QString().setNum(vortexList->count()));
   
-  //vortexList->value(1).printString();
+  // vortexList->timeSort();
+  //vortexList->value(0).printString();
+  
+   QString saveFile("/scr/science40/mauger/Working/trunk/LisaList.xml");
 
+   vortexList->setFileName(saveFile);
+   
+   vortexList->save();
+   */
   //--------------------------------------------------------------------------
-  */
+  
 
   analysisThread.setVortexList(vortexList);
 

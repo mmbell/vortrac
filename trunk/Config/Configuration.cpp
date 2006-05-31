@@ -289,7 +289,7 @@ void Configuration::addDom(const QDomElement &element,
 
   if(element.isNull()) {
     emit log(Message("Configuration could not find "+element.tagName()));
-    Message::toScreen("Configuration could not find "+element.tagName());
+    //Message::toScreen("Configuration could not find "+element.tagName());
   }
   else {
     QDomElement newChildElement = domDoc.createElement(paramName);
@@ -350,7 +350,7 @@ void Configuration::addDom(const QDomElement &element,
 
   if(element.isNull()) {
     emit log(Message("Configuration could not find "+element.tagName()));
-    Message::toScreen("Configuration could not find "+element.tagName());
+    //Message::toScreen("Configuration could not find "+element.tagName());
   }
   else {
     QDomElement newChildElement;
@@ -484,7 +484,7 @@ const QString Configuration::getAttribute(const QDomElement &element,
     QString errMessage = "Configuration could not find "+element.tagName();
       errMessage +=(": " + paramName + ": " + attribName);
       emit log(Message(errMessage));
-      Message::toScreen(errMessage);
+      //Message::toScreen(errMessage);
   }
   return attribValue;
 }
@@ -530,7 +530,7 @@ const QDomElement Configuration::getElementWithAttrib(const QDomElement &element
       QString errMessage = "Configuration could not find "+element.tagName();
       errMessage +=(": " + paramName + ": " + attribName + ": " + attribValue);
       emit log(Message(errMessage));
-      Message::toScreen(errMessage);
+      //Message::toScreen(errMessage);
     }
   }
   return elementWithAttribute;
@@ -554,7 +554,7 @@ const QDomElement Configuration::getElement(const QDomElement &element,
     QString errMessage = "Configuration could not find "+element.tagName();
     errMessage +=(": " + paramName);
     emit log(Message(errMessage));
-    Message::toScreen(errMessage);
+    //Message::toScreen(errMessage);
     
     desiredElement = QDomElement();
   }
@@ -562,3 +562,16 @@ const QDomElement Configuration::getElement(const QDomElement &element,
   return desiredElement;
 
 }
+
+Configuration& Configuration::operator = (const Configuration &other)
+{
+  domDoc = other.domDoc;
+  root = other.root;
+  groupList = other.groupList;
+  indexForTagName = other.indexForTagName;
+  isModified = other.isModified;
+  return *this;
+  
+}
+
+

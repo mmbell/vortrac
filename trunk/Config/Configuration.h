@@ -58,6 +58,10 @@ class Configuration:public QObject
 					 const QString &paramName,
 					 const QString &attribName,
 					 const QString &attribValue);
+
+  Configuration& operator = (const Configuration &other);
+
+  // bool operator == (const Configuration &other);
   
  public slots:
    void catchLog(const Message& message);

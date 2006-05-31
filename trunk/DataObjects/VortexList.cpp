@@ -15,12 +15,22 @@
 VortexList::VortexList(const QString &newFileName)
 {
   fileName = newFileName;
+  workingDir = QString("");
   if(fileName.isEmpty())
     fileName = QString("vortrac_defaultVortexDataStorage.xml");
 
   config = new Configuration(0, newFileName);
-  config->read(fileName);
+  vortexDataConfigs = new QList<Configuration*>;
+  configFileNames = new QList<QString>;
   QList<VortexData>::QList<VortexData>();
+}
+
+VortexList::VortexList(Configuration* newConfig)
+{
+  config = newConfig;
+
+  vortexDataConfigs = new QList<Configuration*>;
+  configFileNames = new QList<QString>;
 }
 
 VortexList::~VortexList()
@@ -30,33 +40,83 @@ VortexList::~VortexList()
 
 bool VortexList::save()
 {
-  if(config->write(fileName))
-    return true;
+  if(config->write(fileName)) {
+    int fileSaves = 0;
+    for(int i = 0; i < vortexDataConfigs->count(); i++) {
+      Configuration *currConfig= vortexDataConfigs->value(i);
+      if(currConfig->write(configFileNames->value(i)))
+	fileSaves++;
+    }
+    if(fileSaves == QList<VortexData>::count())
+      return true;
+  }
 
-  Message::toScreen("Failed to save to file");
+  Message::toScreen("VORTEXLIST FAIL:Failed to save to file");
   return false;
 }
 
 bool VortexList::open()
 {
-  if(config->read(fileName)) {
-    for(int i = 0; i < config->getGroupList()->count(); i++) {
-      VortexData newData;
-      QDomNode node = config->getGroupList()->item(i);
-      if(!node.toElement().tagName().startsWith(QString("volume"))) {
-	// Radar and Hurricane information kept here
+
+  int numConfigsOpened = 0;
+  Message::toScreen("num in Config groupList ="+QString().setNum(config->getGroupList()->count()));
+
+  for(int i = 0; i < config->getGroupList()->count(); i++) {
+
+    QDomNode node = config->getGroupList()->item(i);
+    QDomElement currElement = node.toElement();
+    if(!currElement.tagName().startsWith(QString("vol"))) {
+      vortexName = config->getParam(currElement, "name");
+      radarName = config->getParam(currElement, "radar");
+      productType = config->getParam(currElement, "product");
+      numConfigsOpened++;
+    }
+    else {
+      // Has information about a vortexData
+      if(openNodeFile(node)) {
+	numConfigsOpened++;
+      }
+    }
+  }
+  if(numConfigsOpened == config->getGroupList()->count())
+    return true;
+  Message::toScreen("VORTEXLIST FAIL: Could Not Open All Volume Configuration Files");
+  return false;
+}
+
+bool VortexList::openNodeFile(const QDomNode &newNode)
+{
+  if(!newNode.isNull()) {
+    QDomElement nodeElement = newNode.toElement();
+    QString nodeTimeString = config->getParam(nodeElement, "time");
+    QDateTime nodeTime = QDateTime::fromString(nodeTimeString,Qt::ISODate);
+    QString nodeFileName = config->getParam(nodeElement, "file");
+    if(!QFile::exists(nodeFileName)) {
+      Message::toScreen("VORTEXLIST FAIL: File not found for vortexdata: "+nodeFileName);
+      return false;
+    }
+    Configuration *newConfig = new Configuration(0, nodeFileName);
+    VortexData newData;
+
+    for(int i = 0; i < newConfig->getGroupList()->count(); i++) {
+      QDomNode child = newConfig->getGroupList()->item(i);
+      QDomElement childElement = child.toElement();
+      QString newName, newRadar, newType;
+      if(!childElement.tagName().startsWith(QString("vol"))) {
+	newName = newConfig->getParam(childElement, "name");
+	newRadar = newConfig->getParam(childElement, "radar");
+	newType = newConfig->getParam(childElement, "product");
+	// Check to make sure these line up........
       }
       else {
-	
 	// Has information about a vortexData;
-	QDomElement currElement = node.toElement();
-	QString newTimeString = config->getParam(currElement, "time");
-	QDateTime newTime = QDateTime::fromString(newTimeString);
+	QString newTimeString = newConfig->getParam(childElement, "time");
+	QDateTime newTime = QDateTime::fromString(newTimeString,Qt::ISODate);
 	newData.setTime(newTime);
-	float newPressure = config->getParam(currElement,
+	float newPressure = newConfig->getParam(childElement,
 					     "pressure").toFloat();
 	newData.setPressure(newPressure);
-	float newPressureUncertainty = config->getParam(currElement,
+	float newPressureUncertainty = newConfig->getParam(childElement,
 					     "pressure_uncertainty").toFloat();
 	newData.setPressureUncertainty(newPressureUncertainty);
      
@@ -64,104 +124,58 @@ bool VortexList::open()
 	  QString nString = QString().setNum(n);
 	  QString level("level");
 	  
-	  float newLat = config->getParam(currElement, "latitude", level,
+	  float newLat = newConfig->getParam(childElement, "latitude", level,
 					  nString).toFloat();
 	  newData.setLat(n, newLat);
 	  
-	  float newLon = config->getParam(currElement, "longitude", level,
+	  float newLon = newConfig->getParam(childElement, "longitude", level,
 					  nString).toFloat();
 	  newData.setLon(n, newLon);
 
-	  float newAlt = config->getParam(currElement, "altitude", level,
+	  float newAlt = newConfig->getParam(childElement, "altitude", level,
 					  nString).toFloat();
 	  newData.setAltitude(n, newAlt);
 
-	  float newRmw = config->getParam(currElement, "rmw", level,
+	  float newRmw = newConfig->getParam(childElement, "rmw", level,
 					  nString).toFloat();
 	  newData.setRMW(n, newRmw);
 	  
-	  float newRmwUncertainty = config->getParam(currElement, 
+	  float newRmwUncertainty = newConfig->getParam(childElement, 
 						     "rmw_uncertainty", 
 						     level, 
 						     nString).toFloat();
 	  newData.setRMWUncertainty(n, newRmwUncertainty);
 	  
-	  int numCenters = config->getParam(currElement, 
+	  int numCenters = newConfig->getParam(childElement, 
 					    "num_converging_centers",level,
 					    QString().setNum(n)).toInt();
 	  newData.setNumConvergingCenters(n, numCenters);
 
-	  float centerStd = config->getParam(currElement, 
+	  float centerStd = newConfig->getParam(childElement, 
 					     "center_std_dev",
 					     level, nString).toFloat();
 	  newData.setCenterStdDev(n, centerStd);
 
-	  QDomElement coeff = currElement.firstChildElement("fourier");
+	  QDomElement coeff = childElement.firstChildElement("coefficient");
+	  int num = 0;
 	  while(!coeff.isNull()) {
 	    Coefficient newCoeff;
 	    newCoeff.setLevel(coeff.attribute(level).toInt());
 	    newCoeff.setRadius(coeff.attribute("radius").toInt());
-	    QString code = coeff.attribute("coefficient");
-	    int num = QString(code[3]).toInt();
-	    if((code[2]=='c')||(code[2]=='C')) {
-	      newCoeff.setParameter("c");
-	      switch(num)
-		{
-		case 0: newCoeff.setParameter(newCoeff.getParameter()
-					      +QString().setNum(0)); break;
-		case 1: newCoeff.setParameter(newCoeff.getParameter()
-					      +QString().setNum(1)); break;
-		case 2: newCoeff.setParameter(newCoeff.getParameter()
-					      +QString().setNum(2)); break;
-		case 3: newCoeff.setParameter(newCoeff.getParameter()
-					      +QString().setNum(3)); break;
-		case 4: newCoeff.setParameter(newCoeff.getParameter()
-					      +QString().setNum(4)); break;
-		case 5: newCoeff.setParameter(newCoeff.getParameter()
-					      +QString().setNum(5)); break;
-		}
-	    }
-	    else {
-	      newCoeff.setParameter("s");
-	      switch(num)
-		{
-		case 1: newCoeff.setParameter(newCoeff.getParameter()
-					      +QString().setNum(1)); break;
-		case 2: newCoeff.setParameter(newCoeff.getParameter()
-					      +QString().setNum(2)); break;
-		case 3: newCoeff.setParameter(newCoeff.getParameter()
-					      +QString().setNum(3)); break;
-		case 4: newCoeff.setParameter(newCoeff.getParameter()
-					      +QString().setNum(4)); break;
-		case 5: newCoeff.setParameter(newCoeff.getParameter()
-					      +QString().setNum(5)); break;
-		}
-	      num += 6;
-	    } 
-	    if((newCoeff.getRadius() < newData.getNumRadii())
-	       &&(newCoeff.getLevel() < newData.getNumLevels())
-	       &&(num < 11)) {
-	      if(code.startsWith("vt", Qt::CaseInsensitive)) {
-		newData.setTangential((int)newCoeff.getLevel(), 
-				      (int)newCoeff.getRadius(), 
-				      num, newCoeff);
-	      }
-	      if(code.startsWith("vr", Qt::CaseInsensitive)) {
-		newData.setRadial((int)newCoeff.getLevel(),
-				  (int)newCoeff.getRadius(),
-				  num, newCoeff);
-	      }
-	      if(code.startsWith("dz", Qt::CaseInsensitive)) {
-		newData.setReflectivity((int)newCoeff.getLevel(), 
-					(int)newCoeff.getRadius(),
-					num, newCoeff);
-	      }
-	    }
-	    coeff = coeff.nextSiblingElement("fourier");
+	    newCoeff.setParameter(coeff.attribute("parameter"));
+	    newData.setCoefficient((int)newCoeff.getLevel(), 
+				   (int)newCoeff.getRadius(), 
+				   num, newCoeff);
+	    coeff = coeff.nextSiblingElement("coefficient");
+	    num++;
 	  }
 	}
+	QList<VortexData>::append(newData);
+	vortexDataConfigs->append(newConfig);
+	configFileNames->append(nodeFileName);
       }
     }
+    return true;
   }
   return false;
 }
@@ -171,65 +185,121 @@ void VortexList::setFileName(const QString &newFileName)
   fileName = newFileName;
 }
 
-void VortexList::createDomVortexDataEntry(const VortexData& newData)
+void VortexList::setNewWorkingDirectory(const QString &newDirectory)
 {
+  workingDir = newDirectory;
+}
+
+void VortexList::createDomVortexDataEntry(const VortexData &newData)
+
+  /* 
+   * This is used to keep the configuration Dom tree consistant
+   *   with the vortexData stored in the list. This function commits 
+   *   non-null information from the vortexData to the appropriate 
+   *   element in its configuration node counterpart.
+   *
+   */
+
+{
+
+  // Get time for identification
+
+  QString timeString = newData.getTime().toString(Qt::ISODate);
+  timeString.replace(QString("-"), QString("_"));
+  timeString.replace(QString(":"), QString("_"));
+ 
+  // Add element to main xml identifing specific file
+
   QDomElement root = config->getRoot();
-  config->addDom(root, QString("volume"), QString(""), QString("time"),
-		 newData.getTime().toString());
-  QDomElement parent = config->getConfig(QString("volume"), QString("time"), 
-					 newData.getTime().toString());
-  config->addDom(parent, QString("time"), newData.getTime().toString());
-  config->addDom(parent, QString("pressure"), 
-		 QString().setNum(newData.getPressure()));
-  config->addDom(parent, QString("pressure_uncertainty"),
-		 QString().setNum(newData.getPressureUncertainty()));
+  config->addDom(root, QString("volume_"+timeString), QString(""));
+  
+  QDomElement parent = config->getConfig(QString("volume_"+timeString));
+  
+  // Create a filename and configuration for the volume information
+  
+  QString defaultFile = QString("vortrac_defaultVortexListStorage.xml");
+  
+  QString nodeFile = vortexName+timeString+QString(".xml");
+  //  QFile fileCheck(workingDir+nodeFile);
+  if(QFile::exists(workingDir+nodeFile))
+    nodeFile = vortexName+"_"+radarName+timeString;
+
+  Configuration *newConfig = new Configuration(0,workingDir+defaultFile);
+
+  config->addDom(parent, QString("time"), 
+		 newData.getTime().toString(Qt::ISODate)); 
+  config->addDom(parent, QString("file"), workingDir+nodeFile);
+
+  vortexDataConfigs->append( newConfig);
+  configFileNames->append(workingDir+nodeFile);
+
+  // Add this information to the new catelog entry
+
+  QDomElement volRoot = newConfig->getRoot();
+
+  QDomElement header = newConfig->getConfig("vortex");
+  if(!vortexName.isEmpty())
+    newConfig->setParam(header, QString("vortexName"), vortexName);
+  if(!radarName.isEmpty())
+    newConfig->setParam(header, QString("radar"), radarName);
+  if(!productType.isEmpty())
+    newConfig->setParam(header, QString("product"), productType);
+  
+  newConfig->addDom(volRoot, QString("volume_"+timeString), QString(""));
+  QDomElement volParent =newConfig->getConfig(QString("volume_"+timeString));
+
+  if(!newData.getTime().isNull()) {
+    newConfig->addDom(volParent, QString("time"), 
+		   newData.getTime().toString(Qt::ISODate)); }
+  if(newData.getPressure()!=-999) {
+    newConfig->addDom(volParent, QString("pressure"), 
+		   QString().setNum(newData.getPressure())); }
+  if(newData.getPressureUncertainty()!=-999) {
+    newConfig->addDom(volParent, QString("pressure_uncertainty"),
+		   QString().setNum(newData.getPressureUncertainty())); }
+
+
   for(int i = 0; i < newData.getNumLevels(); i++) {
     QString ii = QString().setNum(i);
     QString level("level");
-    config->addDom(parent, QString("latitude"), 
-		   QString().setNum(newData.getLat(i)), level, ii);
-    config->addDom(parent, QString("longitude"),
-		   QString().setNum(newData.getLon(i)), level, ii);
-    config->addDom(parent, QString("altitude"),
-		   QString().setNum(newData.getAltitude(i)), level, ii);
-    config->addDom(parent, QString("rmw"),
-		   QString().setNum(newData.getRMW(i)), level, ii);
-    config->addDom(parent, QString("rmw_uncertainty"), 
-		   QString().setNum(newData.getRMWUncertainty(i)), level, ii);
-    config->addDom(parent, QString("num_converging_centers"),
-		   QString().setNum(newData.getNumConvergingCenters(i)),
-		   level, ii);
-    config->addDom(parent, QString("center_std_dev"),
-		   QString().setNum(newData.getCenterStdDev(i)), level, ii);
+    if(newData.getLat(i)!=-999)  {
+      newConfig->addDom(volParent, QString("latitude"), 
+		     QString().setNum(newData.getLat(i)), level, ii); }
+    if(newData.getLon(i)!=-999)  {
+      newConfig->addDom(volParent, QString("longitude"),
+		     QString().setNum(newData.getLon(i)), level, ii); }
+    if(newData.getAltitude(i)!=-999) {
+      newConfig->addDom(volParent, QString("altitude"),
+		     QString().setNum(newData.getAltitude(i)), level, ii); }
+    if(newData.getRMW(i)!=-999)  {
+      newConfig->addDom(volParent, QString("rmw"),
+		     QString().setNum(newData.getRMW(i)), level, ii); }
+    if(newData.getRMWUncertainty(i)!=-999) {
+      newConfig->addDom(volParent, QString("rmw_uncertainty"), 
+	     QString().setNum( newData.getRMWUncertainty(i)), level, ii); }
+    if(newData.getNumConvergingCenters(i)!=-999) {
+      newConfig->addDom(volParent, QString("num_converging_centers"),
+		     QString().setNum(newData.getNumConvergingCenters(i)),
+		     level, ii); }
+    if(newData.getCenterStdDev(i)!=-999) {
+      newConfig->addDom(volParent, QString("center_std_dev"),
+		     QString().setNum(newData.getCenterStdDev(i)), level, ii);}
+
     for(int r = 0; r < newData.getNumRadii(); r++) {
-      for(int w = 0; w < 2*newData.getNumWaveNum(); w++) {
-	QString ff("fourier");
+      for(int w = 0; w < newData.getNumWaveNum(); w++) {
+	QString ff("coefficient");
 	QString rr = QString().setNum(r);
-	QString ww = QString().setNum(w);
-	QString coeff("coefficient");
-	Coefficient tangCoeff = newData.getTangential(i,r,w);
-	config->addDom(parent, ff, QString().setNum(tangCoeff.getValue()), 
-		       coeff, QString("VT"+tangCoeff.getParameter()));
-        QDomElement tang = config->getElementWithAttrib(root, ff, coeff, 
-		  QString("VT"+tangCoeff.getParameter()));
-	tang.setAttribute(QString("radius"), rr);
-	tang.setAttribute(level, ii);
-	
-	Coefficient radCoeff = newData.getRadial(i,r,w);
-	config->addDom(parent, ff, QString().setNum(radCoeff.getValue()), 
-		       coeff, QString("VR"+radCoeff.getParameter()));
-	QDomElement rad = config->getElementWithAttrib(root, ff, coeff, 
-		      QString("VR"+radCoeff.getParameter()));
-	rad.setAttribute(QString("radius"), rr);
-	rad.setAttribute(level, ii);
-	
-	Coefficient refCoeff = newData.getReflectivity(i,r,w);
-	config->addDom(parent, ff, QString().setNum(refCoeff.getValue()), coeff, 
-		     QString("DZ"+refCoeff.getParameter()));
-	QDomElement ref = config->getElementWithAttrib(root, ff, coeff, 
-		      QString("DZ"+refCoeff.getParameter()));
-	ref.setAttribute(QString("radius"), rr);
-	ref.setAttribute(level, ii);
+	QString paramString("parameter");
+	Coefficient newCoeff = newData.getCoefficient(i,r,w); 
+	if(!newCoeff.isNull()) {
+	  newConfig->addDom(volParent, ff, 
+			    QString().setNum(newCoeff.getValue()), 
+			    paramString, newCoeff.getParameter());
+	  QDomElement coeffDom = newConfig->getElementWithAttrib(volParent, 
+				ff, paramString, newCoeff.getParameter());
+	  coeffDom.setAttribute(level, ii);
+	  coeffDom.setAttribute(QString("radius"), rr);
+	}
       }
     }
   }
@@ -239,15 +309,17 @@ void VortexList::append(const VortexData &value)
 {
   createDomVortexDataEntry(value);
   QList<VortexData>::append(value);
-
 }
 
 void VortexList::timeSort()
 {
   for(int i = 0; i < this->count(); i++) {
     for(int j = 0; j < this->count()-1; j++) {
-      if(this->value(j)>this->value(j+1))
+      if(this->value(j)>this->value(j+1)) {
 	this->swap(j+1,j);
+	vortexDataConfigs->swap(j+1,j);
+	configFileNames->swap(j+1,j);
+      }
     }
   }
   

@@ -1,30 +1,30 @@
 /*
- * VortexList.h
+ * SimplexList.h
  * VORTRAC
  *
- * Created by Lisa Mauger on 5/23/06
+ * Created by Lisa Mauger on 5/31/06
  *  Copyright 2006 University Corporation for Atmospheric Research.
  *  All rights reserved.
  *
  *
  */
 
-#ifndef VORTEXLIST_H
-#define VORTEXLIST_H
+#ifndef SIMPLEXLIST_H
+#define SIMPLEXLIST_H
 
-#include "VortexData.h"
+#include "SimplexData.h"
 #include <QList>
 #include "Configuration.h"
 #include <QString>
 #include <QObject>
 
-class VortexList : public QList<VortexData>
+class SimplexList : public QList<SimplexData>
 {
 
 public:
-     VortexList(const QString &newFileName = QString());
-     VortexList(Configuration* newConfig);
-     virtual ~VortexList();
+     SimplexList(const QString &newFileName = QString());
+     SimplexList(Configuration* newConfig);
+     virtual ~SimplexList();
      
      bool save();
      bool open();
@@ -35,7 +35,7 @@ public:
      QString getWorkingDirectory() { return workingDir; }
      void timeSort();
      
-     void append(const VortexData &value);
+     void append(const SimplexData &value);
 
 private:
      Configuration *config;
@@ -45,11 +45,11 @@ private:
      QString vortexName;
      QString radarName;
      QString productType;
-     
-     QList<Configuration*>* vortexDataConfigs;
+
+     QList<Configuration*>* simplexDataConfigs;
      QList<QString>* configFileNames;
      
-     void createDomVortexDataEntry(const VortexData &newData);
+     void createDomSimplexDataEntry(const SimplexData &newData);
      
 
 

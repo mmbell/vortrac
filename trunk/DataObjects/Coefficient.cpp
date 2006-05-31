@@ -12,18 +12,20 @@
 
 Coefficient::Coefficient()
 {
-  level = 0;
-  radius = 0;
-  value = 0;
+  level = -999;
+  radius = -999;
+  value = -999;
   parameter = QString("NULL");
 }
 
-Coefficient::Coefficient(const Coefficient &other)
+Coefficient::Coefficient(float newLevel, float newRadius, float newValue,
+			 QString name)
 {
-  level = other.getLevel();
-  radius = other.getRadius();
-  value = other.getValue();
-  parameter = other.getParameter();
+  level = newLevel;
+  radius = newRadius;
+  value = newValue;
+  parameter = name;
+
 }
   
 void Coefficient::setLevel(const float &newLevel)
@@ -46,14 +48,6 @@ void Coefficient::setParameter(const QString &newParameter)
   parameter = newParameter;
 }
 
-void Coefficient::operator = (const Coefficient &other)
-{
-  level = other.getLevel();
-  radius = other.getRadius();
-  value = other.getValue();
-  parameter = other.getParameter();
-}
-
 bool Coefficient::operator == (const Coefficient &other)
 {
   if(level == other.getLevel())
@@ -62,4 +56,12 @@ bool Coefficient::operator == (const Coefficient &other)
 	if(value == other.getValue())
 	  return true;
   return false;
+}
+
+bool Coefficient::isNull()
+{
+  if((level == -999)||(radius == -999)||(value == -999))
+    return true;
+  return false;
+
 }

@@ -12,8 +12,11 @@ HEADERS += DataObjects/PressureData.h \
            Threads/PollThread.h \
            Threads/SimplexThread.h \
            DataObjects/VortexData.h \
+           DataObjects/SimplexData.h \
            DataObjects/VortexList.h \
+           DataObjects/SimplexList.h \
            DataObjects/Coefficient.h \
+           DataObjects/Center.h \
            Config/Configuration.h \
            DataObjects/AnalyticGrid.h \
            DataObjects/CappiGrid.h \
@@ -50,8 +53,11 @@ SOURCES += main.cpp \
            Threads/PollThread.cpp \
            Threads/SimplexThread.cpp \
            DataObjects/VortexData.cpp \
+           DataObjects/SimplexData.cpp \
            DataObjects/VortexList.cpp \
+           DataObjects/SimplexList.cpp \
            DataObjects/Coefficient.cpp \
+           DataObjects/Center.cpp \
            Config/Configuration.cpp \
            DataObjects/AnalyticGrid.cpp \
            DataObjects/CappiGrid.cpp \

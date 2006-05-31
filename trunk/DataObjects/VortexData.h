@@ -19,7 +19,8 @@ class VortexData
 
  public:
   VortexData();
-  VortexData(const VortexData &other);
+  VortexData(int availLevels, int availRadii, int availWaveNum);
+  //VortexData(const VortexData &other);
   ~VortexData();
   void printString();
 
@@ -62,20 +63,13 @@ class VortexData
   void setCenterStdDev(const int& index, const float& number);
   void setCenterStdDev(const float a[], const int& howMany);
 
-  Coefficient getTangential(const int& lev, const int& rad, 
-				const int& waveNum) const;
-  void setTangential(const int& lev, const int& rad, 
-			  const int& waveNum, const Coefficient &coefficient);
-  Coefficient getRadial(const int& lev, const int& rad, 
-			    const int& waveNum) const;
-  void setRadial(const int& lev, const int& rad, 
+ 
+  Coefficient getCoefficient(const int& lev, const int& rad, 
+			     const int& waveNum) const;
+  void setCoefficient(const int& lev, const int& rad, 
 		      const int& waveNum, const Coefficient &coefficient);
-  Coefficient getReflectivity(const int& lev, const int& rad,
-			      const int& waveNum) const;
-  void setReflectivity(const int& lev, const int& rad, const int& waveNum,
-		       const Coefficient& coefficient);
 
-  void operator = (const VortexData &other);
+  // void operator = (const VortexData &other);
   bool operator ==(const VortexData &other);
   bool operator < (const VortexData &other);
   bool operator > (const VortexData &other);
@@ -85,28 +79,30 @@ class VortexData
   int getNumWaveNum() const {return numWaveNum;}
 
  private:
-  static const int numLevels = 15;
-  static const int numRadii = 30;
-  static const int numWaveNum = 4;
+  static const int maxLevels = 15;
+  static const int maxRadii = 30;
+  static const int maxWaveNum = 25;
 
-  float centerLatitude[numLevels];
-  float centerLongitude[numLevels];
-  float centerAltitude[numLevels];
+  int numLevels;
+  int numRadii;
+  int numWaveNum;
+
+  float centerLatitude[maxLevels];
+  float centerLongitude[maxLevels];
+  float centerAltitude[maxLevels];
   
   QDateTime time;
 
-  float RMW[numLevels];
-  float RMWUncertainty[numLevels];
+  float RMW[maxLevels];
+  float RMWUncertainty[maxLevels];
 
   float centralPressure;
   float centralPressureUncertainty;
 
-  int numConvergingCenters[numLevels];
-  float centerStdDeviation[numLevels];
+  int numConvergingCenters[maxLevels];
+  float centerStdDeviation[maxLevels];
   
-  Coefficient radialWinds[numLevels][numRadii][2*numWaveNum];
-  Coefficient tangentialWinds[numLevels][numRadii][2*numWaveNum];
-  Coefficient reflectivity[numLevels][numRadii][2*numWaveNum];
+  Coefficient coefficients[maxLevels][maxRadii][maxWaveNum];
   
 };
 

@@ -32,7 +32,7 @@ SimplexThread::~SimplexThread()
 
 }
 
-void SimplexThread::findCenter(QDomElement centerConfig, GriddedData *dataPtr, float* vortexLat, float* vortexLon)
+void SimplexThread::findCenter(Configuration *wholeConfig, GriddedData *dataPtr, float* vortexLat, float* vortexLon)
 {
 
 	// Lock the thread
@@ -46,8 +46,9 @@ void SimplexThread::findCenter(QDomElement centerConfig, GriddedData *dataPtr, f
 	refLon = vortexLon;
 
 	// Set the configuration info
-	simplexConfig = centerConfig;
-
+	configData = wholeConfig;
+	simplexConfig = wholeConfig->getConfig("center");
+      
 	// Start or wake the thread
 	if(!isRunning()) {
 		start();
@@ -70,31 +71,47 @@ void SimplexThread::run()
 		bool foundCenter = true;
 		
 		// Initialize variables
-		QString simplexPath = simplexConfig.firstChildElement("dir").text();		
-		QString geometry = simplexConfig.firstChildElement("geometry").text();
-		QString velField = simplexConfig.firstChildElement("velocity").text();
-		QString closure = simplexConfig.firstChildElement("closure").text();
+		QString simplexPath = configData->getParam(simplexConfig, 
+							   QString("dir"));
+		QString geometry = configData->getParam(simplexConfig,
+							QString("geometry"));
+		QString velField = configData->getParam(simplexConfig,
+							QString("velocity"));
+		QString closure = configData->getParam(simplexConfig,
+						       QString("closure"));
 		
-		float firstLevel = simplexConfig.firstChildElement("bottomlevel").text().toFloat();
-		float lastLevel = simplexConfig.firstChildElement("toplevel").text().toFloat();
-		float firstRing = simplexConfig.firstChildElement("innerradius").text().toFloat();
-		float lastRing = simplexConfig.firstChildElement("outerradius").text().toFloat();
+		float firstLevel = configData->getParam(simplexConfig,
+					     QString("bottomlevel")).toFloat();
+		float lastLevel = configData->getParam(simplexConfig,
+					     QString("toplevel")).toFloat();
+		float firstRing = configData->getParam(simplexConfig,
+					     QString("innerradius")).toFloat();
+		float lastRing = configData->getParam(simplexConfig, 
+				       	     QString("outerradius")).toFloat();
 		
-		float boxSize = simplexConfig.firstChildElement("boxdiameter").text().toFloat();
-		float numPoints = simplexConfig.firstChildElement("numpoints").text().toFloat();
+		float boxSize = configData->getParam(simplexConfig, 
+					     QString("boxdiameter")).toFloat();
+		float numPoints = configData->getParam(simplexConfig, 
+					     QString("numpoints")).toFloat();
 		float boxRowLength = sqrt(numPoints);
 		float boxIncr = boxSize / sqrt(numPoints);
 		
-		float radiusOfInfluence = simplexConfig.firstChildElement("influenceradius").text().toFloat();
-		float convergeCriterion = simplexConfig.firstChildElement("convergence").text().toFloat();
-		float maxIterations = simplexConfig.firstChildElement("maxIterations").text().toFloat();
-		float ringWidth = simplexConfig.firstChildElement("ringwidth").text().toFloat();
-		int maxWave = simplexConfig.firstChildElement("maxwavenumber").text().toInt();
+		float radiusOfInfluence = configData->getParam(simplexConfig, 
+					 QString("influenceradius")).toFloat();
+		float convergeCriterion = configData->getParam(simplexConfig, 
+					 QString("convergence")).toFloat();
+		float maxIterations = configData->getParam(simplexConfig, 
+					 QString("maxIterations")).toFloat();
+		float ringWidth = configData->getParam(simplexConfig, 
+					 QString("ringwidth")).toFloat();
+		int maxWave = configData->getParam(simplexConfig, 
+					 QString("maxwavenumber")).toInt();
 		
 		dataGaps = new float[maxWave];
 		for (int i = 0; i <= maxWave; i++) {
-			QString maxGap = "maxdatagap_" + i;
-			dataGaps[i] = simplexConfig.firstChildElement(maxGap).text().toFloat();
+		  dataGaps[i] = configData->getParam(simplexConfig, 
+			QString("maxdatagap"), QString("wavenum"), 
+			QString().setNum(i)).toFloat();
 		}
 		
 		// Create a GBVTD object to process the rings
@@ -143,7 +160,7 @@ void SimplexThread::run()
 					
 					for (int v=0; v <= 2; v++) {				
 						// Get the data
-						gridData->setCartesianReferencePoint(int(vertex[v][0]),int(vertex[v][1]),int(RefK));
+					        gridData->setCartesianReferencePoint(int(vertex[v][0]),int(vertex[v][1]),int(RefK));
 						int numData = gridData->getCylindricalAzimuthLength(radius, height);
 						float* ringData = gridData->getCylindricalAzimuthData(velField, radius, height);
 						float* ringAzimuths = gridData->getCylindricalAzimuthPosition(radius, height);

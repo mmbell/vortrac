@@ -13,57 +13,62 @@
 
 VortexData::VortexData()
 {
+  numLevels = maxLevels;
+  numRadii = maxRadii;
+  numWaveNum = maxWaveNum;
+
   for(int i = 0; i < numLevels; i++)
     {
-      centerLatitude[i] = 0;
-      centerLongitude[i] = 0;
-      centerAltitude[i] = 0;
-      RMW[i] = 0;
-      RMWUncertainty[i] = 0;
-      numConvergingCenters[i] = 0;
-      centerStdDeviation[i] = 0;
+      centerLatitude[i] = -999;
+      centerLongitude[i] = -999;
+      centerAltitude[i] = -999;
+      RMW[i] = -999;
+      RMWUncertainty[i] = -999;
+      numConvergingCenters[i] = -999;
+      centerStdDeviation[i] = -999;
       for(int j = 0; j < numRadii; j++) {
-	for(int k = 0; k < 2*numWaveNum; k++) {
-	  radialWinds[i][j][k] = Coefficient();
-	  tangentialWinds[i][j][k] = Coefficient();
-	  reflectivity[i][j][k] = Coefficient();
+	for(int k = 0; k < numWaveNum; k++) {
+	  coefficients[i][j][k] = Coefficient();
 	}
       }
     }
 
   time = QDateTime();
 
-  centralPressure = 0;
-  centralPressureUncertainty = 0;
+  centralPressure = -999;
+  centralPressureUncertainty = -999;
 
 }
 
-VortexData::VortexData(const VortexData &other) 
+VortexData::VortexData(int availLevels, int availRadii, int availWaveNum)
 {
+  numLevels = availLevels;
+  numRadii = availRadii;
+  numWaveNum = availWaveNum;
   
   for(int i = 0; i < numLevels; i++)
     {
-      centerLatitude[i] = other.centerLatitude[i];
-      centerLongitude[i] = other.centerLongitude[i];
-      centerAltitude[i] = other.centerAltitude[i];
-      RMW[i] = other.RMW[i];
-      RMWUncertainty[i] = other.RMWUncertainty[i];
-      numConvergingCenters[i] = other.numConvergingCenters[i];
-      centerStdDeviation[i] = other.centerStdDeviation[i];
+      centerLatitude[i] = -999;
+      centerLongitude[i] = -999;
+      centerAltitude[i] = -999;
+      RMW[i] = -999;
+      RMWUncertainty[i] = -999;
+      numConvergingCenters[i] = -999;
+      centerStdDeviation[i] = -999;
       for(int j = 0; j < numRadii; j++) {
-	for(int k = 0; k < 2*numWaveNum; k++) {
-	  radialWinds[i][j][k] = other.getRadial(i,j,k);
-	  tangentialWinds[i][j][k] = other.getTangential(i,j,k);
-	  reflectivity[i][j][k] = other.getReflectivity(i,j,k);
+	for(int k = 0; k < numWaveNum; k++) {
+	  coefficients[i][j][k] = Coefficient();
 	}
       }
     }
-
-  time = other.time;
-  centralPressure = other.centralPressure;
-  centralPressureUncertainty = other.centralPressureUncertainty;
-
+  
+  time = QDateTime();
+  
+  centralPressure = -999;
+  centralPressureUncertainty = -999;
+  
 }
+
 
 VortexData::~VortexData()
 {
@@ -253,41 +258,16 @@ void VortexData::setCenterStdDev(const float a[], const int& howMany)
     centerStdDeviation[i]=a[i];
 }
 
-Coefficient VortexData::getTangential(const int& lev, const int& rad, 
-			  const int& waveNum) const
+Coefficient VortexData::getCoefficient(const int& lev, const int& rad, 
+				       const int& waveNum) const
 {
-  return tangentialWinds[lev][rad][waveNum];
+  return coefficients[lev][rad][waveNum];
 }
 
-void VortexData::setTangential(const int& lev, const int& rad, 
-		   const int& waveNum, const Coefficient &coefficient)
-{
-  tangentialWinds[lev][rad][waveNum] = coefficient;
-}
-
-Coefficient VortexData::getRadial(const int& lev, const int& rad, 
-		      const int& waveNum) const
-{
-  return radialWinds[lev][rad][waveNum];
-}
-
-void VortexData::setRadial(const int& lev, const int& rad, 
+void VortexData::setCoefficient(const int& lev, const int& rad, 
 	       const int& waveNum, const Coefficient &coefficient)
 {
-  radialWinds[lev][rad][waveNum] = coefficient;
-}
-
-Coefficient VortexData::getReflectivity(const int& lev, const int& rad,
-					const int& waveNum) const
-{
-  return reflectivity[lev][rad][waveNum];
-}
-
-void VortexData::setReflectivity(const int& lev, const int& rad, 
-				 const int& waveNum,
-				 const Coefficient& coefficient)
-{
-  reflectivity[lev][rad][waveNum] = coefficient;
+  coefficients[lev][rad][waveNum] = coefficient;
 }
 
 bool VortexData::operator ==(const VortexData &other)
@@ -311,38 +291,13 @@ bool VortexData::operator > (const VortexData &other)
   return false;
 }
 
-void VortexData:: operator = (const VortexData &other)
-{
- 
-  for(int i = 0; i < numLevels; i++)
-    {
-      centerLatitude[i] = other.centerLatitude[i];
-      centerLongitude[i] = other.centerLongitude[i];
-      centerAltitude[i] = other.centerAltitude[i];
-      RMW[i] = other.RMW[i];
-      RMWUncertainty[i] = other.RMWUncertainty[i];
-      numConvergingCenters[i] = other.numConvergingCenters[i];
-      centerStdDeviation[i] = other.centerStdDeviation[i];
-      for(int j = 0; j < numRadii; j++) {
-	for(int k = 0; k < 2*numWaveNum; k++) {
-	  radialWinds[i][j][k] = other.getRadial(i,j,k);
-	  tangentialWinds[i][j][k] = other.getTangential(i,j,k);
-	  reflectivity[i][j][k] = other.getReflectivity(i,j,k);
-	}
-      }
-    }
-
-  time = other.time;
-  centralPressure = other.centralPressure;
-  centralPressureUncertainty = other.centralPressureUncertainty;
-}
 
 void VortexData::printString()
 {
   QTextStream out(stdout);
   out<< endl;
-  out<< "Printing VortexData Time = "+getTime().toString()<< endl;
-  out<< "  time: "+getTime().toString() << endl;
+  out<< "Printing VortexData Time = "+getTime().toString(Qt::ISODate)<< endl;
+  out<< "  time: "+getTime().toString(Qt::ISODate) << endl;
   out<< "  pressure: "+QString().setNum(getPressure()) << endl;
   out<< "  pressure uncertainty: ";
   out<<              QString().setNum(getPressureUncertainty())<<endl;
@@ -358,12 +313,8 @@ void VortexData::printString()
     out<<         QString().setNum(getNumConvergingCenters(i)) << endl;
     out<<"  CenterStdDev @ level:"+ii+": ";
     out<<         QString().setNum(getCenterStdDev(i)) << endl;
-    out<<"  reflectivity @ level:"+ii+": ";
-    out<<         QString().setNum(getReflectivity(i,0,0).getValue()) << endl;
-    out<<"  tangential Winds @ level:"+ii+": ";
-    out<<         QString().setNum(getTangential(i,0,0).getValue()) << endl;
-    out<<"  radial Winds @ level:"+ii+": ";
-    out<<         QString().setNum(getRadial(i,0,0).getValue()) << endl;
+    out<<"  coefficients @ level:"+ii+": ";
+    out<<         QString().setNum(getCoefficient(i,0,0).getValue()) << endl;
     out<<"  ----------------------------------------------------------" <<endl;
   }
   

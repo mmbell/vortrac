@@ -18,7 +18,7 @@ class Coefficient
   
  public:
   Coefficient();
-  Coefficient(const Coefficient &other);
+  Coefficient(float newLevel, float newRadius, float newValue, QString name);
   
   float getLevel() const { return level; }
   void setLevel(const float &newLevel);
@@ -32,8 +32,9 @@ class Coefficient
   QString getParameter() const { return parameter; }
   void setParameter(const QString &newParameter);
 
-  void operator = (const Coefficient &other);
   bool operator == (const Coefficient &other);
+
+  bool isNull();
   
 
  private:

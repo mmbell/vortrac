@@ -30,7 +30,8 @@ class SimplexThread : public QThread
  public:
      SimplexThread(QObject *parent = 0);
      ~SimplexThread();
-	 void findCenter(QDomElement centerConfig, GriddedData *dataPtr, float *vortexLat, float *vortexLon);
+	 void findCenter(Configuration *wholeConfig, GriddedData *dataPtr, 
+			 float *vortexLat, float *vortexLon);
 	 
  public slots:
      void catchLog(const Message& message);
@@ -47,6 +48,7 @@ class SimplexThread : public QThread
      QWaitCondition waitForData;
      bool abort;
 	 GriddedData *gridData;
+	 Configuration *configData;
 	 QDomElement simplexConfig;
 	 float* refLat;
 	 float* refLon;
@@ -68,8 +70,8 @@ class SimplexThread : public QThread
 	 void archiveCenters(float& radius, float& height);
 	 inline void getVertexSum(float**& vertex,float*& vertexSum);
 	 float simplexTest(float**& vertex, float*& VT, float*& vertexSum, 
-					   float& radius, float& height, float& RefK,
-					   QString& velField, int& high,double factor);
+			   float& radius, float& height, float& RefK,
+			   QString& velField, int& high,double factor);
 };
 
 #endif
