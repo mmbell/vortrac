@@ -61,6 +61,9 @@ class SimplexThread : public QThread
 	 float* dataGaps;
 	 GBVTD* vtd;
 	 Coefficient* vtdCoeffs; 
+	 float** vertex;
+	 float* VT;
+	 float* vertexSum;
 	 float vtdStdDev;
 	 float VTsolution;
 	 float Xsolution;

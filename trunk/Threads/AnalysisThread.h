@@ -36,7 +36,8 @@ class AnalysisThread : public QThread
 
  public slots:
      void catchLog(const Message& message);
-   
+	 void foundCenter();
+ 
  protected:
      void run();
  
@@ -48,6 +49,7 @@ class AnalysisThread : public QThread
  private:
      QMutex mutex;
      QWaitCondition waitForData;
+	 QWaitCondition waitForCenter;
      bool abort;
      Configuration *configData;
      RadarData *radarVolume;

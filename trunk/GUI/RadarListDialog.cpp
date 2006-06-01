@@ -29,7 +29,7 @@ RadarListDialog::RadarListDialog(QWidget *parent, Configuration *initialConfig)
    * from SoloII and are contained in the file vortrac_radarList.xml
    */
 
-  xmlFileName = QString("/scr/science40/mauger/Working/trunk/vortrac_radarList.xml");
+  xmlFileName = QString("/Users/mbell/Development/vortrac/trunk/vortrac_radarList.xml");
  
   // radars is the Configuration class interface for working with xml files
   radars = initialConfig;

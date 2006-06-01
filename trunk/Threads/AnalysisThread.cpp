@@ -24,7 +24,8 @@ AnalysisThread::AnalysisThread(QObject *parent)
   abort = false;
   connect(&simplexThread, SIGNAL(log(const Message&)), this, 
 			SLOT(catchLog(const Message&)), Qt::DirectConnection);
-
+  connect(&simplexThread, SIGNAL(centerFound()), this,
+		  SLOT(foundCenter()));
 }
 
 AnalysisThread::~AnalysisThread()
@@ -161,6 +162,12 @@ void AnalysisThread::run()
 		// Find Center
 		simplexThread.findCenter(configData, gridData, &vortexLat, &vortexLon);
 
+		mutex.lock();
+		if (!abort) {
+			waitForCenter.wait(&mutex);
+		}
+		mutex.unlock();  
+		
 /*
 		
 		// Get environmental wind
@@ -214,6 +221,11 @@ void AnalysisThread::run()
 void AnalysisThread::archiveAnalysis()
 {
 
+}
+
+void AnalysisThread::foundCenter()
+{
+	waitForCenter.wakeOne();
 }
 
 void AnalysisThread::catchLog(const Message& message)

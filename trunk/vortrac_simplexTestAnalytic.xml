@@ -7,7 +7,7 @@
   <wind_field>
      <rmw>30</rmw>
      <vt0>70</vt0>
-     <vr0>1</vr0>        
+     <vr0>0</vr0>        
      <vt1>0</vt1>
      <vt1angle>0</vt1angle>
      <vr1>0</vr1>

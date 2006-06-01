@@ -118,6 +118,13 @@ void SimplexThread::run()
 		vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
 		vtdCoeffs = new Coefficient[20];
 
+		vertex = new float*[3];
+		vertex[0] = new float[2];
+		vertex[1] = new float[2];
+		vertex[2] = new float[2];
+		VT = new float[3];
+		vertexSum = new float[2];
+		
 		for (float height = firstLevel; height <= lastLevel; height++) {
 			for (float radius = firstRing; radius <= lastRing; radius++) {
 				// Set the reference point
@@ -144,12 +151,6 @@ void SimplexThread::run()
 					RefJ = RefJ + float(point/int(boxRowLength)) * boxIncr;
 
 					// Initialize vertices
-					float** vertex = new float*[3];
-					vertex[0] = new float[2];
-					vertex[1] = new float[2];
-					vertex[2] = new float[2];
-					float* VT = new float[3];
-					float* vertexSum = new float[2];
 					float sqr32 = 0.866025;
 					
 					vertex[0][0] = RefI;
@@ -172,7 +173,7 @@ void SimplexThread::run()
 						if (vtd->analyzeRing(vertex[v][0], vertex[v][1], radius, height, numData, ringData,
 											 ringAzimuths, vtdCoeffs, vtdStdDev)) {
 							if (vtdCoeffs[0].getParameter() == "VTC0") {
-								VT[v] = -(vtdCoeffs[0].getValue());
+								VT[v] = vtdCoeffs[0].getValue();
 							} else {
 								emit log(Message("Error retrieving VTC0 in simplex!"));
 							} 
@@ -180,6 +181,8 @@ void SimplexThread::run()
 							emit log(Message("VTD failed!"));
 						}
 
+						delete[] ringData;
+						delete[] ringAzimuths;
 					}
 					
 					// Run the simplex search loop
@@ -195,7 +198,7 @@ void SimplexThread::run()
 						
 						// Sort the initial guesses
 						high = VT[0] > VT[1] ? (mid = 1,0) : (mid = 0,1);
-						for (int v=0; v<=1; v++) {
+						for (int v=0; v<=2; v++) {
 							if (VT[v] <= VT[low]) low = v;
 							if (VT[v] > VT[high]) {
 								mid = high;
@@ -206,32 +209,33 @@ void SimplexThread::run()
 						// Check convergence
 						float epsilon = 2.0 * fabs(VT[high]-VT[low])/(fabs(VT[high]) + fabs(VT[low]) + 1.0e-10);
 						if (epsilon < convergeCriterion) {
-							VTsolution = -VT[low];
-							Xsolution = vertex[low][0];
-							Ysolution = vertex[low][1];
+							VTsolution = VT[high];
+							Xsolution = vertex[high][0];
+							Ysolution = vertex[high][1];
 							break;
 						}
 						
 						// Check iterations
 						if (numIterations > maxIterations) {
 							emit log(Message("Maximum iterations exceeded in Simplex!"));
+							break;
 						}
 						
 						numIterations += 2;
 						// Reflection
-						float VTtest = simplexTest(vertex, VT, vertexSum, radius, height, RefK, velField, high, -1.0);
-						if (VTtest <= VT[low])
-							// Better point, so try expansion
-							VTtest = simplexTest(vertex, VT, vertexSum, radius, height, RefK, velField, high, 2.0);
-						else if (VTtest >= VT[mid]) { 
-							// Worse point, so try contraction
-							float VTsave = VT[high];
-							VTtest = simplexTest(vertex, VT, vertexSum, radius, height, RefK, velField, high, 0.5);
-							if (VTtest >= VTsave) {
+						float VTtest = simplexTest(vertex, VT, vertexSum, radius, height, RefK, velField, low, -1.0);
+						if (VTtest >= VT[high])
+							// Better point than highest, so try expansion
+							VTtest = simplexTest(vertex, VT, vertexSum, radius, height, RefK, velField, low, 2.0);
+						else if (VTtest <= VT[mid]) { 
+							// Worse point than second highest, so try contraction
+							float VTsave = VT[low];
+							VTtest = simplexTest(vertex, VT, vertexSum, radius, height, RefK, velField, low, 0.5);
+							if (VTtest <= VTsave) {
 								for (int v=0; v<=2; v++) {
-									if (v != low) {
+									if (v != high) {
 										for (int i=0; i<=1; i++) 
-											vertex[v][i] = vertexSum[i] = 0.5*(vertex[v][i] + vertex[low][i]);
+											vertex[v][i] = vertexSum[i] = 0.5*(vertex[v][i] + vertex[high][i]);
 										gridData->setCartesianReferencePoint(int(vertex[v][0]),int(vertex[v][1]),int(RefK));
 										int numData = gridData->getCylindricalAzimuthLength(radius, height);
 										float* ringData = gridData->getCylindricalAzimuthData(velField, radius, height);
@@ -241,13 +245,17 @@ void SimplexThread::run()
 										if (vtd->analyzeRing(vertex[v][0], vertex[v][1], radius, height, numData, ringData,
 															 ringAzimuths, vtdCoeffs, vtdStdDev)) {
 											if (vtdCoeffs[0].getParameter() == "VTC0") {
-												VT[v] = -(vtdCoeffs[0].getValue());
+												VT[v] = vtdCoeffs[0].getValue();
 											} else {
 												emit log(Message("Error retrieving VTC0 in simplex!"));
 											} 
 										} else {
 											emit log(Message("VTD failed!"));
 										}
+										
+										delete[] ringData;
+										delete[] ringAzimuths;
+
 									}
 								}
 								numIterations += 2;
@@ -380,7 +388,7 @@ inline void SimplexThread::getVertexSum(float**& vertex,float*& vertexSum)
 
 float SimplexThread::simplexTest(float**& vertex,float*& VT,float*& vertexSum, 
 								 float& radius, float& height, float& RefK,
-								 QString& velField, int& high, double factor)
+								 QString& velField, int& low, double factor)
 {
 	
 	// Test a simplex vertex
@@ -389,7 +397,7 @@ float SimplexThread::simplexTest(float**& vertex,float*& VT,float*& vertexSum,
 	float factor1 = (1.0 - factor)/2;
 	float factor2 = factor1 - factor;
 	for (int i=0; i<=1; i++)
-		vertexTest[i] = vertexSum[i]*factor1 - vertex[high][i]*factor2;
+		vertexTest[i] = vertexSum[i]*factor1 - vertex[low][i]*factor2;
 	
 	// Get the data
 	gridData->setCartesianReferencePoint(int(vertexTest[0]),int(vertexTest[1]),int(RefK));
@@ -401,19 +409,23 @@ float SimplexThread::simplexTest(float**& vertex,float*& VT,float*& vertexSum,
 	if (vtd->analyzeRing(vertexTest[0], vertexTest[1], radius, height, numData, ringData,
 						 ringAzimuths, vtdCoeffs, vtdStdDev)) {
 		if (vtdCoeffs[0].getParameter() == "VTC0") {
-			VTtest = -(vtdCoeffs[0].getValue());
+			VTtest = vtdCoeffs[0].getValue();
 		} else {
 			emit log(Message("Error retrieving VTC0 in simplex!"));
 		} 
 	} else {
 		emit log(Message("VTD failed!"));
 	}
+
+	delete[] ringData;
+	delete[] ringAzimuths;
+
 	// If its a better point than the worst, replace it
-	if (VTtest < VT[high]) {
-		VT[high] = VTtest;
+	if (VTtest > VT[low]) {
+		VT[low] = VTtest;
 		for (int i=0; i<=1; i++) {
-			vertexSum[i] += vertexTest[i]-vertex[high][i];
-			vertex[high][i] = vertexTest[i];
+			vertexSum[i] += vertexTest[i]-vertex[low][i];
+			vertex[low][i] = vertexTest[i];
 		}
 	}
 	

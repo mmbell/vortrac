@@ -10,7 +10,7 @@
 
 #include "GBVTD.h"
 #include <math.h>
-
+#include "IO/Message.h"
 
 GBVTD::GBVTD(QString& initGeometry, QString& initClosure,int& wavenumbers, float*& gaps)
 {
@@ -28,9 +28,9 @@ GBVTD::GBVTD(QString& initGeometry, QString& initClosure,int& wavenumbers, float
 GBVTD::~GBVTD()
 {
 	// Default destructor
-	delete ringPsi;
-	delete vel;
-	delete psi;
+	delete[] ringPsi;
+	delete[] vel;
+	delete[] psi;
 	
 }
 
@@ -53,12 +53,16 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
 		
 		for (int i=0; i <= numData-1; i++) {
 			// Convert to Psi
-			float angle = ringAzimuths[i]*deg2rad;
+			float angle = ringAzimuths[i]*deg2rad - thetaT;
 			angle = fixAngle(angle);
-			float xx = xCenter + radius * cos(angle);
-			float yy = yCenter + radius * sin(angle);
+			float xx = xCenter + radius * cos(angle+thetaT);
+			float yy = yCenter + radius * sin(angle+thetaT);
 			float psiCorrection = atan2(yy,xx) - thetaT;
-			ringPsi[i] = angle = psiCorrection;
+			ringPsi[i] = angle - psiCorrection;
+			ringPsi[i] = fixAngle(ringPsi[i]);
+			/* QString testvalues = QString::number(i) + " " + QString::number(ringData[i]) + " " 
+				+ QString::number(ringPsi[i]) + " " + QString::number(angle);
+			Message::toScreen(testvalues); */
 		}
 		
 
@@ -104,7 +108,7 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
 			yLLS[i] = vel[i];
 		}
 		
-		float* stdError = 0;
+		float* stdError = new float[numCoeffs];
 		if(!llsSolver.lls(numCoeffs, numData, xLLS, yLLS, vtdStdDev, FourierCoeffs, stdError))
 			//emit log(Message("Failed in lls"));
 			return false;
@@ -112,9 +116,9 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
 		// Convert Fourier coefficients into wind coefficients
 		setWindCoefficients(radius, height, numCoeffs, FourierCoeffs, vtdCoeffs);
 		
-		delete xLLS;
-		delete yLLS;
-		
+		delete[] xLLS;
+		delete[] yLLS;
+		delete[] stdError;
 			
 		
 	}
@@ -136,8 +140,8 @@ void GBVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, flo
 	A[0] = FourierCoeffs[0];
 	B[0] = 0.;
 	for (int i=1; i <= (numCoeffs/2); i++) {
-		A[i] = FourierCoeffs[2*i+1];
-		B[i] = FourierCoeffs[2*i];
+		A[i] = FourierCoeffs[2*i];
+		B[i] = FourierCoeffs[2*i-1];
 	}
 		
 	if (closure == "original") {
@@ -198,6 +202,10 @@ void GBVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, flo
 		}
 	}
 	// Other closure methods here (including HVVP)
+	
+	delete[] A;
+	delete[] B;
+	
 }
 
 int GBVTD::getNumCoefficients(int& numData)
@@ -205,7 +213,6 @@ int GBVTD::getNumCoefficients(int& numData)
 
 	int maxCoeffs = maxWavenumber*2 + 3;
 	int numCoeffs = maxCoeffs;
-	FourierCoeffs = new float[maxCoeffs];
 	
 	// Find the data gaps
 	bool degreeSector[360];
