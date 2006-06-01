@@ -49,6 +49,11 @@ class SimplexData
   float getVTUncertainty(const int& lev, const int& rad) const;
   void setVTUncertainty(const int& lev, const int& rad, const float& vel);
   void setVTUncertainty(const float** a, const int& numLev, const int& numRad);
+
+  int getNumConvergingCenters(const int& lev, const int& rad) const;
+  void setNumConvergingCenters(const int& lev, const int& rad, const int& num);
+  void setNumConvergingCenters(const int** a, const int& numLev, 
+			       const int& numRad);
  
   Center getCenter(const int& lev, const int& rad, 
 		   const int& centers) const;
@@ -63,24 +68,32 @@ class SimplexData
   int getNumRadii() const {return numRadii;}
   int getNumCenters() const {return numCenters;}
 
+  bool isNull();
+  bool emptyLevelRadius(const int& l, const int& r) const;
+
+  void printString();
+
  private:
   static const int maxLevels = 15;
   static const int maxRadii = 30;
   static const int maxCenters = 25;
+  static const float velNull = -999.;
 
   int numLevels;
   int numRadii;
   int numCenters;
 
-  float meanX[maxRadii][maxLevels];
-  float meanY[maxRadii][maxLevels];
+  float meanX[maxLevels][maxRadii];
+  float meanY[maxLevels][maxRadii];
   float height[maxLevels];
-  float centerStdDeviation[maxRadii][maxLevels];
+  float centerStdDeviation[maxLevels][maxRadii];
+
+  int numConvergingCenters[maxLevels][maxRadii];
   
   QDateTime time;
 
-  float meanVT[maxRadii][maxLevels];
-  float meanVTUncertainty[maxRadii][maxLevels];
+  float meanVT[maxLevels][maxRadii];
+  float meanVTUncertainty[maxLevels][maxRadii];
 
   Center centers[maxLevels][maxRadii][maxCenters];
   

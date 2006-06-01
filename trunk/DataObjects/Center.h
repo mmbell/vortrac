@@ -16,8 +16,9 @@ class Center
 {
  public:
 
-    Center(float x = -999, float y = -999, float radius = -999, 
-	   float level = -999, float maxVT = -999);
+    Center(const float& newX = -999, const float& newY = -999,  
+	   const float& maxVT = -999, const float& newLevel = -999, 
+	   const float& newRadius = -999);
     ~Center();
 
     float getX() const { return x; }
@@ -43,6 +44,9 @@ class Center
 
 
  private:
+
+    static const float velNull = -999.;
+
     float x;
     float y;
     float radius;

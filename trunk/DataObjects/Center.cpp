@@ -11,14 +11,14 @@
 
 #include "Center.h"
 
-Center::Center(float newX, float newY, float newRadius, float newLevel,
-			 float name)
+Center::Center(const float& newX, const float& newY, const float& vel,
+	       const float& newLevel, const float& newRadius)
 {
   x = newX;
   y = newY;
   radius = newRadius;
   level = newLevel;
-  maxVT = name;
+  maxVT = vel;
 
 }
 
@@ -65,8 +65,8 @@ bool Center::operator == (const Center &other)
 
 bool Center::isNull()
 {
-  if((x == -999)||(y == -999)||(radius == -999)||(level == -999)
-     ||(maxVT == -999))
+  if((x == velNull)||(y == velNull)||(radius == velNull)||(level == velNull)
+     ||(maxVT == velNull))
     return true;
   return false;
 

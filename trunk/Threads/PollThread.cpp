@@ -11,6 +11,8 @@
 #include "PollThread.h"
 #include "Message.h"
 
+#include "DataObjects/SimplexList.h"
+
 PollThread::PollThread(QObject *parent)
   : QThread(parent)
 {
@@ -72,6 +74,47 @@ void PollThread::run()
   
   vortexList = new VortexList(vortexConfig);
   vortexList->open();
+  // Testing SimplexList ----------------------------------------------------
+  /*
+  file = QString("/scr/science40/mauger/Working/trunk/LisaSimplex.xml");
+
+  Configuration *simplexConfig = new Configuration(0,QString());
+  connect(simplexConfig, SIGNAL(log(const Message&)), 
+	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+  simplexConfig = new Configuration(0, file);
+  
+  SimplexList *list = new SimplexList(simplexConfig);
+  list->open();
+
+  Message::toScreen("Num simplex: "+QString().setNum(list->count()));
+
+  SimplexData newData(15,6,2);
+  newData.setTime(QDateTime::currentDateTime());
+  for(int i = 0; i < 2; i++) {
+    newData.setX(i,0,7);
+    newData.setY(i,0,7);
+    newData.setHeight(i,7);
+    newData.setCenterStdDev(i,0,7);
+    newData.setMaxVT(i,0,7);
+    newData.setVTUncertainty(i,0,7);
+    newData.setNumConvergingCenters(i,0,7);
+    Center newCenter(8,8,8,i,0);
+    newData.setCenter(i,0,0,newCenter);
+    Center otherCenter(9,9,9,i,0);
+    newData.setCenter(i,0,1,otherCenter);
+  }
+  //newData.printString();
+  // list->append(newData);
+  Message::toScreen("Num simplex: "+QString().setNum(list->count()));
+  list->value(0).printString();
+  list->value(1).printString();
+  file = QString("/scr/science40/mauger/Working/trunk/LisaSimplex.xml");
+  list->setFileName(file);
+  list->save();
+  */
+  
+  //-------------------------------------------------------------------------
+
   /*
   // Testing VortexList ------------------------------------------------------
   //vortexList->value(0).printString();

@@ -45,6 +45,7 @@ private:
        RadarPanel* radar;
        CappiPanel* cappi;
        CenterPanel* center;
+       ChooseCenterPanel* chooseCenter;
        VTDPanel* vtd;
        HVVPPanel* hvvp;
        PressurePanel* pressure;

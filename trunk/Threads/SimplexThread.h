@@ -22,6 +22,8 @@
 #include "DataObjects/GriddedData.h"
 #include "VTD/GBVTD.h"
 #include "DataObjects/Coefficient.h"
+#include "DataObjects/SimplexList.h"
+//#include "DataObjects/Center.h"
 
 class SimplexThread : public QThread
 {
@@ -32,6 +34,10 @@ class SimplexThread : public QThread
      ~SimplexThread();
 	 void findCenter(Configuration *wholeConfig, GriddedData *dataPtr, 
 			 float *vortexLat, float *vortexLon);
+	 
+
+	 //bool chooseCenter();
+	 //bool initialize();
 	 
  public slots:
      void catchLog(const Message& message);
@@ -66,12 +72,21 @@ class SimplexThread : public QThread
 	 float convergingCenters;
 	 float Xind[25],Yind[25],VTind[25];
 	 float Xconv[25],Yconv[25],VTconv[25];
+	 SimplexList simplexResults;
 	 
 	 void archiveCenters(float& radius, float& height);
 	 inline void getVertexSum(float**& vertex,float*& vertexSum);
 	 float simplexTest(float**& vertex, float*& VT, float*& vertexSum, 
 			   float& radius, float& height, float& RefK,
 			   QString& velField, int& high,double factor);
+	 
+	 // Choosecenter variables
+	 QDomElement chooseCElem;
+	 float distWeight, windWeight, stdWeight, ptsWeight;
+	 float fCriteria[30];
+	 QDateTime startTime, stopTime;
+	 //const float velNull = -999;
+
 };
 
 #endif

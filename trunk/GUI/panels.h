@@ -159,6 +159,16 @@ class CenterPanel:public AbstractPanel
   //  for the vortrex center
 };
 
+class ChooseCenterPanel:public AbstractPanel
+{
+ public:
+  ChooseCenterPanel();
+  void updatePanel(const QDomElement panelElement);
+  bool updateConfig();
+  
+ private:
+};
+
 class VTDPanel:public AbstractPanel
 { 
   // Modifies the VTD Section of the Configuration

@@ -54,6 +54,10 @@
    <choosecenter>
      <dir>/path/to/choose/center/output</dir>
      <filename>nameOfCenterListFile</filename>
+     <startdate>2005-01-01</startdate>
+     <enddate>2005-01-02</enddate>
+     <starttime>00:00:00</starttime>
+     <endtime>00:00:00</endtime>
      <dist_weight>0.0</dist_weight>
      <wind_weight>.2</wind_weight>
      <stddev_weight>.6</stddev_weight>
@@ -61,6 +65,7 @@
      <position_weight>.4</position_weight>
      <rmw_weight>.4</rmw_weight>
      <vt_weight>.2</vt_weight>
+     <stats>99</stats>
    </choosecenter>
    <vtd>
      <dir>/path/to/vtd/output</dir>

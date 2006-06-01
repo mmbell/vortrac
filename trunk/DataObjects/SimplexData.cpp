@@ -9,6 +9,7 @@
  */
 
 #include "SimplexData.h"
+#include <QTextStream>
 
 SimplexData::SimplexData()
 {
@@ -18,13 +19,14 @@ SimplexData::SimplexData()
 
   for(int i = 0; i < numLevels; i++)
     {
-      height[i] = -999;
+      height[i] = velNull;
       for(int j = 0; j < numRadii; j++) {
-	meanX[i][j] = -999;
-	meanY[i][j] = -999;
-	centerStdDeviation[i][j] = -999.;
-	meanVT[i][j] = -999;
-	meanVTUncertainty[i][j] = -999;
+	meanX[i][j] = velNull;
+	meanY[i][j] = velNull;
+	centerStdDeviation[i][j] = velNull;
+	meanVT[i][j] = velNull;
+	meanVTUncertainty[i][j] = velNull;
+	numConvergingCenters[i][j] = (int)velNull;
 	for(int k = 0; k < numCenters; k++) {
 	  centers[i][j][k] = Center();
 	}
@@ -43,14 +45,15 @@ SimplexData::SimplexData(int availLevels, int availRadii, int availCenters)
   
   for(int i = 0; i < numLevels; i++)
     {
-      height[i] = -999;
+      height[i] = velNull;
       for(int j = 0; j < numRadii; j++) 
 	{
-	  meanX[i][j] = -999;
-	  meanY[i][j] = -999;
-	  centerStdDeviation[i][j] = -999;
-	  meanVT[i][j] = -999;
-	  meanVTUncertainty[i][j] = -999;
+	  meanX[i][j] = velNull;
+	  meanY[i][j] = velNull;
+	  centerStdDeviation[i][j] = velNull;
+	  meanVT[i][j] = velNull;
+	  meanVTUncertainty[i][j] = velNull;
+	  numConvergingCenters[i][j]= (int)velNull;
 	  for(int k = 0; k < numCenters; k++) {
 	    centers[i][j][k] = Center();
 	  }
@@ -201,7 +204,27 @@ void SimplexData::setVTUncertainty(const float** a, const int& numLev,
       meanVTUncertainty[i][j] = a[i][j];
 }
 
+int SimplexData::getNumConvergingCenters(const int& lev, const int& rad) const
+{
+  if((lev < numLevels)&&(rad < numRadii))
+    return numConvergingCenters[lev][rad];
+  return numConvergingCenters[0][0];
+}
 
+void SimplexData::setNumConvergingCenters(const int& lev, const int& rad, 
+					  const int& num)
+{
+ if((lev < numLevels)&&(rad < numRadii))
+   numConvergingCenters[lev][rad] = num;
+}
+
+void SimplexData::setNumConvergingCenters(const int** a, const int& numLev, 
+			     const int& numRad)
+{
+  for (int i = 0; i < numLev; i++)
+    for (int j = 0; j < numRad; j++)
+      numConvergingCenters[i][j] = a[i][j];
+}
 
 Center SimplexData::getCenter(const int& lev, const int& rad, 
 			      const int& waveNum) const
@@ -236,3 +259,51 @@ bool SimplexData::operator > (const SimplexData &other)
   return false;
 }
 
+bool SimplexData::isNull()
+{
+  if(time.isNull()) {
+    if(meanX[0][0] == velNull)
+      if(meanY[0][0] == velNull)
+	if(height[0]== velNull)
+	  if(meanVT[0][0] == velNull)
+	    if(numConvergingCenters[0][0]==(int)velNull)
+	      if(centers[0][0][0].isNull())
+		return true;
+  }
+  return false;
+}
+
+bool SimplexData::emptyLevelRadius(const int& l, const int& r) const 
+{
+  if((meanX[l][r]!=velNull)||(meanY[l][r]!=velNull)
+     ||(centerStdDeviation[l][r]!=velNull)
+     ||(numConvergingCenters[l][r]!=(int)velNull)||(meanVT[l][r]!=velNull)
+     ||(meanVTUncertainty[l][r]!=velNull))
+    return false;
+  return true;
+}
+
+void SimplexData::printString()
+{
+ QTextStream out(stdout);
+  out<< endl;
+  out<< "Printing SimplexData Time = "+getTime().toString(Qt::ISODate)<< endl;
+  out<< "  time: "+getTime().toString(Qt::ISODate) << endl;
+  for(int i = 0; i < 2; i++) {
+    QString ii = QString().setNum(i);
+    out<<"  meanX @ level:"+ii+": "+QString().setNum(getX(i,0)) <<endl;
+    out<<"  meanY @ level:"+ii+": "+QString().setNum(getY(i,0)) << endl;
+    out<<"  height @ level:"+ii+": "+QString().setNum(getHeight(i)) << endl;
+    out<<"  centerStdDev @ level:"+ii+": ";
+    out<<         QString().setNum(getCenterStdDev(i,0)) << endl;
+    out<<"  maxVT @ level:"+ii+": ";
+    out<<         QString().setNum(getMaxVT(i,0)) << endl;
+    out<<"  NumConvCenters @ level:"+ii+": ";
+    out<<         QString().setNum(getNumConvergingCenters(i,0)) << endl;
+    out<<"  MaxVtStdDev @ level:"+ii+": ";
+    out<<         QString().setNum(getVTUncertainty(i,0)) << endl;
+    out<<"  centers @ level:"+ii+": ";
+    out<<         QString().setNum(getCenter(i,0,0).getMaxVT()) << endl;
+    out<<"  ----------------------------------------------------------" <<endl;
+  }
+}

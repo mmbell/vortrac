@@ -17,7 +17,7 @@ SimplexList::SimplexList(const QString &newFileName)
   fileName = newFileName;
   workingDir = QString("");
   if(fileName.isEmpty())
-    fileName = QString("vortrac_defaultSimplexDataStorage.xml");
+    fileName = QString("vortrac_defaultSimplexListStorage.xml");
 
   config = new Configuration(0, newFileName);
   simplexDataConfigs = new QList<Configuration*>;
@@ -46,6 +46,7 @@ bool SimplexList::save()
       Configuration *currConfig= simplexDataConfigs->value(i);
       if(currConfig->write(configFileNames->value(i)))
 	fileSaves++;
+      Message::toScreen(QString().setNum(fileSaves));
     }
     if(fileSaves == QList<SimplexData>::count())
       return true;
@@ -59,7 +60,7 @@ bool SimplexList::open()
 {
 
   int numConfigsOpened = 0;
-  Message::toScreen("num in Config groupList ="+QString().setNum(config->getGroupList()->count()));
+  Message::toScreen("!num in Config groupList ="+QString().setNum(config->getGroupList()->count()));
 
   for(int i = 0; i < config->getGroupList()->count(); i++) {
 
@@ -71,9 +72,11 @@ bool SimplexList::open()
       radarName = config->getParam(currElement, "radar");
       productType = config->getParam(currElement, "product");
       numConfigsOpened++;
+      Message::toScreen("found the header config for index");
     }
     else {
       // Has information about a simplexData
+      Message::toScreen("found data node");
       if(openNodeFile(node)) {
 	numConfigsOpened++;
       }
@@ -109,11 +112,17 @@ bool SimplexList::openNodeFile(const QDomNode &newNode)
     for(int i = 0; i < newConfig->getGroupList()->count(); i++) {
       QDomNode child = newConfig->getGroupList()->item(i);
       QDomElement childElement = child.toElement();
+      Message::toScreen("child Element = "+childElement.tagName());
       QString newName, newRadar, newType, newTime;
-      if(!childElement.tagName().startsWith(QString("simplex"))) {
+      if(childElement.tagName().startsWith(QString("simplex"))) {
 	newName = newConfig->getParam(childElement, "name");
+	//newConfig->setParam(childElement, QString("name"), vortexName);
 	newRadar = newConfig->getParam(childElement, "radar");
+	//newConfig->setParam(childElement, QString("radar"), radarName);
 	newType = newConfig->getParam(childElement, "product");
+	//newConfig->setParam(childElement, QString("product"), 
+	//		    QString("simplex"));
+	//newConfig->addDom(childElement, QString("time"), nodeTimeString);
 	newTime = newConfig->getParam(childElement, "time");
 	newData.setTime(QDateTime::fromString(newTime, Qt::ISODate));
 	// Check to make sure these line up........
@@ -121,20 +130,23 @@ bool SimplexList::openNodeFile(const QDomNode &newNode)
       else {
 	int level = childElement.attribute("level").toInt();
 	int radius = childElement.attribute("radius").toInt();
-	if(!childElement.tagName().startsWith(QString("search"))) {
+	if(childElement.tagName().startsWith(QString("sum"))) {
 	  // Sum Node average parameters
 	  newData.setX(level, radius, 
-		       config->getParam(childElement, "meanX").toFloat());
+		       config->getParam(childElement, 
+					QString("meanx")).toFloat());
 	  newData.setY(level, radius, 
-		       config->getParam(childElement, "meanY").toFloat());
+		       config->getParam(childElement, "meany").toFloat());
 	  newData.setHeight(level,
 			   config->getParam(childElement, "height").toFloat());
 	  newData.setCenterStdDev(level, radius, 
 		  config->getParam(childElement, "center_stddev").toFloat());
 	  newData.setMaxVT(level, radius, 
-			   config->getParam(childElement, "meanVT").toFloat());
+			   config->getParam(childElement, "meanvt").toFloat());
 	  newData.setVTUncertainty(level, radius, 
-		   config->getParam(childElement, "meanVT_stddev").toFloat());
+		   config->getParam(childElement, "meanvt_stddev").toFloat());
+	  newData.setNumConvergingCenters(level, radius, 
+		   config->getParam(childElement, "numcenters").toInt());
 	}
 	else {
 	  
@@ -148,9 +160,9 @@ bool SimplexList::openNodeFile(const QDomNode &newNode)
 	    newCenter.setX(newConfig->getParam(childElement, "x").toFloat());
 	    newCenter.setY(newConfig->getParam(childElement, "y").toFloat());
 	    newCenter.setMaxVT(newConfig->getParam(childElement, 
-						"maxVT").toFloat());
+						"maxvt").toFloat());
 	    centIndex[level][radius]++;
-	    newData.setCenter(level,radius,centIndex[level][radius],newCenter);
+	    newData.setCenter(level,radius,centerIndex,newCenter);
 	    centerParam = centerParam.nextSiblingElement();
 	  }
 	}
@@ -229,47 +241,64 @@ void SimplexList::createDomSimplexDataEntry(const SimplexData &newData)
     for(int j = 0; j < newData.getNumRadii(); j++) {
       QString levelIndex = QString().setNum(i);
       QString radiusIndex = QString().setNum(j);
-      newConfig->addDom(volRoot, QString("sum"+levelIndex+radiusIndex), 
-			QString(""));
-      QDomElement volParent =newConfig->getConfig(QString("sum"+levelIndex+radiusIndex));
-      if(newData.getX(i,j)!=-999) 
-	newConfig->addDom(volParent, QString("meanx"), 
-			   QString().setNum(newData.getX(i,j)));
-      if(newData.getY(i,j)!=-999) 
-	newConfig->addDom(volParent,  QString("meany"), 
-			   QString().setNum(newData.getY(i,j)));
-      if(newData.getHeight(i)!=-999) 
-	newConfig->addDom(volParent,  QString("height"), 
-			   QString().setNum(newData.getHeight(i)));
-      if(newData.getCenterStdDev(i,j)!=-999) 
-	newConfig->addDom(volParent,  QString("center_stddev"), 
-			   QString().setNum(newData.getCenterStdDev(i,j)));
-      if(newData.getMaxVT(i,j)!=-999) 
-	newConfig->addDom(volParent, QString("meanvt"), 
-			   QString().setNum(newData.getMaxVT(i,j)));
-      if(newData.getVTUncertainty(i,j)!=-999) 
-	newConfig->addDom(volParent,  QString("meanvt_stddev"), 
-			   QString().setNum(newData.getVTUncertainty(i,j)));
-      
-      for(int k = 0; k < newData.getNumCenters(); k++) {
-	QString centerIndex = QString().setNum(k);
-	Center currCenter = newData.getCenter(i,j,k);
-	if(!currCenter.isNull()) {
+      if(!newData.emptyLevelRadius(i,j)) {
+	newConfig->addDom(volRoot, QString("sum"+levelIndex+radiusIndex), 
+			  QString(""));
+	QDomElement volParent =newConfig->getConfig(QString("sum"+levelIndex+radiusIndex));
+	volParent.setAttribute(QString("radius"),radiusIndex);
+	volParent.setAttribute(QString("level"), levelIndex);
+	if(newData.getX(i,j)!=-999) 
+	  newConfig->addDom(volParent, QString("meanx"), 
+			    QString().setNum(newData.getX(i,j)));
+	if(newData.getY(i,j)!=-999) 
+	  newConfig->addDom(volParent,  QString("meany"), 
+			    QString().setNum(newData.getY(i,j)));
+	if(newData.getHeight(i)!=-999) 
+	  newConfig->addDom(volParent,  QString("height"), 
+			    QString().setNum(newData.getHeight(i)));
+	if(newData.getCenterStdDev(i,j)!=-999) 
+	  newConfig->addDom(volParent,  QString("center_stddev"), 
+			    QString().setNum(newData.getCenterStdDev(i,j)));
+	if(newData.getMaxVT(i,j)!=-999) 
+	  newConfig->addDom(volParent, QString("meanvt"), 
+			    QString().setNum(newData.getMaxVT(i,j)));
+	if(newData.getVTUncertainty(i,j)!=-999) 
+	  newConfig->addDom(volParent,  QString("meanvt_stddev"), 
+			    QString().setNum(newData.getVTUncertainty(i,j)));
+	if(newData.getNumConvergingCenters(i,j)!=-999)
+	  newConfig->addDom(volParent, QString("numcenters"),
+		       QString().setNum(newData.getNumConvergingCenters(i,j)));
+	
+	bool hasCenters = false;
+	for(int k = 0; k < newData.getNumCenters(); k++) {
+	  if(!newData.getCenter(i,j,k).isNull())
+	    hasCenters = true;
+	}
+
+	if(hasCenters) {
 	  newConfig->addDom(volRoot, QString("search"+levelIndex+radiusIndex),
 			    QString(""));
-	  QDomElement volParent = newConfig->getConfig(QString("search"+levelIndex+radiusIndex));
-	  if(currCenter.getX()!=-999)
-	    newConfig->addDom(volParent,  QString("x"),  
-			      QString().setNum(currCenter.getX()), 
-			       QString("center"), centerIndex);
-	  if(currCenter.getY()!=-999)
-	    newConfig->addDom(volParent,  QString("y"), 
-			      QString().setNum(currCenter.getY()),
-			       QString("center"), centerIndex);
-	  if(currCenter.getMaxVT()!=-999)
-	    newConfig->addDom(volParent,  QString("maxvt"), 
-			       QString().setNum(currCenter.getMaxVT()),
-			       QString("center"), centerIndex);
+	  QDomElement searchParent = newConfig->getConfig(QString("search"+levelIndex+radiusIndex));
+	  searchParent.setAttribute(QString("radius"), radiusIndex);
+	  searchParent.setAttribute(QString("level"), levelIndex);
+	  
+	  for(int k = 0; k < newData.getNumCenters(); k++) {
+	    QString centerIndex = QString().setNum(k);
+	    Center currCenter = newData.getCenter(i,j,k);
+	    
+	    if(currCenter.getX()!=-999)
+	      newConfig->addDom(searchParent,  QString("x"),  
+				QString().setNum(currCenter.getX()), 
+				QString("center"), centerIndex);
+	    if(currCenter.getY()!=-999)
+	      newConfig->addDom(searchParent,  QString("y"), 
+				QString().setNum(currCenter.getY()),
+				QString("center"), centerIndex);
+	    if(currCenter.getMaxVT()!=-999)
+	      newConfig->addDom(searchParent,  QString("maxvt"), 
+				QString().setNum(currCenter.getMaxVT()),
+				QString("center"), centerIndex);
+	  }
 	}
       }
     }

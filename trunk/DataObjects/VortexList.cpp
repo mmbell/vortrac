@@ -59,7 +59,7 @@ bool VortexList::open()
 {
 
   int numConfigsOpened = 0;
-  Message::toScreen("num in Config groupList ="+QString().setNum(config->getGroupList()->count()));
+  // Message::toScreen("num in Config groupList ="+QString().setNum(config->getGroupList()->count()));
 
   for(int i = 0; i < config->getGroupList()->count(); i++) {
 

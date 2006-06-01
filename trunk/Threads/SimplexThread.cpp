@@ -420,4 +420,142 @@ float SimplexThread::simplexTest(float**& vertex,float*& VT,float*& vertexSum,
 	return VTtest;
 
 }
+/*
+bool SimplexThread::chooseCenter()
+{
 
+
+
+}
+
+bool SimplexThread::initialize()
+{
+  QDomElement ccElement = configData->getConfig("choosecenter");
+  distWeight = config->getParam(ccElement, QString("dist_weight")).toFloat();
+  windWeight = config->getParam(ccElement, QString("wind_weight")).toFloat();
+  stdWeight = config->getParam(ccElement, QString("stddev_weight")).toFloat();
+  ptsWeight = config->getParam(ccElmenet, QString("pts_weight")).toFloat();
+  int fPercent = config->getParam(ccElement, QString("stats")).toInt();
+  QDate sDate = QDate::fromString(config->getParam(ccElement, 
+						   QString("startdate")),
+				  Qt::ISODate);
+  QDate eDate = QDate::fromString(config->getParam(ccElement, 
+						   QString("enddate")),
+				  Qt::ISODate);
+  QTime sTime = QTime::fromString(config->getParam(ccElement, 
+						   QString("starttime")),
+				  Qt::ISODate);
+  QTime eTime = QTime::fromString(config->getParam(ccElement,
+						   QString("endtime")),
+				  Qt::ISODate);
+  startTime = QDateTime(sDate);
+  startTime.setTime(sTime);
+  endTime = QDateTime(eDate);
+  endTime.setTimsimplexResults[i].getNumRadiie(eTime);
+
+  // Didn't initialize weightscheme array, see if we need this first
+
+  if(fPercent = 99) {
+    fCriteria[0] = 4052.2;  
+    fCriteria[1] = 98.50;  
+    fCriteria[2] = 34.12;  
+    fCriteria[3] = 21.20;  
+    fCriteria[4] = 16.26;  
+    fCriteria[5] = 13.75;  
+    fCriteria[6] = 12.25;  
+    fCriteria[7] = 11.26;  
+    fCriteria[8] = 10.56;  
+    fCriteria[9] = 10.04;  
+    fCriteria[10] = 9.65;  
+    fCriteria[11] = 9.33;  
+    fCriteria[12] = 9.07;  
+    fCriteria[13] = 8.86;  
+    fCriteria[14] = 8.68;  
+    fCriteria[15] = 8.53;  
+    fCriteria[16] = 8.40;  
+    fCriteria[17] = 8.29;  
+    fCriteria[18] = 8.18;  
+    fCriteria[19] = 8.10;  
+    fCriteria[20] = 8.02;  
+    fCriteria[21] = 7.95;  
+    fCriteria[22] = 7.88;  
+    fCriteria[23] = 7.82;  
+    fCriteria[24] = 7.77;  
+    fCriteria[25] = 7.72;  
+    fCriteria[26] = 7.68;  
+    fCriteria[27] = 7.64;  
+    fCriteria[28] = 7.60;  
+    fCriteria[29] = 7.56;
+
+  }
+  else {
+    fCriteria[0] = 161.45;  
+    fCriteria[1] = 18.513;  
+    fCriteria[2] = 10.128;  
+    fCriteria[3] = 7.7086;  
+    fCriteria[4] = 6.6079;  
+    fCriteria[5] = 5.9874;  
+    fCriteria[6] = 5.5914;  
+    fCriteria[7] = 5.3177;  
+    fCriteria[8] = 5.1174;  
+    fCriteria[9] = 4.9646;  
+    fCriteria[10] = 4.8443;  
+    fCriteria[11] = 4.7472;  
+    fCriteria[12] = 4.6672;  
+    fCriteria[13] = 4.6001;  
+    fCriteria[14] = 4.5431;  
+    fCriteria[15] = 4.4940;  
+    fCriteria[16] = 4.4513;  
+    fCriteria[17] = 4.4139;  
+    fCriteria[18] = 4.3808;  
+    fCriteria[19] = 4.3513;  
+    fCriteria[20] = 4.3248;  
+    fCriteria[21] = 4.3009;  
+    fCriteria[22] = 4.2793;  
+    fCriteria[23] = 4.2597;  
+    fCriteria[24] = 4.2417;  
+    fCriteria[25] = 4.2252;  
+    fCriteria[26] = 4.2100;  
+    fCriteria[27] = 4.1960;  
+    fCriteria[28] = 4.1830;  
+    fCriteria[29] = 4.1709;
+  }
+}
+
+bool SimplexThread::perlChooseCenter()
+{
+  for(int i = 0; i < simplexResults.count(); i++) {
+    float radiusSum = 0;
+    float xSum = 0; 
+    ySum = 0;
+    for(int k = kmin; k < simplexResults[i].getNumLevels; k++) {
+      float bestWind = 0.;
+      float bestStd = 50.;
+      float bestPts = 0.;
+      float jPtr = 0;
+      for(int j = 0; j < simplexResults[i].getNumRadii; j++) {
+	float *winds = new float[simplexResults[i].getNumRadii];
+	winds[j] = velNull;
+	float *stds = new float[simplexResults[i].getNumRadii];
+	stds[j] = velNull;
+	float *pts = new float[simplexResults[i].getNumRadii];
+	pts[j] = velNull;
+	if(simplexResults[i].getMaxVT(k,j)!=velNull)
+	  winds[j] = simplexResults[i].getMaxVT(k,j);
+	if(simplexResults[i].getCenterStdDev(k,j)!=velNull)
+	  stds[j] = simplexResults[i].getCenterStdDev(k,j);
+	if(simplexResults[i].getNumConvergingCenters(k,j)!=velNull)
+	  pts[j] = simplexResults[i].getNumConvergingCenters(k,j);
+
+	   // This last one should be about converging centers 
+	   // stoped work on this to do some testing of simplexList
+	   // and add a converging centers thing
+
+	
+      }    
+    }    
+  }
+
+
+}
+*/

@@ -1028,6 +1028,29 @@ bool CenterPanel::updateConfig()
   return true;
 }
 
+ChooseCenterPanel::ChooseCenterPanel()
+{
+    //Do nothing
+  setPanelChanged(false);
+}
+
+void ChooseCenterPanel::updatePanel(const QDomElement panelElement)
+{
+  setElement(panelElement);
+  //Do nothing for now
+  setPanelChanged(false);
+}
+ 
+bool ChooseCenterPanel::updateConfig()
+{
+  if(checkPanelChanged())
+    {
+      //Do nothing
+    }
+  setPanelChanged(false);
+  return true;
+}
+
 VTDPanel::VTDPanel()
 {
   QLabel *dirLabel = new QLabel(tr("VTD Output Directory"));

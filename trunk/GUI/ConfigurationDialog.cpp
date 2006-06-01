@@ -119,6 +119,7 @@ void ConfigurationDialog::makePanelForString()
   panelForString.insert("radar", radar);
   panelForString.insert("cappi", cappi);
   panelForString.insert("center", center);
+  panelForString.insert("choosecenter", chooseCenter);
   panelForString.insert("vtd", vtd);
   panelForString.insert("hvvp", hvvp);
   panelForString.insert("pressure", pressure);
@@ -149,6 +150,11 @@ void ConfigurationDialog::populateSelection()
   center->setText(tr("Simplex Configuration"));
   makeSelectionItem(center);
   center->setIcon(QIcon("images/DropSondeImage"));
+  
+  QListWidgetItem *chooseCenter = new QListWidgetItem(selection);
+  chooseCenter->setText(tr("Choose Center Configuration"));
+  makeSelectionItem(chooseCenter);
+  chooseCenter->setIcon(QIcon("images/DropSondeImage"));
   
   QListWidgetItem *vtd = new QListWidgetItem(selection);
   vtd->setText(tr("VTD Configuration"));
@@ -193,6 +199,9 @@ void ConfigurationDialog::populatePanels()
   center = new CenterPanel;
   panels->addWidget(center);
   connectPanel(center);
+  chooseCenter = new ChooseCenterPanel;
+  panels->addWidget(chooseCenter);
+  connectPanel(chooseCenter);
   vtd = new VTDPanel;
   panels->addWidget(vtd);
   connectPanel(vtd);
