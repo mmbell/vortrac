@@ -27,6 +27,7 @@ SimplexData::SimplexData()
 	meanVT[i][j] = velNull;
 	meanVTUncertainty[i][j] = velNull;
 	numConvergingCenters[i][j] = (int)velNull;
+	radius[j] = velNull;
 	for(int k = 0; k < numCenters; k++) {
 	  centers[i][j][k] = Center();
 	}
@@ -54,6 +55,7 @@ SimplexData::SimplexData(int availLevels, int availRadii, int availCenters)
 	  meanVT[i][j] = velNull;
 	  meanVTUncertainty[i][j] = velNull;
 	  numConvergingCenters[i][j]= (int)velNull;
+	  radius[j] = velNull;
 	  for(int k = 0; k < numCenters; k++) {
 	    centers[i][j][k] = Center();
 	  }
@@ -151,6 +153,26 @@ void SimplexData::setHeight(const float* a, const int& numLev)
     height[i] = a[i];
 }
 
+float SimplexData::getRadius(const int& i) const
+{
+  if (i < numRadii)
+    return radius[i];
+  return radius[0];
+}
+
+
+void SimplexData::setRadius(const int& index, const float& newRadius)
+{
+  if (index < numRadii)
+    radius[index] = newRadius;
+}
+
+void SimplexData::setRadius(const float* a, const int& numRad)
+{
+  for (int i = 0; i < numRad; i++)
+    radius[i] = a[i];
+}
+
 QDateTime SimplexData::getTime() const
 {
   return time;
@@ -238,6 +260,16 @@ void SimplexData::setCenter(const int& lev, const int& rad,
   centers[lev][rad][waveNum] = newCenter;
 }
 
+int SimplexData::getNumPointsUsed() const
+{
+  return numPointsUsed;
+}
+
+void SimplexData::setNumPointsUsed(const int& i)
+{
+  numPointsUsed = i;
+}
+
 bool SimplexData::operator ==(const SimplexData &other)
 {
   if(this->time == other.time)
@@ -265,10 +297,11 @@ bool SimplexData::isNull()
     if(meanX[0][0] == velNull)
       if(meanY[0][0] == velNull)
 	if(height[0]== velNull)
-	  if(meanVT[0][0] == velNull)
-	    if(numConvergingCenters[0][0]==(int)velNull)
-	      if(centers[0][0][0].isNull())
-		return true;
+	  if(radius[0] == velNull)
+	    if(meanVT[0][0] == velNull)
+	      if(numConvergingCenters[0][0]==(int)velNull)
+		if(centers[0][0][0].isNull())
+		  return true;
   }
   return false;
 }
@@ -294,6 +327,7 @@ void SimplexData::printString()
     out<<"  meanX @ level:"+ii+": "+QString().setNum(getX(i,0)) <<endl;
     out<<"  meanY @ level:"+ii+": "+QString().setNum(getY(i,0)) << endl;
     out<<"  height @ level:"+ii+": "+QString().setNum(getHeight(i)) << endl;
+    out<<"  first Radius: "+QString().setNum(getRadius(0)) << endl;
     out<<"  centerStdDev @ level:"+ii+": ";
     out<<         QString().setNum(getCenterStdDev(i,0)) << endl;
     out<<"  maxVT @ level:"+ii+": ";

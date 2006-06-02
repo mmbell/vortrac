@@ -17,6 +17,7 @@
 SimplexThread::SimplexThread(QObject *parent)
   : QThread(parent)
 {
+  velNull = -999.;
   abort = false;
 }
 
@@ -432,38 +433,40 @@ float SimplexThread::simplexTest(float**& vertex,float*& VT,float*& vertexSum,
 	return VTtest;
 
 }
-/*
+
 bool SimplexThread::chooseCenter()
 {
+initialize();
+//perlChooseCenter();
 
-
-
+ return false;
 }
 
 bool SimplexThread::initialize()
 {
   QDomElement ccElement = configData->getConfig("choosecenter");
-  distWeight = config->getParam(ccElement, QString("dist_weight")).toFloat();
-  windWeight = config->getParam(ccElement, QString("wind_weight")).toFloat();
-  stdWeight = config->getParam(ccElement, QString("stddev_weight")).toFloat();
-  ptsWeight = config->getParam(ccElmenet, QString("pts_weight")).toFloat();
-  int fPercent = config->getParam(ccElement, QString("stats")).toInt();
-  QDate sDate = QDate::fromString(config->getParam(ccElement, 
+  
+  distWeight = configData->getParam(ccElement, QString("dist_weight")).toFloat();
+  windWeight = configData->getParam(ccElement, QString("wind_weight")).toFloat();
+  stdWeight = configData->getParam(ccElement, QString("stddev_weight")).toFloat();
+  ptsWeight = configData->getParam(ccElement, QString("pts_weight")).toFloat();
+  int fPercent = configData->getParam(ccElement, QString("stats")).toInt();
+  QDate sDate = QDate::fromString(configData->getParam(ccElement, 
 						   QString("startdate")),
 				  Qt::ISODate);
-  QDate eDate = QDate::fromString(config->getParam(ccElement, 
+  QDate eDate = QDate::fromString(configData->getParam(ccElement, 
 						   QString("enddate")),
 				  Qt::ISODate);
-  QTime sTime = QTime::fromString(config->getParam(ccElement, 
+  QTime sTime = QTime::fromString(configData->getParam(ccElement, 
 						   QString("starttime")),
 				  Qt::ISODate);
-  QTime eTime = QTime::fromString(config->getParam(ccElement,
+  QTime eTime = QTime::fromString(configData->getParam(ccElement,
 						   QString("endtime")),
 				  Qt::ISODate);
   startTime = QDateTime(sDate);
   startTime.setTime(sTime);
   endTime = QDateTime(eDate);
-  endTime.setTimsimplexResults[i].getNumRadiie(eTime);
+  endTime.setTime(eTime);
 
   // Didn't initialize weightscheme array, see if we need this first
 
@@ -532,42 +535,214 @@ bool SimplexThread::initialize()
     fCriteria[28] = 4.1830;  
     fCriteria[29] = 4.1709;
   }
+  return false;
 }
-
+/*
 bool SimplexThread::perlChooseCenter()
 {
+  bestRadius = new int*[simplexResults.count()];
+  centerDev = new float[simplexResults.count()];
+  radiusDev = new float[simplexResults.count()];
+  score = new float**[simplexResults.count()];
   for(int i = 0; i < simplexResults.count(); i++) {
+    bestRadius[i] = new int[simplexResults[i].getNumLevels()];
+    score[i] = new float*[simplexResults[i].getNumRadii()];
+    for(int rad = 0; rad < simplexResults[i].getNumRadii(); rad++) 
+      score[i][rad] = new float[simplexResults[i].getNumLevels()];
     float radiusSum = 0;
     float xSum = 0; 
-    ySum = 0;
-    for(int k = kmin; k < simplexResults[i].getNumLevels; k++) {
+    float ySum = 0;
+    for(int k = 0; k < simplexResults[i].getNumLevels(); k++) {
+      int lastj = -1;
+      float *winds = new float[simplexResults[i].getNumRadii()];
+      float *stds = new float[simplexResults[i].getNumRadii()];
+      float *pts = new float[simplexResults[i].getNumRadii()];
       float bestWind = 0.;
       float bestStd = 50.;
       float bestPts = 0.;
-      float jPtr = 0;
-      for(int j = 0; j < simplexResults[i].getNumRadii; j++) {
-	float *winds = new float[simplexResults[i].getNumRadii];
+      float ptRatio = (float)simplexResults[i].getNumPointsUsed()/2.718281828;
+      for(int j = 0; j < simplexResults[i].getNumRadii(); j++) {
 	winds[j] = velNull;
-	float *stds = new float[simplexResults[i].getNumRadii];
 	stds[j] = velNull;
-	float *pts = new float[simplexResults[i].getNumRadii];
 	pts[j] = velNull;
-	if(simplexResults[i].getMaxVT(k,j)!=velNull)
+	if(simplexResults[i].getMaxVT(k,j)!=velNull) {
 	  winds[j] = simplexResults[i].getMaxVT(k,j);
-	if(simplexResults[i].getCenterStdDev(k,j)!=velNull)
+	  if(winds[j] > bestWind)
+	    bestWind = winds[j];
+	}
+	if(simplexResults[i].getCenterStdDev(k,j)!=velNull) {
 	  stds[j] = simplexResults[i].getCenterStdDev(k,j);
-	if(simplexResults[i].getNumConvergingCenters(k,j)!=velNull)
+	  if(stds[j] < bestStd)
+	    bestStd = stds[j];
+	}
+	if(simplexResults[i].getNumConvergingCenters(k,j)!=velNull) {
 	  pts[j] = simplexResults[i].getNumConvergingCenters(k,j);
+	  if(pts[j] > bestPts)
+	    bestPts = pts[j];
+	}
+      }
 
-	   // This last one should be about converging centers 
-	   // stoped work on this to do some testing of simplexList
-	   // and add a converging centers thing
-
+      // Formerlly know as fix winds
+      
+      int count = 0;
+      float *peakWinds = new float[simplexResults[i].getNumRadii()];
+      float *peaks = new float[simplexResults[i].getNumRadii()];
+      float meanPeak,meanStd;
+      for(int a = 1; a < simplexResults[i].getNumRadii()-1; a++) {
+	if((winds[a] >= winds[a-1])&&(winds[a] >=winds[a+1])) {
+	  peakWinds[count] = winds[a];
+	  count++;
+	  peaks[a] = 1;
+	}
+	else {
+	  peaks[a]=0;
+    	}
+      }
+      float windSum = 0;
+      for(int a = 0; a < count; a++) {
+	windSum += peakWinds[a];
+      }
+      if(count>0) {
+	meanPeak = windSum/((float)count);
+	meanStd = 0;
+	for(int z = 0; z < count; z++) 
+	  meanStd += (peakWinds[z]-meanPeak)*(peakWinds[z]-meanPeak);
+	meanStd/=count;
+      }
+      else {
+	meanStd = 0;
+	peakWinds = winds;
+      }
+      
+      // End of function formally known as fix winds
+      // returned meanpeak, meanstd, peaks[array]
+      
+      for(int jj = 0; jj < simplexResults[i].getNumRadii()-1; jj++) {
+	if(((jj>0)&&(jj<simplexResults[i].getNumRadii()-1))
+	   &&((peakWinds[jj]==1)||(peakWinds[jj+1]==1)||(peakWinds[jj-1]))) {
+	  winds[jj] = simplexResults[i].getMaxVT(k,jj);
+	}
+	else {
+	  winds[jj] = velNull;
+	}
 	
-      }    
-    }    
-  }
-
-
+	if(winds[jj]!=velNull) {     // my version of sorting
+	  if(winds[jj] > bestWind) {
+	    bestWind = winds[jj];      
+	  }
+	}
+	
+	
+	// bests from eachs were assigned earilier
+	
+	float tempBest = 0;
+	// int bestIndex = 0;  wrong place to declare this ?
+	for(int j = 0; j < simplexResults[i].getNumRadii(); j++) {
+	  score[i][j][k] = velNull;
+	  float windScore = 0;
+	  float stdScore = 0;
+	  float ptsScore = 0;
+	  //for(int w = 0; w <= #weightSchemes; w++) {
+	  // Mike says we only need to run this once
+	  // assign windWeight, stdWeight, ptsWeight, but not
+	  // distWeight cause we are droping it
+	  if((bestWind!=0)&&(winds[j]!=velNull))
+	    windScore = exp(winds[j]-bestWind)*windWeight;
+	  if(stds[j]!=velNull)
+	    stdScore = bestStd/stds[j]*stdWeight;
+	  if((bestPts!=0)&&(pts[j]!=velNull))
+	    ptsScore = log((float)pts[j]/ptRatio)*ptsWeight;
+	  
+	  // How do we get log without log(const Message)??
+	  
+	  if(winds[j]!=velNull) {
+	    // We don't want any score if the wind didn't hit near peak
+	    score[i][j][k] = windScore+stdScore+ptsScore;
+	    // I think we might want this to be totalscore too........
+	    // ps score was never declared the original version had a w index
+	    // totalScore was just suming them up over the w's
+	    // but that was commented out???
+	    
+	    
+	    // Use default weight scheme to set radius and mean 
+	    if((score[i][j][k] > tempBest)&&(k>=0)
+	       &&(k<=simplexResults[i].getNumLevels())) {
+	      tempBest = score[i][j][k];
+	      if(lastj == -1){
+		// sort through to find the highest scoring x,y,radius
+		// for each level, later we will sum those together over 
+		// all levels and take the mean; if this is the first acceptable
+		// radius found in a level we know because lastj is still set to 
+		// -1, otherwise the value that was formerly the best must be
+		// subtracted from the sums.
+		lastj = j;
+		radiusSum += simplexResults[i].getRadius(j);
+		// gives the actual distance of the radius not just index
+		xSum+= simplexResults[i].getX(j,k);
+		ySum+= simplexResults[i].getY(j,k);
+	      }
+	      else {
+		// if we have found a higher scoring radius on the same level
+		// remove the old one and add the new
+		// consider changing jLast to jHigh or something, jBest mayber
+		radiusSum -= simplexResults[i].getRadius(j);
+		// gives the actual distance of the radius not just index	     
+		xSum-=simplexResults[i].getX(lastj,k);
+		ySum-=simplexResults[i].getY(lastj,k);
+		
+		radiusSum += simplexResults[i].getRadius(j);
+		xSum+=simplexResults[i].getX(j,k);
+		ySum+=simplexResults[i].getY(j,k);
+	      }
+	    }
+	  }
+	}
+      }
+      // calculate the mean radius and center scores over all levels
+      float numLevels = simplexResults[i].getNumLevels(); 
+      // what is the current level index verses height issue
+      float meanRadius = radiusSum/numLevels;
+      float meanXChoose = xSum/numLevels;
+      float meanYChoose = ySum/numLevels;
+      
+      //if(opt_i){
+      //   calc_radscore();   we don't need this it is only related to crazy
+      //}                     weight scheme stuff
+      
+      
+      for(int k = 0; k <= simplexResults[i].getNumLevels(); k++) {
+	int bestIndex;
+	for(int j = 0; j < simplexResults[i].getNumRadii(); j++) {
+	  //score[i][j][k] /=(numWeightSchemes+1);
+	  // totalscore[i][j][k] /=(numWeightSchemes+1);
+	  // This was 2 in the code at least cause we added the max VTC0 default
+	  // to whatever was in the file, I think this is one here
+	}
+	float bestScore = 0;
+	for(int j = 0; j < simplexResults[i].getNumRadii(); j++) {
+	  //if(totalScore[i][j][k] > bestScore) {
+	  //  bestScore = totalScore[i][j][k];
+	  //  bestIndex = j;
+	  //}
+	  if(score[i][j][k] > bestScore) {
+	    bestScore = score[i][j][k];
+	    bestIndex = j;
+	  }
+	}
+	bestRadius[i][k] = bestIndex;
+      }
+      // Calculate initial standard deviations of radius and center
+      centerDev[i] = 0;
+      radiusDev[i] = 0;
+      
+      for(int k = 0; k <= simplexResults[i].getNumLevels(); k++) {
+	int j = bestRadius[i][k];
+	float radLength = simplexResults[i].getRadius(j);
+	radiusDev[i] +=(meanRadius-radLength)*(meanRadius-radLength);
+	centerDev[i] +=sqrt(centerDev[i]/numLevels);
+	// Do these get put in the simplexData???
+      }
+    }
+  } 
 }
 */

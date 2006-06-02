@@ -45,7 +45,7 @@ class Center
 
  private:
 
-    static const float velNull = -999.;
+    float velNull;
 
     float x;
     float y;

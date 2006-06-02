@@ -116,15 +116,12 @@ bool SimplexList::openNodeFile(const QDomNode &newNode)
       QString newName, newRadar, newType, newTime;
       if(childElement.tagName().startsWith(QString("simplex"))) {
 	newName = newConfig->getParam(childElement, "name");
-	//newConfig->setParam(childElement, QString("name"), vortexName);
 	newRadar = newConfig->getParam(childElement, "radar");
-	//newConfig->setParam(childElement, QString("radar"), radarName);
 	newType = newConfig->getParam(childElement, "product");
-	//newConfig->setParam(childElement, QString("product"), 
-	//		    QString("simplex"));
-	//newConfig->addDom(childElement, QString("time"), nodeTimeString);
 	newTime = newConfig->getParam(childElement, "time");
 	newData.setTime(QDateTime::fromString(newTime, Qt::ISODate));
+	newData.setNumPointsUsed(newConfig->getParam(childElement, 
+						     "numpoints").toInt());
 	// Check to make sure these line up........
       }
       else {
@@ -236,6 +233,10 @@ void SimplexList::createDomSimplexDataEntry(const SimplexData &newData)
   newConfig->setParam(header, "name", vortexName);
   newConfig->setParam(header, "radar", radarName);
   newConfig->setParam(header, "product", "simplex");
+
+  newConfig->addDom(header, "time", newData.getTime().toString(Qt::ISODate));
+  newConfig->addDom(header, "numpoints", 
+		      QString().setNum(newData.getNumPointsUsed()));
   
   for(int i = 0; i < newData.getNumLevels(); i++) {
     for(int j = 0; j < newData.getNumRadii(); j++) {

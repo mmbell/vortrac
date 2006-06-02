@@ -36,8 +36,9 @@ class SimplexThread : public QThread
 			 float *vortexLat, float *vortexLon);
 	 
 
-	 //bool chooseCenter();
-	 //bool initialize();
+	 bool chooseCenter();
+	 bool initialize();
+	 //bool perlChooseCenter();
 	 
  public slots:
      void catchLog(const Message& message);
@@ -87,8 +88,13 @@ class SimplexThread : public QThread
 	 QDomElement chooseCElem;
 	 float distWeight, windWeight, stdWeight, ptsWeight;
 	 float fCriteria[30];
-	 QDateTime startTime, stopTime;
-	 //const float velNull = -999;
+	 QDateTime startTime, endTime;
+	 float velNull;
+	 float*** score;
+	 float *centerDev, *radiusDev;
+	 int **bestRadius;
+	 
+	 
 
 };
 

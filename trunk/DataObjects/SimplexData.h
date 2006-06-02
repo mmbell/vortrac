@@ -35,6 +35,10 @@ class SimplexData
   void setHeight(const int& index, const float& height);
   void setHeight(const float* a, const int& howMany);
 
+  float getRadius(const int& i) const;
+  void setRadius(const int& index, const float& newRadius);
+  void setRadius(const float* a, const int& numRad);
+
   float getCenterStdDev(const int& lev, const int& rad) const;
   void setCenterStdDev(const int& lev, const int& rad, const float& number);
   void setCenterStdDev(const float** a, const int& numLev, const int& numRad);
@@ -60,6 +64,9 @@ class SimplexData
   void setCenter(const int& lev, const int& rad, 
 		 const int& center, const Center &newCenter);
 
+  int getNumPointsUsed() const;
+  void setNumPointsUsed(const int& i);
+
   bool operator ==(const SimplexData &other);
   bool operator < (const SimplexData &other);
   bool operator > (const SimplexData &other);
@@ -83,9 +90,17 @@ class SimplexData
   int numRadii;
   int numCenters;
 
+  int numPointsUsed;
+
   float meanX[maxLevels][maxRadii];
   float meanY[maxLevels][maxRadii];
+
   float height[maxLevels];
+  float radius[maxRadii];
+  // These two members hold absolute values of the distances the represent
+  // since the area of interest might have non-interger units, or be offset
+  // physically while still occupying the lowest index
+
   float centerStdDeviation[maxLevels][maxRadii];
 
   int numConvergingCenters[maxLevels][maxRadii];

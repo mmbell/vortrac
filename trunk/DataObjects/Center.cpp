@@ -14,6 +14,7 @@
 Center::Center(const float& newX, const float& newY, const float& vel,
 	       const float& newLevel, const float& newRadius)
 {
+  velNull = -999.;
   x = newX;
   y = newY;
   radius = newRadius;
