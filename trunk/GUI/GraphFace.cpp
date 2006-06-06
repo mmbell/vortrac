@@ -79,8 +79,8 @@ GraphFace::GraphFace(QString& title, QWidget *parent)
 
 GraphFace::~GraphFace()
 {
-  QFile autoImage(workingDirectory+autoImageName);
-  autoImage.remove();
+  //QFile autoImage(workingDirectory+autoImageName);
+  //autoImage.remove();
 
   delete VortexDataList;
   delete dropList;
@@ -1197,7 +1197,7 @@ void GraphFace::updateImage()
   if (painter->isActive())
     painter->end();
   image = temp;
-  autoSave(workingDirectory+autoImageName);
+  //autoSave(workingDirectory+autoImageName);
 }
 
 

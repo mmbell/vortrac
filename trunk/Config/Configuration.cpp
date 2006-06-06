@@ -115,6 +115,13 @@ bool Configuration::write(const QString &filename)
   return false;
 }
 
+bool Configuration::isNull()
+{
+  if(!domDoc.isNull())
+    return true;
+  return false;
+}
+
 QDomElement Configuration::getConfig(const QString &configName)
 {
 

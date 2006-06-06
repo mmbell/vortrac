@@ -23,7 +23,8 @@
 #include "VTD/GBVTD.h"
 #include "DataObjects/Coefficient.h"
 #include "DataObjects/SimplexList.h"
-//#include "DataObjects/Center.h"
+#include "ChooseCenter.h"
+
 
 class SimplexThread : public QThread
 {
@@ -34,12 +35,7 @@ class SimplexThread : public QThread
      ~SimplexThread();
 	 void findCenter(Configuration *wholeConfig, GriddedData *dataPtr, 
 			 float *vortexLat, float *vortexLon);
-	 
 
-	 bool chooseCenter();
-	 bool initialize();
-	 //bool perlChooseCenter();
-	 
  public slots:
      void catchLog(const Message& message);
    
@@ -85,14 +81,9 @@ class SimplexThread : public QThread
 			   QString& velField, int& high,double factor);
 	 
 	 // Choosecenter variables
-	 QDomElement chooseCElem;
-	 float distWeight, windWeight, stdWeight, ptsWeight;
-	 float fCriteria[30];
-	 QDateTime startTime, endTime;
 	 float velNull;
-	 float*** score;
-	 float *centerDev, *radiusDev;
-	 int **bestRadius;
+	 ChooseCenter *centerFinder;
+ 
 	 
 	 
 

@@ -34,6 +34,7 @@ bool Matrix::lls(const int &numCoEff,const int &numData,
    * stError is a product containing the estimated error for each
    *  coefficent in coEff, (numCoEff rows)
    * stDeviation is the estimated standard deviation of the regression
+   *
    */
 
   if(numData < numCoEff) {

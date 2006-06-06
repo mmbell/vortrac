@@ -32,6 +32,7 @@ class Configuration:public QObject
   QDomNodeList* getGroupList();
   bool read(const QString &filename);
   bool write(const QString &filename);
+  bool isNull();
   
   QDomElement getConfig(const QString &configName);
   QDomElement getConfig(const QString &configName,

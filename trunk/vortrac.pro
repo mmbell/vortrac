@@ -46,7 +46,8 @@ HEADERS += DataObjects/PressureData.h \
            Radar/Ray.h \
            Radar/Sweep.h \
            VTD/GBVTD.h \
-           Math/Matrix.h
+           Math/Matrix.h \
+           ChooseCenter.h 
 SOURCES += main.cpp \
            DataObjects/PressureData.cpp \
            Threads/AnalysisThread.cpp \
@@ -86,7 +87,8 @@ SOURCES += main.cpp \
            Radar/Ray.cpp \
            Radar/Sweep.cpp \
            VTD/GBVTD.cpp \
-           Math/Matrix.cpp
+           Math/Matrix.cpp \
+           ChooseCenter.cpp 
 F95 = gfortran
 g95.output = ${QMAKE_FILE_BASE}.o
 g95.commands = $$F95 -c -g  -O0 ${QMAKE_FILE_NAME} \
