@@ -16,7 +16,7 @@ SimplexData::SimplexData()
   numLevels = maxLevels;
   numRadii = maxRadii;
   numCenters = maxCenters;
-
+  velNull = -999.; 
   for(int i = 0; i < numLevels; i++)
     {
       height[i] = velNull;

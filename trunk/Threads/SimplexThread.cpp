@@ -103,7 +103,7 @@ void SimplexThread::run()
 		float convergeCriterion = configData->getParam(simplexConfig, 
 					 QString("convergence")).toFloat();
 		float maxIterations = configData->getParam(simplexConfig, 
-					 QString("maxIterations")).toFloat();
+					 QString("maxiterations")).toFloat();
 		float ringWidth = configData->getParam(simplexConfig, 
 					 QString("ringwidth")).toFloat();
 		int maxWave = configData->getParam(simplexConfig, 
@@ -189,15 +189,16 @@ void SimplexThread::run()
 					
 					// Run the simplex search loop
 					getVertexSum(vertex,vertexSum);
-					for(;;) {
-						int numIterations = 0;
-						int low = 0;
-						int mid = 0;
-						int high = 0;
-						VTsolution = 0;
-						Xsolution = 0;
-						Ysolution = 0;
+					int numIterations = 0;
+					VTsolution = 0;
+					Xsolution = 0;
+					Ysolution = 0;
+					int low = 0;
+					int mid = 0;
+					int high = 0;
 						
+					for(;;) {
+						low = 0;
 						// Sort the initial guesses
 						high = VT[0] > VT[1] ? (mid = 1,0) : (mid = 0,1);
 						for (int v=0; v<=2; v++) {
@@ -435,12 +436,5 @@ float SimplexThread::simplexTest(float**& vertex,float*& VT,float*& vertexSum,
 	return VTtest;
 
 }
-
-
-
-
-
-
-
 
 

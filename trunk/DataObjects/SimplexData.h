@@ -84,8 +84,8 @@ class SimplexData
   static const int maxLevels = 15;
   static const int maxRadii = 30;
   static const int maxCenters = 25;
-  static const float velNull = -999.;
-
+  float velNull;
+ 
   int numLevels;
   int numRadii;
   int numCenters;
