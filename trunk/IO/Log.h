@@ -16,6 +16,7 @@
 #include <QString>
 #include <QFile>
 #include <QDomElement>
+#include <QDir>
 #include "Message.h"
 
 class Log : public QWidget
@@ -30,8 +31,8 @@ class Log : public QWidget
   QString getLogFileName() { return logFileName; }
 
  public slots:
-  void setWorkingDirectory(const QString& newDir);
-  void setLogFileName(const QString& newName);
+  void setWorkingDirectory(QDir& newDir);
+  void setLogFileName(QString& newName);
   void catchLog(const Message& logEntry);
 
     
@@ -43,7 +44,7 @@ class Log : public QWidget
  private:
   QString logFileName;
   QFile *logFile;
-  QString workingDirectory;
+  QDir workingDirectory;
   int absoluteProgress;
   bool displayLocation;
 

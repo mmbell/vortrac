@@ -17,6 +17,7 @@
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QDir>
 
 RadarListDialog::RadarListDialog(QWidget *parent, Configuration *initialConfig)
   :QDialog(parent)
@@ -29,7 +30,7 @@ RadarListDialog::RadarListDialog(QWidget *parent, Configuration *initialConfig)
    * from SoloII and are contained in the file vortrac_radarList.xml
    */
 
-  xmlFileName = QString("/Users/mbell/Development/vortrac/trunk/vortrac_radarList.xml");
+  xmlFileName = QString("vortrac_radarList.xml");
  
   // radars is the Configuration class interface for working with xml files
   radars = initialConfig;
@@ -274,7 +275,7 @@ void RadarListDialog::savePressed()
 
   // Attempts to save changes made to the configuration perminant in the 
   // xml radar list
-  if(!radars->write(xmlFileName))
+  if(!radars->write(QDir::current().filePath(xmlFileName)))
     emit log(Message("Error Saving XML Radar List"));
 
   // Repopulates drop down menus with new information

@@ -42,7 +42,7 @@ class AnalysisPage : public QWidget
   bool saveFile(const QString &fileName);
   QString getVortexLabel() { return vortexLabel; }
   QString currentFile() { return configFileName; }
-  QString getWorkingDirectory() { return workingDirectory; }
+  QDir getWorkingDirectory() { return workingDirectory; }
   void setVortexLabel();
   bool maybeSave();
   void saveDisplay();
@@ -87,7 +87,7 @@ class AnalysisPage : public QWidget
   bool isUntitled;
   GraphFace* graph;
   ConfigurationDialog *configDialog;
-  QString workingDirectory;
+  QDir workingDirectory;
   QString imageFileName;
   QLCDNumber *currPressure;
   QLCDNumber *currRMW;

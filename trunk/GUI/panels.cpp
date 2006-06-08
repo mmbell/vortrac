@@ -143,10 +143,9 @@ RadarPanel::RadarPanel()
 {
   QLabel *radarNameLabel = new QLabel(tr("Radar Name:"));
   radarName = new QComboBox();
-  radars = new Configuration(this,QString("vortrac_radarList.xml"));
+  radars = new Configuration(this,QDir::current().filePath(QString("vortrac_radarList.xml")));
   connect(radars, SIGNAL(log(const Message&)),
 	  this, SLOT(catchLog(const Message&)));
-  radars->read(QString("vortrac_radarList.xml"));
   QDomNodeList radarList = 
     radars->getRoot().childNodes();
   for (int i = 0; i <= radarList.count()-1; i++) 

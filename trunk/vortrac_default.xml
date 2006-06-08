@@ -4,7 +4,7 @@
      <name>New Hurricane</name>
      <lat>0.00</lat>
      <lon>0.00</lon>
-     <dir>workingDirs/</dir>
+     <dir>/scr/science40/mauger/Working/trunk/test/</dir>
   </vortex>
   <radar>
      <name>WSR-88D</name>
@@ -19,7 +19,7 @@
      <endtime>00:00:00</endtime>
   </radar>
   <cappi>
-     <dir>/path/to/cappi/output</dir>
+     <dir>test/cappi/</dir>
      <xdim>200.0</xdim>
      <ydim>200.0</ydim>
      <zdim>5.0</zdim>
@@ -31,7 +31,7 @@
      <interpolation>bilinear</interpolation>
   </cappi>
   <center>
-     <dir>/path/to/center/output</dir>
+     <dir>test/simplex/</dir>
      <geometry>GBVTD</geometry>
      <closure>original</closure>
      <reflectivity>DZ</reflectivity>
@@ -52,7 +52,7 @@
      <maxdatagap wavenum="1">120</maxdatagap>
    </center>
    <choosecenter>
-     <dir>/path/to/choose/center/output</dir>
+     <dir>test/chooseCenter/</dir>
      <filename>nameOfCenterListFile</filename>
      <startdate>2005-01-01</startdate>
      <enddate>2005-01-02</enddate>
@@ -68,7 +68,7 @@
      <stats>99</stats>
    </choosecenter>
    <vtd>
-     <dir>/path/to/vtd/output</dir>
+     <dir>test/vtd/</dir>
      <geometry>GBVTD</geometry>
      <closure>original</closure>
      <reflectivity>DZ</reflectivity>

@@ -19,23 +19,25 @@ Log::Log(QWidget *parent)
   connect(this, SIGNAL(log(const Message&)),
 	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
   
-  workingDirectory = QString("workingDirs/");
+  workingDirectory = QDir::current();
   logFileName = QString("autoLog");
 
-  logFile = new QFile(workingDirectory+logFileName+".log");
+  logFile = new QFile(workingDirectory.filePath(logFileName+".log"));
   int i = 1;
   QString newName(logFileName);
   while(logFile->exists())
     {
       i++;
       newName = logFileName+QString().setNum(i);
-      logFile = new QFile(workingDirectory+newName+".log");
+      logFile = new QFile(workingDirectory.filePath(newName+".log"));
     }
 
   logFileName = newName + ".log";
 
   absoluteProgress = 0;
   displayLocation = false;
+
+  //Message::toScreen("log:constructor: "+workingDirectory.path());
 }
 
 Log::~Log()
@@ -43,51 +45,78 @@ Log::~Log()
 
 }
 
-void Log::setWorkingDirectory(const QString& newDir)
+void Log::setWorkingDirectory(QDir& newDir)
 {
-  QString newFileName("autoLog.log");
-  
-  /*
-  QFile* newLogFile = new QFile(newDir+newFileName);
-  
-    Best plan of action for if log files already exist there??
-  if(newLogFile->exists()) {
-    QFile* newLogFile = new QFile(newDir+newFileName+".log");
+  if(newDir.exists()) {
+    //Message::toScreen("Path does exist");
   }
-  */
-  logFile->copy(newDir+logFileName);
-  logFile->remove();
-  workingDirectory = newDir;
-  logFileName = newFileName;
-  logFile = new QFile(workingDirectory+logFileName);
+  else {
+    //Message::toScreen("Path does not exist yet");
+    newDir.mkpath(newDir.path());
+    if(newDir.exists()) {
+      //Message::toScreen("Path exists NOW?");
+    }
+  }
+  if(!newDir.isAbsolute())
+    newDir.makeAbsolute();
+
+  QString newFileName("autoLog");
+  QFile* newLogFile = new QFile(newDir.filePath(newFileName+".log"));
+  int i = 1;
+  QString newName(newFileName);
+  while(newLogFile->exists())
+    {
+      i++;
+      newName = newFileName+QString().setNum(i);
+      newLogFile = new QFile(workingDirectory.filePath(newName+".log"));
+    }
+  newFileName = newName+".log";
+
+  if(!logFile->copy(newDir.filePath(newFileName))) {
+    //Message::toScreen("Log::setWorkingDirectory: could not copy "+logFile->fileName()+" to "+newDir.filePath(logFileName));
+  }
   
+  logFile->remove();
+  //Message::toScreen("log:beforeChange: "+workingDirectory.path());
+  workingDirectory = newDir;
+  //Message::toScreen("log:afterChange: "+workingDirectory.path());
+  logFileName = newFileName;
+  logFile = new QFile(workingDirectory.filePath(logFileName));
+  //Message::toScreen(" after working dir changed file = "+logFile->fileName());
   
 }
 
-void Log::setLogFileName(const QString& newName) 
+void Log::setLogFileName(QString& newName) 
 {
-  QFile *newFile = new QFile(workingDirectory+newName);
+  // check and see if it has a file extension
+  if(!newName.contains(QString(".log")))
+    if(!newName.contains(QString(".")))
+      newName.append(QString(".log"));
+	// if not, then add .log extension
+
+  QFile *newFile = new QFile(workingDirectory.filePath(newName));
 
   if(newFile->exists())
     {
       newFile->remove();
     }
 
-  logFile->copy(workingDirectory+newName);
+  if(!logFile->copy(workingDirectory.filePath(newName)))
+    //Message::toScreen("Log::setWorkingDirectory: could not copy "+logFile->fileName()+" to "+workingDirectory.filePath(newName));
   logFileName = newName;
-  logFile = new QFile(workingDirectory+logFileName);
+  logFile = new QFile(workingDirectory.filePath(logFileName));
   
 }
 
 bool Log::saveLogFile()
 {
- QString saveName=QFileDialog::getSaveFileName(this, QString(tr("Save Status Log File as...")), workingDirectory, QString(tr("Text Files *.txt")));
+ QString saveName=QFileDialog::getSaveFileName(this, QString(tr("Save Status Log File as...")), workingDirectory.path(), QString(tr("Text Files *.txt")));
   if(!saveName.isEmpty()) {
     if(logFile->copy(saveName)) {
       return true;
     }
     else {
-      emit log(Message(tr("Failed to save log file")));
+      Message::toScreen(tr("Failed to save log file"));
       return false;
     }
   }
@@ -96,16 +125,34 @@ bool Log::saveLogFile()
 
 bool Log::saveLogFile(const QString& fileName)
 {
-  QFile newLogFile(fileName);
-  if(newLogFile.exists())
-    newLogFile.remove();
+  QString checkFileName(fileName);
+  int lastSlash = checkFileName.lastIndexOf(QString("/"));
+  checkFileName.truncate(lastSlash);
+  QDir check(checkFileName);
+  QFile *newLogFile;
+  if(check.isAbsolute())
+    newLogFile = new QFile(fileName);
+  else 
+    newLogFile = new QFile(workingDirectory.filePath(fileName));
   
-  if(logFile->copy(fileName)) {
-    return true;
-  }
+  if(newLogFile->exists())
+    newLogFile->remove();
+  if(check.isAbsolute())
+    if(logFile->copy(fileName)) {
+      return true;
+    }
+    else {
+      Message::toScreen(tr("Failed to save log file"));
+      return false;
+    }
   else {
-    log(Message(tr("Failed to save log file")));
-    return false;
+    if(logFile->copy(workingDirectory.filePath(fileName))) {
+      return true;
+    }
+    else {
+      Message::toScreen(tr("Failed to save log file"));
+      return false;
+    }
   }
 }
 
@@ -141,9 +188,10 @@ bool Log::writeToFile(const QString& message)
     {
       logFile->write(message.toAscii());
       logFile->close();
+      //Message::toScreen("Sucessfully saved to file named "+logFile->fileName());
       return true;
     }
 
-  Message::toScreen("Failed to write Log message to file");
+  // Message::toScreen("Failed to write Log message to file");
   return false;
 }

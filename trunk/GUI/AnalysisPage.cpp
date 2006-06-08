@@ -174,9 +174,8 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   connect(&pollThread, SIGNAL(log(const Message&)),
 	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
 
-  connect(this, SIGNAL(saveGraphImage(const QString&)),
-	   graph, SLOT(saveImage(const QString&)));
-  
+  //connect(this, SIGNAL(saveGraphImage(const QString&)),
+  //   graph, SLOT(saveImage(const QString&)));
   
 }
 
@@ -189,12 +188,12 @@ void AnalysisPage::newFile()
 {
 
   // Load the default configuration
-  if (!loadFile("vortrac_default.xml"))
+  if (!loadFile(QDir::current().filePath("vortrac_default.xml")))
     emit log(Message("Couldn't load default configuration"));
   
   // Set the current filename to untitled
   isUntitled = true;
-  configFileName = "vortrac_newconfig.xml";
+  configFileName = QDir::current().filePath("vortrac_newconfig.xml");
 
 }
 
@@ -210,9 +209,23 @@ bool AnalysisPage::loadFile(const QString &fileName)
 
   // Set the filename
   configFileName = fileName;
-  workingDirectory = configData->getParam(configData->getConfig("vortex"),
-					  "dir");
- 
+  QString directoryString(configData->getParam(configData->getConfig("vortex"),
+					       "dir"));
+  workingDirectory = QDir(directoryString);
+  //Message::toScreen(workingDirectory.path());
+  if(!workingDirectory.isAbsolute()) {
+    emit log(Message("this was the problem"));
+    workingDirectory.makeAbsolute();
+  }
+  // Check to make sure the workingDirectory exists
+  if(!workingDirectory.exists())
+    if(!workingDirectory.mkpath(directoryString)) {
+      emit log(Message("failed to find or create working directory path: "+directoryString));
+      return false;
+    }
+  //Message::toScreen("2"+workingDirectory.path());
+  statusLog->setWorkingDirectory(workingDirectory);
+  //graph->setWorkingDirectory(workingDirectory);
   return true;
 }
 
@@ -280,12 +293,13 @@ void AnalysisPage::setVortexLabel()
 
 void AnalysisPage::closeEvent(QCloseEvent *event)
 {
-  Message::toScreen("closeEvent");
+  //Message::toScreen("closeEvent");
   if (maybeSave()) 
     {
-      Message::toScreen("Do We Get To Close Event?");
+      //Message::toScreen("Do We Get To Close Event?");
       QString autoLogName = statusLog->getLogFileName();
-      QFile autoLog(workingDirectory+autoLogName);
+      //Message::toScreen("CloseEvent "+workingDirectory.path());
+      QFile autoLog(workingDirectory.filePath(autoLogName));
       autoLog.remove();
       event->accept();
     } 
@@ -319,15 +333,19 @@ void AnalysisPage::updatePage()
   setVortexLabel();
   QString temp = getVortexLabel();
   emit(tabLabelChanged(temp));
-  if(workingDirectory != configData->getParam(configData->getConfig("vortex"), 
-					      "dir"))
-    {
-      workingDirectory = configData->getParam(configData->getConfig("vortex"),
-					      "dir");
-      statusLog->setWorkingDirectory(workingDirectory);
-      //graph->changeWorkDir(workingDirectory);
+  //Message::toScreen("updatepage before "+workingDirectory.path());
+  QString newPathString(configData->getParam(configData->getConfig("vortex"), 
+					     "dir"));
+  QDir newPath(newPathString);
+  if(newPath.isRelative())
+    newPath.makeAbsolute();
+  if(newPath!=workingDirectory) {
+    workingDirectory = newPath;
+    statusLog->setWorkingDirectory(workingDirectory);
+    //graph->setWorkingDirectory(workingDirectory);
       
     }
+  //Message::toScreen("updatePage after "+workingDirectory.path());
 }
 
 void AnalysisPage::runThread()
@@ -399,8 +417,9 @@ void AnalysisPage::autoScroll()
 
 void AnalysisPage::prepareToClose()
 {
+  //Message::toScreen("prepare to Close "+workingDirectory.path());
   QString autoLogName = statusLog->getLogFileName();
-  QFile autoLog(workingDirectory+autoLogName);
+  QFile autoLog(workingDirectory.filePath(autoLogName));
   autoLog.remove();
 
   // autoImage is deleted in the GraphFace destructor

@@ -58,17 +58,17 @@ GraphFace::GraphFace(QString& title, QWidget *parent)
 
   imageAltered = true;
 
-  workingDirectory = QString("workingDirs/");
+  workingDirectory = QDir(QDir::currentPath());
   autoImageName = QString("autoImage");
 
-  QFile *imageFile = new QFile(workingDirectory+autoImageName+".png");
+  imageFile = new QFile(workingDirectory.filePath(autoImageName+".png"));
   int i = 1;
   QString newName = autoImageName;
   while(imageFile->exists())
     {
       i++;
       newName = autoImageName+QString().setNum(i);
-      imageFile = new QFile(workingDirectory+newName+".png");
+      imageFile = new QFile(workingDirectory.filePath(newName+".png"));
     }
 
   autoImageName = newName + ".png";
@@ -79,8 +79,7 @@ GraphFace::GraphFace(QString& title, QWidget *parent)
 
 GraphFace::~GraphFace()
 {
-  //QFile autoImage(workingDirectory+autoImageName);
-  //autoImage.remove();
+  imageFile->remove();
 
   delete VortexDataList;
   delete dropList;
@@ -182,7 +181,7 @@ void GraphFace::saveImage()
   int index = byteList.indexOf("png");
   byteList.move(index,0);
   QFileDialog *fd = new QFileDialog(this, QString("Save Image As.."),
-				    workingDirectory);
+				    workingDirectory.path());
   QString filter;
   QStringList fileName;
   fd->setAcceptMode(QFileDialog::AcceptSave);
@@ -210,12 +209,15 @@ void GraphFace::saveImage()
     } 
   }
 }
-
+/*
 void GraphFace::saveImage(QString fileName)
 {
-  autoSave(fileName);
+  // I don't think I need this really
+  QImage visibleImage(*image);
+  QDir check(
+  if(!visibleImage.save(imageFile,"PNG")) {
 }
-
+*/
 //***********************--newInfo (SLOT) --************************************
 
 void GraphFace::newInfo(QList<VortexData>* gList)
@@ -436,46 +438,49 @@ void GraphFace::makeKey()
 
 //************************--setWorkingDirectory--*****************************
 
-void GraphFace::setWorkingDirectory(QString newDir, QString oldName)
+void GraphFace::setWorkingDirectory(QDir &newDir)
 { 
-  QString newImageName("autoImage.png");
-  QFile* newImageFile = new QFile(newDir+newImageName);
 
-  if(newImageFile->exists()) {
-    newImageFile->remove();
+  Message::toScreen("in the lions den");
+
+  if(newDir.exists()) {
+    Message::toScreen("Path does exist");
   }
-
-  saveImage(newDir+newImageName);
-
-  oldName = workingDirectory+oldName;
-  QFile* prevImageFile = new QFile(oldName);
-  prevImageFile->remove();
+  else {
+    Message::toScreen("Path does not exist yet");
+    newDir.mkpath(newDir.path());
+    if(newDir.exists())
+      Message::toScreen("Path exists NOW?");
+  }
+  if(!newDir.isAbsolute())
+    newDir.makeAbsolute();
+  QString newImageName = QString("autoImage");
   
-  workingDirectory = newDir;
+  QFile *newImageFile = new QFile(newDir.filePath(newImageName+".png"));
+  int i = 1;
+  QString newName = newImageName;
+  while(newImageFile->exists())
+    {
+      i++;
+      newName = newImageName+QString().setNum(i);
+      newImageFile = new QFile(newDir.filePath(newName+".png"));
+    }
+
+  //  imageFile->remove();
+  //imageFile = newImageFile;
+
+  newImageName = newName + ".png";
+  //  saveImage(newDir.filePath(newImageName));
+  //QImage visibleImage(*image);
+  //if(!visibleImage.save(newImageFile,"PNG")) 
+  //  Message::toScreen("Couldn't save graphface image in set working dir");
+
+  //workingDirectory = newDir;
   autoImageName = newImageName;
   
   Message::toScreen("Made it");
 }
 
-void GraphFace::changeWorkDir(QString newDir)
-{
-  QString newImageName("autoImage.png");
-  QFile newFile(newDir+newImageName);
-  if(newFile.exists())
-    newFile.remove();
-  
-  saveImage(newDir+newImageName);
-  
-  QFile oldFile(workingDirectory+autoImageName);
-  oldFile.remove();
-  
-  workingDirectory = newDir;
-  autoImageName = newImageName;
-
-  Message::toScreen("Crazy Luck");
-
-
-}
 
 //************************--converters and QPointF constructors--*************
 
@@ -1197,15 +1202,22 @@ void GraphFace::updateImage()
   if (painter->isActive())
     painter->end();
   image = temp;
-  //autoSave(workingDirectory+autoImageName);
+  //autoSave();
 }
 
 
-void GraphFace::autoSave(QString name)
+bool GraphFace::autoSave()
 {
   QImage visibleImage(*image);
-  if(!visibleImage.save(name,"PNG"))
+  if(!imageFile->open(QIODevice::WriteOnly))
+    Message::toScreen("can't open imagefile");
+  if(!visibleImage.save(imageFile,"PNG")) {
     emit log(Message(tr("Failed to Auto-Save Graph Image")));
+    imageFile->close();
+    return false;
+  }
+  imageFile->close();
+  return true;
 }
 
 void GraphFace::catchLog(const Message& message)
@@ -1693,12 +1705,7 @@ void GraphFace::altUpdateImage()
   if (painter->isActive())
     painter->end();
   image = temp;
-  autoSave(workingDirectory+autoImageName);
-}
-
-QString GraphFace::getImageFileName()
-{
-  return(autoImageName);
+  //autoSave();
 }
 
 void GraphFace::setImageFileName(QString newName)

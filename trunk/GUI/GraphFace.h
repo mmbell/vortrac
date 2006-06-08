@@ -18,6 +18,7 @@
 #include<QEvent>
 #include<QImage>
 #include<QMatrix>
+#include<QDir>
 
 #include "DataObjects/VortexData.h"
 #include "KeyPicture.h"
@@ -33,15 +34,15 @@ public:
        // it also preforms several initialization for the object
    ~GraphFace();
    void setImageFileName(QString newName);
-   QString getImageFileName();
-   void setWorkingDirectory(QString newDir, QString oldName);
-   QString getWorkingDirectory() { return workingDirectory;}
+   QString getImageFileName() { return autoImageName; }
+   QDir getWorkingDirectory() { return workingDirectory;}
 
-   void changeWorkDir(QString newDir);
+   //void setWorkingDirectory(QDir &newDir);
 
 
  
 public slots:
+   void setWorkingDirectory(QDir &newDir);
    void newInfo(QList<VortexData> *VortexPointer);
    void makeKey();
    void newDropSonde(QList<VortexData> *dropPointer);
@@ -50,7 +51,7 @@ public slots:
        // this modifies nessecary ranges
    void updateTitle(const QString& new_Label);
    void saveImage();
-   void saveImage(QString fileName);
+   // void saveImage(QString fileName);
    void manualAxes(const QString& name, const bool change);
    void manualParameter(const QString& name, const float num);
    void catchLog(const Message& message);
@@ -63,10 +64,6 @@ protected:
         // and any time update is called
    bool event(QEvent *event);
    void resizeEvent(QResizeEvent * /* event */);
-
-   QString autoImageName;
-   QString workingDirectory;
- 
 
    // all these members are related to the color and size of marks on the graph
    // they are protected so they can easily be passed to the key Widget
@@ -86,6 +83,10 @@ protected:
  
 private:
    QImage *image;
+   QString autoImageName;
+   QDir workingDirectory;
+   QFile *imageFile;
+
    QList<VortexData>* VortexDataList;      
    QList<VortexData>*  dropList;         
    QDateTime first;                // Time of first data points
@@ -150,7 +151,7 @@ private:
    float getSTDMultiplier(VortexData p, float z);
    int pointAt(const QPointF & position, bool& ONDropSonde);
    void setColors();
-   void autoSave(QString name);
+   bool autoSave();
 
    // this function checks to see if the ranges need to be update
    // it will also update ranges when necessary
