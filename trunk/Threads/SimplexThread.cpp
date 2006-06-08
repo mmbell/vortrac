@@ -168,8 +168,10 @@ void SimplexThread::run()
 						// Get the data
 						gridData->setCartesianReferencePoint(int(vertex[v][0]),int(vertex[v][1]),int(RefK));
 						int numData = gridData->getCylindricalAzimuthLength(radius, height);
-						float* ringData = gridData->getCylindricalAzimuthData(velField, radius, height);
-						float* ringAzimuths = gridData->getCylindricalAzimuthPosition(radius, height);
+						float* ringData = new float[numData];
+						float* ringAzimuths = new float[numData];
+						gridData->getCylindricalAzimuthData(velField, numData, radius, height, ringData);
+						gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);
 						
 						// Call gbvtd
 						if (vtd->analyzeRing(vertex[v][0], vertex[v][1], radius, height, numData, ringData,
@@ -241,8 +243,10 @@ void SimplexThread::run()
 											vertex[v][i] = vertexSum[i] = 0.5*(vertex[v][i] + vertex[high][i]);
 										gridData->setCartesianReferencePoint(int(vertex[v][0]),int(vertex[v][1]),int(RefK));
 										int numData = gridData->getCylindricalAzimuthLength(radius, height);
-										float* ringData = gridData->getCylindricalAzimuthData(velField, radius, height);
-										float* ringAzimuths = gridData->getCylindricalAzimuthPosition(radius, height);
+										float* ringData = new float[numData];
+										float* ringAzimuths = new float[numData];
+										gridData->getCylindricalAzimuthData(velField, numData, radius, height, ringData);
+										gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);
 									
 										// Call gbvtd
 										if (vtd->analyzeRing(vertex[v][0], vertex[v][1], radius, height, numData, ringData,
@@ -336,6 +340,13 @@ void SimplexThread::run()
 		centerFinder = new ChooseCenter(configData,simplexResults);
 		foundCenter = centerFinder->findCenter();
 		
+		
+		// Clean up
+		delete[] dataGaps;
+		delete[] vertex;
+		delete[] VT;
+		delete[] vertexSum;
+
 		if(!foundCenter)
 		{
 			// Some error occurred, notify the user
@@ -346,7 +357,7 @@ void SimplexThread::run()
 			// vortexData ???
 		
 			// Update the progress bar and log
-			emit log(Message("Found center!",60));
+			emit log(Message("Done with Simplex",60));
 
 			// Let the poller know we're done
 			emit(centerFound());
@@ -406,8 +417,10 @@ float SimplexThread::simplexTest(float**& vertex,float*& VT,float*& vertexSum,
 	// Get the data
 	gridData->setCartesianReferencePoint(int(vertexTest[0]),int(vertexTest[1]),int(RefK));
 	int numData = gridData->getCylindricalAzimuthLength(radius, height);
-	float* ringData = gridData->getCylindricalAzimuthData(velField, radius, height);
-	float* ringAzimuths = gridData->getCylindricalAzimuthPosition(radius, height);
+	float* ringData = new float[numData];
+	float* ringAzimuths = new float[numData];
+	gridData->getCylindricalAzimuthData(velField, numData, radius, height, ringData);
+	gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);
 	
 	// Call gbvtd
 	if (vtd->analyzeRing(vertexTest[0], vertexTest[1], radius, height, numData, ringData,

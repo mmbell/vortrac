@@ -90,6 +90,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   float beamHeight = radarData->radarBeamHeight(distance, radarData->getSweep(0)->getElevation());
   zmin = (float(int(beamHeight/kGridsp)))*kGridsp;
   zmax = zmin + kDim*kGridsp;
+  delete[] relDist;
   
   // Find good values
   long r = 0;

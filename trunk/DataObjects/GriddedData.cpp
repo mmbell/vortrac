@@ -500,19 +500,20 @@ int GriddedData::getCylindricalAzimuthLength(float radius, float height)
   
 }
 
-float* GriddedData::getCylindricalAzimuthData(QString& fieldName, 
-					      float radius, float height)
+void GriddedData::getCylindricalAzimuthData(QString& fieldName, int numPoints,
+					      float radius, float height, float* values)
 {
-  int numPoints = getCylindricalAzimuthLength(radius, height);
+//  int numPoints = getCylindricalAzimuthLength(radius, height);
   int field = getFieldIndex(fieldName);
 
-  float *values = new float[numPoints];
+//  float *values = new float[numPoints];
 
   int count = 0;
+  float r = 0;
   for(int i = 0; i < iDim; i ++) {
     for(int j = 0; j < jDim; j ++) {
       for(int k = 0; k < kDim; k ++) {
-	float r = sqrt(iGridsp*iGridsp*(i-refPointI)*(i-refPointI)+jGridsp*jGridsp*(j-refPointJ)*(j-refPointJ));
+	r = sqrt(iGridsp*iGridsp*(i-refPointI)*(i-refPointI)+jGridsp*jGridsp*(j-refPointJ)*(j-refPointJ));
 	if((r <= (radius+cylindricalRadiusSpacing/2.)) 
 	   && (r > (radius-cylindricalRadiusSpacing/2.))) {
 	  if((k*kGridsp <= (height+cylindricalHeightSpacing/2))
@@ -524,33 +525,39 @@ float* GriddedData::getCylindricalAzimuthData(QString& fieldName,
       }    
     }
   }
-  return values;
+  //return values;
 }
 
-float* GriddedData::getCylindricalAzimuthPosition(float radius, float height) 
+void GriddedData::getCylindricalAzimuthPosition(int numPoints, float radius, float height, float* positions) 
 {
-  int numPoints = getCylindricalAzimuthLength(radius, height);
+//  int numPoints = getCylindricalAzimuthLength(radius, height);
 
-  float *positions = new float[numPoints];
+//  float *positions = new float[numPoints];
   
   int count = 0;
+  float r = 0;
   for(int i = 0; i < iDim; i ++) {
     for(int j = 0; j < jDim; j ++) {
       for(int k = 0; k < kDim; k ++) {
-	float r = sqrt(iGridsp*iGridsp*(i-refPointI)*(i-refPointI)+jGridsp*jGridsp*(j-refPointJ)*(j-refPointJ));
-	if((r <= (radius+cylindricalRadiusSpacing/2.)) 
-	   && (r > (radius-cylindricalRadiusSpacing/2.))) {
-	  if((k*kGridsp <= (height+cylindricalHeightSpacing/2))
-	     && (k*kGridsp > (height-cylindricalHeightSpacing/2))) {
-	    float azimuth = fixAngle(atan2((j-refPointJ),(i-refPointI)))*rad2deg;
-	    positions[count] = azimuth;
-	    count++;
-	  }
+		  r = sqrt(iGridsp*iGridsp*(i-refPointI)*(i-refPointI) 
+				   + jGridsp*jGridsp*(j-refPointJ)*(j-refPointJ));
+		  if((r <= (radius+cylindricalRadiusSpacing/2.)) 
+			 && (r > (radius-cylindricalRadiusSpacing/2.))) {
+			  if((k*kGridsp <= (height+cylindricalHeightSpacing/2))
+				 && (k*kGridsp > (height-cylindricalHeightSpacing/2))) {
+				  float azimuth = fixAngle(atan2((j-refPointJ),(i-refPointI)))*rad2deg;
+				  if (count > numPoints) {
+					  // Memory overflow, bail out
+					  return;
+				  } else {					
+					  positions[count] = azimuth;
+					  count++;
+				  }
+			  }	
+		  }
+	  }    
 	}
-      }    
-    }
   }
-  return positions;
 }
 
 int GriddedData::getCylindricalHeightLength(float radius, float azimuth)

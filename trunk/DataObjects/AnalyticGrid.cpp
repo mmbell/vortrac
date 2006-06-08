@@ -88,6 +88,7 @@ bool AnalyticGrid::getConfigInfo(QDomElement cappiConfig,
   
   radX = centX+radLocation[0];  // x coordinate of radar on grid
   radY = centY+radLocation[1];  // y coordinate of radar on grid
+  delete[] radLocation;
   
   //testing Message::toScreen("RadX,Y ="+QString().setNum(radX)+", "+QString().setNum(radY)+"  VortX,Y ="+QString().setNum(centX)+", "+QString().setNum(centY));
   
@@ -764,6 +765,7 @@ void AnalyticGrid::testRange()
   for(int n = 0; n < numPoints; n++) {
     print+=QString().setNum(refData[n])+" ";
   }
+  delete[] refData;
   //testing Message::toScreen("testRange");
   //testing Message::toScreen(print);
 }

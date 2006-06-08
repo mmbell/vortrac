@@ -7,22 +7,22 @@
         <dir>workingDirs/</dir>
     </vortex>
     <radar>
-        <name>WSR-88D</name>
+        <name/>
         <lat>0.00</lat>
-        <lon>0.90</lon>
+        <lon>0</lon>
         <alt>0.00</alt>
-        <dir>/scr/science40/mauger/Working/trunk/vortrac_simplexTestAnalytic.xml</dir>
+        <dir>/Users/mbell/Development/vortrac/trunk/vortrac_simplexTestAnalytic.xml</dir>
         <format>MODEL</format>
-        <startdate>2005-1-1</startdate>
-        <enddate>2005-1-2</enddate>
+        <startdate>2000-01-01</startdate>
+        <enddate>2000-02-01</enddate>
         <starttime>00:00:00</starttime>
         <endtime>00:00:00</endtime>
     </radar>
     <cappi>
         <dir>workingDirs/cappi/</dir>
-        <xdim>200.0</xdim>
-        <ydim>200.0</ydim>
-        <zdim>5.0</zdim>
+        <xdim>200</xdim>
+        <ydim>200</ydim>
+        <zdim>2</zdim>
         <xgridsp>1.0</xgridsp>
         <ygridsp>1.0</ygridsp>
         <zgridsp>1.0</zgridsp>
@@ -37,19 +37,19 @@
         <reflectivity>DZ</reflectivity>
         <velocity>VE</velocity>
         <bottomlevel>1</bottomlevel>
-        <toplevel>5</toplevel>
-        <innerradius>5</innerradius>
-        <outerradius>20</outerradius>
+        <toplevel>1</toplevel>
+        <innerradius>20</innerradius>
+        <outerradius>30</outerradius>
         <ringwidth>1.0</ringwidth>
-        <search>MAXVT0</search>
+        <search>MAXVTO</search>
         <influenceradius>4.0</influenceradius>
         <convergence>0.05</convergence>
         <maxiterations>60</maxiterations>
         <boxdiameter>12.0</boxdiameter>
         <numpoints>16</numpoints>
         <maxwavenumber>1</maxwavenumber>
-        <maxdatagap wavenum="0">180</maxdatagap>
-        <maxdatagap wavenum="1">120</maxdatagap>
+        <maxdatagap wavenum="0" >180</maxdatagap>
+        <maxdatagap wavenum="1" >120</maxdatagap>
     </center>
     <choosecenter>
         <dir>/path/to/choose/center/output</dir>
@@ -79,8 +79,8 @@
         <outerradius>60</outerradius>
         <ringwidth>1.0</ringwidth>
         <maxwavenumber>1</maxwavenumber>
-        <maxdatagap wavenum="0">180</maxdatagap>
-        <maxdatagap wavenum="1">120</maxdatagap>
+        <maxdatagap wavenum="0" >180</maxdatagap>
+        <maxdatagap wavenum="1" >120</maxdatagap>
     </vtd>
     <hvvp/>
     <pressure>

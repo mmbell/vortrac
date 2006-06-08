@@ -59,6 +59,7 @@ GraphFace::GraphFace(QString& title, QWidget *parent)
   imageAltered = true;
 
   workingDirectory = QDir(QDir::currentPath());
+
   autoImageName = QString("autoImage");
 
   imageFile = new QFile(workingDirectory.filePath(autoImageName+".png"));

@@ -22,12 +22,13 @@ GBVTD::GBVTD(QString& initGeometry, QString& initClosure,int& wavenumbers, float
 	Pi = 3.141592653589793238462643;
 	deg2rad = Pi/180.;
 	rad2deg = 180./Pi;
-	
+	FourierCoeffs = new float[maxWavenumber*2 + 3];
 }
 
 GBVTD::~GBVTD()
 {
 	// Default destructor
+	delete[] FourierCoeffs;
 	delete[] ringPsi;
 	delete[] vel;
 	delete[] psi;
@@ -115,7 +116,8 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
 		
 		// Convert Fourier coefficients into wind coefficients
 		setWindCoefficients(radius, height, numCoeffs, FourierCoeffs, vtdCoeffs);
-		
+		for (int i = 0; i<=numCoeffs-1; i++) 
+			delete[] xLLS[i];
 		delete[] xLLS;
 		delete[] yLLS;
 		delete[] stdError;

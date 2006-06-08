@@ -23,51 +23,50 @@ Matrix::~Matrix()
 
 }
 
-bool Matrix::lls(const int &numCoEff,const int &numData, 
+bool Matrix::lls(const int &numCoeff,const int &numData, 
 		  float** &x, float* &y, 
-		  float &stDeviation, float* &coEff, float* &stError)
+		  float &stDeviation, float* &coeff, float* &stError)
 {
   /*
-   * x is a matrix with numCoEff rows, and numData columns,
+   * x is a matrix with numCoeff rows, and numData columns,
    * y is a matrix with numData rows,
-   * coEff is the product containing the coefficient values (numCoEff rows)
+   * coeff is the product containing the coefficient values (numCoeff rows)
    * stError is a product containing the estimated error for each
-   *  coefficent in coEff, (numCoEff rows)
+   *  coefficent in coeff, (numCoeff rows)
    * stDeviation is the estimated standard deviation of the regression
    *
    */
 
-  if(numData < numCoEff) {
+  if(numData < numCoeff) {
     //emit log(Message("Least Squares: Not Enough Data"));
     return false;
   }
   // We need at least one more data point than coefficient in order to
   // estimate the standard deviation of the fit.
   
-  float** A = new float*[numCoEff];
-  float** AA = new float*[numCoEff];
-  float* B = new float[numCoEff];
-  float** BB = new float*[numCoEff];
-  coEff = new float[numCoEff];
-  for(int row = 0; row < numCoEff; row++) {
-    A[row] = new float[numCoEff];
-    AA[row] = new float[numCoEff];
+  float** A = new float*[numCoeff];
+  float** AA = new float*[numCoeff];
+  float* B = new float[numCoeff];
+  float** BB = new float*[numCoeff];
+  for(int row = 0; row < numCoeff; row++) {
+    A[row] = new float[numCoeff];
+    AA[row] = new float[numCoeff];
     BB[row] = new float[1];
-    for(int col = 0; col < numCoEff; col++) {
+    for(int col = 0; col < numCoeff; col++) {
       A[row][col] = 0;
       AA[row][col] = 0;
       BB[row][0] = 0;
     }
     B[row] = 0;
-    coEff[row] = 0;
+    coeff[row] = 0;
   }
 
   // accumulate the covariances of all the data into the regression
   // matrices
 
   for(int i = 0; i < numData; i++) {
-    for(int row = 0; row < numCoEff; row++) {
-      for(int col = 0; col < numCoEff; col++) {
+    for(int row = 0; row < numCoeff; row++) {
+      for(int col = 0; col < numCoeff; col++) {
 	A[row][col]+=(x[row][i]*x[col][i]);
 	AA[row][col]+=(x[row][i]*x[col][i]);
       }
@@ -77,43 +76,43 @@ bool Matrix::lls(const int &numCoEff,const int &numData,
   }
 
   
-  float** Ainv = new float*[numCoEff];
-  for(int p = 0; p < numCoEff; p++) 
+  float** Ainv = new float*[numCoeff];
+  for(int p = 0; p < numCoeff; p++) 
     Ainv[p] = new float[p];
 
   //The C++ Recipes Code Works so All this can be done away with
 
   /*
   // find the inverse of A
-  if(!matrixInverse(A, numCoEff, numCoEff, Ainv)) {
+  if(!matrixInverse(A, numCoeff, numCoeff, Ainv)) {
     Message::toScreen("lls: matrix inverse failed");
     return false;
   }
   
-  // use the inverse of A to find coEff
-  if(!matrixMultiply(Ainv, numCoEff, numCoEff, B, numCoEff, coEff, numCoEff)) {
+  // use the inverse of A to find coeff
+  if(!matrixMultiply(Ainv, numCoeff, numCoeff, B, numCoeff, coeff, numCoeff)) {
     Message::toScreen("lls: Matrix Multiply Failed");
     return false;
   }
   */
 
-  if(!gaussJordan(AA,BB, numCoEff, 1)) {
+  if(!gaussJordan(AA,BB, numCoeff, 1)) {
     // emit log(Message("Least Squares Fit Failed"));
     return false;
   }
   
   /* 
-  Message::toScreen("CHECK: coeff[0] = "+QString().setNum(coEff[0])+" coeff[1] = "
-		 +QString().setNum(coEff[1])+" coeff[2] = "
-		 +QString().setNum(coEff[2]));
+  Message::toScreen("CHECK: coeff[0] = "+QString().setNum(coeff[0])+" coeff[1] = "
+		 +QString().setNum(coeff[1])+" coeff[2] = "
+		 +QString().setNum(coeff[2]));
   Message::toScreen("     : BB[0][0] = "+QString().setNum(BB[0][0])+" BB[1][0] = "
 		 +QString().setNum(BB[1][0])+" BB[2][0] = "
 		 +QString().setNum(BB[2][0]));
   */
 
-  for(int i = 0; i < numCoEff; i++) {
-    coEff[i] = BB[i][0];
-    for(int j = 0; j < numCoEff; j++) {
+  for(int i = 0; i < numCoeff; i++) {
+    coeff[i] = BB[i][0];
+    for(int j = 0; j < numCoeff; j++) {
       Ainv[i][j] = AA[i][j];
     }
   }
@@ -122,20 +121,35 @@ bool Matrix::lls(const int &numCoEff,const int &numData,
   float sum = 0;
   for(int i = 0; i < numData; i++) {
     float regValue = 0;
-    for(int j = 0; j < numCoEff; j++) {
-      regValue += coEff[j]*x[j][i]; 
+    for(int j = 0; j < numCoeff; j++) {
+      regValue += coeff[j]*x[j][i]; 
     }
     sum +=((y[i]-regValue)*(y[i]-regValue));
   }
   
-  stDeviation = sqrt(sum/float(numData-numCoEff));
+  stDeviation = sqrt(sum/float(numData-numCoeff));
   
   // calculate the standard error for the coefficients
 
-  for(int i = 0; i < numCoEff; i++) {
+  for(int i = 0; i < numCoeff; i++) {
     stError[i] = stDeviation*sqrt(Ainv[i][i]);
   }
-   
+
+  // Clean up
+   for(int row = 0; row < numCoeff; row++) {
+	   delete[] A[row];
+	   delete[] AA[row];
+	   delete[] BB[row];
+   }
+  delete[] A;
+  delete[] AA;
+  delete[] B;
+  delete[] BB;
+
+  for(int p = 0; p < numCoeff; p++) 
+	  delete[] Ainv[p];
+  delete[] Ainv;
+  
   return true;
 } 
 
@@ -176,6 +190,9 @@ bool Matrix::matrixInverse(float **A, int M, int N, float** &Ainv)
 
   if(!reduceRow(temp, M, 2*M)) {
     // emit log(Message("matrixInverse: reduceRow failed"));
+	  for(int p = 0; p < M; p++) 
+		  delete[] temp[p];
+	  delete[] temp;
     return false;
   }
 
@@ -190,12 +207,18 @@ bool Matrix::matrixInverse(float **A, int M, int N, float** &Ainv)
       if(i==j){
 	if(temp[i][j]!=1.0) {
 	  // emit log(Message("matrixInverse:WARNING:Matrix May Be Singular! :("));
+		for(int p = 0; p < M; p++) 
+			delete[] temp[p];
+		delete[] temp;		
 	  return false;
 	}
       }
       else{
 	if(temp[i][j]!=0.0) {
 	  // emit log(Message("matrixInverse:WARNING:Matrix May Be Singular! :<>"));
+		for(int p = 0; p < M; p++) 
+			delete[] temp[p];
+		delete[] temp;		
 	  return false;
 	}
       }
@@ -204,7 +227,10 @@ bool Matrix::matrixInverse(float **A, int M, int N, float** &Ainv)
   
   //Message::toScreen("Matrix after inverting");
   //printMatrix(Ainv, M, M);
-
+  for(int p = 0; p < M; p++) 
+	  delete[] temp[p];
+  delete[] temp;
+  
   return true;
 }
 
@@ -243,6 +269,7 @@ bool Matrix::reduceRow(float **A, int M, int N)
 	colStart++;
 	if (colStart == N) {
 	  //emit log(Message("rowReduce:WARNING:Matrix May Be Singular! AllZero"));
+		delete[] allZero;
 	  return false;
 	}
       }
@@ -300,6 +327,8 @@ bool Matrix::reduceRow(float **A, int M, int N)
       colStart++;
     }
   //Message::toScreen("Out of Row Reduce");
+  delete[] allZero;
+  
   return true;
 }
 

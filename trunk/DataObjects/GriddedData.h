@@ -85,9 +85,9 @@ class GriddedData
 				 float height);
   float* getCylindricalRadiusPosition(float azimuth, float height);
   int getCylindricalAzimuthLength(float radius, float height);
-  float* getCylindricalAzimuthData(QString& fieldName, float radius,
-				   float height);
-  float* getCylindricalAzimuthPosition(float radius, float height);
+  void getCylindricalAzimuthData(QString& fieldName,int numPoints, float radius,
+				   float height, float* values);
+  void getCylindricalAzimuthPosition(int numPoints, float radius, float height, float* positions);
   int getCylindricalHeightLength(float radius, float height);
   float* getCylindricalHeightData(QString& fieldName, float radius, 
 				  float height);

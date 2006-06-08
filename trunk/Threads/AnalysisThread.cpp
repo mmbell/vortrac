@@ -72,7 +72,7 @@ void AnalysisThread::analyze(RadarData *dataVolume, Configuration *configPtr)
 
 void AnalysisThread::run()
 {
-	   emit log(Message("AnalysisThread Started"));
+	   emit log(Message("Data found, starting analysis..."));
 
        forever {
 		// Check to see if we should quit
@@ -122,7 +122,7 @@ void AnalysisThread::run()
 		}
 		
 		// Create CAPPI
-		emit log(Message("Create CAPPI"));
+		emit log(Message("Creating CAPPI..."));
 
 		/* If Analytic Model is running we need to make an analytic
 		   gridded data rather than a cappi*/

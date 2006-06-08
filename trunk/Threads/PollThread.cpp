@@ -53,7 +53,7 @@ void PollThread::analysisDoneProcessing()
 
 void PollThread::run()
 {
-  emit log(Message("PollThread Started"));
+  emit log(Message("Polling for data..."));
   RadarFactory *dataSource = new RadarFactory(configData->getConfig("radar"));
   connect(dataSource, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
