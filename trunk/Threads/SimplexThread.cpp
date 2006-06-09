@@ -12,6 +12,7 @@
 #include <math.h>
 #include "SimplexThread.h"
 #include "DataObjects/Coefficient.h"
+#include "DataObjects/Center.h"
 #include "VTD/GBVTD.h"
 #include "Math/Matrix.h"
 
@@ -34,7 +35,8 @@ SimplexThread::~SimplexThread()
 
 }
 
-void SimplexThread::findCenter(Configuration *wholeConfig, GriddedData *dataPtr, float* vortexLat, float* vortexLon)
+void SimplexThread::findCenter(Configuration *wholeConfig, GriddedData *dataPtr,
+							   float* vortexLat, float* vortexLon, SimplexData* simplexPtr)
 {
 
 	// Lock the thread
@@ -46,7 +48,10 @@ void SimplexThread::findCenter(Configuration *wholeConfig, GriddedData *dataPtr,
 	// Remember the vortex center
 	refLat = vortexLat;
 	refLon = vortexLon;
-
+	
+	// Set the simplex data object
+	simplexData = simplexPtr;
+	
 	// Set the configuration info
 	configData = wholeConfig;
 	simplexConfig = wholeConfig->getConfig("center");
@@ -82,13 +87,13 @@ void SimplexThread::run()
 		QString closure = configData->getParam(simplexConfig,
 						       QString("closure"));
 		
-		float firstLevel = configData->getParam(simplexConfig,
+		firstLevel = configData->getParam(simplexConfig,
 					     QString("bottomlevel")).toFloat();
-		float lastLevel = configData->getParam(simplexConfig,
+		lastLevel = configData->getParam(simplexConfig,
 					     QString("toplevel")).toFloat();
-		float firstRing = configData->getParam(simplexConfig,
+		firstRing = configData->getParam(simplexConfig,
 					     QString("innerradius")).toFloat();
-		float lastRing = configData->getParam(simplexConfig, 
+		lastRing = configData->getParam(simplexConfig, 
 				       	     QString("outerradius")).toFloat();
 		
 		float boxSize = configData->getParam(simplexConfig, 
@@ -120,6 +125,10 @@ void SimplexThread::run()
 		vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
 		vtdCoeffs = new Coefficient[20];
 
+		// Create a simplexData object to hold the results;
+		simplexData = new SimplexData(int(lastLevel - firstLevel + 1), int(lastRing - firstRing + 1), (int)numPoints);
+		
+		// Allocate memory for the vertices	
 		vertex = new float*[3];
 		vertex[0] = new float[2];
 		vertex[1] = new float[2];
@@ -127,6 +136,7 @@ void SimplexThread::run()
 		VT = new float[3];
 		vertexSum = new float[2];
 		
+		// Loop through the levels and rings
 		for (float height = firstLevel; height <= lastLevel; height++) {
 			for (float radius = firstRing; radius <= lastRing; radius++) {
 				// Set the reference point
@@ -143,6 +153,7 @@ void SimplexThread::run()
 				stdDevVertex = stdDevVT = 0;
 				convergingCenters = 0;
 				
+				// Loop through the initial guesses
 				for (int point = 0; point <= numPoints-1; point++) {
 					if (point <= boxRowLength) {
 						RefI = RefI + float(point) * boxIncr;
@@ -294,18 +305,19 @@ void SimplexThread::run()
 				meanXall = meanXall / float(meanCount);
 				meanYall = meanYall / float(meanCount);
 				meanVTall = meanVTall / float(meanCount);
-				for (int i=0;i<=numPoints;i++) {
+				for (int i=0;i<numPoints;i++) {
 					if ((Xind[i] != -999.) and (Yind[i] != -999.) and (VTind[i] != -999.)) {
 						stdDevVertexAll += ((Xind[i] - meanXall)*(Xind[i] - meanXall)
 										 + (Yind[i] - meanYall)*(Yind[i] - meanYall));
 						stdDevVTAll += (VTind[i] - meanVTall)*(VTind[i] - meanVTall);
 					}
-					stdDevVertexAll = sqrt(stdDevVertexAll/float(meanCount));
-					stdDevVTAll = sqrt(stdDevVTAll/float(meanCount));
 				}
+				stdDevVertexAll = sqrt(stdDevVertexAll/float(meanCount-1));
+				stdDevVTAll = sqrt(stdDevVTAll/float(meanCount-1));
+					
 				// Now remove centers beyond 1 standard deviation
 				meanCount = 0;
-				for (int i=0;i<=numPoints;i++) {
+				for (int i=0;i<numPoints;i++) {
 					if ((Xind[i] != -999.) and (Yind[i] != -999.) and (VTind[i] != -999.)) {
 						float vertexDist = sqrt((Xind[i]-meanXall)*(Xind[i] - meanXall)
 										  + (Yind[i] - meanYall)*(Yind[i] - meanYall));
@@ -323,16 +335,16 @@ void SimplexThread::run()
 				meanX = meanX / float(meanCount);
 				meanY = meanY / float(meanCount);
 				meanVT = meanVT / float(meanCount);
-				for (int i=0;i<=numPoints;i++) {
+				for (int i=0;i<numPoints;i++) {
 					stdDevVertex += ((Xconv[i] - meanX)*(Xconv[i] - meanX)
 									 + (Yconv[i] - meanY)*(Yconv[i] - meanY));
 					stdDevVT += (VTconv[i] - meanVT)*(VTconv[i] - meanVT);
 				}
-				stdDevVertex = sqrt(stdDevVertex/float(meanCount));
-				stdDevVT = sqrt(stdDevVT/float(meanCount));
+				stdDevVertex = sqrt(stdDevVertex/float(meanCount-1));
+				stdDevVT = sqrt(stdDevVT/float(meanCount-1));
 				
 				// All done with this radius and height, archive it
-				archiveCenters(radius, height);
+				archiveCenters(radius, height, numPoints);
 			}
 		}
 
@@ -378,10 +390,25 @@ void SimplexThread::run()
 	}
 }
 
-void SimplexThread::archiveCenters(float& radius, float& height)
+void SimplexThread::archiveCenters(float& radius, float& height, float& numPoints)
 {
 
-	// Do something with the centers
+	// Save the centers to the SimplexData object
+	int level = int(height - firstLevel);
+	int ring = int(radius - firstRing);
+	simplexData->setHeight(level, height);
+	simplexData->setRadius(ring, radius);
+	simplexData->setX(level, ring, meanX);
+	simplexData->setY(level, ring, meanY);
+	simplexData->setMaxVT(level, ring, meanVT);
+	simplexData->setCenterStdDev(level, ring, stdDevVertex);
+	simplexData->setVTUncertainty(level, ring, stdDevVT);
+	simplexData->setNumConvergingCenters(level, ring, (int)convergingCenters);
+	for (int point = 0; point < (int)numPoints; point++) {
+		Center* indCenter = new Center(Xind[point], Yind[point], VTind[point], level, ring);
+		simplexData->setCenter(level, ring, point, *indCenter);
+	}
+	simplexResults.append(*simplexData);
 	
 }
 

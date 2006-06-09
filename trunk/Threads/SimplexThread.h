@@ -23,6 +23,7 @@
 #include "VTD/GBVTD.h"
 #include "DataObjects/Coefficient.h"
 #include "DataObjects/SimplexList.h"
+#include "DataObjects/SimplexData.h"
 #include "ChooseCenter.h"
 
 
@@ -34,7 +35,7 @@ class SimplexThread : public QThread
      SimplexThread(QObject *parent = 0);
      ~SimplexThread();
 	 void findCenter(Configuration *wholeConfig, GriddedData *dataPtr, 
-			 float *vortexLat, float *vortexLon);
+			 float *vortexLat, float *vortexLon, SimplexData *simplexPtr);
 
  public slots:
      void catchLog(const Message& message);
@@ -51,6 +52,7 @@ class SimplexThread : public QThread
      QWaitCondition waitForData;
      bool abort;
 	 GriddedData *gridData;
+	 SimplexData *simplexData;
 	 Configuration *configData;
 	 QDomElement simplexConfig;
 	 float* refLat;
@@ -61,6 +63,10 @@ class SimplexThread : public QThread
 	 float** vertex;
 	 float* VT;
 	 float* vertexSum;
+	 float firstLevel;
+	 float lastLevel;
+	 float firstRing;
+	 float lastRing;
 	 float vtdStdDev;
 	 float VTsolution;
 	 float Xsolution;
@@ -74,7 +80,7 @@ class SimplexThread : public QThread
 	 float Xconv[25],Yconv[25],VTconv[25];
 	 SimplexList simplexResults;
 	 
-	 void archiveCenters(float& radius, float& height);
+	 void archiveCenters(float& radius,float& height,float& numPoints);
 	 inline void getVertexSum(float**& vertex,float*& vertexSum);
 	 float simplexTest(float**& vertex, float*& VT, float*& vertexSum, 
 			   float& radius, float& height, float& RefK,

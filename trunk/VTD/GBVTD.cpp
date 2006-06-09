@@ -132,8 +132,8 @@ void GBVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, flo
 {
 	
 	// Use the specified closure method to set VT, VR, and VM
-	float* A = new float[numCoeffs/2];
-	float* B = new float[numCoeffs/2];
+	float* A = new float[numCoeffs/2 + 1];
+	float* B = new float[numCoeffs/2 + 1];
 	
 		
 	float sinAlphamax = radius/centerDistance;

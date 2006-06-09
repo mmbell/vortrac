@@ -156,11 +156,11 @@ void AnalysisThread::run()
 		gridData->writeAsi();
 		emit log(Message("Writing ASI"));
 		
-		// Create vortexdata instance to hold the analysis results
-		VortexData *vortexdata = new VortexData(); 
-		
+		// Create data instances to hold the analysis results
+		VortexData *vortexData = new VortexData(); 
+		SimplexData *simplexData;
 		// Find Center
-		simplexThread.findCenter(configData, gridData, &vortexLat, &vortexLon);
+		simplexThread.findCenter(configData, gridData, &vortexLat, &vortexLon, simplexData);
 
 		mutex.lock();
 		if (!abort) {
@@ -188,7 +188,7 @@ void AnalysisThread::run()
 		vortexlist->addVortex(vortexdata->getArchiveData());
 		
 		*/
-		delete vortexdata;
+		delete vortexData;
 		
 		if(!analysisGood)
 		{
