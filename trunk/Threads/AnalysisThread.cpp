@@ -188,7 +188,8 @@ void AnalysisThread::run()
 		vortexlist->addVortex(vortexdata->getArchiveData());
 		
 		*/
-
+		delete vortexdata;
+		
 		if(!analysisGood)
 		{
 			// Some error occurred, notify the user

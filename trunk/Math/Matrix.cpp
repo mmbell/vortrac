@@ -78,7 +78,7 @@ bool Matrix::lls(const int &numCoeff,const int &numData,
   
   float** Ainv = new float*[numCoeff];
   for(int p = 0; p < numCoeff; p++) 
-    Ainv[p] = new float[p];
+    Ainv[p] = new float[numCoeff];
 
   //The C++ Recipes Code Works so All this can be done away with
 

@@ -119,7 +119,8 @@ void GriddedData::setAbsoluteReferencePoint(float Lat, float Lon, float Height)
   refPointJ = floor(locations[1]/jGridsp +.5);
   refPointK = floor(Height/kGridsp +.5);
   // testing Message::toScreen("I = "+QString().setNum(refPointI)+" J = "+QString().setNum(refPointJ)+" K = "+QString().setNum(refPointK));
-
+  delete[] locations;
+  
 }
 
 float* GriddedData::getCartesianPoint(float *Lat, float *Lon,

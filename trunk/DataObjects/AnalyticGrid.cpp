@@ -76,8 +76,7 @@ bool AnalyticGrid::getConfigInfo(QDomElement cappiConfig,
   
   QDomElement radar = analyticConfig->getRoot().firstChildElement("analytic_radar");
   
-  float *radLocation  = new float[2];
-  radLocation = getCartesianPoint(vLat,vLon,rLat,rLon);
+  float* radLocation = getCartesianPoint(vLat,vLon,rLat,rLon);
   
   centX = iDim/2*iGridsp;  // x coordinate of storm center on grid
   centY = jDim/2*jGridsp;  // y coordinate of storm center on grid

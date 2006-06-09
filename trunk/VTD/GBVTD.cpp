@@ -29,9 +29,6 @@ GBVTD::~GBVTD()
 {
 	// Default destructor
 	delete[] FourierCoeffs;
-	delete[] ringPsi;
-	delete[] vel;
-	delete[] psi;
 	
 }
 
@@ -121,7 +118,9 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
 		delete[] xLLS;
 		delete[] yLLS;
 		delete[] stdError;
-			
+		delete[] ringPsi;
+		delete[] vel;
+		delete[] psi;		
 		
 	}
 	
@@ -133,8 +132,8 @@ void GBVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, flo
 {
 	
 	// Use the specified closure method to set VT, VR, and VM
-	float* A = new float[maxWavenumber];
-	float* B = new float[maxWavenumber];
+	float* A = new float[numCoeffs/2];
+	float* B = new float[numCoeffs/2];
 	
 		
 	float sinAlphamax = radius/centerDistance;

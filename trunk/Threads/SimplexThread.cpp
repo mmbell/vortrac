@@ -109,7 +109,7 @@ void SimplexThread::run()
 		int maxWave = configData->getParam(simplexConfig, 
 					 QString("maxwavenumber")).toInt();
 		
-		dataGaps = new float[maxWave];
+		dataGaps = new float[maxWave+1];
 		for (int i = 0; i <= maxWave; i++) {
 		  dataGaps[i] = configData->getParam(simplexConfig, 
 			QString("maxdatagap"), QString("wavenum"), 
@@ -346,7 +346,8 @@ void SimplexThread::run()
 		delete[] vertex;
 		delete[] VT;
 		delete[] vertexSum;
-
+		delete[] vtdCoeffs;
+		
 		if(!foundCenter)
 		{
 			// Some error occurred, notify the user

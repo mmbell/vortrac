@@ -731,11 +731,11 @@ void GraphFace::updateImage()
   // to the origin of the graphable area
 
 {
-  QImage *temp = new QImage(graph_width+LEFT_MARGIN_WIDTH+RIGHT_MARGIN_WIDTH, 
+  QImage *imageTemp = new QImage(graph_width+LEFT_MARGIN_WIDTH+RIGHT_MARGIN_WIDTH, 
 	      graph_height+TOP_MARGIN_HEIGHT+BOTTOM_MARGIN_HEIGHT,
 	      QImage::Format_ARGB32_Premultiplied);
 
-  QPainter* painter = new QPainter(temp);
+  QPainter* painter = new QPainter(imageTemp);
   painter->setRenderHint(QPainter::Antialiasing);
   painter->setBackgroundMode(Qt::TransparentMode);
   //this option makes lines appear smoother;
@@ -1202,7 +1202,9 @@ void GraphFace::updateImage()
     }
   if (painter->isActive())
     painter->end();
-  image = temp;
+  image = imageTemp;
+  // Memory leak here?
+  //delete imageTemp;
   //autoSave();
 }
 

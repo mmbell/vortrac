@@ -137,6 +137,7 @@ bool Log::saveLogFile(const QString& fileName)
   
   if(newLogFile->exists())
     newLogFile->remove();
+  delete newLogFile;
   if(check.isAbsolute())
     if(logFile->copy(fileName)) {
       return true;
