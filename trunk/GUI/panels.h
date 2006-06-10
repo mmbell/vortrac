@@ -37,6 +37,7 @@ class VortexPanel:public AbstractPanel
   // Modifies the Vortex Section of the Configuration
  public:
   VortexPanel();
+  ~VortexPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
 
@@ -54,6 +55,7 @@ class RadarPanel:public AbstractPanel
   // Modifies the Radar Section of the Configuration 
  public:
    RadarPanel();
+   ~RadarPanel();
    void updatePanel(const QDomElement panelElement);
    bool updateConfig();
 
@@ -87,8 +89,10 @@ class CappiPanel:public AbstractPanel
   // Modifies the Cappi Section of the Configuration
  public:
   CappiPanel();
+  ~CappiPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
+  void setDefaultDirectory(QDir* newDir);
 
  private:
   /*
@@ -121,8 +125,10 @@ class CenterPanel:public AbstractPanel
   // Modifies the Center Section of the Configuration
  public:
   CenterPanel();
+  ~CenterPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
+  void setDefaultDirectory(QDir* newDir);
 
  private:
   /*
@@ -163,10 +169,66 @@ class ChooseCenterPanel:public AbstractPanel
 {
  public:
   ChooseCenterPanel();
+  ~ChooseCenterPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
-  
+  void setDefaultDirectory(QDir* newDir);
+
  private:
+  /*
+   * This panel uses the dir and browse members declared in AbstractPanel
+   * for the location of the center output directory.
+   * This panel also uses the dataGap members declared in AbstractPanel
+   * for automatically updating the number of input boxes available.
+   */
+  
+  QDateTimeEdit *startDateTime, *endDateTime;
+  /*
+   * startDateTime & endDateTime adjust the parameters that control upper 
+   *  and lower limits of volumes with valid dates to be used in the fit
+   *  
+   */
+
+  QDoubleSpinBox *windWeightBox, *stdDevWeightBox, *ptsWeightBox;
+  /* 
+   * windWeightBox contains the relative weight a volume's maximum wind 
+   *   will be given in determining the curve fit
+   *
+   * stdDevWeightBox contains the relative weight a volume's standard 
+   *   deviation should be given when determing the curve fit
+   *
+   * ptsWeightBox contains the relative weight a volume's number of converging 
+   *   points should be given when determing the curve fit
+   *
+   * The sum of these three values should add up to one
+   *
+   */
+  
+  QDoubleSpinBox *positionWeightBox, *rmwWeightBox, *velWeightBox;
+  /* 
+   * positionWeightBox contains the relative weight a center's position 
+   *   will be given in determining which center best fits the curve
+   *
+   * rmwWeightBox contains the relative weight a center's radius of 
+   *   maximum wind should be given when determining which center best fits 
+   *   the curve
+   *
+   * velWeightBox contains the relative weight a center's maximum velocity  
+   *   should be given when determining which center best fits the curve
+   *
+   * The sum of these three values should add up to one
+   *
+   */
+
+  QRadioButton *fTest95Button, *fTest99Button;
+  /*
+   * fTest95Button and fTest99Button determine what agreement will be required 
+   *   for fTesting results. If fTest99Button is down then the results will 
+   *   be thresholded at the 99th percentile. If fTest95Button is down then
+   *   agreement within the 95th percentile will be used.
+   *
+   */
+
 };
 
 class VTDPanel:public AbstractPanel
@@ -174,8 +236,10 @@ class VTDPanel:public AbstractPanel
   // Modifies the VTD Section of the Configuration
  public:
   VTDPanel();
+  ~VTDPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
+  void setDefaultDirectory(QDir* newDir);
  
  private:
   /*
@@ -192,7 +256,6 @@ class VTDPanel:public AbstractPanel
   QHash<QString, QString> *closureOptions;
   QHash<QString, QString> *reflectivityOptions;
   QHash<QString, QString> *velocityOptions;
-  QHash<QString, QString> *criteriaOptions;
 
   QSpinBox *bLBox, *tLBox, *iRBox, *oRBox;
   // bLBox controls the lowest search level of the cappi
@@ -209,6 +272,7 @@ class HVVPPanel:public AbstractPanel
   // Modifies the HVVP Section of the Configuration
  public:
   HVVPPanel();
+  ~HVVPPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
 };
@@ -218,6 +282,7 @@ class PressurePanel:public AbstractPanel
   // Modifies the Pressure Section of the Configuration
  public:
   PressurePanel();
+  ~PressurePanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
  private:
@@ -232,6 +297,7 @@ class GraphicsPanel:public AbstractPanel
   // Modifies the Graphics Section of the Configuration
  public:
   GraphicsPanel();
+  ~GraphicsPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
  private:
@@ -259,6 +325,7 @@ class QCPanel:public AbstractPanel
   // Modifies the QC Section of the Configuration
  public:
   QCPanel();
+  ~QCPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
  private:

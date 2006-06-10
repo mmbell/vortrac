@@ -11,7 +11,7 @@
      <lat>0.00</lat>
      <lon>0.00</lon>
      <alt>0.00</alt>
-     <dir>workingDirs/</dir>
+     <dir>default</dir>
      <format>LEVELII</format>
      <startdate>2005-01-01</startdate>
      <enddate>2005-01-02</enddate>
@@ -19,7 +19,7 @@
      <endtime>00:00:00</endtime>
   </radar>
   <cappi>
-     <dir>test/cappi/</dir>
+     <dir>default</dir>
      <xdim>200.0</xdim>
      <ydim>200.0</ydim>
      <zdim>5.0</zdim>
@@ -31,7 +31,7 @@
      <interpolation>bilinear</interpolation>
   </cappi>
   <center>
-     <dir>test/simplex/</dir>
+     <dir>default</dir>
      <geometry>GBVTD</geometry>
      <closure>original</closure>
      <reflectivity>DZ</reflectivity>
@@ -52,13 +52,12 @@
      <maxdatagap wavenum="1">120</maxdatagap>
    </center>
    <choosecenter>
-     <dir>test/chooseCenter/</dir>
+     <dir>default</dir>
      <filename>nameOfCenterListFile</filename>
      <startdate>2005-01-01</startdate>
      <enddate>2005-01-02</enddate>
      <starttime>00:00:00</starttime>
      <endtime>00:00:00</endtime>
-     <dist_weight>0.0</dist_weight>
      <wind_weight>.2</wind_weight>
      <stddev_weight>.6</stddev_weight>
      <pts_weight>.2</pts_weight>
@@ -68,7 +67,7 @@
      <stats>99</stats>
    </choosecenter>
    <vtd>
-     <dir>test/vtd/</dir>
+     <dir>default</dir>
      <geometry>GBVTD</geometry>
      <closure>original</closure>
      <reflectivity>DZ</reflectivity>
@@ -84,7 +83,7 @@
    </vtd>
    <hvvp></hvvp>
    <pressure>
-      <dir>/path/to/pressure/data</dir>
+     <dir>default</dir>
    </pressure>
    <graphics>
       <autolimits>on</autolimits>

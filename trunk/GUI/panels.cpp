@@ -51,7 +51,9 @@ VortexPanel::VortexPanel()
 
   QLabel *workingDirLabel = new QLabel(tr("Working Directory"));
   dir = new QLineEdit();
+  defaultDirectory = new QDir(QDir::currentPath());
   browse = new QPushButton("Browse..");
+  dir->setText(defaultDirectory->path());
   connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
   QGridLayout *dirLayout = new QGridLayout();
   dirLayout->addWidget(workingDirLabel, 0, 0);
@@ -78,6 +80,13 @@ VortexPanel::VortexPanel()
 
   setPanelChanged(false);
 }
+
+VortexPanel::~VortexPanel()
+ {
+  delete vortexName;
+  delete latBox;
+  delete longBox;
+}
     
 void VortexPanel::updatePanel(const QDomElement panelElement)
 {
@@ -100,9 +109,13 @@ void VortexPanel::updatePanel(const QDomElement panelElement)
       if (name == "lon") {
 	longBox->setValue(parameter.toDouble()); }
       if(name == "dir")  {
-	dir->clear();
-	dir->insert(parameter); }
-      
+	if(parameter!=QString("default")) {
+	  dir->clear();
+	  dir->insert(parameter); 
+	  emit workingDirectoryChanged();}
+	else {
+	  setPanelChanged(true);}}
+    
       child = child.nextSiblingElement();
     }
   setPanelChanged(false);
@@ -132,6 +145,7 @@ bool VortexPanel::updateConfig()
       }
       if(element.firstChildElement("dir").text()!=dir->text()) {
 	emit changeDom(element, QString("dir"), dir->text());
+	emit workingDirectoryChanged();
       }
       
     }
@@ -185,7 +199,9 @@ RadarPanel::RadarPanel()
 
   QLabel *radarDirLabel = new QLabel(tr("Radar Data Directory"));
   dir = new QLineEdit();
+  defaultDirectory = new QDir(QDir::currentPath());
   browse = new QPushButton("Browse..");
+  dir->setText(defaultDirectory->path());
   connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
   QGridLayout *radarDirLayout = new QGridLayout();
   radarDirLayout->addWidget(radarDirLabel, 0, 0);
@@ -259,6 +275,13 @@ RadarPanel::RadarPanel()
 
 }
 
+RadarPanel::~RadarPanel()
+{
+  delete radarFormat;
+  delete radarFormatOptions;
+  delete startDateTime;
+  delete endDateTime;
+}
 
 void RadarPanel::updatePanel(const QDomElement panelElement)
 {
@@ -286,8 +309,12 @@ void RadarPanel::updatePanel(const QDomElement panelElement)
     if(name == "alt") {
       radarAltBox->setValue(parameter.toFloat()); }
     if (name == "dir") {
-      dir->clear();
-      dir->insert(parameter); }
+      if(parameter!=QString("default")) {
+	dir->clear();
+	dir->insert(parameter); 
+	emit workingDirectoryChanged();}
+      else
+	setPanelChanged(true);}
     if (name == "format") {
       if(parameter == QString("MODEL"))
 	connectFileBrowse(); 
@@ -345,6 +372,7 @@ bool RadarPanel::updateConfig()
       }
       if(element.firstChildElement("dir").text()!=dir->text()) {
 	emit changeDom(element, QString("dir"), dir->text());
+	emit workingDirectoryChanged();
       }
       if(element.firstChildElement("startdate").text()
 	 !=startDateTime->date().toString("yyyy-MM-dd")) {
@@ -385,6 +413,13 @@ CappiPanel::CappiPanel()
 {
   QLabel *cappiDirLabel = new QLabel(tr("CAPPI Output Directory"));
   dir = new QLineEdit;
+  defaultDirectory = new QDir(QDir::currentPath());
+  if(!defaultDirectory->exists(defaultDirectory->filePath("cappi"))) {
+    defaultDirectory->mkdir("cappi") ;
+  }
+  defaultDirectory->cd("cappi");
+ 
+  dir->setText(defaultDirectory->path());
   browse = new QPushButton(tr("Browse.."));
   connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
   QGridLayout *cappiDir = new QGridLayout;
@@ -507,6 +542,20 @@ CappiPanel::CappiPanel()
   setPanelChanged(false);
 }
 
+CappiPanel::~CappiPanel()
+{
+  delete xDimBox;
+  delete yDimBox;
+  delete zDimBox;
+  delete xGridBox;
+  delete yGridBox;
+  delete zGridBox;
+  delete advUWindBox;
+  delete advVWindBox;
+  delete intBox;
+  delete interpolationMethod;
+}
+
 void CappiPanel::updatePanel(const QDomElement panelElement)
 {
   // Sets the location of the panel's information in the Configuration
@@ -520,8 +569,12 @@ void CappiPanel::updatePanel(const QDomElement panelElement)
     QString name = child.tagName();
     QString parameter = child.text();
     if (name == "dir") {
-      dir->clear();
-      dir->insert(parameter); }
+      if(parameter!=QString("default")) {
+	dir->clear();
+	dir->insert(parameter); 
+	emit workingDirectoryChanged();}
+      else {
+	setPanelChanged(true);}}
     if (name == "xdim") {
       xDimBox->setValue(parameter.toDouble()); }
     if (name == "ydim") {
@@ -559,7 +612,8 @@ bool CappiPanel::updateConfig()
     {
       if(element.firstChildElement("dir").text()!=dir->text()) {
 	emit changeDom(element, QString("dir"), dir->text());
-  }
+	emit workingDirectoryChanged();
+      }
       if(element.firstChildElement("xdim").text().toDouble()
 	 !=xDimBox->value()) {
 	emit changeDom(element, QString("xdim"), 
@@ -611,11 +665,28 @@ bool CappiPanel::updateConfig()
   return true;
 }
 
+void CappiPanel::setDefaultDirectory(QDir* newDir)
+{
+  QString subDirectory("cappi");
+  if(!newDir->cd(subDirectory))
+    if(newDir->mkdir(subDirectory)) 
+      newDir->cd(subDirectory);
+  if(!newDir->isAbsolute())
+    newDir->makeAbsolute();
+  defaultDirectory = newDir;
+}
+
 CenterPanel::CenterPanel()
 {
   QLabel *dirLabel = new QLabel(tr("Center Output Directory"));
   dir = new QLineEdit();
+  defaultDirectory = new QDir(QDir::currentPath());
+  if(!defaultDirectory->exists(defaultDirectory->filePath("center"))) {
+    defaultDirectory->mkdir("center") ;
+  }
+  defaultDirectory->cd("center");
   browse = new QPushButton(tr("Browse.."));
+  dir->setText(defaultDirectory->path());
   connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
   QGridLayout *dirLayout = new QGridLayout;
   dirLayout->addWidget(dirLabel, 0, 0);
@@ -825,6 +896,30 @@ CenterPanel::CenterPanel()
   setPanelChanged(false);
 }
 
+CenterPanel::~CenterPanel()
+{
+  delete geometryBox;
+  delete closureBox;
+  delete refBox;
+  delete velBox;
+  delete critBox;
+  delete geometryOptions;
+  delete closureOptions;
+  delete reflectivityOptions;
+  delete velocityOptions;
+  delete criteriaOptions;
+  delete bLBox;
+  delete tLBox;
+  delete iRBox;
+  delete oRBox;
+  delete iterations;
+  delete numPointsBox;
+  delete ringBox;
+  delete influenceBox;
+  delete convergenceBox;
+  delete diameterBox;
+}
+
 void CenterPanel::updatePanel(const QDomElement panelElement)
 {
   // Sets the location of the panel's information in the Configuration
@@ -838,8 +933,12 @@ void CenterPanel::updatePanel(const QDomElement panelElement)
     QString name = child.tagName();
     QString parameter = child.text();
     if (name == "dir") {
-      dir->clear();
-      dir->insert(parameter); }
+      if(parameter!=QString("default")) {
+	dir->clear();
+	dir->insert(parameter); 
+	emit workingDirectoryChanged();}
+      else 
+	setPanelChanged(true);}
     if (name == "ringwidth") {
       ringBox->setValue(parameter.toDouble()); }
     if (name == "influenceradius") {
@@ -911,6 +1010,7 @@ bool CenterPanel::updateConfig()
     {
       if(element.firstChildElement("dir").text()!=dir->text()) {
 	emit changeDom(element, QString("dir"), dir->text());
+	emit workingDirectoryChanged();
       }
       if(element.firstChildElement("geometry").text()
 	 !=geometryOptions->value(geometryBox->currentText())) {
@@ -1027,34 +1127,297 @@ bool CenterPanel::updateConfig()
   return true;
 }
 
+void CenterPanel::setDefaultDirectory(QDir* newDir)
+{
+  QString subDirectory("center");
+ if(!newDir->cd(subDirectory))
+    if(newDir->mkdir(subDirectory)) 
+      newDir->cd(subDirectory);
+  if(!newDir->isAbsolute())
+    newDir->makeAbsolute();
+  defaultDirectory = newDir;
+}
+
 ChooseCenterPanel::ChooseCenterPanel()
 {
-    //Do nothing
+  QLabel *dirLabel = new QLabel(tr("VTD Output Directory"));
+  dir = new QLineEdit();
+  defaultDirectory = new QDir(QDir::currentPath());
+  if(!defaultDirectory->exists(defaultDirectory->filePath("chooseCenter"))) {
+    defaultDirectory->mkdir("chooseCenter") ;
+  }
+  defaultDirectory->cd("chooseCenter");
+  browse = new QPushButton(tr("Browse.."));
+  dir->setText(defaultDirectory->path());
+  connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
+  QGridLayout *dirLayout = new QGridLayout;
+  dirLayout->addWidget(dirLabel, 0, 0);
+  dirLayout->addWidget(dir, 1, 0, 1, 3);
+  dirLayout->addWidget(browse, 1,3);
+
+  QLabel *start = new QLabel(tr("Start Date and Time"));
+  startDateTime = new QDateTimeEdit();
+  startDateTime->setDisplayFormat("MMM-dd-yyyy hh:mm:ss");
+  QHBoxLayout *startLayout = new QHBoxLayout;
+  startLayout->addWidget(start);
+  startLayout->addWidget(startDateTime);
+
+  QLabel *end = new QLabel(tr("End Date and Time"));
+  endDateTime = new QDateTimeEdit();
+  endDateTime->setDisplayFormat("MMM-dd-yyyy hh:mm:ss");
+  QHBoxLayout *endLayout = new QHBoxLayout;
+  endLayout->addWidget(end);
+  endLayout->addWidget(endDateTime);
+
+  QGroupBox *weightsMeanGroup = new QGroupBox(tr("Mean Weighting Scheme"));
+  QGridLayout *weightsMeanLayout = new QGridLayout;
+  QLabel *windWeightLabel = new QLabel(tr("Maximum Wind Score Weight"));
+  windWeightBox = new QDoubleSpinBox;
+  windWeightBox->setRange(0,1);
+  windWeightBox->setDecimals(2);
+  QLabel *stdDevWeightLabel = new QLabel(tr("Standard Deviation Score Weight"));
+  stdDevWeightBox = new QDoubleSpinBox;
+  stdDevWeightBox->setRange(0,1);
+  stdDevWeightBox->setDecimals(2);
+  QLabel *ptsWeightLabel = new QLabel(tr("Number of Converging Centers Score Weight"));
+  ptsWeightBox = new QDoubleSpinBox;
+  ptsWeightBox->setRange(0,1);
+  ptsWeightBox->setDecimals(2);
+
+  weightsMeanLayout->addWidget(windWeightLabel,0,0,1,1);
+  weightsMeanLayout->addWidget(windWeightBox,0,1);
+  weightsMeanLayout->addWidget(stdDevWeightLabel, 1,0,1,1);
+  weightsMeanLayout->addWidget(stdDevWeightBox,1,1);
+  weightsMeanLayout->addWidget(ptsWeightLabel, 2,0,1,1);
+  weightsMeanLayout->addWidget(ptsWeightBox,2,1);
+  weightsMeanGroup->setLayout(weightsMeanLayout);
+  
+  QGroupBox *weightsSingleGroup = new QGroupBox(tr("Center Weighting Scheme"));
+  QGridLayout *weightsSingleLayout = new QGridLayout;
+  QLabel *positionWeightLabel = new QLabel(tr("Distance Score Weight"));
+  positionWeightBox = new QDoubleSpinBox;
+  positionWeightBox->setRange(0,1);
+  positionWeightBox->setDecimals(2);
+  QLabel *rmwWeightLabel = new QLabel(tr("Radius of Maximum Wind Score Weight"));
+  rmwWeightBox = new QDoubleSpinBox;
+  rmwWeightBox->setRange(0,1);
+  rmwWeightBox->setDecimals(2);
+  QLabel *velWeightLabel = new QLabel(tr("Maximum Velocity Score Weight"));
+  velWeightBox = new QDoubleSpinBox;
+  velWeightBox->setRange(0,1);
+  velWeightBox->setDecimals(2);
+
+  weightsSingleLayout->addWidget(positionWeightLabel,0,0);
+  weightsSingleLayout->addWidget(positionWeightBox,0,1);
+  weightsSingleLayout->addWidget(rmwWeightLabel, 1,0);
+  weightsSingleLayout->addWidget(rmwWeightBox,1,1);
+  weightsSingleLayout->addWidget(velWeightLabel, 2,0);
+  weightsSingleLayout->addWidget(velWeightBox,2,1);
+  weightsSingleGroup->setLayout(weightsSingleLayout);
+
+  QGroupBox *fTestGroup = new QGroupBox(tr("fTest Precision"));
+  QHBoxLayout *fTestLayout = new QHBoxLayout;
+  QLabel *f95Label = new QLabel(tr("95% Agreement"));
+  fTest95Button = new QRadioButton(fTestGroup);
+  QLabel *f99Label = new QLabel(tr("99% Agreement"));
+  fTest99Button = new QRadioButton(fTestGroup);
+  fTestLayout->addWidget(f95Label);
+  fTestLayout->addWidget(fTest95Button);
+  fTestLayout->addWidget(f99Label);
+  fTestLayout->addWidget(fTest99Button);
+  fTestGroup->setLayout(fTestLayout);
+
+  QVBoxLayout *main = new QVBoxLayout;
+  main->addLayout(dirLayout);
+  main->addLayout(startLayout);
+  main->addLayout(endLayout);
+  main->addWidget(weightsMeanGroup);
+  main->addWidget(weightsSingleGroup);
+  main->addWidget(fTestGroup);
+  main->addStretch(1);
+  setLayout(main);
+
+  connect(dir, SIGNAL(textChanged(const QString&)),
+	  this, SLOT(valueChanged(const QString&)));
+  connect(startDateTime, SIGNAL(dateTimeChanged(const QDateTime&)), 
+	  this, SLOT(valueChanged(const QDateTime&)));
+  connect(endDateTime, SIGNAL(dateTimeChanged(const QDateTime&)), 
+	  this, SLOT(valueChanged(const QDateTime&)));
+  connect(windWeightBox, SIGNAL(valueChanged(const QString&)), 
+	  this, SLOT(valueChanged(const QString&)));
+  connect(stdDevWeightBox, SIGNAL(valueChanged(const QString&)), 
+	  this, SLOT(valueChanged(const QString&))); 
+  connect(ptsWeightBox, SIGNAL(valueChanged(const QString&)), 
+	  this, SLOT(valueChanged(const QString&)));
+  connect(positionWeightBox, SIGNAL(valueChanged(const QString&)), 
+	  this, SLOT(valueChanged(const QString&)));
+  connect(rmwWeightBox, SIGNAL(valueChanged(const QString&)), 
+	  this, SLOT(valueChanged(const QString&)));
+  connect(velWeightBox, SIGNAL(valueChanged(const QString&)), 
+	  this, SLOT(valueChanged(const QString&))); 
+  connect(fTest95Button, SIGNAL(clicked(const bool)),
+	  this, SLOT(valueChanged(const bool)));
+  connect(fTest95Button, SIGNAL(clicked(const bool)),
+	  this, SLOT(valueChanged(const bool)));
+
   setPanelChanged(false);
+}
+
+ChooseCenterPanel::~ChooseCenterPanel()
+{
+  delete startDateTime;
+  delete endDateTime;
+  delete windWeightBox;
+  delete stdDevWeightBox;
+  delete ptsWeightBox;
+  delete positionWeightBox;
+  delete rmwWeightBox;
+  delete velWeightBox;
+  delete fTest95Button;
+  delete fTest99Button;
 }
 
 void ChooseCenterPanel::updatePanel(const QDomElement panelElement)
 {
   setElement(panelElement);
-  //Do nothing for now
+  QDomElement child = panelElement.firstChildElement();
+  while (!child.isNull()) {
+    QString name = child.tagName();
+    QString parameter = child.text();
+    if (name == "dir") {
+      if(parameter!=QString("default")) {
+	dir->clear();
+	dir->insert(parameter); 
+	emit workingDirectoryChanged();}
+      else 
+	setPanelChanged(true);}
+    if (name == "startdate") {
+      startDateTime->setDate(QDate::fromString(parameter, "yyyy-MM-dd")); }
+    if (name == "enddate") {
+      endDateTime->setDate(QDate::fromString(parameter, "yyyy-MM-dd")); }
+    if (name == "starttime") {
+      startDateTime->setTime(QTime::fromString(parameter, "hh:mm:ss")); }
+    if (name == "endtime") {
+      endDateTime->setTime(QTime::fromString(parameter, "hh:mm:ss")); }
+    if (name == "wind_weight") {
+      windWeightBox->setValue(parameter.toFloat()); }
+    if (name == "sttdev_weight") {
+      stdDevWeightBox->setValue(parameter.toFloat()); }
+    if (name == "pts_weight") {
+      ptsWeightBox->setValue(parameter.toFloat()); }
+    if (name == "position_weight") {
+      positionWeightBox->setValue(parameter.toFloat()); }
+    if (name == "rmw_weight") {
+      rmwWeightBox->setValue(parameter.toFloat()); }
+    if (name == "vt_weight") {
+      velWeightBox->setValue(parameter.toFloat()); }
+    if (name == "stats") {
+      if(parameter.toInt() == 99)
+	fTest99Button->setChecked(true);
+      else
+	fTest95Button->setChecked(true);
+    }
+    child = child.nextSiblingElement();
+  }
   setPanelChanged(false);
 }
  
 bool ChooseCenterPanel::updateConfig()
 {
+  QDomElement element = getPanelElement();
   if(checkPanelChanged())
     {
-      //Do nothing
+      if(startDateTime->dateTime() >= endDateTime->dateTime()) {
+	emit log(Message("Start Date and Time must occur before End Date and Time"));
+	return false;
+      }
+       if(element.firstChildElement("startdate").text()
+	 !=startDateTime->date().toString("yyyy-MM-dd")) {
+	emit changeDom(element, QString("startdate"), 
+		       startDateTime->date().toString("yyyy-MM-dd"));
+      }
+      if(element.firstChildElement("enddate").text()
+	 !=endDateTime->date().toString("yyyy-MM-dd")) {
+	emit changeDom(element, QString("enddate"), 
+		       endDateTime->date().toString("yyyy-MM-dd"));
+      }
+      if(element.firstChildElement("starttime").text()
+	 !=startDateTime->time().toString("hh:mm:ss")) {
+	emit changeDom(element, QString("starttime"), 
+		       startDateTime->time().toString("hh:mm:ss"));
+      }
+      if(element.firstChildElement("endtime").text()
+	 !=endDateTime->time().toString("hh:mm:ss")) {
+	emit changeDom(element, QString("endtime"), 
+		       endDateTime->time().toString("hh:mm:ss"));
+      }
+      if(element.firstChildElement("dir").text()!=dir->text()) {
+	emit changeDom(element, QString("dir"), dir->text());
+	emit workingDirectoryChanged();
+      }
+      if(element.firstChildElement("wind_weight").text().toFloat()
+	 !=windWeightBox->value()) {
+	emit changeDom(element, QString("wind_weight"),
+		       QString().setNum(windWeightBox->value()));
+      }
+      if(element.firstChildElement("stddev_weight").text().toFloat()
+	 !=stdDevWeightBox->value()) {
+	emit changeDom(element, QString("stddev_weight"),
+		       QString().setNum(stdDevWeightBox->value()));
+      }
+      if(element.firstChildElement("pts_weight").text().toFloat()
+	 !=ptsWeightBox->value()) {
+	emit changeDom(element, QString("pts_weight"),
+		       QString().setNum(ptsWeightBox->value()));
+      }
+      if(element.firstChildElement("position_weight").text().toFloat()
+	 !=positionWeightBox->value()) {
+	emit changeDom(element, QString("position_weight"),
+		       QString().setNum(positionWeightBox->value()));
+      }
+      if(element.firstChildElement("rmw_weight").text().toFloat()
+	 !=rmwWeightBox->value()) {
+	emit changeDom(element, QString("rmw_weight"),
+		       QString().setNum(rmwWeightBox->value()));
+      }
+      if(element.firstChildElement("vt_weight").text().toFloat()
+	 !=velWeightBox->value()) {
+	emit changeDom(element, QString("vt_weight"),
+		       QString().setNum(velWeightBox->value()));
+      }
+      if(fTest99Button->isChecked()) {
+	emit changeDom(element, QString("stats"), QString().setNum(99));
+      }
+      if(fTest95Button->isChecked()) {
+	emit changeDom(element, QString("stats"), QString().setNum(95));
+      }
     }
   setPanelChanged(false);
   return true;
+}
+
+void ChooseCenterPanel::setDefaultDirectory(QDir* newDir)
+{
+  QString subDirectory("choosecenter");
+  if(!newDir->cd(subDirectory))
+    if(newDir->mkdir(subDirectory)) 
+      newDir->cd(subDirectory);
+  if(!newDir->isAbsolute())
+    newDir->makeAbsolute();
+  defaultDirectory = newDir;
 }
 
 VTDPanel::VTDPanel()
 {
   QLabel *dirLabel = new QLabel(tr("VTD Output Directory"));
   dir = new QLineEdit();
+  defaultDirectory = new QDir(QDir::currentPath());
+  if(!defaultDirectory->exists(defaultDirectory->filePath("vtd"))) {
+    defaultDirectory->mkdir("vtd") ;
+  }
+  defaultDirectory->cd("vtd");
   browse = new QPushButton(tr("Browse.."));
+  dir->setText(defaultDirectory->path());
   connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
   QGridLayout *dirLayout = new QGridLayout;
   dirLayout->addWidget(dirLabel, 0, 0);
@@ -1148,7 +1511,7 @@ VTDPanel::VTDPanel()
   optionsLayout->addWidget(reflectivity, 0,3);
   optionsLayout->addWidget(refBox, 0,4);
   optionsLayout->addWidget(velocity, 1,3);
-  optionsLayout->addWidget(velBox, 1, 4);
+  optionsLayout->addWidget(velBox, 1,4);
 
   dataGapBoxes = QList<QDoubleSpinBox*>();
   QLabel *maxWaveNum = new QLabel(tr("Maximum Wave Number"));
@@ -1205,6 +1568,23 @@ VTDPanel::VTDPanel()
   setPanelChanged(false);
 }
 
+VTDPanel::~VTDPanel()
+{
+  delete geometryBox;
+  delete closureBox;
+  delete refBox;
+  delete velBox;
+  delete geometryOptions;
+  delete closureOptions;
+  delete reflectivityOptions;
+  delete velocityOptions;
+  delete bLBox;
+  delete tLBox;
+  delete iRBox;
+  delete oRBox;
+  delete ringBox;
+}
+
 void VTDPanel::updatePanel(const QDomElement panelElement)
 {
   // Sets the location of the panel's information in the Configuration
@@ -1218,8 +1598,12 @@ void VTDPanel::updatePanel(const QDomElement panelElement)
     QString name = child.tagName();
     QString parameter = child.text();
     if (name == "dir") {
-      dir->clear();
-      dir->insert(parameter); }
+      if(parameter!=QString("default")) {
+	dir->clear();
+	dir->insert(parameter); 
+	emit workingDirectoryChanged();}
+      else 
+	setPanelChanged(true);}
     if (name == "ringwidth") {
       ringBox->setValue(parameter.toDouble()); }
     if (name == "bottomlevel") {
@@ -1273,6 +1657,7 @@ bool VTDPanel::updateConfig()
     {
       if(element.firstChildElement("dir").text()!=dir->text()) {
 	emit changeDom(element, QString("dir"), dir->text());
+	emit workingDirectoryChanged();
       }
       if(element.firstChildElement("geometry").text()
 	 !=geometryOptions->value(geometryBox->currentText())) {
@@ -1359,10 +1744,28 @@ bool VTDPanel::updateConfig()
   return true;
 }
 
+void VTDPanel::setDefaultDirectory(QDir* newDir)
+{
+  QString subDirectory("vtd");
+  if(!newDir->cd(subDirectory))
+    if(newDir->mkdir(subDirectory)) 
+      newDir->cd(subDirectory);
+  if(!newDir->isAbsolute())
+    newDir->makeAbsolute();
+  defaultDirectory = newDir;
+}
+
 HVVPPanel::HVVPPanel()
 {
   //Do nothing
   setPanelChanged(false);
+}
+
+HVVPPanel::~HVVPPanel()
+{
+  // Will be implemented after constructor is
+  // no parameters as of yet
+
 }
 
 void HVVPPanel::updatePanel(const QDomElement panelElement)
@@ -1387,7 +1790,9 @@ PressurePanel::PressurePanel()
 {
   QLabel *dirLabel = new QLabel(tr("Directory Containing Pressure Data"));
   dir = new QLineEdit();
+  defaultDirectory = new QDir(QDir::currentPath());
   browse = new QPushButton(tr("Browse.."));
+  dir->setText(defaultDirectory->path());
   connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
   QGridLayout *dirLayout = new QGridLayout;
   dirLayout->addWidget(dirLabel, 0, 0);
@@ -1404,6 +1809,11 @@ PressurePanel::PressurePanel()
   setPanelChanged(false);
 }
 
+PressurePanel::~PressurePanel()
+{
+  // No independent members
+}
+
 void PressurePanel::updatePanel(const QDomElement panelElement)
 {
   // Sets the location of the panel's information in the Configuration
@@ -1417,8 +1827,12 @@ void PressurePanel::updatePanel(const QDomElement panelElement)
     QString name = child.tagName();
     QString parameter = child.text();
     if (name == "dir") {
-      dir->clear();
-      dir->insert(parameter); }
+      if(parameter!=QString("default")) {
+	dir->clear();
+	dir->insert(parameter); 
+	emit workingDirectoryChanged();}
+      else 
+	setPanelChanged(true);}
     child = child.nextSiblingElement();
   }
   setPanelChanged(false);
@@ -1434,6 +1848,7 @@ bool PressurePanel::updateConfig()
     {
       if(element.firstChildElement("dir").text()!=dir->text()) {
 	emit changeDom(element, QString("dir"), dir->text());
+	emit workingDirectoryChanged();
       }
     }
   setPanelChanged(false);
@@ -1506,6 +1921,17 @@ GraphicsPanel::GraphicsPanel()
 	  this, SLOT(valueChanged(const QDateTime&)));
 
   setPanelChanged(false);
+}
+
+GraphicsPanel::~GraphicsPanel()
+{
+  delete pMaxBox;
+  delete pMinBox;
+  delete rmwMaxBox;
+  delete rmwMinBox;
+  delete beginTime;
+  delete endTime;
+  delete graphParameters;
 }
 
 void GraphicsPanel::updatePanel(const QDomElement panelElement)
@@ -1682,7 +2108,9 @@ QCPanel::QCPanel()
   QFrame *knownParameters = new QFrame;
   QLabel *knownDirLabel = new QLabel(tr("AWIPS Data Directory"));
   dir = new QLineEdit();
+  defaultDirectory = new QDir(QDir::currentPath());
   browse = new QPushButton("Browse..");
+  dir->setText(defaultDirectory->path());
   connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
   QGridLayout *knownDirLayout = new QGridLayout();
   QHBoxLayout *knownLayout = new QHBoxLayout;
@@ -1751,6 +2179,24 @@ QCPanel::QCPanel()
   
   setPanelChanged(false);
 
+}
+
+QCPanel::~QCPanel()
+{
+  delete vad;
+  delete user;
+  delete known;
+  delete bbSegmentSize;
+  delete maxFoldCount;
+  delete vadLevels;
+  delete numCoefficients;
+  delete velocityMinimum;
+  delete velocityMaximum;
+  delete spectralThreshold;
+  delete reflectivityMinimum;
+  delete reflectivityMaximum;
+  delete windSpeed;
+  delete windDirection;
 }
 
 void QCPanel::updatePanel(const QDomElement panelElement)

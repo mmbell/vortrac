@@ -26,9 +26,33 @@
 AbstractPanel::AbstractPanel(QWidget *parent)
   :QWidget(parent)
 {
+  defaultDirectory = new QDir(QDir::currentPath());
   dir = new QLineEdit;
+  dir->setText(defaultDirectory->currentPath());
   browse = new QPushButton("Browse..");
   connectBrowse();
+}
+
+AbstractPanel::~AbstractPanel()
+{
+  delete dir;
+  delete browse;
+  delete defaultDirectory;
+  delete maxWaveNumBox;
+  delete dataGap;
+  delete dataGapLayout;
+  //  delete dataGapBoxes;
+  for(int i = 0; i < dataGapBoxes.count(); i++) {
+    delete dataGapBoxes[i];
+  }
+  //  delete dataGapLabels;
+  for(int i = 0; i < dataGapLabels.count(); i++) {
+    delete dataGapLabels[i];
+  }
+  delete radarLatBox;
+  delete radarLongBox;
+  delete radarAltBox;
+  
 }
 
 void AbstractPanel::updatePanel(QDomElement panelElement)
@@ -51,7 +75,9 @@ void AbstractPanel::connectFileBrowse()
 
 void AbstractPanel::getDirectory()
 {
-  QString filePath = QFileDialog::getExistingDirectory(this);
+  QString filePath = QFileDialog::getExistingDirectory(this,
+					     QString(tr("Select Directory")),
+						       dir->text());
   dir->clear();
   dir->insert(filePath);
 }
@@ -61,7 +87,7 @@ void AbstractPanel::getFileName()
   QString openFile;
   openFile=QFileDialog::getOpenFileName(this,
 					QString("Select File"),
-					elem.firstChildElement("dir").text(), 
+					dir->text(), 
 					QString("Configuration Files (*.xml)"));
   dir->clear();
   dir->insert(openFile);
@@ -208,3 +234,14 @@ void AbstractPanel::radarChanged(const QString& text)
   }
 }
 
+void AbstractPanel::setDefaultDirectory(QDir* newDir)
+{
+  if(!newDir->exists()) {
+    newDir->mkpath(newDir->path());
+  }
+  if(!newDir->isAbsolute())
+    newDir->makeAbsolute();
+  
+  defaultDirectory = newDir;
+   
+}

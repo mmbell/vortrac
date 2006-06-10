@@ -1,4 +1,4 @@
- /*
+/*
  * ConfigurationDialog.cpp
  * VORTRAC
  *
@@ -25,6 +25,9 @@ ConfigurationDialog::ConfigurationDialog(Configuration *initialConfig)
   panels = new QStackedWidget(this);
   populatePanels();
   makePanelForString();
+  workingDirectory = new QDir(vortex->getCurrentDirectoryPath());
+  connect(vortex, SIGNAL(workingDirectoryChanged()),
+  	  this, SLOT(setPanelDirectories()));
 
   selection = new QListWidget(this);
   selection->setViewMode(QListView::IconMode);
@@ -36,7 +39,7 @@ ConfigurationDialog::ConfigurationDialog(Configuration *initialConfig)
   	  SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)), 
   	  this, SLOT(switchPanel(QListWidgetItem *, QListWidgetItem *)));
   selection->setCurrentRow(0);
-
+ 
   QPushButton *apply = new QPushButton(tr("Apply"));
   apply->setDefault(true);
   QPushButton *cancel = new QPushButton(tr("Cancel"));
@@ -58,6 +61,17 @@ ConfigurationDialog::ConfigurationDialog(Configuration *initialConfig)
 
 }
 
+ConfigurationDialog::~ConfigurationDialog()
+{
+  delete selection;
+  delete panels;
+  QList<AbstractPanel*> deleteList = panelForString.values();
+  for(int i = 0; i < deleteList.count(); i++) {
+    delete deleteList[i];
+  }
+  delete workingDirectory;
+}
+
 void ConfigurationDialog::switchPanel(QListWidgetItem *current, QListWidgetItem *previous)
   //transitions between the panels in the QStacked Widget
 {
@@ -73,6 +87,7 @@ bool ConfigurationDialog::read()
     emit log(Message("Configuration Dialog can't read the the Configuration"));
     return false; }
 
+  applyChanges();
   return true;
 }
 
@@ -298,4 +313,25 @@ void ConfigurationDialog::graphicsParameter(const QDomElement& element,
 void ConfigurationDialog::catchLog(const Message& message)
 {
   emit log(message);
+}
+
+void ConfigurationDialog::setPanelDirectories()
+{
+  workingDirectory = vortex->getDefaultDirectory();
+  QList<AbstractPanel*> panelList = panelForString.values();
+  for(int i = 0; i < panelList.count(); i++) {
+    AbstractPanel* currPanel = panelList[i];
+    if((currPanel!=vortex) && (currPanel!=qc) && (currPanel!=hvvp) 
+       && (currPanel!=graphics) && (currPanel!=radar)) {
+      if(currPanel->getDefaultDirectory()->path() 
+	 == currPanel->getCurrentDirectoryPath() ) {
+	// If the directory has not been changed from the default
+	QDir* tempWorkingDir = new QDir(vortex->getCurrentDirectoryPath());
+	currPanel->setDefaultDirectory(tempWorkingDir);
+	configData->setParam(configData->getConfig(panelForString.key(currPanel)), QString("dir"), currPanel->getDefaultDirectory()->path());
+	currPanel->updatePanel(currPanel->getPanelElement());
+	//delete tempWorkingDir;
+      }
+    }
+  }
 }

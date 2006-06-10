@@ -28,6 +28,7 @@ class ConfigurationDialog:public QDialog
        Q_OBJECT
 public:
        ConfigurationDialog(Configuration *initialConfig = 0);
+       ~ConfigurationDialog();
        bool read();
        void checkConfig();
 
@@ -52,6 +53,7 @@ private:
        GraphicsPanel* graphics;
        QCPanel* qc;
        QHash <QString, AbstractPanel*> panelForString;
+       QDir* workingDirectory;
 
        void populateSelection();
        void populatePanels();
@@ -64,6 +66,7 @@ private:
 
 private slots:
        void applyChanges();
+       void setPanelDirectories(); 
  
 signals:
        void log(const Message& message); 

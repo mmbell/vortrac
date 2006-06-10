@@ -24,6 +24,7 @@
 #include <QLabel>
 #include <QDateTime>
 #include <QComboBox>
+#include <QDir>
 #include "Message.h"
 #include "Configuration.h"
 
@@ -36,6 +37,7 @@ class AbstractPanel:public QWidget
      */
  public:
    AbstractPanel(QWidget *parent = 0);
+   ~AbstractPanel();
  
    virtual void updatePanel(QDomElement panelElement);
      // Reads in values from the Configuration and writes
@@ -47,6 +49,10 @@ class AbstractPanel:public QWidget
 
    QLineEdit *dir;
    QPushButton *browse;
+   QDir *defaultDirectory;
+   virtual QDir* getDefaultDirectory() { return defaultDirectory; }
+   QString getCurrentDirectoryPath() { return dir->text(); }
+   virtual void setDefaultDirectory(QDir* newDir);
    // The dir and browse memebers create a generic setup that can be added to
    // any panel for finding and returning an existing folder location.
 
@@ -146,6 +152,9 @@ class AbstractPanel:public QWidget
    void stateChange(const QString &name, const bool change);
      // Updates the graph if changes have been made to the
      //   viewable limits of the graph
+
+   void workingDirectoryChanged();
+     // emitted whenever the working directory is changed 
 };
 
 #endif

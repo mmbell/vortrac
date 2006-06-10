@@ -214,7 +214,6 @@ bool AnalysisPage::loadFile(const QString &fileName)
   workingDirectory = QDir(directoryString);
   //Message::toScreen(workingDirectory.path());
   if(!workingDirectory.isAbsolute()) {
-    emit log(Message("this was the problem"));
     workingDirectory.makeAbsolute();
   }
   // Check to make sure the workingDirectory exists

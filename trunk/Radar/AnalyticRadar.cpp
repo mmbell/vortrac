@@ -19,9 +19,18 @@
    : RadarData(radarname, lat, lon, configFile)
    
 {
+  numSweeps = 0;
+  numRays = 0;
+  vcp = 0;
+  velNull = -999.;
 
+  // Loads the configuration containing analytic radar parameters
   config = new Configuration();
   config->read(configFile);
+  
+  // Retrieves the parameters which indicates whether the analytic data
+  // should be sampled or not
+
   QDomElement radar = config->getRoot().firstChildElement("analytic_radar");
   QString sampling = config->getParam(radar, "sample");
   
@@ -34,17 +43,14 @@
     isDealiased(false);
   }
 
-  numSweeps = 0;
-  numRays = 0;
-  vcp = 0;
-
   // Configure Properties from theoretical radar
 
 }
 
 AnalyticRadar::~AnalyticRadar()
 {
-
+  delete data;
+  delete elevations;
 }
 
 void AnalyticRadar::setConfigElement(QDomElement configRoot)
@@ -56,11 +62,16 @@ bool AnalyticRadar::readVolume()
 {
   
   if(isDealiased()) {
+    // Then the analytic radar is not really needed,
+    // a hollow radarData is constructed and passed along for 
+    // algorithm consistancy
 
     if(skipReadVolume())
       return true;
   }
   else {
+    // Sample the analytic data with the analytic radar
+
     if(readVolumeAnalytic()) {
       //testing Message::toScreen("Finished read Volume Analytic");
       return true;
@@ -73,7 +84,7 @@ return false;
 Sweep AnalyticRadar::addSweep()
 {
   
-  // add Sweeps from theoretical radar sampling
+  // add Sweeps from theoretical radar volume
   Sweep *newSweep = new Sweep();
 
   // Needs a way to do different elevation angles -LM
@@ -100,10 +111,12 @@ Ray AnalyticRadar::addRay()
   newRay->setRayIndex(numRays);
   
   float elevAngle = Sweeps[numSweeps-1].getElevation();
-
+ 
   float metAzimAngle =  beamWidth*(float)(newRay->getRayIndex()-Sweeps[numSweeps-1].getFirstRay());
+  // metAzimAngle is in meterological angle system (cw from 12 o'clock)
   
   float azimAngle = 450.0-metAzimAngle;
+  // azimAngle is in math angle (ccw from 3 o'clock)
   if(azimAngle >= 360.0)
     azimAngle-=360.0;
   newRay->setAzimuth( metAzimAngle );
@@ -113,21 +126,28 @@ Ray AnalyticRadar::addRay()
   int numPoints = data->getSphericalRangeLength(azimAngle, elevAngle);
   float *raw_ref_data = new float[numPoints];
   float *raw_ref_positions = new float[numPoints];
+
   QString dataType("DZ");
   raw_ref_data = data->getSphericalRangeData(dataType,
 					     azimAngle, elevAngle);
   raw_ref_positions = data->getSphericalRangePosition(azimAngle, elevAngle);
+
+  // Selects all points from data that are in the theoretical radar beam
   
   float furthestPosition = 0.0;
   for(int z = 0; z < numPoints; z++) {
     if(raw_ref_positions[z] > furthestPosition)
       furthestPosition = raw_ref_positions[z];
   }
+  // determines the distance from the radar where there is sufficient data
+  // for readings
 
- 
   float *ref_data = new float[numRefGates];
   float gateBoundary = 0;
   
+  // This loop checks the positions of all the points in the ray
+  // for those within a certain gate and sums them together to get an average
+  // reflectivity reading
   for(int gateNum = 0; gateNum < numRefGates; gateNum++ ) {
     if(gateBoundary < furthestPosition) {
       float refSum = 0;
@@ -142,39 +162,52 @@ Ray AnalyticRadar::addRay()
       if(count!=0)
 	ref_data[gateNum] = refSum/(float)count;
       else
-	ref_data[gateNum] = -999;
+	ref_data[gateNum] = velNull;
     }
     else {
-      ref_data[gateNum] = -999;
+      ref_data[gateNum] = velNull;
     }
     gateBoundary+=refGateSp;
   }
+
+
+  delete[] raw_ref_data;
+  delete[] raw_ref_positions;
   
+  // Selects all points in the theoretical radar beam that may contain valid 
+  // velocity data
   
   float *raw_vel_data = new float[numPoints];
+  float *raw_vel_positions = new float[numPoints];
   dataType = QString("VE");
   raw_vel_data = data->getSphericalRangeData(dataType,azimAngle, elevAngle);
+  raw_vel_positions = data->getSphericalRangePosition(azimAngle, elevAngle);
   float *vel_data = new float[numVelGates];
   float *sw_data = new float[numVelGates];
   gateBoundary = 0;
   
+  // This loop checks the positions of all the points in the ray
+  // for those within a certain gate and sums them together to get an average
+  // velocity reading with a measure of spectral width
+  // here noise and aliasing are added if requested
+
   for(int gateNum = 0; gateNum < numVelGates; gateNum++ ) {
     if(gateBoundary < furthestPosition) {
       float velSum = 0;
       int count = 0;
       for(int p = 0; p < numPoints; p++) {
-	if ((raw_ref_positions[p] > gateBoundary) 
-	    && (raw_ref_positions[p] <= (gateBoundary+velGateSp))) {
+	if ((raw_vel_positions[p] > gateBoundary) 
+	    && (raw_vel_positions[p] <= (gateBoundary+velGateSp))) {
 	  velSum += raw_vel_data[p];
 	  count++;
 	}
       }
       if(count == 0) {
-	vel_data[gateNum] = -999;
-	sw_data[gateNum] = -999;
+	vel_data[gateNum] = velNull;
+	sw_data[gateNum] = velNull;
       }
       else {
-	
+	// Good velocity data in this gate
 	vel_data[gateNum] = velSum*cos(elevAngle*deg2rad)/(float)count;
 
 	// Add in noise factor, method borrowed from analyticTC
@@ -192,21 +225,27 @@ Ray AnalyticRadar::addRay()
 	  vel_data[gateNum]+= noiseScale*noise;
 	}
 
+	// collect all the point's velocities for spectral width calculations
+	// spectral width is the standard deviation of the velocity readings
+
 	float *sw_points = new float[count];
 	int countAgain = 0;
 	for(int p = 0; p < numPoints; p++) {
-	  if ((raw_ref_positions[p] > gateBoundary) 
-	      && (raw_ref_positions[p] < gateBoundary+velGateSp)) {
+	  if ((raw_vel_positions[p] > gateBoundary) 
+	      && (raw_vel_positions[p] < gateBoundary+velGateSp)) {
 	    sw_points[countAgain] = raw_vel_data[p];
 	    countAgain++;
 	  }
 	}
 	float swSum = 0;
 	for(int q = 0; q < count; q++) {
+      
 	  swSum = (sw_points[q]-vel_data[gateNum])*(sw_points[q]-vel_data[gateNum]);
 	}
 	sw_data[gateNum] = sqrt(swSum/(float)count);
-
+	
+	// Velocity aliasing when applicable
+	
        	while(fabs(vel_data[gateNum]) > nyqVel) {
 	  if(vel_data[gateNum] > 0) {
 	    vel_data[gateNum]-=2*nyqVel;
@@ -218,11 +257,14 @@ Ray AnalyticRadar::addRay()
       }
     }
     else {
-      vel_data[gateNum] = -999;
-      sw_data[gateNum] = -999;
+      vel_data[gateNum] = velNull;
+      sw_data[gateNum] = velNull;
     } 
     gateBoundary+=velGateSp;
   }
+
+  delete[] raw_vel_data;
+  delete[] raw_vel_positions;
     
   newRay->setRefData( ref_data );
   newRay->setVelData( vel_data );
@@ -307,6 +349,8 @@ bool AnalyticRadar::readVolumeAnalytic()
 			       config, &vortexLat, &vortexLon, 
 			       &radarLat, &radarLon);
   data->writeAsi();
+  // writes out the base cappi data set before sampling
+
   data->setAbsoluteReferencePoint(radarLat,radarLon,0);
   // data->setCartesianReferencePoint(0,0,0);
  
@@ -314,10 +358,15 @@ bool AnalyticRadar::readVolumeAnalytic()
   // VCP 0 : flat cappi sample
 
   vcp = 32;
+  // This needs to be connected to a bunch of more useful options
+  // that correspond to the sweep angles chosen
 
   int numRaysPerSweep = (int)floor(360.0/beamWidth);
-  //testing Message::toScreen(QString().setNum(totNumSweeps*numRaysPerSweep));
+  // we use all the data we have aka radar has no distance limit
+  // of its own
 
+  //testing Message::toScreen(QString().setNum(totNumSweeps*numRaysPerSweep));
+  // sweeps angles are pulled from array in configuration
   elevations = new float[totNumSweeps];
 
   elevations[0]  = 0;
