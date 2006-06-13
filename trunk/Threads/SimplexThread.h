@@ -35,7 +35,7 @@ class SimplexThread : public QThread
      SimplexThread(QObject *parent = 0);
      ~SimplexThread();
 	 void findCenter(Configuration *wholeConfig, GriddedData *dataPtr, 
-			 float *vortexLat, float *vortexLon, SimplexData *simplexPtr);
+			 float *vortexLat, float *vortexLon, SimplexList *simplexPtr);
 
  public slots:
      void catchLog(const Message& message);
@@ -53,6 +53,7 @@ class SimplexThread : public QThread
      bool abort;
 	 GriddedData *gridData;
 	 SimplexData *simplexData;
+	 SimplexList *simplexResults;
 	 Configuration *configData;
 	 QDomElement simplexConfig;
 	 float* refLat;
@@ -78,7 +79,7 @@ class SimplexThread : public QThread
 	 float convergingCenters;
 	 float Xind[25],Yind[25],VTind[25];
 	 float Xconv[25],Yconv[25],VTconv[25];
-	 SimplexList simplexResults;
+
 	 
 	 void archiveCenters(float& radius,float& height,float& numPoints);
 	 inline void getVertexSum(float**& vertex,float*& vertexSum);

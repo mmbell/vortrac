@@ -19,6 +19,7 @@
 #include "AnalysisThread.h"
 #include "Config/Configuration.h"
 #include "DataObjects/VortexList.h"
+#include "DataObjects/SimplexList.h"
 
 #include <QTextStream>
 
@@ -50,10 +51,12 @@ class PollThread : public QThread
 	RadarFactory *dataSource;
 	Configuration *configData;
 	VortexList *vortexList;
+	SimplexList *simplexList;
 	AnalysisThread analysisThread;
 
 	Configuration *vortexConfig;
-
+	Configuration *simplexConfig;
+	
 };
 
 #endif

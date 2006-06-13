@@ -36,7 +36,7 @@ SimplexThread::~SimplexThread()
 }
 
 void SimplexThread::findCenter(Configuration *wholeConfig, GriddedData *dataPtr,
-							   float* vortexLat, float* vortexLon, SimplexData* simplexPtr)
+							   float* vortexLat, float* vortexLon, SimplexList* simplexPtr)
 {
 
 	// Lock the thread
@@ -50,7 +50,7 @@ void SimplexThread::findCenter(Configuration *wholeConfig, GriddedData *dataPtr,
 	refLon = vortexLon;
 	
 	// Set the simplex data object
-	simplexData = simplexPtr;
+	simplexResults = simplexPtr;
 	
 	// Set the configuration info
 	configData = wholeConfig;
@@ -114,6 +114,10 @@ void SimplexThread::run()
 		int maxWave = configData->getParam(simplexConfig, 
 					 QString("maxwavenumber")).toInt();
 		
+		// Set the output directory??
+		//simplexResults.setNewWorkingDirectory(simplexPath);
+		
+		// Define the maximum allowable data gaps
 		dataGaps = new float[maxWave+1];
 		for (int i = 0; i <= maxWave; i++) {
 		  dataGaps[i] = configData->getParam(simplexConfig, 
@@ -348,8 +352,12 @@ void SimplexThread::run()
 			}
 		}
 
-		// Simplex run complete! Now pick the best center
-		centerFinder = new ChooseCenter(configData,simplexResults);
+		// Simplex run complete! Save the results to a file
+		simplexResults->append(*simplexData);
+		simplexResults->save();
+		
+		//Now pick the best center
+		centerFinder = new ChooseCenter(configData,*simplexResults);
 		foundCenter = centerFinder->findCenter();
 		
 		
@@ -408,7 +416,6 @@ void SimplexThread::archiveCenters(float& radius, float& height, float& numPoint
 		Center* indCenter = new Center(Xind[point], Yind[point], VTind[point], level, ring);
 		simplexData->setCenter(level, ring, point, *indCenter);
 	}
-	simplexResults.append(*simplexData);
 	
 }
 

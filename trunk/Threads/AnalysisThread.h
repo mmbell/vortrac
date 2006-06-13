@@ -33,6 +33,7 @@ class AnalysisThread : public QThread
      void analyze(RadarData *dataVolume, Configuration *configPtr);
      void setConfig(Configuration *configPtr);
      void setVortexList(VortexList *archivePtr);
+	 void setSimplexList(SimplexList *archivePtr);
 
  public slots:
      void catchLog(const Message& message);
@@ -56,6 +57,7 @@ class AnalysisThread : public QThread
 	 GriddedFactory gridFactory;
 	 SimplexThread simplexThread;
      VortexList *vortexList;
+	 SimplexList *simplexList;
      void archiveAnalysis();
      float vortexLat, vortexLon;
 

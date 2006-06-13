@@ -54,6 +54,13 @@ void AnalysisThread::setVortexList(VortexList *archivePtr)
 
 }
 
+void AnalysisThread::setSimplexList(SimplexList *archivePtr)
+{
+	
+	simplexList = archivePtr;
+	
+}
+
 void AnalysisThread::analyze(RadarData *dataVolume, Configuration *configPtr)
 {
 	// Lock the thread
@@ -119,6 +126,20 @@ void AnalysisThread::run()
 		} else {
 		  vortexLat = configData->getConfig("vortex").firstChildElement("lat").text().toFloat();
 		  vortexLon = configData->getConfig("vortex").firstChildElement("lon").text().toFloat();
+		  
+		  // Need to define a filename and time for the Lists
+		  QString vortexPath = configData->getConfig("vortex").firstChildElement("dir").text();
+		  QString vortexFile = radarVolume->getDateTimeString();
+		  vortexFile.replace(QString(":"),QString("_"));
+		  QString outFileName = vortexPath + "/" + vortexFile + "vortexList.xml";
+		  vortexList->setFileName(outFileName);
+		  
+		  QString simplexPath = configData->getConfig("center").firstChildElement("dir").text();
+		  QString simplexFile = radarVolume->getDateTimeString();
+		  simplexFile.replace(QString(":"),QString("_"));
+		  outFileName = simplexPath + "/" + simplexFile + "simplexList.xml";
+		  simplexList->setFileName(outFileName);
+		  
 		}
 		
 		// Create CAPPI
@@ -158,9 +179,9 @@ void AnalysisThread::run()
 		
 		// Create data instances to hold the analysis results
 		VortexData *vortexData = new VortexData(); 
-		SimplexData *simplexData;
+
 		// Find Center
-		simplexThread.findCenter(configData, gridData, &vortexLat, &vortexLon, simplexData);
+		simplexThread.findCenter(configData, gridData, &vortexLat, &vortexLon, simplexList);
 
 		mutex.lock();
 		if (!abort) {

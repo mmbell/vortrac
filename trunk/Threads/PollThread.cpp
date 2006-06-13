@@ -74,20 +74,19 @@ void PollThread::run()
   
   vortexList = new VortexList(vortexConfig);
   vortexList->open();
-  // Testing SimplexList ----------------------------------------------------
-  /*
-  file = QString("/scr/science40/mauger/Working/trunk/LisaSimplex.xml");
+  
+  file = QString("/Users/mbell/Development/vortrac/trunk/vortrac_defaultSimplexListStorage.xml");
 
   Configuration *simplexConfig = new Configuration(0,QString());
   connect(simplexConfig, SIGNAL(log(const Message&)), 
 	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
   simplexConfig = new Configuration(0, file);
   
-  SimplexList *list = new SimplexList(simplexConfig);
-  list->open();
+  simplexList = new SimplexList(simplexConfig);
+  simplexList->open();
 
-  Message::toScreen("Num simplex: "+QString().setNum(list->count()));
-
+  //Message::toScreen("Num simplex: "+QString().setNum(list->count()));
+  /* Fake simplex list data
   SimplexData newData(15,6,2);
   newData.setTime(QDateTime::currentDateTime());
   for(int i = 0; i < 2; i++) {
@@ -157,7 +156,8 @@ void PollThread::run()
   
 
   analysisThread.setVortexList(vortexList);
-
+  analysisThread.setSimplexList(simplexList);
+  
 	// Begin polling loop
 	forever {
 

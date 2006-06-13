@@ -4,7 +4,7 @@
         <name>Analytic Storm</name>
         <lat>.90</lat>
         <lon>.90</lon>
-        <dir>workingDirs/</dir>
+        <dir>/Users/mbell/Development/vortrac/trunk/workingDirs</dir>
     </vortex>
     <radar>
         <name/>
@@ -19,7 +19,7 @@
         <endtime>00:00:00</endtime>
     </radar>
     <cappi>
-        <dir>workingDirs/cappi/</dir>
+        <dir>/Users/mbell/Development/vortrac/trunk/workingDirs/cappi</dir>
         <xdim>200</xdim>
         <ydim>200</ydim>
         <zdim>2</zdim>
@@ -31,15 +31,15 @@
         <interpolation>cressman</interpolation>
     </cappi>
     <center>
-        <dir>/path/to/center/output</dir>
+        <dir>/Users/mbell/Development/vortrac/trunk/workingDirs/simplex</dir>
         <geometry>GBVTD</geometry>
         <closure>original</closure>
         <reflectivity>DZ</reflectivity>
         <velocity>VE</velocity>
         <bottomlevel>1</bottomlevel>
         <toplevel>1</toplevel>
-        <innerradius>20</innerradius>
-        <outerradius>30</outerradius>
+        <innerradius>29</innerradius>
+        <outerradius>31</outerradius>
         <ringwidth>1.0</ringwidth>
         <search>MAXVTO</search>
         <influenceradius>4.0</influenceradius>

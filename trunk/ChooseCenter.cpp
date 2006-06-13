@@ -117,7 +117,7 @@ void ChooseCenter::initialize()
   endTime = QDateTime(eDate);
   endTime.setTime(eTime);
 
-  if(fPercent = 99) {
+  if(fPercent == 99) {
     fCriteria[0] = 4052.2;  
     fCriteria[1] = 98.50;  
     fCriteria[2] = 34.12;  
@@ -658,7 +658,7 @@ bool ChooseCenter::fixCenters()
 	    float stdY = sqrt(bestFitVariance[1][k]);
 	    yError = exp(-.5*pow((y-currCenter.getY())/stdY, 2));
 	    float stdRad = sqrt(bestFitVariance[2][k]);
-	    if(stdRad = 0) {
+	    if(stdRad == 0) {
 	      radError = 1;
 	    }
 	    else {
