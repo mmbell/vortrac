@@ -367,6 +367,7 @@ void SimplexThread::run()
 		delete[] VT;
 		delete[] vertexSum;
 		delete[] vtdCoeffs;
+		delete   vtd;
 		
 		if(!foundCenter)
 		{
@@ -480,7 +481,7 @@ float SimplexThread::simplexTest(float**& vertex,float*& VT,float*& vertexSum,
 			vertex[low][i] = vertexTest[i];
 		}
 	}
-	
+	delete[] vertexTest;
 	return VTtest;
 
 }

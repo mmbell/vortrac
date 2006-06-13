@@ -19,7 +19,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 
   QFont f("Helvetica", 12, QFont::Bold);
   setFont(f);
-
+  lastMax = -999;
   statusLog = new Log();
   
   connect(this, SIGNAL(log(const Message&)),
