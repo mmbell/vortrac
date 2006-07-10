@@ -36,6 +36,8 @@ class PollThread : public QThread
         void catchLog(const Message& message);
         void analysisDoneProcessing();
 	void catchVCP(const int vcp);
+	void abortThread();
+	void setOnlyRunOnce(const bool newRunOnce = true);
 
   signals:
 	void log(const Message& message);
@@ -46,6 +48,7 @@ class PollThread : public QThread
 
   private:
 	QMutex mutex;
+	bool runOnce;
 	QWaitCondition waitForAnalysis;
 	bool abort;
 	RadarFactory *dataSource;
@@ -53,7 +56,6 @@ class PollThread : public QThread
 	VortexList *vortexList;
 	SimplexList *simplexList;
 	AnalysisThread analysisThread;
-
 	Configuration *vortexConfig;
 	Configuration *simplexConfig;
 	

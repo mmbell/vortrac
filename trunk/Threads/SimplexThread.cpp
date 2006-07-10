@@ -139,9 +139,11 @@ void SimplexThread::run()
 		vertex[2] = new float[2];
 		VT = new float[3];
 		vertexSum = new float[2];
-		
+		mutex.unlock();
 		// Loop through the levels and rings
 		for (float height = firstLevel; height <= lastLevel; height++) {
+		        mutex.lock();
+			if(!abort) {
 			for (float radius = firstRing; radius <= lastRing; radius++) {
 				// Set the reference point
 				gridData->setAbsoluteReferencePoint(*refLat, *refLon, height);
@@ -350,7 +352,10 @@ void SimplexThread::run()
 				// All done with this radius and height, archive it
 				archiveCenters(radius, height, numPoints);
 			}
+			}
+			mutex.unlock();
 		}
+		mutex.lock();
 
 		// Simplex run complete! Save the results to a file
 		simplexResults->append(*simplexData);

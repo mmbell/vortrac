@@ -7,19 +7,19 @@
         <dir>workingDirs/</dir>
     </vortex>
     <radar>
-        <name>WSR-88D</name>
+        <name>Plea</name>
         <lat>0.90</lat>
         <lon>0.90</lon>
         <alt>0.00</alt>
-        <dir>/scr/science40/mauger/Working/trunk/vortrac_defaultAnalyticTC.xml</dir>
+        <dir>/home/lmauger/NCAR/vortrac/trunk/vortrac_defaultAnalyticTC.xml</dir>
         <format>MODEL</format>
-        <startdate>2005-1-1</startdate>
-        <enddate>2005-1-2</enddate>
+        <startdate>2000-01-01</startdate>
+        <enddate>2000-01-02</enddate>
         <starttime>00:00:00</starttime>
         <endtime>00:00:00</endtime>
     </radar>
     <cappi>
-        <dir>workingDirs/cappi</dir>
+        <dir>/home/lmauger/NCAR/vortrac/trunk/workingDirs/cappi</dir>
         <xdim>100</xdim>
         <ydim>100</ydim>
         <zdim>1</zdim>
@@ -31,7 +31,7 @@
         <interpolation>cressman</interpolation>
     </cappi>
     <center>
-        <dir>/path/to/center/output</dir>
+        <dir>/home/lmauger/NCAR/vortrac/trunk/workingDirs/center</dir>
         <geometry>GBVTD</geometry>
         <closure>original</closure>
         <reflectivity>DZ</reflectivity>
@@ -48,11 +48,11 @@
         <boxdiameter>12.0</boxdiameter>
         <numpoints>16</numpoints>
         <maxwavenumber>1</maxwavenumber>
-        <maxdatagap wavenum="0">180</maxdatagap>
-        <maxdatagap wavenum="1">120</maxdatagap>
+        <maxdatagap wavenum="0" >180</maxdatagap>
+        <maxdatagap wavenum="1" >120</maxdatagap>
     </center>
     <choosecenter>
-        <dir>/path/to/choose/center/output</dir>
+        <dir>/home/lmauger/NCAR/vortrac/trunk/workingDirs/choosecenter</dir>
         <filename>nameOfCenterListFile</filename>
         <startdate>2005-01-01</startdate>
         <enddate>2005-01-02</enddate>
@@ -68,7 +68,7 @@
         <stats>99</stats>
     </choosecenter>
     <vtd>
-        <dir>/path/to/vtd/output</dir>
+        <dir>/home/lmauger/NCAR/vortrac/trunk/workingDirs/vtd</dir>
         <geometry>GBVTD</geometry>
         <closure>original</closure>
         <reflectivity>DZ</reflectivity>
@@ -79,12 +79,12 @@
         <outerradius>60</outerradius>
         <ringwidth>1.0</ringwidth>
         <maxwavenumber>1</maxwavenumber>
-        <maxdatagap wavenum="0">180</maxdatagap>
-        <maxdatagap wavenum="1">120</maxdatagap>
+        <maxdatagap wavenum="0" >180</maxdatagap>
+        <maxdatagap wavenum="1" >120</maxdatagap>
     </vtd>
     <hvvp/>
     <pressure>
-        <dir>/path/to/pressure/data</dir>
+        <dir>/home/lmauger/NCAR/vortrac/trunk/workingDirs</dir>
     </pressure>
     <graphics>
         <autolimits>on</autolimits>

@@ -96,6 +96,5 @@ g95.commands = $$F95 -c -g  -O0 ${QMAKE_FILE_NAME} \
 g95.input    = FORTRAN_SOURCES
 FORTRAN_SOURCES = 
 QMAKE_EXTRA_UNIX_COMPILERS += g95 
-LIBS += -lgfortran -lg2c
 RESOURCES += vortrac.qrc
 QT += xml

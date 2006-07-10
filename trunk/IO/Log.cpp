@@ -178,7 +178,10 @@ void Log::catchLog(const Message& logEntry)
     absoluteProgress+=progress;
     emit newProgressEntry(absoluteProgress);
   }
-  
+  if(progress==-1) {
+    absoluteProgress = 0;
+    emit newProgressEntry(absoluteProgress);
+  }
 }
 
 

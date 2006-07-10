@@ -33,11 +33,12 @@ class AnalysisThread : public QThread
      void analyze(RadarData *dataVolume, Configuration *configPtr);
      void setConfig(Configuration *configPtr);
      void setVortexList(VortexList *archivePtr);
-	 void setSimplexList(SimplexList *archivePtr);
+     void setSimplexList(SimplexList *archivePtr);
 
  public slots:
      void catchLog(const Message& message);
-	 void foundCenter();
+     void foundCenter();
+     void abortThread();
  
  protected:
      void run();
@@ -50,14 +51,14 @@ class AnalysisThread : public QThread
  private:
      QMutex mutex;
      QWaitCondition waitForData;
-	 QWaitCondition waitForCenter;
+     QWaitCondition waitForCenter;
      bool abort;
      Configuration *configData;
      RadarData *radarVolume;
-	 GriddedFactory gridFactory;
-	 SimplexThread simplexThread;
+     GriddedFactory gridFactory;
+     SimplexThread simplexThread;
      VortexList *vortexList;
-	 SimplexList *simplexList;
+     SimplexList *simplexList;
      void archiveAnalysis();
      float vortexLat, vortexLon;
 

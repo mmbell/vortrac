@@ -156,6 +156,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   // Connect the run and abort buttons
   connect(runButton, SIGNAL(clicked()), this, SLOT(runThread()));
   connect(abortButton, SIGNAL(clicked()), this, SLOT(abortThread()));
+  connect(abortButton, SIGNAL(clicked()), &pollThread, SLOT(abortThread()));
 
   // Connect a log to the text window and progress bar
   connect(statusLog, SIGNAL(newLogEntry(QString)), 
@@ -354,17 +355,15 @@ void AnalysisPage::runThread()
   if(configData->getParam(configData->getConfig("radar"), "format")
      == QString("MODEL")){
     if(analyticModel()) {
+      pollThread.setOnlyRunOnce();
       pollThread.setConfig(configData);
       pollThread.start();
     }
   }
-
-  
   else {
     pollThread.setConfig(configData);
     pollThread.start();
   }
-
 }
 
 void AnalysisPage::abortThread()
@@ -372,12 +371,10 @@ void AnalysisPage::abortThread()
 
   // Try to kill the thread
   if(pollThread.isRunning()) {
-	pollThread.quit();
-	emit log(Message("Analysis Aborted!"));
+    // pollThread.quit();
+    pollThread.abortThread();
+    emit log(Message("Analysis Aborted!", -1));
   }
-
-  
-
 }
 
 

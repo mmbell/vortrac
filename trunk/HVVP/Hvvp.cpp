@@ -12,10 +12,14 @@
 #include "Ray.h"
 #include "Sweep.h"
 #include <math.h>
+//#include "Matrix.h"
 
 /*
  * The HVVP subroutine used here was created and written by Paul Harasti for 
  *   determining the cross wind component of the environmental winds. (2006)
+ *
+ * Commented lines with ** indicate that these changes were made to 
+ *   accomadate the differences in the updated version of Paul's code.
  *
  */
 
@@ -25,26 +29,39 @@ Hvvp::Hvvp()
   velNull = -999.0;
   deg2rad = acos(1)/180;
   rad2deg = 1.0/deg2rad;
+  levels = 14;       
 
-  z = new float[12];
-  u = new float[12];
-  v = new float[12];
-  var = new float[12];
-  vm_sin = new float[12];
+  z = new float[levels];
+  u = new float[levels];
+  v = new float[levels];
+  var = new float[levels];
+  vm_sin = new float[levels];
+
+  printOutput = false;
 
 }
 
 Hvvp::~Hvvp()
 {
-  // Not yet implemented
-
+  delete z;
+  delete u;
+  delete v;
+  delete var;
+  delete vm_sin;
+  delete volume;
+  for(int i = 0; i < 16; i++) {
+    delete xls[i];
+  }
+  delete yls;
+  delete xls;
+  delete wgt;
 }
 
 void Hvvp::setRadarData(RadarData *newVolume, float range, float angle,
 			float vortexRmw)
 {
   volume = newVolume;
-  cca = angle;            // in meterological coord
+  cca = angle;            // in meterological coord (degrees)
   rt = range;             // in km
   rmw = vortexRmw;        // in km
 }
@@ -157,6 +174,18 @@ bool Hvvp::lls(int numCoeff, int numData, int effective_nData, float** x,
   for(int i = 0; i < numCoeff; i++) {
     stError[i] = stDeviation*sqrt(Ainv[i][i]);
   }
+
+  for(int i = 0; i < numCoeff; i++) {
+    delete A[i];
+    delete AA[i];
+    delete BB[i];
+    delete Ainv[i];
+  }
+  delete A;
+  delete B;
+  delete AA;
+  delete BB;
+  delete Ainv;
    
   return true;
 }
@@ -253,31 +282,39 @@ bool Hvvp::gaussJordan(float **a, float **b, int n, int m)
 
 int Hvvp::hvvpPrep(int m) {
 
-  float hgtStart = .500;                // km
-  float hInc = .075;                    // km
+  //**float hgtStart = .500;                // km
+  float hgtStart = .600;                // km 
+  //**float hInc = .075;                    // km
+  float hInc = .1;                       // km
   float rangeStart = -.375;             // ???? km
   float cumin = 5.0/rt;                 // What are the units here?
   float cuspec = 0.6;                   // Unitless
   float curmw = (rt - rmw)/rt;          // Unitless
   float cuthr;                          // Unitless
   float ae = 4*6371/3.0;                // km
+  int maxpoints = 200000;               // **
+
   if(cuspec < curmw)
     cuthr = cuspec; 
   else 
     cuthr = curmw;
 
+  rot = cca*deg2rad;               // ** 
+  // float rot = (cca-4.22)*deg2rad; **
+  // ** Special case scenerio for KBRO Data of Bret (1999)
+
   xls = new float*[16];
-  yls = new float[90000];
+  yls = new float[maxpoints];
   for(int k = 0; k < 16; k++) {
-    xls[k] = new float[90000];
-    for(int l = 0; l < 90000; l++) {
+    xls[k] = new float[maxpoints];
+    for(int l = 0; l < maxpoints; l++) {
       xls[k][l] = 0;
       yls[l] = 0;
     }
   }
   
   int count = 0;
-  float h0 = hgtStart+.250*m;
+  float h0 = hgtStart+hInc*m;
   float hLow = h0-hInc;
   float hHigh = h0+hInc;
   for(int s = 0; s < volume->getNumSweeps(); s++) {
@@ -340,21 +377,22 @@ int Hvvp::hvvpPrep(int m) {
   return count;
 }
 
-void Hvvp::findHVVPWinds()
+bool Hvvp::findHVVPWinds()
 {
   /*
-   * Calculates HVVP dependent and independent variables within 12, 125 m
-   *   thick layers, every 250 m, starting form 500 m. Restrick elevation
+   * Calculates HVVP dependent and independent variables within 14, 200 m
+   *   thick layers, every 100 m, starting from 600 m. Restrick elevation
    *   used to those less than or equal to 5 degrees.
    *
    */
 
   int count; 
+  float mod_Rankine_xt[levels];
 
-  for(int m = 0; m < 12; m++) {
+  for(int m = 0; m < levels; m++) {
 
-    float hgtStart = .500;    
-    float h0 = hgtStart+.250*m;
+    float hgtStart = .600;    
+    float h0 = hgtStart+.1*m;
     
     count = hvvpPrep(m);
     
@@ -442,12 +480,15 @@ void Hvvp::findHVVPWinds()
 	// Rankine exponent of the radial wind.
 	float xr = -1*cc[4]/cc[1];
 	
-	/* Variance (percentage error) of xr. Xr has largest percentage error
-	 *   of all HVVP wind parameters so it is used in the weighted average 
-	 *   of the across beam component of the environmental wind. 
+	/* 
+	 * Variance of xr.  This is used in the
+	 *  weigthed average of the across beam component of the environmental wind,
+	 *  c and is calculated along the way as follows:
 	 */
-	var[m] = ((stand_err[4]/cc[4])*(stand_err[4]/cc[4]));
-	var[m] += ((stand_err[1]/cc[1])*(stand_err[1]/cc[1]));
+	
+	float temp = ((stand_err[4]/cc[4])*(stand_err[4]/cc[4]));
+	temp += ((stand_err[1]/cc[1])*(stand_err[1]/cc[1]));
+	var[m] = fabs(xr)*sqrt(temp);
 	
 	/*
 	 * Relations between the Rankine exponent of the tangential wind, xt,
@@ -458,7 +499,7 @@ void Hvvp::findHVVPWinds()
 	 */
 	
 	float xt;
-
+	
 	if(vr > 0) {
 	  if(xr > 0)
 	    xt = 1-xr;
@@ -472,17 +513,33 @@ void Hvvp::findHVVPWinds()
 	    xt = 1+xr;
 	}
 	
+	mod_Rankine_xt[m] = xt;
+	
+	if(fabs(xt) == xr/2.0) 
+	  var[m] = .5*var[m];
+	
 	// Tangential wind above the radar
+	// Assume error in rt is 2 km
+	
 	float vt = rt*cc[6]/(xt+1.0);
+	
+	temp = (2./rt)*(2./rt)+(stand_err[6]/cc[6])*(stand_err[6]/cc[6]);
+	temp += (var[m]/xt)*(var[m]/xt);
+	var[m] = vt*sqrt(temp);
 	
 	// Across-beam component of the environmental wind
 	float vm_s = cc[0]-vt;
 	
+	var[m] = sqrt(stand_err[0]*stand_err[0]+var[m]*var[m]);
+	
 	// rotate vm_c and vm_s to standard cartesian U and V components,
 	// ue and ve, csing cca.
-	cca  = cca *deg2rad;
-	float ue = vm_s*cos(cca)+vm_c*sin(cca);
-	float ve = vm_c*cos(cca)-vm_s*sin(cca);
+	// cca  = cca *deg2rad;
+	// float ue = vm_s*cos(cca)+vm_c*sin(cca);
+	// float ve = vm_c*cos(cca)-vm_s*sin(cca);
+	
+	float ue = vm_s*cos(rot)+vm_c*sin(rot);
+	float ve = vm_c*cos(rot)-vm_s*sin(rot);
 	
 	// Set realistic limit on magnitude of results.
 	if((xt < 0)||(fabs(ue)>30.0)||(fabs(ve)>30)) {
@@ -513,7 +570,130 @@ void Hvvp::findHVVPWinds()
     }
   }
 
+  /*
+   *  Reject results whose Xt is greater than one SD from average Xt
+   */
+  
+  float xtav=0;
+  float xtsd=0;
+  count=0;
+  for(int i = 0; i < levels; i++) {
+    if(u[i]!=velNull) {
+      xtav += mod_Rankine_xt[i];
+      count++;
+    }
+  }
+  if(count > 0) {
+    xtav /=float(count);
+  }
+  if(count >3) {
+    for(int i = 0; i < levels; i++) {
+      if(u[i]!=velNull) {
+	xtsd+=((mod_Rankine_xt[i]-xtav)*(mod_Rankine_xt[i]-xtav));
+      }
+    }
+    xtsd = sqrt(xtsd);
+    for(int i = 0; i < levels; i++) {
+      if(mod_Rankine_xt[i] > xtsd) {
+	u[i] = velNull;
+      }
+    }
+  }
 
+  /*
+   *   Calculate the layer, variance-weighted average of vm_sin. 
+   */
+  
+  av_VmSin = 0;
+  float var_av_VmSin = 0;
+  float sumwgt = 0;
+  int ifoundit = 0;
+  for(int i = 0; i < levels; i++) {
+    if(u[i] != velNull) {
+      var[i] = var[i]*var[i];
+      sumwgt += 1.0/var[i];
+      av_VmSin += vm_sin[i]/var[i];
+      var_av_VmSin +=1.0/var[i];
+    }
+ 
+    if(u[i]!=velNull) {
+      av_VmSin /= sumwgt;
+      var_av_VmSin = 1.0/var_av_VmSin;
+    }
+    else {
+      av_VmSin= velNull;
+      var_av_VmSin=velNull;
+    }
+  }
+
+  float diff = 100;
+  for(int i = 0; i < levels; i++) {
+    if((u[i]!=velNull)&&(var[i]!=velNull)) {
+      if(fabs(2.0-z[i]) < diff) {
+	diff = fabs(2.0-z[i]);
+	ifoundit = i;
+      }
+    }
+  }
+  QString message;
+  if(ifoundit >= 1) {
+    // Here Pauls code does a lot of printing which I will make optional 
+    // depending on whether or not printOutput is set to true, the default
+    // is false
+    message += "RAW HVVP RESULTS\n";
+    message += "\n\n";
+    message += "Layer, variance-weighted, average Vm_Sim = ";
+    message += QString().setNum(av_VmSin)+" +-";
+    message += QString().setNum(sqrt(var_av_VmSin))+" (m/s).";
+    message += "\n\n";
+    message += "Vm_Sin value closest to 2 km altitude is ";
+    message += QString().setNum(vm_sin[ifoundit])+" +- ";
+    message += QString().setNum(sqrt(var[ifoundit]))+" m/s at ";
+    message += QString().setNum(z[ifoundit])+" km altitude.";
+    message += "\n\n";
+    message += "Z (km)  Ue (m/s)  Ve (m/s)  Vm_Sin (m/s)";
+    message += "   Stderr_Vm_Sin (m/s)\n\n";
+    for(int i = 0; i < levels; i++) {
+      if((u[i]!=velNull) && (v[i]!=velNull)) {
+	message +=QString().setNum(z[i])+" "+QString().setNum(u[i]);
+	message +=" "+QString().setNum(v[i])+" "+QString().setNum(vm_sin[i]);
+	message +=" "+QString().setNum(sqrt(var[i]))+"\n";
+      }
+    }
+    message += "Smoothing width is 3 levels, so at least smooth somewhat";
+    message += " beyond 3 levels\n\n";
+    if(count > 4) {
+      smoothHvvp(u);
+      smoothHvvp(v);
+      smoothHvvpVmSin(vm_sin, var);
+      
+      message += "Vm_Sin value closest to 2 km altitude is ";
+      message += QString().setNum(vm_sin[ifoundit])+" +-";
+      message += QString().setNum(sqrt(var[ifoundit]))+" m/s at ";
+      message += QString().setNum(z[ifoundit])+" km altitude.\n\n";
+      message += "Z (km)  Ue (m/s)  Ve (m/s)  Vm_Sin (m/s)";
+      message += "   Stderr_Vm_Sin (m/s)\n\n";
+      for(int i = 0; i < levels; i++) {
+	if((u[i]!=velNull) && (v[i]!=velNull)) {
+	  message +=QString().setNum(z[i])+" "+QString().setNum(u[i]);
+	  message +=" "+QString().setNum(v[i])+" "+QString().setNum(vm_sin[i]);
+	  message +=" "+QString().setNum(sqrt(var[i]))+"\n";
+	}
+      }
+    }
+    if(printOutput) {
+      emit log(Message(message));
+    }
+    return true;
+  }
+  else {
+    message = "No Hvvp Results Found";
+    if(printOutput) {
+      emit log(Message(message));
+    }
+    return false;
+  }
+  
 }
 
 
@@ -521,3 +701,121 @@ void Hvvp::catchLog(const Message& message)
 {
   emit log(message);
 }
+
+
+void Hvvp::setPrintOutput(const bool printToLog) {
+  printOutput = printToLog;
+}
+
+void Hvvp::smoothHvvp(float* data) {
+
+  int wdth = 3;
+  int igrid = wdth/2;
+  float* temp = new float[levels];
+
+  for(int i = 0; i < levels; i++) {
+    if(data[i] > -90) {
+      int i1 = i-igrid;
+      int i2 = i+igrid;
+      // Make sure we are only smoothing levels that are valid
+      if(i1 < 0) {
+	i1 = 0;
+      }
+      if(i2 >= levels) {
+	i2 = levels-1;
+      }
+      int numPoints = 0;
+      for(int j = i1; j <= i2; j++) {
+	if(data[j]!=velNull) {
+	  numPoints++;
+	  temp[numPoints] = data[j];
+	}
+      }
+      if(numPoints > 1) {
+	// Sort smallest to largest
+	for(int k = numPoints-1; k > 0; k--)
+	  for(int w = 0; w < k; w++) {
+	    if(temp[w] > temp[w+1]) {
+	      float hold = temp[w+1];
+	      temp[w+1] = temp[w];
+	      temp[w] = hold;
+	    }
+	  }
+	int mid = numPoints/2;
+	if(numPoints%2!=0) {
+	  data[i] = temp[mid];
+	}
+	else {
+	  data[i] = (temp[mid]+temp[mid+1])/2.0;
+	}
+      }
+      else {
+	data[i] = temp[i];
+      }
+    }
+  }
+  delete temp;
+}
+
+void Hvvp::smoothHvvpVmSin(float* data1, float* data2) {
+
+  int wdth = 3;
+  int igrid = wdth/2;
+  float* temp1 = new float[levels];
+  float* temp2 = new float[levels];
+
+  for(int i = 0; i < levels; i++) {
+    if(data1[i] > -90) {
+      int i1 = i-igrid;
+      int i2 = i+igrid;
+      // Make sure we are only smoothing levels that are valid
+      if(i1 < 0) {
+	i1 = 0;
+      }
+      if(i2 >= levels) {
+	i2 = levels-1;
+      }
+      int numPoints = 0;
+      for(int j = i1; j <= i2; j++) {
+	if(data1[j]!=velNull) {
+	  numPoints++;
+	  temp1[numPoints] = data1[j];
+	  temp2[numPoints] = data2[j];
+	}
+      }
+      if(numPoints > 1) {
+	// Sort smallest to largest
+	for(int k = numPoints-1; k > 0; k--)
+	  for(int w = 0; w < k; w++) {
+	    if(temp1[w] > temp1[w+1]) {
+	      // Why aren't both arrays adjusted according to the sorted
+	      // order of one or both, it seems to me that this
+	      // is picking the var at random.........
+	      float hold1 = temp1[w+1];
+	      float hold2 = temp2[w+1];
+	      temp1[w+1] = temp1[w];
+	      temp2[w+1] = temp2[w];
+	      temp1[w] = hold1;
+	      temp2[w] = hold2;
+	    }
+	  }
+	int mid = numPoints/2;
+	if(numPoints%2!=0) {
+	  data1[i] = temp1[mid];
+	  data2[i] = temp2[mid];
+	}
+	else {
+	  data1[i] = (temp1[mid]+temp1[mid+1])/2.0;
+	  data2[i] = (temp2[mid]+temp2[mid+1])/2.0;
+	}
+      }
+      else {
+	data1[i] = temp1[i];
+	data2[i] = temp2[i];
+      }
+    }
+  }
+  delete temp1;
+  delete temp2;
+}
+

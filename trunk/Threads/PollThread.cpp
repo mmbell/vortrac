@@ -18,6 +18,7 @@ PollThread::PollThread(QObject *parent)
 {
  
   abort = false;
+  runOnce = false;
   connect(&analysisThread, SIGNAL(doneProcessing()), 
   	  this, SLOT(analysisDoneProcessing()));
   connect(&analysisThread, SIGNAL(log(const Message&)),
@@ -46,6 +47,23 @@ void PollThread::setConfig(Configuration *configPtr)
 
 }
 
+void PollThread::abortThread()
+{
+  if (analysisThread.isRunning()) {
+    mutex.lock();
+    abort = true;
+    
+    Message::toScreen("in PollThread Exit");
+    analysisThread.abortThread();
+    //analysisThread.quit();
+    
+    //Message::toScreen("PollThread has mutex locked!");
+    mutex.unlock();
+    
+ }
+  //exit();
+}
+
 void PollThread::analysisDoneProcessing()
 {
   waitForAnalysis.wakeOne();
@@ -53,7 +71,9 @@ void PollThread::analysisDoneProcessing()
 
 void PollThread::run()
 {
+  abort = false;
   emit log(Message("Polling for data..."));
+  //Message::toScreen("Breaks connections but gets back to run??");
   RadarFactory *dataSource = new RadarFactory(configData->getConfig("radar"));
   connect(dataSource, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
@@ -166,17 +186,28 @@ void PollThread::run()
 			// Got some data, fire up the thread to process it
 			analysisThread.analyze(dataSource->getUnprocessedData(),
 					       configData);
+			//Message::toScreen("Before mutex lock in pollThread");
 			mutex.lock();
 			if (!abort) {
+			  //Message::toScreen("Not abort: in pollthread loop");
 			  waitForAnalysis.wait(&mutex);
+			  Message::toScreen("Wait for analysis done");
 			}
 			mutex.unlock();  
+			//Message::toScreen("After mutex unlock in pollThread");
 		}
 		
 		// Check to see if we should quit
-		if (abort)
-			return;
-    
+		if (abort) {
+		  //Message::toScreen("Abort is true, before return in pollthread");
+		  return;
+		}
+		if (runOnce) {
+		  emit log(Message(tr("Analysis Completed Exiting PollThread"),
+				   -1));
+		  runOnce = false;
+		  return;
+		}
 	}
 
 	emit log(Message("PollThread Finished"));	
@@ -195,4 +226,10 @@ void PollThread::catchLog(const Message& message)
 void PollThread::catchVCP(const int vcp)
 {
   emit newVCP(vcp);
+}
+
+void PollThread::setOnlyRunOnce(const bool newRunOnce) {
+  mutex.lock();
+  runOnce = newRunOnce;
+  mutex.unlock();
 }

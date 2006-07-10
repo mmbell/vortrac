@@ -23,9 +23,9 @@ AnalysisThread::AnalysisThread(QObject *parent)
 
   abort = false;
   connect(&simplexThread, SIGNAL(log(const Message&)), this, 
-			SLOT(catchLog(const Message&)), Qt::DirectConnection);
-  connect(&simplexThread, SIGNAL(centerFound()), this,
-		  SLOT(foundCenter()));
+	  SLOT(catchLog(const Message&)), Qt::DirectConnection);
+  connect(&simplexThread, SIGNAL(centerFound()), 
+	  this, SLOT(foundCenter()), Qt::DirectConnection);
 }
 
 AnalysisThread::~AnalysisThread()
@@ -61,6 +61,20 @@ void AnalysisThread::setSimplexList(SimplexList *archivePtr)
 	
 }
 
+void AnalysisThread::abortThread()
+{
+  //if(simplexThread.isRunning()) {
+  //Message::toScreen("in AnalysisThread Exit");
+    mutex.lock();
+    abort = true;
+    simplexThread.exit();
+    //delete simplexThread;
+    //Message::toScreen("AnalysisThread has mutex locked");
+    mutex.unlock();
+    //}
+    // exit();
+}
+
 void AnalysisThread::analyze(RadarData *dataVolume, Configuration *configPtr)
 {
 	// Lock the thread
@@ -73,13 +87,15 @@ void AnalysisThread::analyze(RadarData *dataVolume, Configuration *configPtr)
 	if(!isRunning()) {
 		start();
 	} else {
+	  //Message::toScreen("found running copy of analysis... waiting....");
 		waitForData.wakeOne();
 	}
 }
 
 void AnalysisThread::run()
 {
-	   emit log(Message("Data found, starting analysis..."));
+  abort = false;
+  emit log(Message("Data found, starting analysis...", -1));
 
        forever {
 		// Check to see if we should quit
@@ -95,7 +111,10 @@ void AnalysisThread::run()
 
 		// Pass VCP value to display
 		emit newVCP(radarVolume->getVCP());
-	       
+		mutex.unlock();
+		if(abort)
+		  return;
+		mutex.lock();
 		//Dealias
 		if(!radarVolume->isDealiased()){
 		  
@@ -119,6 +138,10 @@ void AnalysisThread::run()
 		  emit log(Message("RadarVolume is Dealiased"));
 		  
 		// Check the vortex list for a current center
+		mutex.unlock();
+		if(abort)
+		  return;
+		mutex.lock();
 		if (!vortexList->isEmpty()) {
 		  vortexList->timeSort();
 		  vortexLat = vortexList->last().getLat();
@@ -142,6 +165,11 @@ void AnalysisThread::run()
 		  
 		}
 		
+		mutex.unlock();
+		if(abort)
+		  return;
+		mutex.lock();
+
 		// Create CAPPI
 		emit log(Message("Creating CAPPI..."));
 
@@ -165,10 +193,15 @@ void AnalysisThread::run()
 		  gridData = gridFactory.makeCappi(radarVolume,
 						configData->getConfig("cappi"),
 			 			&vortexLat, &vortexLon);
+		  //Message::toScreen("AnalysisThread: outside makeCappi");
 
 		}
 		
-		
+		mutex.unlock();
+		if(abort)
+		  return;
+		mutex.lock();
+
 		/* GriddedData not currently a QObject so this will fail
 		   connect(gridData, SIGNAL(log(const Message&)),this,
 		   SLOT(catchLog(const Message&)), Qt::DirectConnection); */
@@ -180,15 +213,20 @@ void AnalysisThread::run()
 		// Create data instances to hold the analysis results
 		VortexData *vortexData = new VortexData(); 
 
-		// Find Center
-		simplexThread.findCenter(configData, gridData, &vortexLat, &vortexLon, simplexList);
+		mutex.unlock();  // Added this one ... I think...
 
+		// Mutex Investigation.....
+		
 		mutex.lock();
 		if (!abort) {
-			waitForCenter.wait(&mutex);
+		  //Find Center 
+		  simplexThread.findCenter(configData, gridData, &vortexLat, &vortexLon, simplexList);
+		  waitForCenter.wait(&mutex); 
 		}
+		else
+		  return;
 		mutex.unlock();  
-		
+		//Message::toScreen("Where....");
 /*
 		
 		// Get environmental wind
@@ -209,7 +247,12 @@ void AnalysisThread::run()
 		vortexlist->addVortex(vortexdata->getArchiveData());
 		
 		*/
+
+		mutex.lock(); // Added this one....
+
 		delete vortexData;
+		
+		//Message::toScreen("Deleted vortex data.... ???");
 		
 		if(!analysisGood)
 		{

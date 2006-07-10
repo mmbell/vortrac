@@ -21,7 +21,7 @@ class ChooseCenter
 {
 
  public:
-     ChooseCenter(Configuration* newConfig = Configuration(), 
+     ChooseCenter(Configuration* newConfig = new Configuration(), 
 		  const SimplexList &newList = SimplexList());
     ~ChooseCenter();
   

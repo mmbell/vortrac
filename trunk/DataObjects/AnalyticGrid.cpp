@@ -216,6 +216,7 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
   getConfigInfo(cappiConfig, analyticConfig);
   
   if (source == windFields) { 
+    Message::toScreen("Hit Enum to Wind Field");
     gridWindFieldData();
   }
   
