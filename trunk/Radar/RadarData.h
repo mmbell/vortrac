@@ -36,7 +36,9 @@ class RadarData
   float* getRadarLat();
   float* getRadarLon();
   float radarBeamHeight(float &distance, float elevation);
-  // returns height in km from sea level
+  // returns height in km from radar;
+  float absoluteRadarBeamHeight(float &distance, float elevation);
+  // returns height in km from sea level;
   int getVCP() {return vcp;} 
   void setAltitude(const float newAltitude);
 

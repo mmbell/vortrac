@@ -33,7 +33,7 @@ HEADERS += DataObjects/PressureData.h \
            GUI/panels.h \
            GUI/DiagnosticPanel.h \
            GUI/RadarListDialog.h \
-           GUI/StopLight.h \
+           GUI/StopLight.h \   
            HVVP/Hvvp.h \
            IO/Message.h \
            IO/Log.h \

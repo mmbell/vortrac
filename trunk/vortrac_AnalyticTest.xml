@@ -8,8 +8,8 @@
     </vortex>
     <radar>
         <name>Plea</name>
-        <lat>0.90</lat>
-        <lon>0.90</lon>
+        <lat>0.00</lat>
+        <lon>0.00</lon>
         <alt>0.00</alt>
         <dir>/home/lmauger/NCAR/vortrac/trunk/vortrac_defaultAnalyticTC.xml</dir>
         <format>MODEL</format>
@@ -20,8 +20,8 @@
     </radar>
     <cappi>
         <dir>/home/lmauger/NCAR/vortrac/trunk/workingDirs/cappi</dir>
-        <xdim>100</xdim>
-        <ydim>100</ydim>
+        <xdim>200</xdim>
+        <ydim>200</ydim>
         <zdim>1</zdim>
         <xgridsp>1.0</xgridsp>
         <ygridsp>1.0</ygridsp>
@@ -94,12 +94,12 @@
         <rmwmax>60.0</rmwmax>
     </graphics>
     <qc>
-        <wind_method>user</wind_method>
+        <wind_method>vad</wind_method>
         <vel_min>1.0</vel_min>
         <vel_max>100</vel_max>
         <ref_min>-15</ref_min>
         <ref_max>85</ref_max>
-        <sw_threshold>10.0</sw_threshold>
+        <sw_threshold>30.0</sw_threshold>
         <bbcount>30</bbcount>
         <maxfold>4</maxfold>
         <windspeed>0</windspeed>

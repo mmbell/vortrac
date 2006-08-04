@@ -89,6 +89,8 @@ void ChooseCenter::initialize()
   // Pulls all the necessary user parameters from the configuration panel
   //  and initializes the array used for fTesting
   
+  minVolumes = 3;
+
   QDomElement ccElement = config->getConfig("choosecenter");
   windWeight = config->getParam(ccElement, QString("wind_weight")).toFloat();
   stdWeight = config->getParam(ccElement, QString("stddev_weight")).toFloat();

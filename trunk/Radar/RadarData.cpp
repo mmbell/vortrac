@@ -101,6 +101,12 @@ float RadarData::radarBeamHeight(float &distance, float elevation)
   // returns height in km
 }
 
+float RadarData::absoluteRadarBeamHeight(float &distance, float elevation)
+{
+  return  radarBeamHeight(distance, elevation)+altitude;
+}
+
+
 void RadarData::setAltitude(const float newAltitude)
 {
   altitude = newAltitude;

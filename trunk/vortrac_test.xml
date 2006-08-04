@@ -11,7 +11,7 @@
         <lat>27.7056</lat>
         <lon>-82.4017</lon>
         <alt>0.00</alt>
-        <dir>/scr/science40/mauger/charley/levelii</dir>
+        <dir>/home/lmauger/NCAR/charley/levelii</dir>
         <format>LEVELII</format>
         <startdate>2004-08-01</startdate>
         <enddate>2005-01-01</enddate>
@@ -100,10 +100,10 @@
         <ref_min>-15.0</ref_min>
         <ref_max>65.0</ref_max>
         <sw_threshold>10.0</sw_threshold>
-        <bbcount>50</bbcount>
+        <bbcount>30</bbcount>
         <maxfold>4</maxfold>
-        <windspeed>18</windspeed>
-        <winddirection>135</winddirection>
+        <windspeed>24</windspeed>
+        <winddirection>138</winddirection>
         <awips_dir>/path/to/awips/data</awips_dir>
         <vadlevels>6</vadlevels>
         <numcoeff>3</numcoeff>

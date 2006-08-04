@@ -130,6 +130,8 @@ class RadarQC : public QObject
 
   float deg2rad;           // Degrees to radians conversion factor
   float velNull;           // Value that indicates a null velocity value
+  int q, qinc;             //  ????????????????????
+  float radarHeight;       // Absolute height of radar in km from sea leve
 
 
   void thresholdData();
@@ -194,9 +196,13 @@ class RadarQC : public QObject
   float findHeight(Ray* currentRay, int gateIndex);
   /* 
    * Uses the 4/3 earth radius model to return the height of a specific gate
-   *   in km, relative to the radar height.
+   *   in km, relative to sea level.
    *
    */
+
+  float **aveVADHeight;
+  // aveVADHeight[n][v] : The average height (km from sea level) of the vad
+  // ring in sweep n, velocity gate index v.
 
   float bilinear(float value_high, float value_low, 
 		 float deltaH_high, float deltaH_low);
@@ -208,6 +214,7 @@ class RadarQC : public QObject
    */
   
   void crazyCheck();
+  void checkRay();
   
   //--------------------------Mathematical Methods-------------------------------
   // Moved to Matrix.h

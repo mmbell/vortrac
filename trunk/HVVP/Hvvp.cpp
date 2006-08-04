@@ -328,7 +328,8 @@ int Hvvp::hvvpPrep(int m) {
 	float *vel = currentRay->getVelData();          // still in km/s
 	float vGateSpace = currentRay->getVel_gatesp(); // in km
 	float numGates = currentRay->getVel_numgates();
-	int first = currentRay->getFirst_vel_gate();   
+	//int first = currentRay->getFirst_vel_gate();   
+	int first = 0;
 	// What does getFirst_vel_gate actually return?
 	// Index or distance?
 	// Are the limits on this ray right or should i go

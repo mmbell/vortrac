@@ -16,16 +16,14 @@
 #include "DataObjects/VortexData.h"
 #include "Message.h"
 #include "SimplexThread.h"
+#include "HVVP/Hvvp.h"
 
 AnalysisThread::AnalysisThread(QObject *parent)
   : QThread(parent)
 {
-
+  Message::toScreen("AnalysisThread Constructor");
   abort = false;
-  connect(&simplexThread, SIGNAL(log(const Message&)), this, 
-	  SLOT(catchLog(const Message&)), Qt::DirectConnection);
-  connect(&simplexThread, SIGNAL(centerFound()), 
-	  this, SLOT(foundCenter()), Qt::DirectConnection);
+  simplexThread = new SimplexThread;
 }
 
 AnalysisThread::~AnalysisThread()
@@ -63,16 +61,22 @@ void AnalysisThread::setSimplexList(SimplexList *archivePtr)
 
 void AnalysisThread::abortThread()
 {
-  //if(simplexThread.isRunning()) {
-  //Message::toScreen("in AnalysisThread Exit");
+  Message::toScreen("In AnalysisThread Abort");
+  if(simplexThread->isRunning()) {
+    Message::toScreen("in AnalysisThread Exit");
     mutex.lock();
-    abort = true;
-    simplexThread.exit();
+    simplexThread->exit();
+    //simplexThread = new SimplexThread;
     //delete simplexThread;
     //Message::toScreen("AnalysisThread has mutex locked");
     mutex.unlock();
     //}
     // exit();
+  }
+  Message::toScreen("Before AnalysisThread Exit");
+  this->terminate();
+  //  this->exit();
+  Message::toScreen("Leaving AnalysisThread Abort");
 }
 
 void AnalysisThread::analyze(RadarData *dataVolume, Configuration *configPtr)
@@ -82,6 +86,8 @@ void AnalysisThread::analyze(RadarData *dataVolume, Configuration *configPtr)
 
 	this->radarVolume = dataVolume;
 	configData = configPtr;
+	radarVolume->setAltitude(configData->getParam(configData->getConfig("radar"),"alt").toFloat()/1000.0);
+	// Sets altitude of radar to radarData (km) from ConfigData (meters)
 
 	// Start or wake the thread
 	if(!isRunning()) {
@@ -116,6 +122,7 @@ void AnalysisThread::run()
 		  return;
 		mutex.lock();
 		//Dealias
+		
 		if(!radarVolume->isDealiased()){
 		  
 		  RadarQC dealiaser(radarVolume);
@@ -136,7 +143,7 @@ void AnalysisThread::run()
 		}
 		else
 		  emit log(Message("RadarVolume is Dealiased"));
-		  
+		
 		// Check the vortex list for a current center
 		mutex.unlock();
 		if(abort)
@@ -220,18 +227,41 @@ void AnalysisThread::run()
 		mutex.lock();
 		if (!abort) {
 		  //Find Center 
-		  simplexThread.findCenter(configData, gridData, &vortexLat, &vortexLon, simplexList);
-		  waitForCenter.wait(&mutex); 
+		  simplexThread = new SimplexThread();
+		  connect(simplexThread, SIGNAL(log(const Message&)), this, 
+			  SLOT(catchLog(const Message&)), Qt::DirectConnection);
+		  connect(simplexThread, SIGNAL(centerFound()), 
+			  this, SLOT(foundCenter()), Qt::DirectConnection);
+		  //simplexThread->findCenter(configData, gridData, &vortexLat, &vortexLon, simplexList);
+		  //waitForCenter.wait(&mutex); 
 		}
 		else
 		  return;
 		mutex.unlock();  
 		//Message::toScreen("Where....");
-/*
+
 		
 		// Get environmental wind
-		vortexdata->calculateEnvWind(configdata.getEnvWindParams());
-		
+		/*
+		* rt: Range from radar to circulation center (km).
+		*
+		* cca: Meteorological azimuth angle of the direction
+		*      to the circulation center (degrees from north).
+		*
+		* rmw: radius of maximum wind measured from the TC circulation
+		*      center outward.
+		*/
+
+		float rt = 0;
+		float cca = 0;
+		float rmw = 0;
+
+		Hvvp *envWindFinder = new Hvvp;
+		envWindFinder->setRadarData(radarVolume,rt, cca, rmw);
+		envWindFinder->findHVVPWinds();
+		float missingLink = envWindFinder->getAvAcrossBeamWinds();
+		Message::toScreen("Hvvp gives "+QString().setNum(missingLink));
+		/*
 		// Run core VTD algorithm
 		vortexdata->runVTD(configdata.getVTDParams());
 		
@@ -245,8 +275,8 @@ void AnalysisThread::run()
 		// Should have all relevant variables now
 		// Update timeline and output
 		vortexlist->addVortex(vortexdata->getArchiveData());
-		
 		*/
+		
 
 		mutex.lock(); // Added this one....
 

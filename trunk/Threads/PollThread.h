@@ -55,7 +55,7 @@ class PollThread : public QThread
 	Configuration *configData;
 	VortexList *vortexList;
 	SimplexList *simplexList;
-	AnalysisThread analysisThread;
+	AnalysisThread *analysisThread;
 	Configuration *vortexConfig;
 	Configuration *simplexConfig;
 	

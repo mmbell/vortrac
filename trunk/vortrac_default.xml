@@ -99,7 +99,7 @@
       <ref_max>65</ref_max>
       <ref_min>-15</ref_min>
       <sw_threshold>10.0</sw_threshold>
-      <bbcount>50</bbcount>
+      <bbcount>30</bbcount>
       <maxfold>4</maxfold>
       <windspeed>30</windspeed>
       <winddirection>180</winddirection>

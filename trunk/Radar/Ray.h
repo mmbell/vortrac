@@ -36,7 +36,7 @@ class Ray
      meters ... etc -LM
   */
   void setRef_gatesp(const float &value);
-  void setVel_gatesp(const float &value);
+  void setVel_gatesp(const float &value);  // in meters
   
   void setRef_numgates(const int &value);
   void setVel_numgates(const int &value);

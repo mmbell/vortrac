@@ -40,8 +40,6 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   diagPanel->setFixedWidth(250);
   connect(diagPanel, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)));
-  connect(&pollThread, SIGNAL(newVCP(const int)),
-	  diagPanel, SLOT(updateVCP(const int)), Qt::DirectConnection);
 
   GraphFace *graph = new GraphFace(vortexLabel);
   connect(graph, SIGNAL(log(const Message&)), 
@@ -156,7 +154,6 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   // Connect the run and abort buttons
   connect(runButton, SIGNAL(clicked()), this, SLOT(runThread()));
   connect(abortButton, SIGNAL(clicked()), this, SLOT(abortThread()));
-  connect(abortButton, SIGNAL(clicked()), &pollThread, SLOT(abortThread()));
 
   // Connect a log to the text window and progress bar
   connect(statusLog, SIGNAL(newLogEntry(QString)), 
@@ -171,13 +168,11 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   statusLog->catchLog(Message("VORTRAC Status Log for "+
 			    QDateTime::currentDateTime().toUTC().toString()
 			    + " UTC"));
-  
-  connect(&pollThread, SIGNAL(log(const Message&)),
-	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
 
   //connect(this, SIGNAL(saveGraphImage(const QString&)),
   //   graph, SLOT(saveImage(const QString&)));
-  
+
+  pollThread = new PollThread;
 }
 
 AnalysisPage::~AnalysisPage()
@@ -351,36 +346,44 @@ void AnalysisPage::updatePage()
 void AnalysisPage::runThread()
 {
   // Start a processing thread using the current configuration
+  pollThread = new PollThread;
+  connect(pollThread, SIGNAL(log(const Message&)),
+	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+  connect(pollThread, SIGNAL(newVCP(const int)),
+	  diagPanel, SLOT(updateVCP(const int)), Qt::DirectConnection);
   
   if(configData->getParam(configData->getConfig("radar"), "format")
      == QString("MODEL")){
     if(analyticModel()) {
-      pollThread.setOnlyRunOnce();
-      pollThread.setConfig(configData);
-      pollThread.start();
+      pollThread->setOnlyRunOnce();
+      pollThread->setConfig(configData);
+      pollThread->start();
     }
   }
   else {
-    pollThread.setConfig(configData);
-    pollThread.start();
+    pollThread->setConfig(configData);
+    pollThread->start();
   }
 }
 
 void AnalysisPage::abortThread()
 {
-
+  Message::toScreen("In AnalysisPage Abort");
   // Try to kill the thread
-  if(pollThread.isRunning()) {
-    // pollThread.quit();
-    pollThread.abortThread();
+  if(pollThread->isRunning()) {
+    pollThread->abortThread();
+    Message::toScreen("Before PollThread New");
+    //pollThread->terminate();
+    pollThread = new PollThread;
     emit log(Message("Analysis Aborted!", -1));
   }
+  Message::toScreen("Leaving AnalysisPage Abort");
 }
 
 
 bool AnalysisPage::isRunning()
 {
-  if (pollThread.isRunning())
+  if (pollThread->isRunning())
     return true;
   return false;
 }

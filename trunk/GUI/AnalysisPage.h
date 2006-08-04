@@ -83,7 +83,7 @@ class AnalysisPage : public QWidget
   Log *statusLog;
   QTextEdit *statusText;
   int lastMax;
-  PollThread pollThread;
+  PollThread *pollThread;
   bool isUntitled;
   GraphFace* graph;
   ConfigurationDialog *configDialog;

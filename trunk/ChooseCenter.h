@@ -150,6 +150,7 @@ class ChooseCenter
      *
      */
     
+    int minVolumes;
 
 
 

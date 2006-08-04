@@ -325,6 +325,7 @@ void AnalyticGrid::gridWindFieldData()
 
 	float vex = envSpeed*sin(Pi+(envDir)*deg2rad);
 	float vey = envSpeed*cos(Pi+(envDir)*deg2rad);
+	
 	vx += vex;
 	vy += vey;
 	//ref+= sqrt(vex*vex+vey*vey);
@@ -333,6 +334,8 @@ void AnalyticGrid::gridWindFieldData()
 	if(radR != 0) {
       
 	  dataGrid[1][i][j][k] = -(delRX*vx-delRY*vy)/radR;
+	  //dataGrid[1][i][j][k] = envSpeed*radR/200;
+     
 	}      	
 	dataGrid[0][i][j][k] = ref;
 	dataGrid[2][i][j][k] = -999;

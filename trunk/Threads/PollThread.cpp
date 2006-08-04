@@ -16,18 +16,10 @@
 PollThread::PollThread(QObject *parent)
   : QThread(parent)
 {
- 
+  Message::toScreen("PollThread Constructor");
   abort = false;
   runOnce = false;
-  connect(&analysisThread, SIGNAL(doneProcessing()), 
-  	  this, SLOT(analysisDoneProcessing()));
-  connect(&analysisThread, SIGNAL(log(const Message&)),
-  	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
-  connect(this, SIGNAL(terminated()),
-	  &analysisThread, SLOT(terminate()));
-  connect(&analysisThread, SIGNAL(newVCP(const int)),
-	  this, SLOT(catchVCP(const int)), Qt::DirectConnection);
- 
+  analysisThread = new AnalysisThread();
 }
 
 PollThread::~PollThread()
@@ -36,7 +28,6 @@ PollThread::~PollThread()
   abort = true;
   waitForAnalysis.wakeOne();
   mutex.unlock();
-  
   wait();
 }
 
@@ -49,19 +40,24 @@ void PollThread::setConfig(Configuration *configPtr)
 
 void PollThread::abortThread()
 {
-  if (analysisThread.isRunning()) {
+  Message::toScreen("In PollThread Abort");
+  if (analysisThread->isRunning()) {
     mutex.lock();
-    abort = true;
-    
     Message::toScreen("in PollThread Exit");
-    analysisThread.abortThread();
-    //analysisThread.quit();
+    analysisThread->abortThread();
+    //analysisThread = new AnalysisThread;
+    //analysisThread->quit();
     
     //Message::toScreen("PollThread has mutex locked!");
     mutex.unlock();
     
  }
-  //exit();
+  mutex.lock();
+  abort = true;
+  mutex.unlock();
+  //this->terminate();
+  Message::toScreen("Leaving PollThread Abort");
+ 
 }
 
 void PollThread::analysisDoneProcessing()
@@ -174,9 +170,17 @@ void PollThread::run()
    */
   //--------------------------------------------------------------------------
   
-
-  analysisThread.setVortexList(vortexList);
-  analysisThread.setSimplexList(simplexList);
+  analysisThread = new AnalysisThread;
+  connect(analysisThread, SIGNAL(doneProcessing()), 
+  	  this, SLOT(analysisDoneProcessing()));
+  connect(analysisThread, SIGNAL(log(const Message&)),
+  	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+  connect(this, SIGNAL(terminated()),
+	  analysisThread, SLOT(terminate()));
+  connect(analysisThread, SIGNAL(newVCP(const int)),
+	  this, SLOT(catchVCP(const int)), Qt::DirectConnection);
+  analysisThread->setVortexList(vortexList);
+  analysisThread->setSimplexList(simplexList);
   
 	// Begin polling loop
 	forever {
@@ -184,7 +188,7 @@ void PollThread::run()
 		// Check for new data
 		if (dataSource->hasUnprocessedData()) {
 			// Got some data, fire up the thread to process it
-			analysisThread.analyze(dataSource->getUnprocessedData(),
+			analysisThread->analyze(dataSource->getUnprocessedData(),
 					       configData);
 			//Message::toScreen("Before mutex lock in pollThread");
 			mutex.lock();
