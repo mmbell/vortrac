@@ -147,9 +147,20 @@ void SimplexThread::run()
 			for (float radius = firstRing; radius <= lastRing; radius++) {
 				// Set the reference point
 				gridData->setAbsoluteReferencePoint(*refLat, *refLon, height);
-				float RefI = gridData->getRefPointI();
-				float RefJ = gridData->getRefPointJ();
-				float RefK = gridData->getRefPointK();
+				if ((gridData->getRefPointI() < 0) || 
+					(gridData->getRefPointJ() < 0) ||
+					(gridData->getRefPointK() < 0)) {
+					// Out of bounds
+					continue;
+				}
+				
+				// Set the corner of the box
+				float cornerI = gridData->getCartesianRefPointI();
+				float cornerJ = gridData->getCartesianRefPointJ();
+				float cornerK = gridData->getCartesianRefPointK();
+				float RefI = cornerI;
+				float RefJ = cornerJ;
+				float RefK = cornerK;
 				
 				// Initialize mean values
 				int meanCount = 0;
@@ -162,13 +173,13 @@ void SimplexThread::run()
 				// Loop through the initial guesses
 				for (int point = 0; point <= numPoints-1; point++) {
 					if (point <= boxRowLength) {
-						RefI = RefI + float(point) * boxIncr;
+						RefI = cornerI + float(point) * boxIncr;
 					} else { 
-						RefI = RefI + float((point)%int(boxRowLength)) * boxIncr;
+						RefI = cornerI + float((point)%int(boxRowLength)) * boxIncr;
 					}
 					
-					RefJ = RefJ + float(point/int(boxRowLength)) * boxIncr;
-
+					RefJ = cornerJ + float(point/int(boxRowLength)) * boxIncr;
+					
 					// Initialize vertices
 					float sqr32 = 0.866025;
 					
@@ -329,7 +340,7 @@ void SimplexThread::run()
 										  + (Yind[i] - meanYall)*(Yind[i] - meanYall));
 						if (vertexDist < stdDevVertexAll) {
 							Xconv[meanCount] = Xind[i];
-							Yconv[meanCount] = VTind[i];
+							Yconv[meanCount] = Yind[i];
 							VTconv[meanCount] = VTind[i];
 							meanX += Xind[i];
 							meanY += Yind[i];
@@ -341,7 +352,8 @@ void SimplexThread::run()
 				meanX = meanX / float(meanCount);
 				meanY = meanY / float(meanCount);
 				meanVT = meanVT / float(meanCount);
-				for (int i=0;i<numPoints;i++) {
+				convergingCenters = meanCount;
+				for (int i=0;i<convergingCenters-1;i++) {
 					stdDevVertex += ((Xconv[i] - meanX)*(Xconv[i] - meanX)
 									 + (Yconv[i] - meanY)*(Yconv[i] - meanY));
 					stdDevVT += (VTconv[i] - meanVT)*(VTconv[i] - meanVT);

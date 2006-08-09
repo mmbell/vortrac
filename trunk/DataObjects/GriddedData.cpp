@@ -97,13 +97,27 @@ float GriddedData::fixAngle(float angle) {
 
 }
 
+
+void GriddedData::setReferencePoint(int ii, int jj, int kk)
+{
+	if((ii > iDim)||(ii < 0)||(jj > jDim)||(jj < 0)||(kk > kDim)||(kk < 0))
+		Message::toScreen("GriddedData: trying to examine point outside cappi");
+	refPointI = ii;
+	refPointJ = jj;
+	refPointK = kk;
+}
+
+
 void GriddedData::setCartesianReferencePoint(int ii, int jj, int kk)
 {
-  if((ii > iDim)||(ii < 0)||(jj > jDim)||(jj < 0)||(kk > kDim)||(kk < 0))
+	refPointI = ii/iGridsp - xmin;
+	refPointJ = jj/jGridsp - ymin;
+	refPointK = kk/kGridsp - zmin;
+    if((refPointI > iDim)||(refPointI < 0) || 
+	   (refPointJ > jDim)||(refPointJ < 0) ||
+	   (refPointK > kDim)||(refPointK < 0))
     Message::toScreen("GriddedData: trying to examine point outside cappi");
-  refPointI = ii;
-  refPointJ = jj;
-  refPointK = kk;
+	
 }
 
 
@@ -115,9 +129,9 @@ void GriddedData::setAbsoluteReferencePoint(float Lat, float Lon, float Height)
 
   float *locations = getCartesianPoint(&originLat, &originLon, &Lat, &Lon);
   // Floor is used to round to the nearest integer
-  refPointI = floor(locations[0]/iGridsp +.5);
-  refPointJ = floor(locations[1]/jGridsp +.5);
-  refPointK = floor(Height/kGridsp +.5);
+  refPointI = floor(locations[0]/iGridsp - xmin +.5);
+  refPointJ = floor(locations[1]/jGridsp - ymin +.5);
+  refPointK = floor(Height/kGridsp - zmin +.5);
   // testing Message::toScreen("I = "+QString().setNum(refPointI)+" J = "+QString().setNum(refPointJ)+" K = "+QString().setNum(refPointK));
   delete[] locations;
   
@@ -159,6 +173,21 @@ float GriddedData::getRefPointJ ()
 float GriddedData::getRefPointK ()
 {
 	return refPointK;
+}
+
+float GriddedData::getCartesianRefPointI ()
+{
+	return (refPointI + xmin)*iGridsp;
+}
+
+float GriddedData::getCartesianRefPointJ ()
+{
+	return (refPointJ + ymin)*jGridsp;
+}
+
+float GriddedData::getCartesianRefPointK ()
+{
+	return (refPointK + zmin)*kGridsp;
 }
 
 int GriddedData::getFieldIndex(QString& fieldName)

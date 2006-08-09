@@ -11,6 +11,7 @@ HEADERS += DataObjects/PressureData.h \
            Threads/AnalysisThread.h \
            Threads/PollThread.h \
            Threads/SimplexThread.h \
+           Threads/VortexThread.h \
            DataObjects/VortexData.h \
            DataObjects/SimplexData.h \
            DataObjects/VortexList.h \
@@ -53,6 +54,7 @@ SOURCES += main.cpp \
            Threads/AnalysisThread.cpp \
            Threads/PollThread.cpp \
            Threads/SimplexThread.cpp \
+           Threads/VortexThread.cpp \
            DataObjects/VortexData.cpp \
            DataObjects/SimplexData.cpp \
            DataObjects/VortexList.cpp \

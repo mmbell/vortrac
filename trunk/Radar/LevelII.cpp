@@ -180,8 +180,8 @@ Ray LevelII::addRay()
   newRay->setRefData( ref_data );
   newRay->setVelData( vel_data );
   newRay->setSwData( sw_data );
-  newRay->setUnambig_range( (radarHeader->unamb_range_x10) / 10.0 );
-  newRay->setNyquist_vel( (radarHeader->nyquist_vel_x100) / 100 );
+  newRay->setUnambig_range( float(radarHeader->unamb_range_x10) / 10.0 );
+  newRay->setNyquist_vel( float(radarHeader->nyquist_vel_x100) / 100 );
   newRay->setFirst_ref_gate( radarHeader->ref_gate1 );
   newRay->setFirst_vel_gate( radarHeader->vel_gate1 );
   newRay->setRef_gatesp( radarHeader->ref_gate_width );

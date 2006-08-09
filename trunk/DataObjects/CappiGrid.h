@@ -31,9 +31,6 @@ class CappiGrid : public GriddedData
   void writeAsi();
   
  private:
-  float xmin, xmax;
-  float ymin, ymax;
-  float zmin, zmax;
 
   float latReference;
   float lonReference;

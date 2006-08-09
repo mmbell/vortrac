@@ -25,6 +25,16 @@ AnalysisThread::AnalysisThread(QObject *parent)
   Message::toScreen("AnalysisThread Constructor");
   abort = false;
   simplexThread = new SimplexThread;
+  connect(simplexThread, SIGNAL(log(const Message&)), this, 
+		  SLOT(catchLog(const Message&)), Qt::DirectConnection);
+  connect(simplexThread, SIGNAL(centerFound()), 
+		  this, SLOT(foundCenter()), Qt::DirectConnection);
+  vortexThread = new VortexThread;
+  connect(vortexThread, SIGNAL(log(const Message&)), this, 
+		  SLOT(catchLog(const Message&)), Qt::DirectConnection);
+  connect(vortexThread, SIGNAL(windFound()), 
+		  this, SLOT(foundWind()), Qt::DirectConnection);
+  
 }
 
 AnalysisThread::~AnalysisThread()
@@ -122,7 +132,7 @@ void AnalysisThread::run()
 		if(abort)
 		  return;
 		mutex.lock();
-		//Dealias
+		// Dealias 
 		
 		if(!radarVolume->isDealiased()){
 		  
@@ -228,13 +238,8 @@ void AnalysisThread::run()
 		mutex.lock();
 		if (!abort) {
 		  //Find Center 
-		  simplexThread = new SimplexThread();
-		  connect(simplexThread, SIGNAL(log(const Message&)), this, 
-			  SLOT(catchLog(const Message&)), Qt::DirectConnection);
-		  connect(simplexThread, SIGNAL(centerFound()), 
-			  this, SLOT(foundCenter()), Qt::DirectConnection);
 		  simplexThread->findCenter(configData, gridData, &vortexLat, &vortexLon, simplexList);
-		  //waitForCenter.wait(&mutex); 
+		  waitForCenter.wait(&mutex); 
 		}
 		else
 		  return;
@@ -274,10 +279,23 @@ void AnalysisThread::run()
 		envWindFinder->findHVVPWinds();
 		float missingLink = envWindFinder->getAvAcrossBeamWinds();
 		Message::toScreen("Hvvp gives "+QString().setNum(missingLink));
+
 		/*
-		// Run core VTD algorithm
-		vortexdata->runVTD(configdata.getVTDParams());
+		mutex.unlock();  // Added this one ... I think...
 		
+		// Mutex Investigation.....
+		
+		mutex.lock();
+		if (!abort) {
+			// Get the GBVTD winds
+			vtdThread->getWinds(configData, gridData, &vortexLat, &vortexLon, vortexList);
+			waitForWinds.wait(&mutex); 
+		}
+		else
+			return;
+		mutex.unlock();  
+		
+		/*
 		// Get current pressure values
 		PressureData *pressuredata = new PressureData;
 		pressuredata->setPressure(datasource->getPressure());

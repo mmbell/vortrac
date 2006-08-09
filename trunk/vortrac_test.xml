@@ -4,14 +4,14 @@
         <name>Charley</name>
         <lat>26.2</lat>
         <lon>-82.3</lon>
-        <dir>workingDirs/</dir>
+        <dir>/Users/mbell/Development/vortrac/trunk/workingDirs</dir>
     </vortex>
     <radar>
         <name>KTBW</name>
-        <lat>27.7056</lat>
-        <lon>-82.4017</lon>
-        <alt>0.00</alt>
-        <dir>/home/lmauger/NCAR/charley/levelii</dir>
+        <lat>27.706</lat>
+        <lon>-82.402</lon>
+        <alt>32.5</alt>
+        <dir>/Volumes/artemis1/mbell/charley/levelii</dir>
         <format>LEVELII</format>
         <startdate>2004-08-01</startdate>
         <enddate>2005-01-01</enddate>
@@ -19,7 +19,7 @@
         <endtime>23:59:59</endtime>
     </radar>
     <cappi>
-        <dir>/scr/science40/mauger/charley/cappi</dir>
+        <dir>/Users/mbell/Development/vortrac/trunk/workingDirs/cappi</dir>
         <xdim>100</xdim>
         <ydim>100</ydim>
         <zdim>5</zdim>
@@ -31,7 +31,7 @@
         <interpolation>cressman</interpolation>
     </cappi>
     <center>
-        <dir>/scr/science40/mauger/charley/center</dir>
+        <dir>/Users/mbell/Development/vortrac/trunk/workingDirs/center</dir>
         <geometry>GBVTD</geometry>
         <closure>original</closure>
         <reflectivity>DZ</reflectivity>
@@ -48,27 +48,27 @@
         <boxdiameter>12.0</boxdiameter>
         <numpoints>16</numpoints>
         <maxwavenumber>1</maxwavenumber>
-        <maxdatagap wavenum="0">180</maxdatagap>
-        <maxdatagap wavenum="1">120</maxdatagap>
+        <maxdatagap wavenum="0" >180</maxdatagap>
+        <maxdatagap wavenum="1" >120</maxdatagap>
     </center>
     <choosecenter>
-        <dir>/path/to/choose/center/output</dir>
+        <dir>/Users/mbell/Development/vortrac/trunk/workingDirs/choosecenter</dir>
         <filename>nameOfCenterListFile</filename>
-        <startdate>2005-01-01</startdate>
+        <startdate>2004-01-01</startdate>
         <enddate>2005-01-02</enddate>
         <starttime>00:00:00</starttime>
         <endtime>00:00:00</endtime>
         <dist_weight>0.0</dist_weight>
-        <wind_weight>.2</wind_weight>
-        <stddev_weight>.6</stddev_weight>
-        <pts_weight>.2</pts_weight>
-        <position_weight>.4</position_weight>
-        <rmw_weight>.4</rmw_weight>
-        <vt_weight>.2</vt_weight>
+        <wind_weight>0.2</wind_weight>
+        <stddev_weight>0</stddev_weight>
+        <pts_weight>0.2</pts_weight>
+        <position_weight>0.4</position_weight>
+        <rmw_weight>0.4</rmw_weight>
+        <vt_weight>0.2</vt_weight>
         <stats>99</stats>
     </choosecenter>
     <vtd>
-        <dir>/scr/science40/mauger/charley/center</dir>
+        <dir>/Users/mbell/Development/vortrac/trunk/workingDirs/vtd</dir>
         <geometry>GBVTD</geometry>
         <closure>original</closure>
         <reflectivity>DZ</reflectivity>
@@ -79,12 +79,12 @@
         <outerradius>60</outerradius>
         <ringwidth>1.0</ringwidth>
         <maxwavenumber>1</maxwavenumber>
-        <maxdatagap wavenum="0">180</maxdatagap>
-        <maxdatagap wavenum="1">120</maxdatagap>
+        <maxdatagap wavenum="0" >180</maxdatagap>
+        <maxdatagap wavenum="1" >120</maxdatagap>
     </vtd>
     <hvvp/>
     <pressure>
-        <dir>/path/to/pressure/data</dir>
+        <dir>/Users/mbell/Development/vortrac/trunk/workingDirs</dir>
     </pressure>
     <graphics>
         <autolimits>on</autolimits>

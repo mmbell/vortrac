@@ -22,6 +22,7 @@
 #include "DataObjects/VortexList.h"
 #include "DataObjects/GriddedFactory.h"
 #include "SimplexThread.h"
+#include "VortexThread.h"
 
 class AnalysisThread : public QThread
 {
@@ -57,6 +58,7 @@ class AnalysisThread : public QThread
      RadarData *radarVolume;
      GriddedFactory gridFactory;
      SimplexThread *simplexThread;
+	 VortexThread *vortexThread;
      VortexList *vortexList;
      SimplexList *simplexList;
      void archiveAnalysis();

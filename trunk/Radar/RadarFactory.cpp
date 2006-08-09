@@ -130,7 +130,7 @@ bool RadarFactory::hasUnprocessedData()
       // Should have filenames starting with radar ID
       dataPath.setNameFilters(QStringList(radarName + "*"));
       dataPath.setFilter(QDir::Files);
-      dataPath.setSorting(QDir::Time);
+      dataPath.setSorting(QDir::Time | QDir::Reversed);
       QStringList filenames = dataPath.entryList();
       
       // Check to see which are in the time limits

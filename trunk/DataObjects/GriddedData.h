@@ -35,6 +35,7 @@ class GriddedData
   float fixAngle(float angle);
   void setLatLonOrigin(float *knownLat, float *knownLon, float *relX, 
 		       float *relY);
+  void setReferencePoint(int ii, int jj, int kk);
   void setCartesianReferencePoint(int ii, int jj, int kk); 
   void setAbsoluteReferencePoint(float Lat, float Lon, float Height);
   float* getCartesianPoint(float *Lat, float *Lon,
@@ -42,7 +43,11 @@ class GriddedData
   float getRefPointI();
   float getRefPointJ();
   float getRefPointK();
-			 
+  
+  float getCartesianRefPointI();
+  float getCartesianRefPointJ();
+  float getCartesianRefPointK();
+  
   // Return a 1D array of values
   float* getNativeData();
   float* getCartesianData();
@@ -140,6 +145,10 @@ class GriddedData
   };
   coordSystems coordSystem;
 
+  float xmin, xmax;
+  float ymin, ymax;
+  float zmin, zmax;
+  
 };
 
 #endif

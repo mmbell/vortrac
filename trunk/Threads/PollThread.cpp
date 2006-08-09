@@ -91,7 +91,7 @@ void PollThread::run()
   vortexList = new VortexList(vortexConfig);
   vortexList->open();
   
-  file = QString("/Users/mbell/Development/vortrac/trunk/vortrac_defaultSimplexListStorage.xml");
+  file = QString("vortrac_defaultSimplexListStorage.xml");
 
   Configuration *simplexConfig = new Configuration(0,QString());
   connect(simplexConfig, SIGNAL(log(const Message&)), 
