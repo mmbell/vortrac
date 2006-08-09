@@ -19,13 +19,13 @@ public:
   Matrix();
   ~Matrix();
   
-  bool lls(const int &numCoeff, const int &numData, 
-	   float** &x, float* &y, 
-	   float &stDeviation, float* &coeff, float* &stError);
+  static bool lls(const int &numCoeff, const int &numData, 
+		  float** &x, float* &y, 
+		  float &stDeviation, float* &coeff, float* &stError);
   // Preforms a least squares regression on the velocity values
   // on the selected VAD ring to deduce the environmental wind
 
-  bool gaussJordan(float **a, float **b, int n, int m);
+  static bool gaussJordan(float **a, float **b, int n, int m);
   // Preforms a least squares fit, this algorithm was borrowed from 
   // Numericical Recipes in C++ Second Edition,
   // Authors: 

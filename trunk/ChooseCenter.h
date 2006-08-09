@@ -32,6 +32,7 @@ class ChooseCenter
     bool chooseMeanCenters();
     bool constructPolynomial();
     bool fixCenters();
+    bool fixCentersNoFit();
     // void checkHeights();
 
   

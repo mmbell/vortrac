@@ -18,6 +18,7 @@ ChooseCenter::ChooseCenter(Configuration* newConfig,
 {
   config = newConfig;
   simplexResults = newList;
+
 }
 
 ChooseCenter::~ChooseCenter()
@@ -68,18 +69,31 @@ void ChooseCenter::setSimplexList(const SimplexList &newList)
 
 bool ChooseCenter::findCenter()
 {
+  Message::toScreen("ChooseCenter: Initializing Things");
   initialize();
+  Message::toScreen("ChooseCenter: Try Choose Mean Centers");
   if(!chooseMeanCenters()) {
-    // emit log(Message("Choose Mean Centers Failed!"));
+    //emit log(Message("Choose Mean Centers Failed!"));
+    Message::toScreen("Choose Mean Centers Failed!");
     return false;
   }
+  //if(simplexResults.count() > minVolumes) {
+  Message::toScreen("ChooseCenter: Try Construct Polynomials");
   if(!constructPolynomial()) {
-    // emit log(Message("Choose Center failed to Construct Polynomial"));
-    return false;
+     //emit log(Message("Choose Center failed to Construct Polynomial"));
+    Message::toScreen("Choose Center failed to Construct Polynomial");
+    if(!fixCentersNoFit()) {
+      Message::toScreen("Choose Center failed to find individual centers w/o fit");
+      return false;
+    }
   }
-  if(!fixCenters()) {
-    // emit log(Message("Choose Center failed to find individual centers"));
-    return false;
+  else {
+    Message::toScreen("ChooseCenter: Try Fix Centers");
+    if(!fixCenters()) {
+      //emit log(Message("Choose Center failed to find individual centers"));
+      Message::toScreen("Choose Center failed to find individual centers");
+      return false;
+    }
   }
   return true;
 }
@@ -465,6 +479,12 @@ bool ChooseCenter::constructPolynomial()
       else 
 	maxPoly = simplexResults.count()-1;
 
+      if(maxPoly < 3){
+	return false;
+	// Expand this to get variables in the right places
+	// So the next member function can gracefully handle things
+      }
+
       float squareVariance[maxPoly];
       // This goes from 0 to less than maxPoly, because this is the number
       // of fits that we will examine the variance of.
@@ -643,6 +663,162 @@ bool ChooseCenter::fixCenters()
       for(int n = 0; n < bestFitDegree[3][k]; n++) {
 	wind += bestFitCoeff[3][k][n]*pow(min,n);
       }
+      // A whole bunch of stuff for forecasting that we are not dealing with
+      float minError = 0;
+      float totalError = 0;
+      float minXError = x*x;
+      float minYError = y*y;
+      float minRadError = rad*rad;
+      float minWindError = wind*wind;
+      for(int j = 0; j < simplexResults[i].getNumRadii(); j++) {
+	float xError, yError, radError, windError;
+	for(int l = 0; l < simplexResults[i].getNumPointsUsed(); l++) {
+	  if(!simplexResults[i].getCenter(j,k,l).isNull()) {
+	    Center currCenter = simplexResults[i].getCenter(j,k,l);
+	    float stdX = sqrt(bestFitVariance[0][k]);
+	    xError = exp(-.5*pow((x-currCenter.getX())/stdX, 2));
+	    float stdY = sqrt(bestFitVariance[1][k]);
+	    yError = exp(-.5*pow((y-currCenter.getY())/stdY, 2));
+	    float stdRad = sqrt(bestFitVariance[2][k]);
+	    if(stdRad == 0) {
+	      radError = 1;
+	    }
+	    else {
+	      radError = exp(-.5*pow((rad-currCenter.getRadius())/stdRad, 2));  
+	    }
+	    float stdWind = sqrt(bestFitVariance[3][k]);
+	    windError = exp(-.5*pow((wind-currCenter.getMaxVT())/stdWind, 2));
+	    xError *= positionWeight;
+	    yError *= positionWeight;
+	    radError *= rmwWeight;
+	    windError *= velWeight;
+	    totalError = xError+yError+radError+windError;
+	    
+	    if(totalError > minError) {
+	      minError = totalError;
+	      minXError = xError;
+	      minYError = yError;
+	      minRadError = radError;
+	      minWindError = windError;
+	      newBestRadius[i][k] = j;
+	      newBestCenter[i][k] = l;
+	      
+	      int jBest = bestRadius[i][k];
+	      float meanX=((simplexResults[i].getX(k,jBest)+x+currCenter.getX())/3.0);
+	      float meanY=((simplexResults[i].getY(k,jBest)+y+currCenter.getY())/3.0);
+	      finalStd = pow((simplexResults[i].getX(k, jBest)-meanX),2);
+	      finalStd += pow((x-meanX), 2);
+	      finalStd += pow((currCenter.getX()-meanX), 2);
+	      finalStd += pow((simplexResults[i].getY(k, jBest)-meanY),2);
+	      finalStd += pow((y-meanY), 2);
+	      finalStd += pow((currCenter.getY()-meanY), 2);
+	      finalStd = sqrt(finalStd/3.0);
+	      confidence = (100*minError)/4.0;   // percent ? who uses this
+	      float avgError = minError/4.0;
+	      stdError = pow((avgError-minXError),2);
+	      stdError += pow((avgError-minYError),2);
+	      stdError += pow((avgError-minRadError),2);
+	      stdError += pow((avgError-minWindError),2);
+	      stdError /= 4.0;
+	      // finalStd and stdError are printed only for each level and 
+	      // volume, these may be desired as outputs
+	    }
+	  }
+	}
+	// new variables here but why?
+	// check to make sure that all the ending } are in the right place here
+	
+	// get best simplex center;
+	Center bestCenter = simplexResults[i].getCenter(k,newBestRadius[i][k],
+							newBestCenter[i][k]);
+	
+	xError = (x-bestCenter.getX())*(x-bestCenter.getX());
+	yError = (y-bestCenter.getY())*(y-bestCenter.getY());
+	radError = (rad-bestCenter.getRadius())*(rad-bestCenter.getRadius());
+	windError = (wind-bestCenter.getMaxVT())*(wind-bestCenter.getMaxVT());
+	xErrorSum += xError;
+	yErrorSum += yError;
+	radErrorSum += radError;
+	windErrorSum += windError;
+      }
+    }
+    float degree = bestFitDegree[3][k];
+    newVariance[0][k]=xErrorSum/(simplexResults.count()-degree);
+    newVariance[1][k]=yErrorSum/(simplexResults.count()-degree);
+    newVariance[2][k]=radErrorSum/(simplexResults.count()-degree);
+    newVariance[3][k]=windErrorSum/(simplexResults.count()-degree);
+    // the newVariance is never used in the perl code of choose center,
+    // and the variable degree is never initialized either, it is just left at
+    // the last degree checked for the last function, probably wind
+    // is this intentional or not??
+    // my best guess is that degree will be set to the high degree for wind
+    // so that is what I will set it to here
+  }
+  for(int i = 0; i <= simplexResults.count(); i++) {
+    float radiusSum = 0;
+    float xSum = 0;
+    float ySum = 0;
+    float centerDeviation = 0;
+    float radiusDeviation = 0;
+    for(int k = 0; k < simplexResults[i].getNumLevels(); k++) {
+      Center bestCenter = simplexResults[i].getCenter(k, newBestRadius[i][k],
+						      newBestCenter[i][k]);
+      radiusSum += bestCenter.getRadius();
+      xSum = bestCenter.getX();
+      ySum = bestCenter.getY();
+    }
+    float radiusMean = radiusSum/simplexResults[0].getNumLevels();
+    float xMean = xSum/simplexResults[0].getNumLevels();
+    float yMean = ySum/simplexResults[0].getNumLevels();
+
+    for(int k = 0; k < simplexResults[i].getNumLevels(); k++) {
+      Center bestCenter = simplexResults[i].getCenter(k,newBestRadius[i][k],
+						      newBestCenter[i][k]);
+      centerDeviation += pow((xMean - bestCenter.getX()),2);
+      centerDeviation += pow((yMean - bestCenter.getY()),2);
+      radiusDeviation +=pow((radiusMean -bestCenter.getRadius()),2);
+    }
+    centerDeviation = sqrt(centerDeviation/simplexResults[0].getNumLevels());
+    radiusDeviation = sqrt(radiusDeviation/simplexResults[0].getNumLevels());
+  }
+  // I need to go through and figure out which variables are of some importance
+  // after the program has run to completion
+  return true;
+}
+
+bool ChooseCenter::fixCentersNoFit()
+{
+  float **newVariance = new float*[4];
+  for(int m = 0; m < 4; m++) 
+    newVariance[m] = new float[simplexResults[0].getNumLevels()];
+
+  for(int k = 0; k < simplexResults[0].getNumLevels(); k++) {
+    float xErrorSum = 0;
+    float yErrorSum = 0;
+    float radErrorSum = 0;
+    float windErrorSum = 0;
+    for(int i = 0; i < simplexResults.count(); i++) {
+      // should these guys be float?
+      float x = 0;
+      float y = 0;
+      float rad = 0;
+      float wind = 0;
+      float finalStd = 0;
+      float confidence = 0;
+      float stdError = 0;
+      float min = ((float)startTime.secsTo(simplexResults[i].getTime())/60.0);
+      //for(int n = 0; n < bestFitDegree[0][k]; n++) {
+      x += bestFitCoeff[0][k][0];
+      //}
+      //for(int n = 0; n < bestFitDegree[1][k]; n++) {
+      y += bestFitCoeff[1][k][0];
+      //}
+      //for(int n = 0; n < bestFitDegree[2][k]; n++) {
+      rad += bestFitCoeff[2][k][0];
+      //}
+      //for(int n = 0; n < bestFitDegree[3][k]; n++) {
+      wind += bestFitCoeff[3][k][0];
+      //}
       // A whole bunch of stuff for forecasting that we are not dealing with
       float minError = 0;
       float totalError = 0;

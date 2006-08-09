@@ -364,8 +364,7 @@ void SimplexThread::run()
 		//Now pick the best center
 		centerFinder = new ChooseCenter(configData,*simplexResults);
 		foundCenter = centerFinder->findCenter();
-		
-		
+	
 		// Clean up
 		delete[] dataGaps;
 		delete[] vertex;

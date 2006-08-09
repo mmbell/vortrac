@@ -12,7 +12,7 @@
 #include "Ray.h"
 #include "Sweep.h"
 #include <math.h>
-//#include "Matrix.h"
+#include "Math/Matrix.h"
 
 /*
  * The HVVP subroutine used here was created and written by Paul Harasti for 
@@ -30,6 +30,7 @@ Hvvp::Hvvp()
   deg2rad = acos(1)/180;
   rad2deg = 1.0/deg2rad;
   levels = 14;       
+  xlsDimension = 16;
 
   z = new float[levels];
   u = new float[levels];
@@ -49,12 +50,12 @@ Hvvp::~Hvvp()
   delete var;
   delete vm_sin;
   delete volume;
-  for(int i = 0; i < 16; i++) {
+  for(int i = 0; i < xlsDimension; i++) {
     delete xls[i];
   }
   delete yls;
   delete xls;
-  delete wgt;
+  //delete wgt;
 }
 
 void Hvvp::setRadarData(RadarData *newVolume, float range, float angle,
@@ -303,9 +304,9 @@ int Hvvp::hvvpPrep(int m) {
   // float rot = (cca-4.22)*deg2rad; **
   // ** Special case scenerio for KBRO Data of Bret (1999)
 
-  xls = new float*[16];
+  xls = new float*[xlsDimension];
   yls = new float[maxpoints];
-  for(int k = 0; k < 16; k++) {
+  for(int k = 0; k < xlsDimension; k++) {
     xls[k] = new float[maxpoints];
     for(int l = 0; l < maxpoints; l++) {
       xls[k][l] = 0;
@@ -351,7 +352,7 @@ int Hvvp::hvvpPrep(int m) {
 	      float rr = srange*srange*cosee*cosee*cosee;
 	      float zz = alt-h0;
 	      yls[count] = vel[v];
-	      wgt[count] = 1; // why are we weighting it?
+	      //wgt[count] = 1; // why are we weighting it?
 	      xls[0][count] = sinaa*cosee;
 	      xls[1][count] = cosee*sinaa*xx;
 	      xls[2][count] = cosee*sinaa*zz;
@@ -406,11 +407,13 @@ bool Hvvp::findHVVPWinds()
     if(count >= 6500) {
 
       float sse;
-      float stand_err[16];
-      float cc[16];
+      float *stand_err = new float[xlsDimension];
+      float *cc = new float[xlsDimension];
       bool flag, outlier;
-      
-      flag = lls(16, count, count, xls, yls, wgt, sse, stand_err, cc);
+
+      //flag = lls(16, count,count, xls, yls, wgt, sse, stand_err, cc);
+
+      flag = Matrix::lls(xlsDimension, count, xls, yls, sse, stand_err, cc);
       
       /*
        * Check for outliers that deviate more than two standard 
@@ -423,7 +426,7 @@ bool Hvvp::findHVVPWinds()
       int cgood = 0;
       for (int n = 0; n < count; n++) {
 	float vr_est = 0;
-	for(int p = 0; p < 16; p++) {
+	for(int p = 0; p < xlsDimension; p++) {
 	  vr_est = vr_est+cc[p]*xls[p][n];
 	}
 	if(fabs(vr_est-yls[n])>2.0*sse) {
@@ -440,10 +443,10 @@ bool Hvvp::findHVVPWinds()
 
       int qc_count;
  
-      float** qcxls = new float*[16];
+      float** qcxls = new float*[xlsDimension];
       float* qcyls = new float[count];
-      float* qcwgt = new float[count];
-      for(int d = 0; d < 16; d++) {
+      //float* qcwgt = new float[count];
+      for(int d = 0; d < xlsDimension; d++) {
 	qcxls[d] = new float[count];
       }
 
@@ -453,22 +456,23 @@ bool Hvvp::findHVVPWinds()
 	
 	for (int n = 0; n < count; n++) {
 	  
-	  qcwgt[n] = 0;
+	  //qcwgt[n] = 0;
 	  qcyls[n] = 0;
-	  for(int p = 0; p < 16; p++) {
+	  for(int p = 0; p < xlsDimension; p++) {
 	    qcxls[p][n] = 0;
 	  }
 	  
 	  if(yls[n] != velNull) {
 	    qcyls[qc_count] = yls[n];
-	    qcwgt[qc_count] = 1;
-	    for(int p = 0; p < 16; p++) {
+	    //qcwgt[qc_count] = 1;
+	    for(int p = 0; p < xlsDimension; p++) {
 	      qcxls[p][qc_count] = xls[p][n];
 	    }
 	    qc_count++;
 	  }
 	}
-	flag = lls(16, qc_count, qc_count, qcxls,qcyls,qcwgt,sse,stand_err,cc);
+	// flag = lls(16, qc_count, qc_count, qcxls, qcyls, qcwgt, sse, stand_err,cc);
+	flag = Matrix::lls(xlsDimension,qc_count,qcxls,qcyls,sse,stand_err,cc);
 	
 	// Calculate the HVVP wind parameters:
 	

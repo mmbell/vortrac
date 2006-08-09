@@ -69,8 +69,9 @@ private:
    float deg2rad, rad2deg;
 
    float** xls;
+   int xlsDimension;
    float* yls;
-   float* wgt;
+   //float* wgt;
 
    float *z, *u, *v, *vm_sin, *var, av_VmSin, stdErr_VmSin;
    /*

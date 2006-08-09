@@ -17,6 +17,7 @@
 #include "Message.h"
 #include "SimplexThread.h"
 #include "HVVP/Hvvp.h"
+#include "math.h"
 
 AnalysisThread::AnalysisThread(QObject *parent)
   : QThread(parent)
@@ -232,7 +233,7 @@ void AnalysisThread::run()
 			  SLOT(catchLog(const Message&)), Qt::DirectConnection);
 		  connect(simplexThread, SIGNAL(centerFound()), 
 			  this, SLOT(foundCenter()), Qt::DirectConnection);
-		  //simplexThread->findCenter(configData, gridData, &vortexLat, &vortexLon, simplexList);
+		  simplexThread->findCenter(configData, gridData, &vortexLat, &vortexLon, simplexList);
 		  //waitForCenter.wait(&mutex); 
 		}
 		else
@@ -251,10 +252,22 @@ void AnalysisThread::run()
 		* rmw: radius of maximum wind measured from the TC circulation
 		*      center outward.
 		*/
+		QDomElement radar = configData->getConfig("radar");
+		float radarLat = configData->getParam(radar,"lat").toFloat();
+		float radarLon = configData->getParam(radar,"lon").toFloat();
+		
+		float* distance;
+		distance = gridData->getCartesianPoint(&radarLat, &radarLon, 
+						       &vortexLat, &vortexLon);
+		float rt = sqrt(distance[0]*distance[0]+distance[1]*distance[1]);
+		float cca = atan2(distance[0], distance[1])*180/acos(-1);
+		delete[] distance;
+		float rmw = 12.5;
 
-		float rt = 0;
-		float cca = 0;
-		float rmw = 0;
+		// RMW is just a guess for the charley case right now, 
+		// we need this param before we can move on with HVVP
+
+		Message::toScreen("Hvvp Parameters: Distance to Radar"+QString().setNum(rt)+" angel to vortex center in degrees ccw from north "+QString().setNum(cca)+" rmw "+QString().setNum(rmw));
 
 		Hvvp *envWindFinder = new Hvvp;
 		envWindFinder->setRadarData(radarVolume,rt, cca, rmw);

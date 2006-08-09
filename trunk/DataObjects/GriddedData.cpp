@@ -142,6 +142,8 @@ float* GriddedData::getCartesianPoint(float *Lat, float *Lon,
   relArray[1] = relY;
   return relArray;
 
+  // This value is returned in KM ???? -LM
+
 }
 
 float GriddedData::getRefPointI ()
