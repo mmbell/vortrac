@@ -36,7 +36,7 @@ SimplexThread::~SimplexThread()
 }
 
 void SimplexThread::findCenter(Configuration *wholeConfig, GriddedData *dataPtr,
-							   float* vortexLat, float* vortexLon, SimplexList* simplexPtr)
+							   SimplexList* simplexPtr, VortexData* vortexPtr)
 {
 
 	// Lock the thread
@@ -45,12 +45,13 @@ void SimplexThread::findCenter(Configuration *wholeConfig, GriddedData *dataPtr,
 	// Set the grid object
 	gridData = dataPtr;
 
-	// Remember the vortex center
-	refLat = vortexLat;
-	refLon = vortexLon;
-	
 	// Set the simplex data object
 	simplexResults = simplexPtr;
+
+	// Set the vortexdata object and initial center guess
+	vortexData = vortexPtr;
+	refLat = vortexData->getLat();
+	refLon = vortexData->getLon();
 	
 	// Set the configuration info
 	configData = wholeConfig;
@@ -146,7 +147,7 @@ void SimplexThread::run()
 			if(!abort) {
 			for (float radius = firstRing; radius <= lastRing; radius++) {
 				// Set the reference point
-				gridData->setAbsoluteReferencePoint(*refLat, *refLon, height);
+				gridData->setAbsoluteReferencePoint(refLat, refLon, height);
 				if ((gridData->getRefPointI() < 0) || 
 					(gridData->getRefPointJ() < 0) ||
 					(gridData->getRefPointK() < 0)) {
@@ -210,7 +211,8 @@ void SimplexThread::run()
 								emit log(Message("Error retrieving VTC0 in simplex!"));
 							} 
 						} else {
-							emit log(Message("VTD failed!"));
+							VT[v] = -999;
+							// emit log(Message("VTD failed!"));
 						}
 
 						delete[] ringData;
@@ -285,7 +287,8 @@ void SimplexThread::run()
 												emit log(Message("Error retrieving VTC0 in simplex!"));
 											} 
 										} else {
-											emit log(Message("VTD failed!"));
+											VT[v] = -999;
+											// emit log(Message("Not enough data in VTD ring"));
 										}
 										
 										delete[] ringData;
@@ -374,7 +377,7 @@ void SimplexThread::run()
 		simplexResults->save();
 		
 		//Now pick the best center
-		centerFinder = new ChooseCenter(configData,*simplexResults);
+		centerFinder = new ChooseCenter(configData,*simplexResults,vortexData);
 		foundCenter = centerFinder->findCenter();
 	
 		// Clean up
@@ -483,7 +486,8 @@ float SimplexThread::simplexTest(float**& vertex,float*& VT,float*& vertexSum,
 			emit log(Message("Error retrieving VTC0 in simplex!"));
 		} 
 	} else {
-		emit log(Message("VTD failed!"));
+		VTtest = -999;
+		// emit log(Message("Not enough data in simplex ring"));
 	}
 
 	delete[] ringData;

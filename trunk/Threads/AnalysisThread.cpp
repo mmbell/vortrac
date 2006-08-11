@@ -9,7 +9,6 @@
  */
 
 #include <QtGui>
-
 #include "AnalysisThread.h"
 #include "Radar/RadarQC.h"
 #include "DataObjects/CappiGrid.h"
@@ -122,6 +121,8 @@ void AnalysisThread::run()
 		// OK, Let's process some radar data
 		mutex.lock();
 		bool analysisGood = true;
+		QTime analysisTime;
+		analysisTime.start();
 		
 		// Read in the radar data
 		radarVolume->readVolume();
@@ -144,7 +145,7 @@ void AnalysisThread::run()
 		  dealiaser.getConfig(configData->getConfig("qc"));
 		  
 		  if(dealiaser.dealias()) {
-		    emit log(Message("Finished Dealias Method", 10));
+		    emit log(Message("Finished QC and Dealiasing", 10));
 		    radarVolume->isDealiased(true);
 		  } else {
 		    emit log(Message("Finished Dealias Method with Failures"));
@@ -226,11 +227,18 @@ void AnalysisThread::run()
 		
 		// Output Radar data to check if dealias worked
 		gridData->writeAsi();
-		emit log(Message("Writing ASI"));
-		
-		// Create data instances to hold the analysis results
+		emit log(Message("Done with Cappi",30));
+		QString cappiTime;
+		cappiTime.setNum(analysisTime.elapsed());
+		emit log(Message(cappiTime));
+				 
+		// Create data instance to hold the analysis results
 		VortexData *vortexData = new VortexData(); 
-
+		
+		// Set the initial guess in the data object as a temporary center
+		vortexData->setLat(0,vortexLat);
+		vortexData->setLon(0,vortexLon);
+		
 		mutex.unlock();  // Added this one ... I think...
 
 		// Mutex Investigation.....
@@ -238,12 +246,16 @@ void AnalysisThread::run()
 		mutex.lock();
 		if (!abort) {
 		  //Find Center 
-		  simplexThread->findCenter(configData, gridData, &vortexLat, &vortexLon, simplexList);
+		  simplexThread->findCenter(configData, gridData, simplexList, vortexData);
 		  waitForCenter.wait(&mutex); 
 		}
 		else
 		  return;
-		mutex.unlock();  
+		mutex.unlock();
+				 
+		QString simplexTime;
+		simplexTime.setNum(analysisTime.elapsed());
+		emit log(Message(simplexTime));
 		//Message::toScreen("Where....");
 
 		
@@ -280,7 +292,6 @@ void AnalysisThread::run()
 		float missingLink = envWindFinder->getAvAcrossBeamWinds();
 		Message::toScreen("Hvvp gives "+QString().setNum(missingLink));
 
-		/*
 		mutex.unlock();  // Added this one ... I think...
 		
 		// Mutex Investigation.....
@@ -288,7 +299,7 @@ void AnalysisThread::run()
 		mutex.lock();
 		if (!abort) {
 			// Get the GBVTD winds
-			vtdThread->getWinds(configData, gridData, &vortexLat, &vortexLon, vortexList);
+			vortexThread->getWinds(configData, gridData, vortexData);
 			waitForWinds.wait(&mutex); 
 		}
 		else
@@ -302,16 +313,16 @@ void AnalysisThread::run()
 		
 		// Calculate central pressure
 		vortexdata->setCentralPressure(pressuredata->getPressure());
+		*/
 		
 		// Should have all relevant variables now
 		// Update timeline and output
-		vortexlist->addVortex(vortexdata->getArchiveData());
-		*/
+		vortexList->append(*vortexData);		
+		vortexList->save();
 		
-
 		mutex.lock(); // Added this one....
 
-		delete vortexData;
+		// delete vortexData;
 		
 		//Message::toScreen("Deleted vortex data.... ???");
 		

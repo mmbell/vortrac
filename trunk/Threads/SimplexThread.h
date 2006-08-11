@@ -24,6 +24,7 @@
 #include "DataObjects/Coefficient.h"
 #include "DataObjects/SimplexList.h"
 #include "DataObjects/SimplexData.h"
+#include "DataObjects/VortexData.h"
 #include "ChooseCenter.h"
 
 
@@ -35,7 +36,7 @@ class SimplexThread : public QThread
      SimplexThread(QObject *parent = 0);
      ~SimplexThread();
 	 void findCenter(Configuration *wholeConfig, GriddedData *dataPtr, 
-			 float *vortexLat, float *vortexLon, SimplexList *simplexPtr);
+					 SimplexList *simplexPtr, VortexData *vortexPtr);
 
  public slots:
      void catchLog(const Message& message);
@@ -54,10 +55,11 @@ class SimplexThread : public QThread
 	 GriddedData *gridData;
 	 SimplexData *simplexData;
 	 SimplexList *simplexResults;
+	 VortexData *vortexData;
 	 Configuration *configData;
 	 QDomElement simplexConfig;
-	 float* refLat;
-	 float* refLon;
+	 float refLat;
+	 float refLon;
 	 float* dataGaps;
 	 GBVTD* vtd;
 	 Coefficient* vtdCoeffs; 

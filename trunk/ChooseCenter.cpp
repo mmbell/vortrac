@@ -14,11 +14,11 @@
 #include <QDomElement>
 
 ChooseCenter::ChooseCenter(Configuration* newConfig, 
-			   const SimplexList &newList)
+			   const SimplexList &newList, VortexData* vortexPtr)
 {
   config = newConfig;
   simplexResults = newList;
-
+  vortexData = vortexPtr;
 }
 
 ChooseCenter::~ChooseCenter()
@@ -77,6 +77,7 @@ bool ChooseCenter::findCenter()
     Message::toScreen("Choose Mean Centers Failed!");
     return false;
   }
+  /*
   //if(simplexResults.count() > minVolumes) {
   Message::toScreen("ChooseCenter: Try Construct Polynomials");
   if(!constructPolynomial()) {
@@ -95,6 +96,32 @@ bool ChooseCenter::findCenter()
       return false;
     }
   }
+  */
+ 
+  // Fake fill of vortexData for testing purposes
+  float radarLat = config->getParam(config->getConfig("radar"), QString("lat")).toFloat();
+  float radarLon = config->getParam(config->getConfig("radar"), QString("lon")).toFloat();
+  float radarLatRadians = radarLat * acos(-1.0)/180.0;
+  float fac_lat = 111.13209 - 0.56605 * cos(2.0 * radarLatRadians)
+	  + 0.00012 * cos(4.0 * radarLatRadians) - 0.000002 * cos(6.0 * radarLatRadians);
+  float fac_lon = 111.41513 * cos(radarLatRadians)
+	  - 0.09455 * cos(3.0 * radarLatRadians) + 0.00012 * cos(5.0 * radarLatRadians);
+  
+  int i = simplexResults.size() - 1;
+  for(int k = 0; k < simplexResults[i].getNumLevels(); k++) {
+	  int j = bestRadius[i][k];
+	  float centerLat = radarLat + simplexResults[i].getY(j,k)/fac_lat;
+	  float centerLon = radarLon + simplexResults[i].getX(j,k)/fac_lon;
+      vortexData->setLat(k, centerLat);
+	  vortexData->setLon(k, centerLon);
+	  vortexData->setAltitude(k, simplexResults[i].getHeight(k));
+	  vortexData->setRMW(k, simplexResults[i].getRadius(j));
+	  vortexData->setRMWUncertainty(k, 1);
+	  vortexData->setCenterStdDev(k, simplexResults[i].getCenterStdDev(j,k));
+	  vortexData->setNumConvergingCenters(k, simplexResults[i].getNumConvergingCenters(j,k));
+  }
+  
+  
   return true;
 }
 

@@ -351,13 +351,13 @@ bool RadarQC::dealias()
   //crazyCheck();
   
   if(!findEnvironmentalWind()) {
-    Message::toScreen("Failed in findEnvWind");
+    Message::toScreen("Failed finding environmental wind");
   }
   //Message::toScreen("findEnvironmentalWind");
   //crazyCheck();
   
   if(!BB()) {
-    Message::toScreen("Failed in BB");
+    Message::toScreen("Failed in Bargen-Brown dealising");
     return false;
   }
   
@@ -836,11 +836,11 @@ bool RadarQC::findVADStart(bool useGVAD)
       }
 
       if(!useGVAD)
-	emit log(Message("M:"+ QString().setNum(m)+" VAD SPEED: "
+	emit log(Message("Level:"+ QString().setNum(m)+" VAD SPEED: "
 		       +QString().setNum(envWind[m])
 		       +" VAD DIR: "+QString().setNum(envDir[m])));
       else
-	emit log(Message("M:"+ QString().setNum(m)+" GVAD SPEED: "
+	emit log(Message("Level:"+ QString().setNum(m)+" GVAD SPEED: "
 		       +QString().setNum(envWind[m])
 		       +" VAD DIR: "+QString().setNum(envDir[m])));
 
@@ -995,7 +995,7 @@ bool RadarQC::VAD(float* &vel, Sweep* &currentSweep,
   stError = new float[vadNumCoEff];
 
   if(!llsSolver->lls(vadNumCoEff, numData, X, Y, stDeviation, coEff, stError)) {
-    emit log(Message("Failed in lls"));
+    emit log(Message("VAD failed in lls"));
     return false;
   }
 
@@ -1298,7 +1298,7 @@ bool RadarQC::BB()
    */
 
 {
-  emit log(Message("In BB"));
+  //emit log(Message("In BB"));
   Ray* currentRay;
   float numRays = radarData->getNumRays();
   for(int i = 0; i < numRays; i++) 

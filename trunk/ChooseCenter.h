@@ -14,6 +14,7 @@
 
 #include "Configuration.h"
 #include "DataObjects/SimplexList.h"
+#include "DataObjects/VortexData.h"
 #include "Math/Matrix.h"
 #include <QDateTime>
 
@@ -22,7 +23,8 @@ class ChooseCenter
 
  public:
      ChooseCenter(Configuration* newConfig = new Configuration(), 
-		  const SimplexList &newList = SimplexList());
+				  const SimplexList &newList = SimplexList(),
+				  VortexData* vortexPtr = VortexData());
     ~ChooseCenter();
   
     void setConfig(Configuration* newConfig);
@@ -39,6 +41,7 @@ class ChooseCenter
  private:
     Configuration* config;       // Should this be a constant parameter
     SimplexList simplexResults;
+	VortexData* vortexData;
     float velNull;
   
     float windWeight, stdWeight, ptsWeight;

@@ -35,8 +35,7 @@ VortexThread::~VortexThread()
 
 }
 
-void VortexThread::getWinds(Configuration *wholeConfig, GriddedData *dataPtr,
-							   float* vortexLat, float* vortexLon, VortexList* vortexPtr)
+void VortexThread::getWinds(Configuration *wholeConfig, GriddedData *dataPtr, VortexData* vortexPtr)
 {
 
 	// Lock the thread
@@ -45,12 +44,8 @@ void VortexThread::getWinds(Configuration *wholeConfig, GriddedData *dataPtr,
 	// Set the grid object
 	gridData = dataPtr;
 
-	// Remember the vortex center
-	refLat = vortexLat;
-	refLon = vortexLon;
-	
 	// Set the vortex data object
-	vortexResults = vortexPtr;
+	vortexData = vortexPtr;
 	
 	// Set the configuration info
 	configData = wholeConfig;
@@ -113,28 +108,38 @@ void VortexThread::run()
 			QString("maxdatagap"), QString("wavenum"), 
 			QString().setNum(i)).toFloat();
 		}
+		float maxCoeffs = maxWave*2 + 3;
 		
 		// Create a GBVTD object to process the rings
 		vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
 		vtdCoeffs = new Coefficient[20];
-
-		// Create a vortexData object to hold the results;
-		vortexData = new VortexData(int(lastLevel - firstLevel + 1), int(lastRing - firstRing + 1), (int)maxWave);
+	
+		// Placeholders for centers
+		float xCenter = -999;
+		float yCenter = -999;
 		
 		mutex.unlock();
 		// Loop through the levels and rings
 		for (float height = firstLevel; height <= lastLevel; height++) {
-		        mutex.lock();
+			mutex.lock();
 			if(!abort) {
 			for (float radius = firstRing; radius <= lastRing; radius++) {
 				// Set the reference point
-				gridData->setAbsoluteReferencePoint(*refLat, *refLon, height);
-				float RefI = gridData->getRefPointI();
-				float RefJ = gridData->getRefPointJ();
-				float RefK = gridData->getRefPointK();
-				
+				float refLat = vortexData->getLat(int(height-firstLevel));
+				float refLon = vortexData->getLon(int(height-firstLevel));
+				gridData->setAbsoluteReferencePoint(refLat, refLon, int(height));
+				if ((gridData->getRefPointI() < 0) || 
+					(gridData->getRefPointJ() < 0) ||
+					(gridData->getRefPointK() < 0)) {
+					// Out of bounds
+					continue;
+				}
+			
+				// Get the cartesian points
+				xCenter = gridData->getCartesianRefPointI();
+				yCenter = gridData->getCartesianRefPointJ();
+
 				// Get the data
-				gridData->setCartesianReferencePoint(int(RefI),int(RefJ),int(RefK));
 				int numData = gridData->getCylindricalAzimuthLength(radius, height);
 				float* ringData = new float[numData];
 				float* ringAzimuths = new float[numData];
@@ -142,7 +147,7 @@ void VortexThread::run()
 				gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);
 						
 				// Call gbvtd
-				if (vtd->analyzeRing(RefI, RefJ, radius, height, numData, ringData,
+				if (vtd->analyzeRing(xCenter, yCenter, radius, height, numData, ringData,
 									ringAzimuths, vtdCoeffs, vtdStdDev)) {
 					if (vtdCoeffs[0].getParameter() == "VTC0") {
 							// VT[v] = vtdCoeffs[0].getValue();
@@ -156,18 +161,13 @@ void VortexThread::run()
 				delete[] ringData;
 				delete[] ringAzimuths;
 				
-				float numCoeffs = 0;
 				// All done with this radius and height, archive it
-				archiveWinds(radius, height, numCoeffs);
+				archiveWinds(radius, height, maxCoeffs);
 			}
 			}
 			mutex.unlock();
 		}
 		mutex.lock();
-
-		// Vortex run complete! Save the results to a file
-		vortexResults->append(*vortexData);
-		vortexResults->save();
 		
 		// Clean up
 		delete vtdCoeffs;
@@ -183,7 +183,7 @@ void VortexThread::run()
 			// vortexData ???
 		
 			// Update the progress bar and log
-			emit log(Message("Done with Vortex",60));
+			emit log(Message("Done with Vortex",90));
 
 			// Let the poller know we're done
 			emit(windsFound());
@@ -203,15 +203,14 @@ void VortexThread::run()
 	}
 }
 
-void VortexThread::archiveWinds(float& radius, float& height, float& numCoeffs)
+void VortexThread::archiveWinds(float& radius, float& height, float& maxCoeffs)
 {
 
 	// Save the centers to the VortexData object
 	int level = int(height - firstLevel);
 	int ring = int(radius - firstRing);
-	for (int coeff = 0; coeff < (int)(numCoeffs); coeff++) {
-		// Coefficient*  = new Center(Xind[point], Yind[point], VTind[point], level, ring);
-		// vortexData->setCoefficient(level, ring, point, *indCenter);
+	for (int coeff = 0; coeff < (int)(maxCoeffs); coeff++) {
+		vortexData->setCoefficient(level, ring, coeff, vtdCoeffs[coeff]);
 	}
 	
 }

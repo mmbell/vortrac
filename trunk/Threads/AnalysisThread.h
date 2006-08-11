@@ -53,6 +53,7 @@ class AnalysisThread : public QThread
      QMutex mutex;
      QWaitCondition waitForData;
      QWaitCondition waitForCenter;
+	 QWaitCondition waitForWinds;
      bool abort;
      Configuration *configData;
      RadarData *radarVolume;

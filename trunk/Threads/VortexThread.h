@@ -15,7 +15,6 @@
 #include <QSize>
 #include <QThread>
 #include <QWaitCondition>
-#include <QList>
 
 #include "IO/Message.h"
 #include "Config/Configuration.h"
@@ -34,8 +33,7 @@ class VortexThread : public QThread
  public:
      VortexThread(QObject *parent = 0);
      ~VortexThread();
-	 void getWinds(Configuration *wholeConfig, GriddedData *dataPtr, 
-			 float *vortexLat, float *vortexLon, VortexList *vortexPtr);
+	 void getWinds(Configuration *wholeConfig, GriddedData *dataPtr, VortexData *vortexPtr);
 
  public slots:
      void catchLog(const Message& message);
@@ -53,7 +51,6 @@ class VortexThread : public QThread
      bool abort;
 	 GriddedData *gridData;
 	 VortexData *vortexData;
-	 VortexList *vortexResults;
 	 Configuration *configData;
 	 QDomElement vtdConfig;
 	 float* refLat;
@@ -68,7 +65,7 @@ class VortexThread : public QThread
 	 float vtdStdDev;
 	 float convergingCenters;
 	 
-	 void archiveWinds(float& radius,float& height,float& numPoints);
+	 void archiveWinds(float& radius,float& height,float& maxCoeffs);
 
 
 };
