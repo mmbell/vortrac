@@ -39,6 +39,7 @@ class AnalysisThread : public QThread
  public slots:
      void catchLog(const Message& message);
      void foundCenter();
+	 void foundWinds();
      void abortThread();
  
  protected:

@@ -48,6 +48,14 @@ class GriddedData
   float getCartesianRefPointJ();
   float getCartesianRefPointK();
   
+  float getCartesianPointFromIndexI (float& indexI);
+  float getCartesianPointFromIndexJ (float& indexJ);
+  float getCartesianPointFromIndexK (float& indexK);
+  
+  float getIndexFromCartesianPointI (float& cartI);
+  float getIndexFromCartesianPointJ (float& cartJ);
+  float getIndexFromCartesianPointK (float& cartK);
+  
   // Return a 1D array of values
   float* getNativeData();
   float* getCartesianData();

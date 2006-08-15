@@ -160,6 +160,7 @@ float* GriddedData::getCartesianPoint(float *Lat, float *Lon,
 
 }
 
+// These functions return indices
 float GriddedData::getRefPointI ()
 {
 	return refPointI;
@@ -175,6 +176,7 @@ float GriddedData::getRefPointK ()
 	return refPointK;
 }
 
+// These functions return cartesian points
 float GriddedData::getCartesianRefPointI ()
 {
 	return (refPointI + xmin)*iGridsp;
@@ -188,6 +190,38 @@ float GriddedData::getCartesianRefPointJ ()
 float GriddedData::getCartesianRefPointK ()
 {
 	return (refPointK + zmin)*kGridsp;
+}
+
+// These functions convert between indices and cartesian points
+float GriddedData::getCartesianPointFromIndexI (float& indexI)
+{
+	return (indexI + xmin)*iGridsp;
+}
+
+float GriddedData::getCartesianPointFromIndexJ (float& indexJ)
+{
+	return (indexJ + ymin)*jGridsp;
+}
+
+float GriddedData::getCartesianPointFromIndexK (float& indexK)
+{
+	return (indexK + zmin)*kGridsp;
+}
+
+// These functions convert between cartesian points and indices
+float GriddedData::getIndexFromCartesianPointI (float& cartI)
+{
+	return (cartI/iGridsp) - xmin;
+}
+
+float GriddedData::getIndexFromCartesianPointJ (float& cartJ)
+{
+	return (cartJ/jGridsp) - ymin;
+}
+
+float GriddedData::getIndexFromCartesianPointK (float& cartK)
+{
+	return (cartK/kGridsp) - zmin;
 }
 
 int GriddedData::getFieldIndex(QString& fieldName)
@@ -448,8 +482,8 @@ int GriddedData::getCylindricalRadiusLength(float azimuth, float height)
 	float pAzimuth = fixAngle(atan2((j-refPointJ),(i-refPointI)))*rad2deg;
 	if((pAzimuth <= (azimuth+cylindricalAzimuthSpacing/2.)) 
 	   && (pAzimuth > (azimuth-cylindricalAzimuthSpacing/2.))) {
-	  if((k*kGridsp <= (height+cylindricalHeightSpacing/2.))
-	     && (k*kGridsp > (height-cylindricalHeightSpacing/2.))) {
+	  if((k*kGridsp <= ((height/kGridsp)-zmin+cylindricalHeightSpacing/2.))
+	     && (k*kGridsp > ((height/kGridsp)-zmin-cylindricalHeightSpacing/2.))) {
 	    count++;
 	  }
 	}    
@@ -473,8 +507,8 @@ float* GriddedData::getCylindricalRadiusData(QString& fieldName, float azimuth,
 	float pAzimuth = fixAngle(atan2((j-refPointJ),(i-refPointI)))*rad2deg;
 	if((pAzimuth <= (azimuth+cylindricalAzimuthSpacing/2.)) 
 	 && (pAzimuth > (azimuth-cylindricalAzimuthSpacing/2.))) {
-	  if((k*kGridsp <= (height+cylindricalHeightSpacing/2.))
-	     && (k*kGridsp > (height-cylindricalHeightSpacing/2.))) {
+	  if((k*kGridsp <= ((height/kGridsp)-zmin+cylindricalHeightSpacing/2.))
+	     && (k*kGridsp > ((height/kGridsp)-zmin-cylindricalHeightSpacing/2.))) {
 	    values[count] = dataGrid[field][i][j][k];
 	    count++;
 	  }
@@ -498,8 +532,8 @@ float* GriddedData::getCylindricalRadiusPosition(float azimuth, float height)
 	float pAzimuth = fixAngle(atan2((j-refPointJ),(i-refPointI)))*rad2deg;
 	if((pAzimuth <= (azimuth+cylindricalAzimuthSpacing/2.)) 
 	   && (pAzimuth > (azimuth-cylindricalAzimuthSpacing/2.))) {
-	  if((k*kGridsp <= (height+cylindricalHeightSpacing/2.))
-	     && (k*kGridsp > (height-cylindricalHeightSpacing/2.))) {
+	  if((k*kGridsp <= ((height/kGridsp)-zmin+cylindricalHeightSpacing/2.))
+	     && (k*kGridsp > ((height/kGridsp)-zmin-cylindricalHeightSpacing/2.))) {
 	    positions[count] = sqrt(iGridsp*iGridsp*(i-refPointI)*(i-refPointI)+jGridsp*jGridsp*(j-refPointJ)*(j-refPointJ));
 	    count++;
 	  }
@@ -520,8 +554,8 @@ int GriddedData::getCylindricalAzimuthLength(float radius, float height)
 	float r = sqrt(iGridsp*iGridsp*(i-refPointI)*(i-refPointI)+jGridsp*jGridsp*(j-refPointJ)*(j-refPointJ));
 	if((r <= (radius+cylindricalRadiusSpacing/2.)) 
 	   && (r > (radius-cylindricalRadiusSpacing/2.))) {
-	  if((k*kGridsp <= (height+cylindricalHeightSpacing/2))
-	     && (k*kGridsp > (height-cylindricalHeightSpacing/2))) {
+	  if((k*kGridsp <= ((height/kGridsp)-zmin+cylindricalHeightSpacing/2))
+	     && (k*kGridsp > ((height/kGridsp)-zmin-cylindricalHeightSpacing/2))) {
 	    count++;
 	  }
 	}
@@ -548,8 +582,8 @@ void GriddedData::getCylindricalAzimuthData(QString& fieldName, int numPoints,
 	r = sqrt(iGridsp*iGridsp*(i-refPointI)*(i-refPointI)+jGridsp*jGridsp*(j-refPointJ)*(j-refPointJ));
 	if((r <= (radius+cylindricalRadiusSpacing/2.)) 
 	   && (r > (radius-cylindricalRadiusSpacing/2.))) {
-	  if((k*kGridsp <= (height+cylindricalHeightSpacing/2))
-	     && (k*kGridsp > (height-cylindricalHeightSpacing/2))) {
+	  if((k*kGridsp <= ((height/kGridsp)-zmin+cylindricalHeightSpacing/2))
+	     && (k*kGridsp > ((height/kGridsp)-zmin-cylindricalHeightSpacing/2))) {
 	    values[count] = dataGrid[field][i][j][k];
 	    count++;
 	  }
@@ -575,8 +609,8 @@ void GriddedData::getCylindricalAzimuthPosition(int numPoints, float radius, flo
 				   + jGridsp*jGridsp*(j-refPointJ)*(j-refPointJ));
 		  if((r <= (radius+cylindricalRadiusSpacing/2.)) 
 			 && (r > (radius-cylindricalRadiusSpacing/2.))) {
-			  if((k*kGridsp <= (height+cylindricalHeightSpacing/2))
-				 && (k*kGridsp > (height-cylindricalHeightSpacing/2))) {
+			  if((k*kGridsp <= ((height/kGridsp)-zmin+cylindricalHeightSpacing/2))
+				 && (k*kGridsp > ((height/kGridsp)-zmin-cylindricalHeightSpacing/2))) {
 				  float azimuth = fixAngle(atan2((j-refPointJ),(i-refPointI)))*rad2deg;
 				  if (count > numPoints) {
 					  // Memory overflow, bail out

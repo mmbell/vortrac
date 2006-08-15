@@ -75,8 +75,7 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
 				goodCount++;
 			}
 		}
-		numData = goodCount;
-
+		numData = goodCount;		
 		
 		// Get the maximum number of coefficients for the given data distribution and geometry
 		numCoeffs = getNumCoefficients(numData);
@@ -142,10 +141,21 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
 void GBVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, float*& FourierCoeffs, Coefficient*& vtdCoeffs)
 {
 	
-	// Use the specified closure method to set VT, VR, and VM
-	float* A = new float[numCoeffs/2 + 1];
-	float* B = new float[numCoeffs/2 + 1];
-	
+	// Allocate and initialize the A & B coefficient arrays
+	float* A;
+	float* B;
+	int maxIndex = numCoeffs/2 + 1;
+	if (maxIndex > 5) {		
+		A = new float[numCoeffs/2 + 1];
+		B = new float[numCoeffs/2 + 1];
+	} else {
+		A = new float[5];
+		B = new float[5];
+	}
+	for (int i=0; i <= 4; i++) {
+		A[i] = 0;
+		B[i] = 0;
+	}
 		
 	float sinAlphamax = radius/centerDistance;
 	float cosAlphamax = sqrt(centerDistance * centerDistance - radius*radius)/centerDistance;
@@ -155,7 +165,8 @@ void GBVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, flo
 		A[i] = FourierCoeffs[2*i];
 		B[i] = FourierCoeffs[2*i-1];
 	}
-		
+	
+	// Use the specified closure method to set VT, VR, and VM		
 	if (closure == "original") {
 		vtdCoeffs[0].setLevel(level);
 		vtdCoeffs[0].setRadius(radius);
@@ -166,51 +177,56 @@ void GBVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, flo
 		vtdCoeffs[1].setLevel(level);
 		vtdCoeffs[1].setRadius(radius);
 		vtdCoeffs[1].setParameter("VRC0");
-		value = ((A[1]+A[3])*centerDistance - (A[0]+A[2])*sinAlphamax)/cosAlphamax;
+		value = A[1]+A[3];
 		vtdCoeffs[1].setValue(value);
 
 		vtdCoeffs[2].setLevel(level);
 		vtdCoeffs[2].setRadius(radius);
 		vtdCoeffs[2].setParameter("VMC0");
-		value = ((A[0]+A[2])*centerDistance - (A[1]+A[3])*sinAlphamax)/cosAlphamax;
+		value = A[0]+A[2]+A[4];
 		vtdCoeffs[2].setValue(value);
 		
+		vtdCoeffs[3].setLevel(level);
+		vtdCoeffs[3].setRadius(radius);
+		vtdCoeffs[3].setParameter("VTS1");
 		if ((sinAlphamax < 0.8) and (numCoeffs >= 5)) {
-			vtdCoeffs[3].setLevel(level);
-			vtdCoeffs[3].setRadius(radius);
-			vtdCoeffs[3].setParameter("VTS1");
 			value = A[2]-A[0]+A[4]+(A[0]+A[2]+A[4])*cosAlphamax;
 			if (value < vtdCoeffs[0].getValue()) {
 				vtdCoeffs[3].setValue(value);
 			} else {
 				vtdCoeffs[3].setValue(value);
 			}
-			
-			vtdCoeffs[4].setLevel(level);
-			vtdCoeffs[4].setRadius(radius);
-			vtdCoeffs[4].setParameter("VTC1");
+		} else {
+			vtdCoeffs[3].setValue(0);
+		}
+		
+		vtdCoeffs[4].setLevel(level);
+		vtdCoeffs[4].setRadius(radius);
+		vtdCoeffs[4].setParameter("VTC1");
+		if ((sinAlphamax < 0.8) and (numCoeffs >= 5)) {
 			value = -2.*(B[2]+B[4]);
 			if (value < vtdCoeffs[0].getValue()) {
 				vtdCoeffs[4].setValue(value);
 			} else {
 				vtdCoeffs[4].setValue(value);
 			}
-				
-			for (int i=5; i <= numCoeffs-1; i+=2) {
-				vtdCoeffs[i].setLevel(level);
-				vtdCoeffs[i].setRadius(radius);
-				QString param = "VTC" + (QString)(i/2);
-				vtdCoeffs[i].setParameter(param);
-				value = -2*B[i/2+1];
-				vtdCoeffs[i].setValue(value);	
-
-				vtdCoeffs[i+1].setLevel(level);
-				vtdCoeffs[i+1].setRadius(radius);
-				param = "VTS" + (QString)(i/2);
-				vtdCoeffs[i+1].setParameter(param);
-				value = 2*A[i/2+1];
-				vtdCoeffs[i+1].setValue(value);				
-			}
+		} else {
+			vtdCoeffs[4].setValue(0);
+		}
+		for (int i=5; i <= numCoeffs-1; i+=2) {
+			vtdCoeffs[i].setLevel(level);
+			vtdCoeffs[i].setRadius(radius);
+			QString param = "VTC" + (QString)(i/2);
+			vtdCoeffs[i].setParameter(param);
+			value = -2*B[i/2+1];
+			vtdCoeffs[i].setValue(value);	
+			
+			vtdCoeffs[i+1].setLevel(level);
+			vtdCoeffs[i+1].setRadius(radius);
+			param = "VTS" + (QString)(i/2);
+			vtdCoeffs[i+1].setParameter(param);
+			value = 2*A[i/2+1];
+			vtdCoeffs[i+1].setValue(value);				
 		}
 	}
 	// Other closure methods here (including HVVP)

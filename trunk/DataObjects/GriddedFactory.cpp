@@ -41,7 +41,6 @@ GriddedData* GriddedFactory::makeEmptyGrid(const char *coordinates)
         }
         
         
-        
 }
 
 GriddedData* GriddedFactory::makeCappi(RadarData *radarData, 

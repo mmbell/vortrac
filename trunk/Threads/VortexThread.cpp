@@ -122,18 +122,20 @@ void VortexThread::run()
 		// Loop through the levels and rings
 		for (float height = firstLevel; height <= lastLevel; height++) {
 			mutex.lock();
+			// Set the reference point
+			float refLat = vortexData->getLat(int(height-firstLevel));
+			float refLon = vortexData->getLon(int(height-firstLevel));
+			gridData->setAbsoluteReferencePoint(refLat, refLon, height);
+			if ((gridData->getRefPointI() < 0) || 
+				(gridData->getRefPointJ() < 0) ||
+				(gridData->getRefPointK() < 0)) {
+				// Out of bounds problem
+				emit log(Message("Out of bounds in simplex!"));
+				continue;
+			}			
+			
 			if(!abort) {
 			for (float radius = firstRing; radius <= lastRing; radius++) {
-				// Set the reference point
-				float refLat = vortexData->getLat(int(height-firstLevel));
-				float refLon = vortexData->getLon(int(height-firstLevel));
-				gridData->setAbsoluteReferencePoint(refLat, refLon, int(height));
-				if ((gridData->getRefPointI() < 0) || 
-					(gridData->getRefPointJ() < 0) ||
-					(gridData->getRefPointK() < 0)) {
-					// Out of bounds
-					continue;
-				}
 			
 				// Get the cartesian points
 				xCenter = gridData->getCartesianRefPointI();
@@ -155,7 +157,12 @@ void VortexThread::run()
 						emit log(Message("Error retrieving VTC0 in vortex!"));
 					} 
 				} else {
-					emit log(Message("VTD failed!"));
+					QString err = "VTD failed at ";
+					QString loc;
+					err.append(loc.setNum(radius));
+					err.append(",");
+					err.append(loc.setNum(height));
+					emit log(Message(err));
 				}
 
 				delete[] ringData;
@@ -185,7 +192,7 @@ void VortexThread::run()
 			// Update the progress bar and log
 			emit log(Message("Done with Vortex",90));
 
-			// Let the poller know we're done
+			// Let the AnalysisThread know we're done
 			emit(windsFound());
 		}
 		mutex.unlock();

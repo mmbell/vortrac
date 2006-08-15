@@ -325,7 +325,7 @@ bool AnalyticRadar::readVolumeAnalytic()
   velGateSp = config->getParam(radar, "velgatesp").toFloat();
   beamWidth = config->getParam(radar, "beamwidth").toFloat();
   noiseScale = config->getParam(radar, "noiseScale").toFloat();
-  noisyGates = config->getParam(radar, "percent_noisy_gates").toFloat();
+  noisyGates = config->getParam(radar, "percent_noisy_gates").toInt();
   int numGates = config->getParam(radar, "numgates").toInt();
   int totNumSweeps = config->getParam(radar, "numsweeps").toInt();
   

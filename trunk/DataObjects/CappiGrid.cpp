@@ -86,10 +86,16 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 
   latReference = *radarData->getRadarLat();
   lonReference = *radarData->getRadarLon();
+  
+  /* Changed to be hardcoded absolute minimum zmin at 1 km for array purposes M. Bell
   float distance = sqrt(relDist[0] * relDist[0] + relDist[1] * relDist[1]);
   float beamHeight = radarData->radarBeamHeight(distance, radarData->getSweep(0)->getElevation());
   zmin = (float(int(beamHeight/kGridsp)))*kGridsp;
   zmax = zmin + kDim*kGridsp;
+  */
+  zmin = 1.0;
+  zmax = zmin + kDim*kGridsp;
+  
   delete[] relDist;
   
   // Find good values
@@ -137,6 +143,8 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 		}
 		*/
 		r++;
+		if (r > 199999)
+			Message::toScreen("Gone out of array bounds in CappiGrid.ccp refValues");
       }
       
     }
@@ -179,7 +187,8 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 		}
 		*/
 		v++;
-
+		if(v >199999)
+			Message::toScreen("Gone out of array bounds in CappiGrid.ccp velValues");
       }
       
     }

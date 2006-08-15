@@ -67,7 +67,6 @@ void SimplexThread::findCenter(Configuration *wholeConfig, GriddedData *dataPtr,
 
 void SimplexThread::run()
 {
-	emit log(Message("SimplexThread Started"));
   
 	forever {
 		// Check to see if we should quit
@@ -77,7 +76,8 @@ void SimplexThread::run()
 		// OK, Let's find a center
 		mutex.lock();
 		bool foundCenter = true;
-		
+		emit log(Message("Simplex search started"));
+	
 		// Initialize variables
 		QString simplexPath = configData->getParam(simplexConfig, 
 							   QString("dir"));
@@ -143,17 +143,20 @@ void SimplexThread::run()
 		mutex.unlock();
 		// Loop through the levels and rings
 		for (float height = firstLevel; height <= lastLevel; height++) {
-		        mutex.lock();
+			mutex.lock();
+			
+			// Set the reference point
+			gridData->setAbsoluteReferencePoint(refLat, refLon, height);
+			if ((gridData->getRefPointI() < 0) || 
+				(gridData->getRefPointJ() < 0) ||
+				(gridData->getRefPointK() < 0)) {
+				// Out of bounds problem
+				emit log(Message("Out of bounds in simplex!"));
+				continue;
+			}			
+
 			if(!abort) {
 			for (float radius = firstRing; radius <= lastRing; radius++) {
-				// Set the reference point
-				gridData->setAbsoluteReferencePoint(refLat, refLon, height);
-				if ((gridData->getRefPointI() < 0) || 
-					(gridData->getRefPointJ() < 0) ||
-					(gridData->getRefPointK() < 0)) {
-					// Out of bounds
-					continue;
-				}
 				
 				// Set the corner of the box
 				float cornerI = gridData->getCartesianRefPointI();
@@ -162,7 +165,12 @@ void SimplexThread::run()
 				float RefI = cornerI;
 				float RefJ = cornerJ;
 				float RefK = cornerK;
-				
+				if ((gridData->getRefPointI() < 0) || 
+					(gridData->getRefPointJ() < 0)) {
+					// Out of bounds problem
+					emit log(Message("Out of bounds in simplex!"));
+					continue;
+				}
 				// Initialize mean values
 				int meanCount = 0;
 				meanXall = meanYall= meanVTall = 0;
@@ -414,7 +422,6 @@ void SimplexThread::run()
 			mutex.unlock();		
 		}
 		
-		emit log(Message("End of Simplex Run"));
 	}
 }
 

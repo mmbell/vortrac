@@ -31,8 +31,8 @@ AnalysisThread::AnalysisThread(QObject *parent)
   vortexThread = new VortexThread;
   connect(vortexThread, SIGNAL(log(const Message&)), this, 
 		  SLOT(catchLog(const Message&)), Qt::DirectConnection);
-  connect(vortexThread, SIGNAL(windFound()), 
-		  this, SLOT(foundWind()), Qt::DirectConnection);
+  connect(vortexThread, SIGNAL(windsFound()), 
+		  this, SLOT(foundWinds()), Qt::DirectConnection);
   
 }
 
@@ -111,7 +111,6 @@ void AnalysisThread::analyze(RadarData *dataVolume, Configuration *configPtr)
 void AnalysisThread::run()
 {
   abort = false;
-  emit log(Message("Data found, starting analysis...", -1));
 
        forever {
 		// Check to see if we should quit
@@ -123,6 +122,7 @@ void AnalysisThread::run()
 		bool analysisGood = true;
 		QTime analysisTime;
 		analysisTime.start();
+		emit log(Message("Data found, starting analysis...", -1));
 		
 		// Read in the radar data
 		radarVolume->readVolume();
@@ -229,7 +229,8 @@ void AnalysisThread::run()
 		gridData->writeAsi();
 		emit log(Message("Done with Cappi",30));
 		QString cappiTime;
-		cappiTime.setNum(analysisTime.elapsed());
+		cappiTime.setNum((float)analysisTime.elapsed() / 60000);
+		cappiTime.append(" minutes elapsed");
 		emit log(Message(cappiTime));
 				 
 		// Create data instance to hold the analysis results
@@ -254,7 +255,8 @@ void AnalysisThread::run()
 		mutex.unlock();
 				 
 		QString simplexTime;
-		simplexTime.setNum(analysisTime.elapsed());
+		simplexTime.setNum((float)analysisTime.elapsed() / 60000);
+		simplexTime.append(" minutes elapsed");
 		emit log(Message(simplexTime));
 		//Message::toScreen("Where....");
 
@@ -292,7 +294,7 @@ void AnalysisThread::run()
 		float missingLink = envWindFinder->getAvAcrossBeamWinds();
 		Message::toScreen("Hvvp gives "+QString().setNum(missingLink));
 
-		mutex.unlock();  // Added this one ... I think...
+		//mutex.unlock();  // Added this one ... I think...
 		
 		// Mutex Investigation.....
 		
@@ -363,6 +365,11 @@ void AnalysisThread::archiveAnalysis()
 void AnalysisThread::foundCenter()
 {
 	waitForCenter.wakeOne();
+}
+
+void AnalysisThread::foundWinds()
+{
+	waitForWinds.wakeOne();
 }
 
 void AnalysisThread::catchLog(const Message& message)

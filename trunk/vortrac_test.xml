@@ -22,7 +22,7 @@
         <dir>/Users/mbell/Development/vortrac/trunk/workingDirs/cappi</dir>
         <xdim>100</xdim>
         <ydim>100</ydim>
-        <zdim>5</zdim>
+        <zdim>3</zdim>
         <xgridsp>1.0</xgridsp>
         <ygridsp>1.0</ygridsp>
         <zgridsp>1.0</zgridsp>
@@ -37,11 +37,11 @@
         <reflectivity>DZ</reflectivity>
         <velocity>VE</velocity>
         <bottomlevel>1</bottomlevel>
-        <toplevel>5</toplevel>
+        <toplevel>3</toplevel>
         <innerradius>5</innerradius>
         <outerradius>20</outerradius>
         <ringwidth>1.0</ringwidth>
-        <search>MAXVT0</search>
+        <search>MAXVTO</search>
         <influenceradius>4.0</influenceradius>
         <convergence>0.05</convergence>
         <maxiterations>60</maxiterations>
@@ -74,8 +74,8 @@
         <reflectivity>DZ</reflectivity>
         <velocity>VE</velocity>
         <bottomlevel>1</bottomlevel>
-        <toplevel>5</toplevel>
-        <innerradius>1</innerradius>
+        <toplevel>3</toplevel>
+        <innerradius>2</innerradius>
         <outerradius>60</outerradius>
         <ringwidth>1.0</ringwidth>
         <maxwavenumber>1</maxwavenumber>
@@ -100,7 +100,7 @@
         <ref_min>-15.0</ref_min>
         <ref_max>65.0</ref_max>
         <sw_threshold>10.0</sw_threshold>
-        <bbcount>30</bbcount>
+        <bbcount>15</bbcount>
         <maxfold>4</maxfold>
         <windspeed>24</windspeed>
         <winddirection>138</winddirection>
