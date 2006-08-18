@@ -69,6 +69,13 @@ void AnalysisThread::setSimplexList(SimplexList *archivePtr)
 	
 }
 
+void AnalysisThread::setPressureList(PressureList *archivePtr)
+{
+	
+	pressureList = archivePtr;
+	
+}
+
 void AnalysisThread::abortThread()
 {
   Message::toScreen("In AnalysisThread Abort");
@@ -127,6 +134,61 @@ void AnalysisThread::run()
 		// Read in the radar data
 		radarVolume->readVolume();
 
+		mutex.unlock();
+		if(abort)
+			return;
+		mutex.lock();
+		
+		// Check the vortex list for a current center		
+		if (!vortexList->isEmpty()) {
+			vortexList->timeSort();
+			vortexLat = vortexList->last().getLat();
+			vortexLon = vortexList->last().getLon();
+		} else {
+			vortexLat = configData->getConfig("vortex").firstChildElement("lat").text().toFloat();
+			vortexLon = configData->getConfig("vortex").firstChildElement("lon").text().toFloat();
+			
+			// Need to initialize the Lists
+			QDomElement radar = configData->getConfig("radar");
+			QString radarName = configData->getParam(radar,"name");
+			
+			QDomElement vortex = configData->getConfig("vortex");
+			QString vortexName = configData->getParam(vortex,"name");
+			
+			QString vortexPath = configData->getConfig("vortex").firstChildElement("dir").text();
+			QString vortexFile = radarVolume->getDateTimeString();
+			vortexFile.replace(QString(":"),QString("_"));
+			QString outFileName = vortexPath + "/" + vortexFile + "vortexList.xml";
+			vortexList->setFileName(outFileName);
+			vortexList->setRadarName(radarName);
+			vortexList->setVortexName(vortexName);
+			vortexList->setNewWorkingDirectory(vortexPath + "/");
+			
+			QString simplexPath = configData->getConfig("center").firstChildElement("dir").text();
+			QString simplexFile = radarVolume->getDateTimeString();
+			simplexFile.replace(QString(":"),QString("_"));
+			outFileName = simplexPath + "/" + simplexFile + "simplexList.xml";
+			simplexList->setFileName(outFileName);
+			simplexList->setRadarName(radarName);
+			simplexList->setVortexName(vortexName);
+			simplexList->setNewWorkingDirectory(simplexPath + "/");
+			
+			// Put the pressure output in the workingDir for now, since the pressure obs
+			// may be somewhere where we can't write
+			QString pressurePath = configData->getConfig("vortex").firstChildElement("dir").text();
+			QString pressureFile = radarVolume->getDateTimeString();
+			pressureFile.replace(QString(":"),QString("_"));
+			outFileName = pressurePath + "/" + pressureFile + "pressureList.xml";
+			pressureList->setFileName(outFileName);
+			pressureList->setRadarName(radarName);
+			pressureList->setVortexName(vortexName);
+			pressureList->setNewWorkingDirectory(pressurePath + "/");
+		}
+		
+		// Create data instance to hold the analysis results
+		VortexData *vortexData = new VortexData(); 
+		vortexData->setTime(radarVolume->getDateTime());
+		
 		// Pass VCP value to display
 		emit newVCP(radarVolume->getVCP());
 		mutex.unlock();
@@ -155,35 +217,7 @@ void AnalysisThread::run()
 		}
 		else
 		  emit log(Message("RadarVolume is Dealiased"));
-		
-		// Check the vortex list for a current center
-		mutex.unlock();
-		if(abort)
-		  return;
-		mutex.lock();
-		if (!vortexList->isEmpty()) {
-		  vortexList->timeSort();
-		  vortexLat = vortexList->last().getLat();
-		  vortexLon = vortexList->last().getLon();
-		} else {
-		  vortexLat = configData->getConfig("vortex").firstChildElement("lat").text().toFloat();
-		  vortexLon = configData->getConfig("vortex").firstChildElement("lon").text().toFloat();
-		  
-		  // Need to define a filename and time for the Lists
-		  QString vortexPath = configData->getConfig("vortex").firstChildElement("dir").text();
-		  QString vortexFile = radarVolume->getDateTimeString();
-		  vortexFile.replace(QString(":"),QString("_"));
-		  QString outFileName = vortexPath + "/" + vortexFile + "vortexList.xml";
-		  vortexList->setFileName(outFileName);
-		  
-		  QString simplexPath = configData->getConfig("center").firstChildElement("dir").text();
-		  QString simplexFile = radarVolume->getDateTimeString();
-		  simplexFile.replace(QString(":"),QString("_"));
-		  outFileName = simplexPath + "/" + simplexFile + "simplexList.xml";
-		  simplexList->setFileName(outFileName);
-		  
-		}
-		
+				
 		mutex.unlock();
 		if(abort)
 		  return;
@@ -233,8 +267,6 @@ void AnalysisThread::run()
 		cappiTime.append(" minutes elapsed");
 		emit log(Message(cappiTime));
 				 
-		// Create data instance to hold the analysis results
-		VortexData *vortexData = new VortexData(); 
 		
 		// Set the initial guess in the data object as a temporary center
 		vortexData->setLat(0,vortexLat);

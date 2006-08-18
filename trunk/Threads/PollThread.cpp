@@ -74,33 +74,40 @@ void PollThread::run()
   connect(dataSource, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
 
-  //QString file("/scr/science40/mauger/Working/trunk/LisaList.xml");
-  QString file("vortrac_defaultVortexListStorage.xml");
-
-  vortexConfig = new Configuration(0, QString());
-  //  QString newWorkingDirectory = "/scr/science40/mauger/WorkingDir/trunk/";
-  QString newWorkingDirectory = QString("");
-  //vortexList->setNewWorkingDirectory(newWorkingDirectory);
+  PressureFactory *pressureSource = new PressureFactory(configData);
+  connect(pressureSource, SIGNAL(log(const Message&)),
+		  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
   
+  //QString file("/scr/science40/mauger/Working/trunk/LisaList.xml");
+  //vortexConfig = new Configuration(0, QString());
+  //  QString newWorkingDirectory = "/scr/science40/mauger/WorkingDir/trunk/";
+  //QString newWorkingDirectory = QString("");
+  //vortexList->setNewWorkingDirectory(newWorkingDirectory);
   //vortexConfig->read(file);
+  
+  QString file("vortrac_defaultVortexListStorage.xml");
+  vortexConfig = new Configuration(0, file);
   connect(vortexConfig, SIGNAL(log(const Message&)), 
 	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
- 
-  vortexConfig = new Configuration(0, file);
-  
   vortexList = new VortexList(vortexConfig);
   vortexList->open();
   
   file = QString("vortrac_defaultSimplexListStorage.xml");
-
-  Configuration *simplexConfig = new Configuration(0,QString());
+  //simplexConfig = new Configuration(0,QString());
+  simplexConfig = new Configuration(0, file);
   connect(simplexConfig, SIGNAL(log(const Message&)), 
 	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
-  simplexConfig = new Configuration(0, file);
-  
   simplexList = new SimplexList(simplexConfig);
   simplexList->open();
 
+  file = QString("vortrac_defaultPressureListStorage.xml");
+  //pressureConfig = new Configuration(0,QString());
+  pressureConfig = new Configuration(0, file);
+  connect(pressureConfig, SIGNAL(log(const Message&)), 
+		  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+  pressureList = new PressureList(pressureConfig);
+  pressureList->open();
+  
   //Message::toScreen("Num simplex: "+QString().setNum(list->count()));
   /* Fake simplex list data
   SimplexData newData(15,6,2);
@@ -181,20 +188,37 @@ void PollThread::run()
 	  this, SLOT(catchVCP(const int)), Qt::DirectConnection);
   analysisThread->setVortexList(vortexList);
   analysisThread->setSimplexList(simplexList);
+  analysisThread->setPressureList(pressureList);
   
 	// Begin polling loop
 	forever {
 
 		// Check for new data
 		if (dataSource->hasUnprocessedData()) {
-			// Got some data, fire up the thread to process it
+
+			// Fire up the analysis thread to process it
 			analysisThread->analyze(dataSource->getUnprocessedData(),
 					       configData);
 			//Message::toScreen("Before mutex lock in pollThread");
+			
 			mutex.lock();
+			
 			if (!abort) {
+				while(!waitForAnalysis.wait(&mutex, 60000)) {
 			  //Message::toScreen("Not abort: in pollthread loop");
-			  waitForAnalysis.wait(&mutex);
+					// Check for new pressure measurements every minute while we are waiting
+					while (pressureSource->hasUnprocessedData()) {
+						PressureList* newObs = pressureSource->getUnprocessedData();
+ 						for (int i = 0; i < newObs->size(); i++) 
+							pressureList->append(newObs->at(i));
+						delete newObs;
+						// Hopefully, the filename has been set by the analysisThread by this point
+						// have to be careful about synchronization here, this may not be the best way to do this
+						if (!pressureList->getFileName().isNull()) 	
+							pressureList->save();						
+					}
+					
+				}
 			  Message::toScreen("Wait for analysis done");
 			}
 			mutex.unlock();  

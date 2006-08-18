@@ -45,7 +45,7 @@ void SimplexThread::findCenter(Configuration *wholeConfig, GriddedData *dataPtr,
 	// Set the grid object
 	gridData = dataPtr;
 
-	// Set the simplex data object
+	// Set the simplex list object
 	simplexResults = simplexPtr;
 
 	// Set the vortexdata object and initial center guess
@@ -132,7 +132,8 @@ void SimplexThread::run()
 
 		// Create a simplexData object to hold the results;
 		simplexData = new SimplexData(int(lastLevel - firstLevel + 1), int(lastRing - firstRing + 1), (int)numPoints);
-		
+		simplexData->setTime(vortexData->getTime());
+							 
 		// Allocate memory for the vertices	
 		vertex = new float*[3];
 		vertex[0] = new float[2];

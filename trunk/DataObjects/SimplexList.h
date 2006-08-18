@@ -30,6 +30,8 @@ public:
      bool open();
      bool openNodeFile(const QDomNode &newNode);
      void setFileName(const QString &newFileName);
+	 void setRadarName(const QString &newRadarName);
+	 void setVortexName(const QString &newVortexName);
      void setNewWorkingDirectory(const QString &newDirectory);
      QString getFileName() { return fileName; }
      QString getWorkingDirectory() { return workingDir; }

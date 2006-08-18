@@ -7,8 +7,7 @@ DEPENDPATH += . Config Grids GUI IO Radar
 INCLUDEPATH += . GUI Config IO Radar
 
 # Input
-HEADERS += DataObjects/PressureData.h \
-           Threads/AnalysisThread.h \
+HEADERS += Threads/AnalysisThread.h \
            Threads/PollThread.h \
            Threads/SimplexThread.h \
            Threads/VortexThread.h \
@@ -48,9 +47,13 @@ HEADERS += DataObjects/PressureData.h \
            Radar/Sweep.h \
            VTD/GBVTD.h \
            Math/Matrix.h \
-           ChooseCenter.h 
+           ChooseCenter.h \
+           Pressure/PressureData.h \
+           Pressure/PressureList.h \
+           Pressure/PressureFactory.h \
+           Pressure/Metar.h \
+           Pressure/AWIPS.h
 SOURCES += main.cpp \
-           DataObjects/PressureData.cpp \
            Threads/AnalysisThread.cpp \
            Threads/PollThread.cpp \
            Threads/SimplexThread.cpp \
@@ -90,7 +93,12 @@ SOURCES += main.cpp \
            Radar/Sweep.cpp \
            VTD/GBVTD.cpp \
            Math/Matrix.cpp \
-           ChooseCenter.cpp 
+           ChooseCenter.cpp \
+           Pressure/PressureData.cpp \
+           Pressure/PressureList.cpp \
+           Pressure/PressureFactory.cpp \
+           Pressure/Metar.cpp \
+           Pressure/AWIPS.cpp
 F95 = gfortran
 g95.output = ${QMAKE_FILE_BASE}.o
 g95.commands = $$F95 -c -g  -O0 ${QMAKE_FILE_NAME} \

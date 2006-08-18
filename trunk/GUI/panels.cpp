@@ -1791,6 +1791,10 @@ PressurePanel::PressurePanel()
   QLabel *dirLabel = new QLabel(tr("Directory Containing Pressure Data"));
   dir = new QLineEdit();
   defaultDirectory = new QDir(QDir::currentPath());
+  if(!defaultDirectory->exists(defaultDirectory->filePath("pressure"))) {
+	  defaultDirectory->mkdir("pressure") ;
+  }
+  defaultDirectory->cd("pressure");  
   browse = new QPushButton(tr("Browse.."));
   dir->setText(defaultDirectory->path());
   connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
@@ -1798,20 +1802,43 @@ PressurePanel::PressurePanel()
   dirLayout->addWidget(dirLabel, 0, 0);
   dirLayout->addWidget(dir, 1, 0, 1, 3);
   dirLayout->addWidget(browse, 1,3);
+  
+  QLabel *pressureFormatLabel = new QLabel(tr("Data Format"));
+  pressureFormatOptions = new QHash<QString, QString>;
+  pressureFormatOptions->insert(QString("Select a Pressure Data Format"),
+							 QString(""));
+  pressureFormatOptions->insert(QString("Metar"), QString("METAR"));
+  pressureFormatOptions->insert(QString("AWIPS"), QString("AWIPS"));
+  pressureFormat = new QComboBox();
+  QList<QString> options = pressureFormatOptions->keys();
+  for(int i = 0; i < options.count(); i++) 
+  {
+      pressureFormat->addItem(options[i]);
+  }
+  pressureFormat->setEditable(false);
+  QHBoxLayout *pressureFormatLayout = new QHBoxLayout;
+  pressureFormatLayout->addWidget(pressureFormatLabel);
+  pressureFormatLayout->addWidget(pressureFormat);
+  // add more formats when found
+  
   QVBoxLayout *main = new QVBoxLayout;
   main->addLayout(dirLayout);
+  main->addLayout(pressureFormatLayout);
   main->addStretch(1);
   setLayout(main);
 
   connect(dir, SIGNAL(textChanged(const QString&)),
 	  this, SLOT(valueChanged(const QString&)));
+  connect(pressureFormat, SIGNAL(activated(const QString&)), 
+		  this, SLOT(valueChanged(const QString&)));
 
   setPanelChanged(false);
 }
 
 PressurePanel::~PressurePanel()
 {
-  // No independent members
+    delete pressureFormat;
+	delete pressureFormatOptions;
 }
 
 void PressurePanel::updatePanel(const QDomElement panelElement)
@@ -1833,6 +1860,12 @@ void PressurePanel::updatePanel(const QDomElement panelElement)
 	emit workingDirectoryChanged();}
       else 
 	setPanelChanged(true);}
+	if (name == "format") {
+		int index = pressureFormat->findText(pressureFormatOptions->key(parameter), 
+										 Qt::MatchStartsWith);
+		if (index != -1)
+			pressureFormat->setCurrentIndex(index); }
+	
     child = child.nextSiblingElement();
   }
   setPanelChanged(false);
@@ -1850,10 +1883,29 @@ bool PressurePanel::updateConfig()
 	emit changeDom(element, QString("dir"), dir->text());
 	emit workingDirectoryChanged();
       }
+	  if(element.firstChildElement("format").text()
+		 !=pressureFormatOptions->value(pressureFormat->currentText()))
+	  {
+		  emit changeDom(element, QString("format"), 
+						 pressureFormatOptions->value(pressureFormat->currentText()));
+	  }
+	  
     }
   setPanelChanged(false);
   return true;
 }
+
+void PressurePanel::setDefaultDirectory(QDir* newDir)
+{
+	QString subDirectory("pressure");
+	if(!newDir->cd(subDirectory))
+		if(newDir->mkdir(subDirectory)) 
+			newDir->cd(subDirectory);
+	if(!newDir->isAbsolute())
+		newDir->makeAbsolute();
+	defaultDirectory = newDir;
+}
+
 
 GraphicsPanel::GraphicsPanel()
 {

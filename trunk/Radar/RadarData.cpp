@@ -70,6 +70,13 @@ QString RadarData::getDateTimeString()
 	
 }
 
+QDateTime RadarData::getDateTime()
+{
+	
+	return radarDateTime;
+	
+}
+
 float* RadarData::getRadarLat()
 {
 

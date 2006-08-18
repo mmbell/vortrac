@@ -285,11 +285,20 @@ class PressurePanel:public AbstractPanel
   ~PressurePanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
+  void setDefaultDirectory(QDir* newDir);
+  
  private:
   /*
    * This panel uses the dir and browse members declared in AbstractPanel
    * for the location of the directory containing pressure data.
    */
+  QComboBox *pressureFormat;
+  // Allows selection of the input format for the pressure data
+  
+  QHash<QString, QString> *pressureFormatOptions;
+  // The pressureFormatOptions hash is used to relate combobox entries 
+  // to the correct element in the xml file.
+  
 };
 
 class GraphicsPanel:public AbstractPanel

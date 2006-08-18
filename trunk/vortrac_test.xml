@@ -13,9 +13,9 @@
         <alt>32.5</alt>
         <dir>/Volumes/artemis1/mbell/charley/levelii</dir>
         <format>LEVELII</format>
-        <startdate>2004-08-01</startdate>
+        <startdate>2004-08-13</startdate>
         <enddate>2005-01-01</enddate>
-        <starttime>00:00:00</starttime>
+        <starttime>18:00:00</starttime>
         <endtime>23:59:59</endtime>
     </radar>
     <cappi>
@@ -84,7 +84,8 @@
     </vtd>
     <hvvp/>
     <pressure>
-        <dir>/Users/mbell/Development/vortrac/trunk/workingDirs</dir>
+        <dir>/Volumes/artemis1/mbell/charley/pressureobs</dir>
+        <format>AWIPS</format>
     </pressure>
     <graphics>
         <autolimits>on</autolimits>

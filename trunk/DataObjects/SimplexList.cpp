@@ -178,6 +178,22 @@ void SimplexList::setFileName(const QString &newFileName)
   fileName = newFileName;
 }
 
+void SimplexList::setRadarName(const QString &newRadarName)
+{
+	radarName = newRadarName;
+	QDomElement header = config->getConfig("simplex");
+	config->setParam(header, "radar", radarName);
+
+}
+
+void SimplexList::setVortexName(const QString &newVortexName)
+{
+	vortexName = newVortexName;
+	QDomElement header = config->getConfig("simplex");
+	config->setParam(header, "name", vortexName);
+
+}
+
 void SimplexList::setNewWorkingDirectory(const QString &newDirectory)
 {
   workingDir = newDirectory;
@@ -212,12 +228,12 @@ void SimplexList::createDomSimplexDataEntry(const SimplexData &newData)
   
   QString defaultFile = QString("vortrac_defaultSimplexListStorage.xml");
   
-  QString nodeFile = vortexName+"simplex"+timeString+QString(".xml");
+  //QString nodeFile = vortexName+"simplex"+timeString+QString(".xml");
   //  QFile fileCheck(workingDir+nodeFile);
-  if(QFile::exists(workingDir+nodeFile))
-    nodeFile = vortexName+"_"+radarName+"simplex"+timeString;
+  //if(QFile::exists(workingDir+nodeFile))
+  QString nodeFile = vortexName+"_"+radarName+"simplex"+timeString+QString(".xml");
 
-  Configuration *newConfig = new Configuration(0,workingDir+defaultFile);
+  Configuration *newConfig = new Configuration(0,defaultFile);
 
   config->addDom(parent, QString("time"), 
 		 newData.getTime().toString(Qt::ISODate)); 

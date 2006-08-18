@@ -23,6 +23,7 @@
 #include "DataObjects/GriddedFactory.h"
 #include "SimplexThread.h"
 #include "VortexThread.h"
+#include "Pressure/PressureList.h"
 
 class AnalysisThread : public QThread
 {
@@ -35,7 +36,8 @@ class AnalysisThread : public QThread
      void setConfig(Configuration *configPtr);
      void setVortexList(VortexList *archivePtr);
      void setSimplexList(SimplexList *archivePtr);
-
+	 void setPressureList(PressureList *archivePtr);
+	 
  public slots:
      void catchLog(const Message& message);
      void foundCenter();
@@ -63,6 +65,7 @@ class AnalysisThread : public QThread
 	 VortexThread *vortexThread;
      VortexList *vortexList;
      SimplexList *simplexList;
+	 PressureList *pressureList;
      void archiveAnalysis();
      float vortexLat, vortexLon;
 

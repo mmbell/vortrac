@@ -20,6 +20,8 @@
 #include "Config/Configuration.h"
 #include "DataObjects/VortexList.h"
 #include "DataObjects/SimplexList.h"
+#include "Pressure/PressureFactory.h"
+#include "Pressure/PressureList.h"
 
 #include <QTextStream>
 
@@ -52,12 +54,15 @@ class PollThread : public QThread
 	QWaitCondition waitForAnalysis;
 	bool abort;
 	RadarFactory *dataSource;
+	PressureFactory *pressureSource;
 	Configuration *configData;
 	VortexList *vortexList;
 	SimplexList *simplexList;
+	PressureList *pressureList;
 	AnalysisThread *analysisThread;
 	Configuration *vortexConfig;
 	Configuration *simplexConfig;
+	Configuration *pressureConfig;
 	
 };
 

@@ -322,7 +322,7 @@ void ConfigurationDialog::setPanelDirectories()
   for(int i = 0; i < panelList.count(); i++) {
     AbstractPanel* currPanel = panelList[i];
     if((currPanel!=vortex) && (currPanel!=qc) && (currPanel!=hvvp) 
-       && (currPanel!=graphics) && (currPanel!=radar)) {
+       && (currPanel!=graphics) && (currPanel!=radar) && (currPanel!=pressure)) {
       if(currPanel->getDefaultDirectory()->path() 
 	 == currPanel->getCurrentDirectoryPath() ) {
 	// If the directory has not been changed from the default

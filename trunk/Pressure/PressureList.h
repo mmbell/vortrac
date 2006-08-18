@@ -1,5 +1,5 @@
 /*
- * VortexList.h
+ * PressureList.h
  * VORTRAC
  *
  * Created by Lisa Mauger on 5/23/06
@@ -9,22 +9,22 @@
  *
  */
 
-#ifndef VORTEXLIST_H
-#define VORTEXLIST_H
+#ifndef PRESSURELIST_H
+#define PRESSURELIST_H
 
-#include "VortexData.h"
+#include "Pressure/PressureData.h"
 #include <QList>
 #include "Configuration.h"
 #include <QString>
 #include <QObject>
 
-class VortexList : public QList<VortexData>
+class PressureList : public QList<PressureData>
 {
 
 public:
-     VortexList(const QString &newFileName = QString());
-     VortexList(Configuration* newConfig);
-     virtual ~VortexList();
+     PressureList(const QString &newFileName = QString());
+     PressureList(Configuration* newConfig);
+     virtual ~PressureList();
      
      bool save();
      bool open();
@@ -37,7 +37,7 @@ public:
      QString getWorkingDirectory() { return workingDir; }
      void timeSort();
      
-     void append(const VortexData &value);
+     void append(const PressureData &value);
 
 private:
      Configuration *config;
@@ -47,11 +47,8 @@ private:
      QString vortexName;
      QString radarName;
      QString productType;
-     
-     QList<Configuration*>* vortexDataConfigs;
-     QList<QString>* configFileNames;
-     
-     void createDomVortexDataEntry(const VortexData &newData);
+         
+     void createDomPressureDataEntry(const PressureData &newData);
      
 
 

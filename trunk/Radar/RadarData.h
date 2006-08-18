@@ -33,6 +33,7 @@ class RadarData
   bool isDealiased() { return dealiased; }
   void isDealiased(bool flag) { dealiased = flag; }
   QString getDateTimeString();
+  QDateTime getDateTime();
   float* getRadarLat();
   float* getRadarLon();
   float radarBeamHeight(float &distance, float elevation);

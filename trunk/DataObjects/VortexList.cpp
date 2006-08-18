@@ -185,6 +185,22 @@ void VortexList::setFileName(const QString &newFileName)
   fileName = newFileName;
 }
 
+void VortexList::setRadarName(const QString &newRadarName)
+{
+	radarName = newRadarName;
+	QDomElement header = config->getConfig("vortex");
+	config->setParam(header, "radar", radarName);
+
+}
+
+void VortexList::setVortexName(const QString &newVortexName)
+{
+	vortexName = newVortexName;
+	QDomElement header = config->getConfig("vortex");
+	config->setParam(header, "name", vortexName);
+
+}
+
 void VortexList::setNewWorkingDirectory(const QString &newDirectory)
 {
   workingDir = newDirectory;
@@ -219,12 +235,12 @@ void VortexList::createDomVortexDataEntry(const VortexData &newData)
   
   QString defaultFile = QString("vortrac_defaultVortexListStorage.xml");
   
-  QString nodeFile = vortexName+timeString+QString(".xml");
+  //QString nodeFile = vortexName+timeString+QString(".xml");
   //  QFile fileCheck(workingDir+nodeFile);
-  if(QFile::exists(workingDir+nodeFile))
-    nodeFile = vortexName+"_"+radarName+timeString;
+  //if(QFile::exists(workingDir+nodeFile))
+  QString nodeFile = vortexName+"_"+radarName+timeString+QString(".xml");
 
-  Configuration *newConfig = new Configuration(0,workingDir+defaultFile);
+  Configuration *newConfig = new Configuration(0,defaultFile);
 
   config->addDom(parent, QString("time"), 
 		 newData.getTime().toString(Qt::ISODate)); 
