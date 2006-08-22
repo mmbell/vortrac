@@ -49,8 +49,8 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
     qinc = 4;
   }
 
-  Message::toScreen("Constructor");
-  checkRay();
+  //Message::toScreen("Constructor");
+  //checkRay();
 
   // Interpolating reflectivity to split levels
 
@@ -225,7 +225,7 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
 
 
   Message::toScreen("After interpolation");
-  checkRay();
+ //checkRay();
 
 
 }
@@ -330,7 +330,7 @@ bool RadarQC::dealias()
   QString checkPrint("First");
   //Message::toScreen(checkPrint);
   //emit log(Message(checkPrint));
-  checkRay();
+  //checkRay();
   //crazyCheck();
 
   if(!terminalVelocity())
@@ -339,7 +339,7 @@ bool RadarQC::dealias()
   checkPrint = QString("Terminal Vel");
   //Message::toScreen(checkPrint);
   //emit log(Message(checkPrint));
-  checkRay();
+ //checkRay();
   //crazyCheck();
   
   thresholdData();
@@ -347,7 +347,7 @@ bool RadarQC::dealias()
   checkPrint = QString("Threshold Data");
   //Message::toScreen(checkPrint);
   //emit log(Message(checkPrint));
-  checkRay();
+ //checkRay();
   //crazyCheck();
   
   if(!findEnvironmentalWind()) {
@@ -367,7 +367,7 @@ bool RadarQC::dealias()
   //emit log(Message(checkPrint));
   //crazyCheck();
   
-  checkRay();
+  //checkRay();
   
   return true;
 }

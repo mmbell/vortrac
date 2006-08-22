@@ -96,10 +96,21 @@ bool Matrix::lls(const int &numCoeff,const int &numData,
   }
   */
 
+
+  //Message::toScreen("Printing AA");
+  //printMatrix(AA, numCoeff, numCoeff);
+
+  //Message::toScreen("Printing BB");
+  //printMatrix(BB, numCoeff, 1);
+
+
   if(!gaussJordan(AA,BB, numCoeff, 1)) {
     // emit log(Message("Least Squares Fit Failed"));
     return false;
   }
+
+
+  //printMatrix(BB, numCoeff, 1);
   
   /* 
   Message::toScreen("CHECK: coeff[0] = "+QString().setNum(coeff[0])+" coeff[1] = "
@@ -126,8 +137,15 @@ bool Matrix::lls(const int &numCoeff,const int &numData,
     }
     sum +=((y[i]-regValue)*(y[i]-regValue));
   }
+
   
-  stDeviation = sqrt(sum/float(numData-numCoeff));
+  if(numData!=numCoeff)
+    stDeviation = sqrt(sum/float(numData-numCoeff));
+  else
+    stDeviation = sqrt(sum);
+
+  // Added this to avoid getting bad numbers, don't know if it is statistically
+  // correct, made note of it and will check later - LM (Aug 13)
   
   // calculate the standard error for the coefficients
 

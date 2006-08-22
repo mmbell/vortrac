@@ -36,6 +36,7 @@ public:
      QString getFileName() { return fileName; }
      QString getWorkingDirectory() { return workingDir; }
      void timeSort();
+     int getLatestIndex();
      
      void append(const SimplexData &value);
 

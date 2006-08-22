@@ -34,8 +34,8 @@ public:
   // Cambridge University Press: 2002,
   // Chapter 2.1 Gauss-Jordan Elimination
 
-  void printMatrix(float **A, int M, int N);
-  void printMatrix(float *A, int M);
+  static void printMatrix(float **A, int M, int N);
+  static void printMatrix(float *A, int M);
 
 private:
   bool matrixInverse(float **A, int M, int N, float** &Ainv);

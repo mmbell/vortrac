@@ -71,9 +71,9 @@ class SimplexData
   bool operator < (const SimplexData &other);
   bool operator > (const SimplexData &other);
 
-  int getNumLevels() const {return numLevels;}
-  int getNumRadii() const {return numRadii;}
-  int getNumCenters() const {return numCenters;}
+  int getNumLevels() const { return numLevels; }
+  int getNumRadii() const { return numRadii; }
+  int getNumCenters() const { return numCenters; }
 
   bool isNull();
   bool emptyLevelRadius(const int& l, const int& r) const;

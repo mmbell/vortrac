@@ -24,7 +24,7 @@ class ChooseCenter
  public:
      ChooseCenter(Configuration* newConfig = new Configuration(), 
 				  const SimplexList &newList = SimplexList(),
-				  VortexData* vortexPtr = VortexData());
+				  VortexData* vortexPtr = new VortexData());
     ~ChooseCenter();
   
     void setConfig(Configuration* newConfig);
@@ -35,6 +35,7 @@ class ChooseCenter
     bool constructPolynomial();
     bool fixCenters();
     bool fixCentersNoFit();
+    void useLastMean();
     // void checkHeights();
 
   

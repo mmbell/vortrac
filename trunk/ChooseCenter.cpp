@@ -69,58 +69,35 @@ void ChooseCenter::setSimplexList(const SimplexList &newList)
 
 bool ChooseCenter::findCenter()
 {
-  Message::toScreen("ChooseCenter: Initializing Things");
+  //simplexResults.timeSort();   make sure this works first
+  //Message::toScreen("ChooseCenter: Initializing Things");
   initialize();
-  Message::toScreen("ChooseCenter: Try Choose Mean Centers");
+  //Message::toScreen("ChooseCenter: Try Choose Mean Centers");
   if(!chooseMeanCenters()) {
     //emit log(Message("Choose Mean Centers Failed!"));
     Message::toScreen("Choose Mean Centers Failed!");
     return false;
   }
-  /*
-  //if(simplexResults.count() > minVolumes) {
-  Message::toScreen("ChooseCenter: Try Construct Polynomials");
-  if(!constructPolynomial()) {
-     //emit log(Message("Choose Center failed to Construct Polynomial"));
-    Message::toScreen("Choose Center failed to Construct Polynomial");
-    if(!fixCentersNoFit()) {
-      Message::toScreen("Choose Center failed to find individual centers w/o fit");
-      return false;
+  //Message::toScreen("Returned From ChooseMeanCenters");
+  
+  if(simplexResults.count() > minVolumes) {
+    Message::toScreen("ChooseCenter: Try Construct Polynomials");
+    if(constructPolynomial()) {
+      //emit log(Message("Choose Center failed to Construct Polynomial"));
+      Message::toScreen("Choose Center failed to Construct Polynomial");
+      if(!fixCentersNoFit()) {
+	Message::toScreen("Choose Center failed to find individual centers w/o fit");
+	return false;
+      }
+    }
+    else {
+      useLastMean();
     }
   }
   else {
-    Message::toScreen("ChooseCenter: Try Fix Centers");
-    if(!fixCenters()) {
-      //emit log(Message("Choose Center failed to find individual centers"));
-      Message::toScreen("Choose Center failed to find individual centers");
-      return false;
-    }
+    Message::toScreen("ChooseCenter: Using Last Mean Center For Guess");
+    useLastMean();
   }
-  */
- 
-  // Fake fill of vortexData for testing purposes
-  float radarLat = config->getParam(config->getConfig("radar"), QString("lat")).toFloat();
-  float radarLon = config->getParam(config->getConfig("radar"), QString("lon")).toFloat();
-  float radarLatRadians = radarLat * acos(-1.0)/180.0;
-  float fac_lat = 111.13209 - 0.56605 * cos(2.0 * radarLatRadians)
-	  + 0.00012 * cos(4.0 * radarLatRadians) - 0.000002 * cos(6.0 * radarLatRadians);
-  float fac_lon = 111.41513 * cos(radarLatRadians)
-	  - 0.09455 * cos(3.0 * radarLatRadians) + 0.00012 * cos(5.0 * radarLatRadians);
-  
-  int i = simplexResults.size() - 1;
-  for(int k = 0; k < simplexResults[i].getNumLevels(); k++) {
-	  int j = bestRadius[i][k];
-	  float centerLat = radarLat + simplexResults[i].getY(j,k)/fac_lat;
-	  float centerLon = radarLon + simplexResults[i].getX(j,k)/fac_lon;
-      vortexData->setLat(k, centerLat);
-	  vortexData->setLon(k, centerLon);
-	  vortexData->setAltitude(k, simplexResults[i].getHeight(k));
-	  vortexData->setRMW(k, simplexResults[i].getRadius(j));
-	  vortexData->setRMWUncertainty(k, 1);
-	  vortexData->setCenterStdDev(k, simplexResults[i].getCenterStdDev(j,k));
-	  vortexData->setNumConvergingCenters(k, simplexResults[i].getNumConvergingCenters(j,k));
-  }
-  
   
   return true;
 }
@@ -250,7 +227,7 @@ bool ChooseCenter::chooseMeanCenters()
     return false;
   
   //checkHeights();
-
+  
   bestRadius = new int*[simplexResults.count()];
   centerDev = new float[simplexResults.count()];
   radiusDev = new float[simplexResults.count()];
@@ -414,6 +391,9 @@ bool ChooseCenter::chooseMeanCenters()
 	  }
 	}
       }
+
+      //Message::toScreen("Made it to means");
+
       // calculate the mean radius and center scores over all levels
       float numLevels = simplexResults[i].getNumLevels(); 
       // what is the current level index verses height issue
@@ -427,7 +407,7 @@ bool ChooseCenter::chooseMeanCenters()
       
       
       for(int k = 0; k <= simplexResults[i].getNumLevels(); k++) {
-	int bestIndex;
+	int bestIndex = 0;
 	for(int j = 0; j < simplexResults[i].getNumRadii(); j++) {
 	  // Talked with mike the division below should be by 1
 	  //score[i][j][k] /=(numWeightSchemes+1);
@@ -454,6 +434,10 @@ bool ChooseCenter::chooseMeanCenters()
       
       for(int k = 0; k <= simplexResults[i].getNumLevels(); k++) {
 	int j = bestRadius[i][k];
+	//Message::toScreen("simplexResults["+QString().setNum(i)+"].getNumRadii() = "+QString().setNum(simplexResults[i].getNumRadii()));
+	//Message::toScreen("Best Radius (j = "+QString().setNum(j)+")");
+	//Message::toScreen(" has value ("+QString().setNum(simplexResults[i].getRadius(j))+")");
+	
 	float radLength = simplexResults[i].getRadius(j);
 	radiusDev[i] +=(meanRadius-radLength)*(meanRadius-radLength);
 	centerDev[i] +=sqrt(centerDev[i]/numLevels);
@@ -969,3 +953,29 @@ bool ChooseCenter::fixCentersNoFit()
   return true;
 }
 
+void ChooseCenter::useLastMean()
+{
+  // Fake fill of vortexData for testing purposes
+  float radarLat = config->getParam(config->getConfig("radar"), QString("lat")).toFloat();
+  float radarLon = config->getParam(config->getConfig("radar"), QString("lon")).toFloat();
+  float radarLatRadians = radarLat * acos(-1.0)/180.0;
+  float fac_lat = 111.13209 - 0.56605 * cos(2.0 * radarLatRadians)
+	  + 0.00012 * cos(4.0 * radarLatRadians) - 0.000002 * cos(6.0 * radarLatRadians);
+  float fac_lon = 111.41513 * cos(radarLatRadians)
+	  - 0.09455 * cos(3.0 * radarLatRadians) + 0.00012 * cos(5.0 * radarLatRadians);
+  
+  int i = simplexResults.size() - 1;
+  for(int k = 0; k < simplexResults[i].getNumLevels(); k++) {
+	  int j = bestRadius[i][k];
+	  float centerLat = radarLat + simplexResults[i].getY(j,k)/fac_lat;
+	  float centerLon = radarLon + simplexResults[i].getX(j,k)/fac_lon;
+	  vortexData->setLat(k, centerLat);
+	  vortexData->setLon(k, centerLon);
+	  vortexData->setAltitude(k, simplexResults[i].getHeight(k));
+	  vortexData->setRMW(k, simplexResults[i].getRadius(j));
+	  vortexData->setRMWUncertainty(k, 1);
+	  vortexData->setCenterStdDev(k, simplexResults[i].getCenterStdDev(j,k));
+	  vortexData->setNumConvergingCenters(k, simplexResults[i].getNumConvergingCenters(j,k));
+  } 
+  
+}

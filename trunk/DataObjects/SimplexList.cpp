@@ -333,7 +333,7 @@ void SimplexList::timeSort()
 {
   for(int i = 0; i < this->count(); i++) {
     for(int j = 0; j < this->count()-1; j++) {
-      if(this->value(j)>this->value(j+1)) {
+      if(this->value(j).getTime() > this->value(j+1).getTime()) {
 	this->swap(j+1,j);
 	simplexDataConfigs->swap(j+1,j);
 	configFileNames->swap(j+1,j);
@@ -341,4 +341,18 @@ void SimplexList::timeSort()
     }
   }
   
+}
+
+int SimplexList::getLatestIndex()
+{
+  QDateTime startTime = this->value(0).getTime();
+  float timeRefIndex = 0;
+  for(int i = 1; i < this->count(); i++) {
+    if(this->value(i).getTime() > startTime) {
+      timeRefIndex = i;
+      startTime = this->value(i).getTime();
+    }
+  }
+
+  return timeRefIndex;
 }

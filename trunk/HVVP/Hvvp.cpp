@@ -27,7 +27,7 @@ Hvvp::Hvvp()
 {
   // Generic constructor, initializes some variables..
   velNull = -999.0;
-  deg2rad = acos(1)/180;
+  deg2rad = acos(-1)/180;
   rad2deg = 1.0/deg2rad;
   levels = 14;       
   xlsDimension = 16;
@@ -38,7 +38,15 @@ Hvvp::Hvvp()
   var = new float[levels];
   vm_sin = new float[levels];
 
-  printOutput = false;
+  for(int i = 0; i < levels; i++) {
+    z[i] = velNull;
+    u[i] = velNull;
+    v[i] = velNull;
+    var[i] = velNull;
+    vm_sin[i] = velNull;
+  }
+
+  printOutput = true;
 
 }
 
@@ -55,7 +63,7 @@ Hvvp::~Hvvp()
   }
   delete yls;
   delete xls;
-  //delete wgt;
+  delete wgt;
 }
 
 void Hvvp::setRadarData(RadarData *newVolume, float range, float angle,
@@ -71,16 +79,20 @@ float Hvvp::rotateAzimuth(const float &angle)
 {
   // Angle received is in Meteorological Coordinates (degrees from north)
 
-  float newAngle = angle - cca;
+  float newAngle;
+  newAngle = angle - cca;
   if (newAngle < 0)
     newAngle +=360;
-
+  
   return newAngle;
 }
 
+
+//Using functions in Matrix Class
+
 bool Hvvp::lls(int numCoeff, int numData, int effective_nData, float** x, 
-	       float* y, float* weight, float stDeviation, float* stError, 
-	       float* coEff)
+	       float* y, float* weight, float &stDeviation, float* &stError, 
+	       float* &coEff)
 {
 
   /*
@@ -102,8 +114,13 @@ bool Hvvp::lls(int numCoeff, int numData, int effective_nData, float** x,
 
   if(numData < numCoeff) {
     //emit log(Message("Least Squares: Not Enough Data"));
+    Message::toScreen("Least Squares Fail Initial");
     return false;
   }
+
+  //Matrix::printMatrix(x, numCoeff, numData);
+  //Matrix::printMatrix(y, numData);
+  
   // We need at least one more data point than coefficient in order to
   // estimate the standard deviation of the fit.
   
@@ -142,13 +159,23 @@ bool Hvvp::lls(int numCoeff, int numData, int effective_nData, float** x,
   
   float** Ainv = new float*[numCoeff];
   for(int p = 0; p < numCoeff; p++) 
-    Ainv[p] = new float[p];
+    Ainv[p] = new float[numCoeff];
 
-
+  //Message::toScreen("Printing AA Before");
+  //Matrix::printMatrix(AA,numCoeff,numCoeff);
+  //Message::toScreen("Printing BB Before");
+  //Matrix::printMatrix(BB,numCoeff, 1);
+  
   if(!gaussJordan(AA,BB, numCoeff, 1)) {
     emit log(Message("Least Squares Fit Failed"));
+    Message::toScreen("Least Squares Fail In Gauss Jordan");
     return false;
   }
+
+  //Message::toScreen("Printing AA After");
+  //Matrix::printMatrix(AA,numCoeff,numCoeff);
+  //Message::toScreen("Printing BB After");
+  //Matrix::printMatrix(BB,numCoeff, 1);
   
 
   for(int i = 0; i < numCoeff; i++) {
@@ -157,6 +184,9 @@ bool Hvvp::lls(int numCoeff, int numData, int effective_nData, float** x,
       Ainv[i][j] = AA[i][j];
     }
   }
+
+  //Message::toScreen("Printing coEff");
+  //Matrix::printMatrix(coEff,numCoeff);
   
   // calculate the stDeviation and stError
   float sum = 0;
@@ -166,15 +196,34 @@ bool Hvvp::lls(int numCoeff, int numData, int effective_nData, float** x,
       regValue += coEff[j]*x[j][i]; 
     }
     sum +=((y[i]-regValue)*(y[i]-regValue));
+    if(sum < 0)
+      Message::toScreen(" Sum is less than zero sum = "+QString().setNum(sum));
   }
   
-  stDeviation = sqrt(sum/float(numData-numCoeff));
+  if(numData!=numCoeff)
+    stDeviation = sqrt(sum/float(numData-numCoeff));
+  else
+    stDeviation = sqrt(sum);
+
+  //Message::toScreen("sum = "+QString().setNum(sum));
+
+  //Message::toScreen("Standard Dev = "+QString().setNum(stDeviation));
   
   // calculate the standard error for the coefficients
 
   for(int i = 0; i < numCoeff; i++) {
-    stError[i] = stDeviation*sqrt(Ainv[i][i]);
+    if(Ainv[i][i] < 0) {
+      //Message::toScreen("Ainv[i][i] < 0 @ i = "+QString().setNum(i)+" = "+QString().setNum(Ainv[i][i]));
+      stError[i] = stDeviation*sqrt(fabs(Ainv[i][i]));
+    }
+    else {
+      //Message::toScreen("Ainv[i][i] @ i = "+QString().setNum(i)+" = "+QString().setNum(Ainv[i][i]));
+      stError[i] = stDeviation*sqrt(Ainv[i][i]);
+    }
   }
+
+  //Message::toScreen("Printing StError");
+  //Matrix::printMatrix(stError, numCoeff);
 
   for(int i = 0; i < numCoeff; i++) {
     delete A[i];
@@ -187,6 +236,9 @@ bool Hvvp::lls(int numCoeff, int numData, int effective_nData, float** x,
   delete AA;
   delete BB;
   delete Ainv;
+
+  //Message::toScreen("Printing coEff Again!!");
+  //Matrix::printMatrix(coEff,numCoeff);
    
   return true;
 }
@@ -234,7 +286,7 @@ bool Hvvp::gaussJordan(float **a, float **b, int n, int m)
 	a[irow][l] = a[icol][l];
 	a[icol][l] = dummy;
       }
-      for(l = 0; l < m; l++) {
+      for(l = 0; l < m; l++) { 
 	float dummy = b[irow][l];
 	b[irow][l] = b[icol][l];
 	b[icol][l] = dummy;
@@ -281,7 +333,10 @@ bool Hvvp::gaussJordan(float **a, float **b, int n, int m)
 }
 
 
+
 int Hvvp::hvvpPrep(int m) {
+
+  // Message::toScreen("HVVP Prep");
 
   //**float hgtStart = .500;                // km
   float hgtStart = .600;                // km 
@@ -294,6 +349,9 @@ int Hvvp::hvvpPrep(int m) {
   float cuthr;                          // Unitless
   float ae = 4*6371/3.0;                // km
   int maxpoints = 200000;               // **
+  Sweep* currentSweep;
+  Ray* currentRay;
+  float* vel; 
 
   if(cuspec < curmw)
     cuthr = cuspec; 
@@ -305,6 +363,7 @@ int Hvvp::hvvpPrep(int m) {
   // ** Special case scenerio for KBRO Data of Bret (1999)
 
   xls = new float*[xlsDimension];
+  wgt = new float[maxpoints];
   yls = new float[maxpoints];
   for(int k = 0; k < xlsDimension; k++) {
     xls[k] = new float[maxpoints];
@@ -316,18 +375,21 @@ int Hvvp::hvvpPrep(int m) {
   
   int count = 0;
   float h0 = hgtStart+hInc*m;
+  z[m] = h0;
   float hLow = h0-hInc;
   float hHigh = h0+hInc;
   for(int s = 0; s < volume->getNumSweeps(); s++) {
-    Sweep *currentSweep = volume->getSweep(s);
+    currentSweep = volume->getSweep(s);
     float elevation = currentSweep->getElevation();     // deg
     if(elevation <= 5) {
       int startRay = currentSweep->getFirstRay();
       int stopRay = currentSweep->getLastRay();
+      //Message::toScreen("Sweep # "+QString().setNum(s)+" elevation = "+QString().setNum(elevation)+" startRay = "+QString().setNum(startRay)+" stopRay = "+QString().setNum(stopRay));
       for(int r = startRay; r <= stopRay; r++) {
-	Ray *currentRay = volume->getRay(r);
-	float *vel = currentRay->getVelData();          // still in km/s
-	float vGateSpace = currentRay->getVel_gatesp(); // in km
+	currentRay = volume->getRay(r);
+	vel = currentRay->getVelData();          // still in km/s
+	float vGateSpace = currentRay->getVel_gatesp(); // in m
+	vGateSpace /= 1000;
 	float numGates = currentRay->getVel_numgates();
 	//int first = currentRay->getFirst_vel_gate();   
 	int first = 0;
@@ -335,24 +397,25 @@ int Hvvp::hvvpPrep(int m) {
 	// Index or distance?
 	// Are the limits on this ray right or should i go
 	// to first+numGates is 
+	float aa = currentRay->getAzimuth();
+	aa = rotateAzimuth(aa)*deg2rad;
+	float sinaa = sin(aa);
+	float cosaa = cos(aa);
 	for(int v = first; v < numGates; v++) {
 	  if(vel[v]!=velNull) {
 	    float srange = (rangeStart+float(v)*vGateSpace);
 	    float cu = srange * (cos(elevation)/rt);    // unitless
-	    float alt = volume->radarBeamHeight(cu, elevation);  // km
+	    float alt = volume->radarBeamHeight(srange, elevation);  // km
 	    if((cu >= cumin)&&(cu < cuthr)&&(alt >= hLow)&&(alt < hHigh)) {
 	      float ee = elevation*deg2rad;
 	      ee+=asin(srange*cos(elevation)/(ae+alt));
 	      float cosee = cos(ee);
-	      float aa = rotateAzimuth(currentRay->getAzimuth())*deg2rad;
-	      float sinaa = sin(aa);
-	      float cosaa = cos(aa);
 	      float xx = srange*cosee*sinaa;
 	      float yy = srange*cosee*cosaa;
 	      float rr = srange*srange*cosee*cosee*cosee;
 	      float zz = alt-h0;
 	      yls[count] = vel[v];
-	      //wgt[count] = 1; // why are we weighting it?
+	      wgt[count] = 1; // why are we weighting it?
 	      xls[0][count] = sinaa*cosee;
 	      xls[1][count] = cosee*sinaa*xx;
 	      xls[2][count] = cosee*sinaa*zz;
@@ -373,8 +436,11 @@ int Hvvp::hvvpPrep(int m) {
 	    }
 	  }
 	}
+	//delete currentRay;
+	//delete [] vel;
       }
     }
+    //delete currentSweep;
   }
   return count;
 }
@@ -397,93 +463,134 @@ bool Hvvp::findHVVPWinds()
     float h0 = hgtStart+.1*m;
     
     count = hvvpPrep(m);
+    //Message::toScreen("Returned From hvvpPrep level = "+QString().setNum(m)+" with count = "+QString().setNum(count));
     
     /* 
      * Empirically determined limit to the minimum number of points
-     *   needed for a low varieance HVVP result.
+     *   needed for a low variance HVVP result.
      *
      */
     
     if(count >= 6500) {
+      
+      //Message::toScreen("Enough Info On Level "+QString().setNum(m)+" to located HVVP - GO.....");
 
       float sse;
       float *stand_err = new float[xlsDimension];
       float *cc = new float[xlsDimension];
       bool flag, outlier;
 
-      //flag = lls(16, count,count, xls, yls, wgt, sse, stand_err, cc);
+      flag = lls(16, count, count, xls, yls, wgt, sse, stand_err, cc);
 
-      flag = Matrix::lls(xlsDimension, count, xls, yls, sse, stand_err, cc);
-      
+      //flag = Matrix::lls(xlsDimension, count, xls, yls, sse, cc, stand_err);
+      //if(flag)
+	//Message::toScreen("First Least Squares Attempt = True");
+      //else
+	//Message::toScreen("First Least Squares Attempt = False");
+
       /*
        * Check for outliers that deviate more than two standard 
        *   deviations from the least squares fit.
        *
        */
       
-      if(flag)
+      if(flag) {
 	outlier = false;
-      int cgood = 0;
-      for (int n = 0; n < count; n++) {
-	float vr_est = 0;
-	for(int p = 0; p < xlsDimension; p++) {
-	  vr_est = vr_est+cc[p]*xls[p][n];
-	}
-	if(fabs(vr_est-yls[n])>2.0*sse) {
-	  yls[n] = velNull;
-	  outlier = true;
-	}
-	else {
-	  cgood++;
-	}
-      }
-
-      // Re-calculate the least squares solution if outliers are found.
-      
-
-      int qc_count;
- 
-      float** qcxls = new float*[xlsDimension];
-      float* qcyls = new float[count];
-      //float* qcwgt = new float[count];
-      for(int d = 0; d < xlsDimension; d++) {
-	qcxls[d] = new float[count];
-      }
-
-      if(outlier && (cgood >=6500)) {
-	
-	qc_count = 0;
-	
+	int cgood = 0;
 	for (int n = 0; n < count; n++) {
-	  
-	  //qcwgt[n] = 0;
-	  qcyls[n] = 0;
+	  float vr_est = 0;
 	  for(int p = 0; p < xlsDimension; p++) {
-	    qcxls[p][n] = 0;
+	    vr_est = vr_est+cc[p]*xls[p][n];
 	  }
-	  
-	  if(yls[n] != velNull) {
-	    qcyls[qc_count] = yls[n];
-	    //qcwgt[qc_count] = 1;
-	    for(int p = 0; p < xlsDimension; p++) {
-	      qcxls[p][qc_count] = xls[p][n];
-	    }
-	    qc_count++;
+	  if(fabs(vr_est-yls[n])>2.0*sse) {
+	    yls[n] = velNull;
+	    outlier = true;
+	  }
+	  else {
+	    cgood++;
 	  }
 	}
-	// flag = lls(16, qc_count, qc_count, qcxls, qcyls, qcwgt, sse, stand_err,cc);
-	flag = Matrix::lls(xlsDimension,qc_count,qcxls,qcyls,sse,stand_err,cc);
+	
+	// Re-calculate the least squares solution if outliers are found.
+	
+	
+	int qc_count;
+	
+	float** qcxls = new float*[xlsDimension];
+	float* qcyls = new float[count];
+	float* qcwgt = new float[count];
+	for(int d = 0; d < xlsDimension; d++) {
+	  qcxls[d] = new float[count];
+	}
+	
+	if(outlier && (cgood >=6500)) {
+	  
+	  qc_count = 0;
+	  
+	  for (int n = 0; n < count; n++) {
+	    
+	    qcwgt[n] = 0;
+	    qcyls[n] = 0;
+	    for(int p = 0; p < xlsDimension; p++) {
+	      qcxls[p][n] = 0;
+	    }
+	    
+	    if(yls[n] != velNull) {
+	      qcyls[qc_count] = yls[n];
+	      qcwgt[qc_count] = 1;
+	      for(int p = 0; p < xlsDimension; p++) {
+		qcxls[p][qc_count] = xls[p][n];
+	      }
+	      qc_count++;
+	    }
+	  }
+	  flag = lls(16, qc_count, qc_count, qcxls, qcyls, qcwgt, sse, stand_err,cc);
+
+	  //Message::toScreen("qc_count = "+QString().setNum(qc_count));
+	  //flag=Matrix::lls(xlsDimension,qc_count,qcxls,qcyls,sse,cc,stand_err);
+	  /*
+	  if(flag)
+	    Message::toScreen("Second Least Squares Attempt = True");
+	  else
+	    Message::toScreen("Second Least Squares Attempt = False");
+	  */
+
+	  for(int ii = 0; ii < xlsDimension; ii++) {
+	    delete [] qcxls[ii];
+	  }
+
+	  delete [] qcxls;
+	  delete [] qcyls;
+	  delete [] qcwgt;
+
+	}
+	QString ccmessage;
+	for(int ii = 0; ii < xlsDimension; ii++) {
+	  ccmessage += "cc["+QString().setNum(ii)+"] = "+QString().setNum(cc[ii])+" ";
+	}
+	//Message::toScreen(ccmessage);
+	//Message::toScreen("--------------------------------");
+
+	ccmessage = QString();
+	for(int ii = 0; ii < xlsDimension; ii++) {
+	  ccmessage += "stand_err["+QString().setNum(ii)+"] = "+QString().setNum(stand_err[ii])+" ";
+	}
+	//Message::toScreen(ccmessage);
+	//Message::toScreen("--------------------------------");
 	
 	// Calculate the HVVP wind parameters:
 	
 	// Radial wind above the radar.
 	float vr = rt*cc[1];
+	//Message::toScreen(" vr = "+QString().setNum(vr));
 	
 	// Along beam component of the environmental wind above the radar.
 	float vm_c = cc[3]+vr;
+	//Message::toScreen(" vm_c = "+QString().setNum(vm_c));
 	
 	// Rankine exponent of the radial wind.
 	float xr = -1*cc[4]/cc[1];
+	//Message::toScreen(" xr = "+QString().setNum(xr));
 	
 	/* 
 	 * Variance of xr.  This is used in the
@@ -503,20 +610,24 @@ bool Hvvp::findHVVPWinds()
 	 *   of outflow.
 	 */
 	
-	float xt;
+	float xt = 0;
 	
 	if(vr > 0) {
 	  if(xr > 0)
 	    xt = 1-xr;
+	  //if(xr < 0)
 	  else
-	    xt = -1.0*xt/2.0;
+	    xt = -1.0*xr/2.0;
 	}
 	else {
 	  if(xr >= 0)
 	    xt = xr/2.0;
-	  else 
+	  //if(xr < 0) 
+	  else
 	    xt = 1+xr;
 	}
+
+	//Message::toScreen(" xt = "+QString().setNum(xt));
 	
 	mod_Rankine_xt[m] = xt;
 	
@@ -527,6 +638,11 @@ bool Hvvp::findHVVPWinds()
 	// Assume error in rt is 2 km
 	
 	float vt = rt*cc[6]/(xt+1.0);
+
+	//Message::toScreen(" vt = "+QString().setNum(vt));
+
+	if(xt == 0)
+	  Message::toScreen("Going to have issues in xt");
 	
 	temp = (2./rt)*(2./rt)+(stand_err[6]/cc[6])*(stand_err[6]/cc[6]);
 	temp += (var[m]/xt)*(var[m]/xt);
@@ -534,6 +650,7 @@ bool Hvvp::findHVVPWinds()
 	
 	// Across-beam component of the environmental wind
 	float vm_s = cc[0]-vt;
+	//Message::toScreen(" vm_s = "+QString().setNum(vm_s));
 	
 	var[m] = sqrt(stand_err[0]*stand_err[0]+var[m]*var[m]);
 	
@@ -542,37 +659,49 @@ bool Hvvp::findHVVPWinds()
 	// cca  = cca *deg2rad;
 	// float ue = vm_s*cos(cca)+vm_c*sin(cca);
 	// float ve = vm_c*cos(cca)-vm_s*sin(cca);
+	//Message::toScreen("rot = "+QString().setNum(rot));
 	
 	float ue = vm_s*cos(rot)+vm_c*sin(rot);
 	float ve = vm_c*cos(rot)-vm_s*sin(rot);
+	//Message::toScreen(" ve = "+QString().setNum(ve));
+	//Message::toScreen(" ue = "+QString().setNum(ue));
+	//Message::toScreen(" z[m] = "+QString().setNum(z[m]));
 	
 	// Set realistic limit on magnitude of results.
 	if((xt < 0)||(fabs(ue)>30.0)||(fabs(ve)>30)) {
-	  z[m] = h0;               
+	  Message::toScreen("First Crappy Fail Option");
+	  //z[m] = h0;               
 	  u[m] = velNull;
 	  v[m] = velNull;
 	  vm_sin[m] = velNull;
 	}
 	else {
-	  z[m] = h0;
+	  Message::toScreen("Only Good Option");
+	  //z[m] = hgtStart+hInc*float(m);
 	  u[m] = ue;
 	  v[m] = ve;
 	  vm_sin[m] = vm_s;
 	}
+	delete [] stand_err;
+	delete [] cc;
       }
       else {
-	z[m] = h0;
+	Message::toScreen("Second Crappy Fail Option");
+	//z[m] = h0;
 	u[m] = velNull;
 	v[m] = velNull;
 	vm_sin[m] = velNull;
       }
     }
     else {
-      z[m] = h0;
+      Message::toScreen("Third Crappy Fail Option");
+      //z[m] = h0;
       u[m] = velNull;
       v[m] = velNull;
       vm_sin[m] = velNull;
     }
+    //Message::toScreen("HVVP Output From Level "+QString().setNum(m)+" z = "+QString().setNum(z[m])+" vm_sin = "+QString().setNum(vm_sin[m]));
+    
   }
 
   /*
@@ -599,12 +728,13 @@ bool Hvvp::findHVVPWinds()
     }
     xtsd = sqrt(xtsd);
     for(int i = 0; i < levels; i++) {
-      if(mod_Rankine_xt[i] > xtsd) {
+      //if(mod_Rankine_xt[i] > xtsd) { // ----- Pauls code I don't agree -LM
+      if(fabs(mod_Rankine_xt[i]-xtav) > xtsd) {
 	u[i] = velNull;
       }
     }
   }
-
+  
   /*
    *   Calculate the layer, variance-weighted average of vm_sin. 
    */
@@ -614,22 +744,29 @@ bool Hvvp::findHVVPWinds()
   float sumwgt = 0;
   int ifoundit = 0;
   for(int i = 0; i < levels; i++) {
-    if(u[i] != velNull) {
+    //Message::toScreen("var["+QString().setNum(i)+"] = "+QString().setNum(var[i])+" vm_sin["+QString().setNum(i)+"] = "+QString().setNum(vm_sin[i]));
+    if((u[i] != velNull)&&(var[i]!=0)) {
       var[i] = var[i]*var[i];
       sumwgt += 1.0/var[i];
       av_VmSin += vm_sin[i]/var[i];
       var_av_VmSin +=1.0/var[i];
     }
- 
-    if(u[i]!=velNull) {
-      av_VmSin /= sumwgt;
-      var_av_VmSin = 1.0/var_av_VmSin;
-    }
-    else {
-      av_VmSin= velNull;
-      var_av_VmSin=velNull;
-    }
   }
+  
+  // if(u(i)!=velNull) {   ---- This is how it was in Pauls code
+  // the for loop extended to the outside of the else bracket below.. 
+  // didn't seem right (or I may have interpretted it wrong but I think
+  // this is what was intended
+
+  if((sumwgt!=0) && (var_av_VmSin!=0)) {
+    av_VmSin /= sumwgt;
+    var_av_VmSin = 1.0/var_av_VmSin;
+  }
+  else {
+    av_VmSin= velNull;
+    var_av_VmSin=velNull;
+  }
+  
 
   float diff = 100;
   for(int i = 0; i < levels; i++) {
@@ -640,6 +777,7 @@ bool Hvvp::findHVVPWinds()
       }
     }
   }
+  //Message::toScreen("ifoundit = "+QString().setNum(ifoundit));
   QString message;
   if(ifoundit >= 1) {
     // Here Pauls code does a lot of printing which I will make optional 
@@ -660,9 +798,9 @@ bool Hvvp::findHVVPWinds()
     message += "   Stderr_Vm_Sin (m/s)\n\n";
     for(int i = 0; i < levels; i++) {
       if((u[i]!=velNull) && (v[i]!=velNull)) {
-	message +=QString().setNum(z[i])+" "+QString().setNum(u[i]);
-	message +=" "+QString().setNum(v[i])+" "+QString().setNum(vm_sin[i]);
-	message +=" "+QString().setNum(sqrt(var[i]))+"\n";
+	message +=QString().setNum(z[i])+"\t   "+QString().setNum(u[i]);
+	message +="\t   "+QString().setNum(v[i])+"\t   "+QString().setNum(vm_sin[i]);
+	message +="\t   "+QString().setNum(sqrt(var[i]))+"\n";
       }
     }
     message += "Smoothing width is 3 levels, so at least smooth somewhat";
@@ -680,14 +818,15 @@ bool Hvvp::findHVVPWinds()
       message += "   Stderr_Vm_Sin (m/s)\n\n";
       for(int i = 0; i < levels; i++) {
 	if((u[i]!=velNull) && (v[i]!=velNull)) {
-	  message +=QString().setNum(z[i])+" "+QString().setNum(u[i]);
-	  message +=" "+QString().setNum(v[i])+" "+QString().setNum(vm_sin[i]);
-	  message +=" "+QString().setNum(sqrt(var[i]))+"\n";
+	  message +=QString().setNum(z[i])+"\t   "+QString().setNum(u[i]);
+	  message +="\t   "+QString().setNum(v[i])+"\t   "+QString().setNum(vm_sin[i]);
+	  message +="\t   "+QString().setNum(sqrt(var[i]))+"\n";
 	}
       }
     }
     if(printOutput) {
       emit log(Message(message));
+      Message::toScreen(message);
     }
     return true;
   }
@@ -695,6 +834,7 @@ bool Hvvp::findHVVPWinds()
     message = "No Hvvp Results Found";
     if(printOutput) {
       emit log(Message(message));
+      Message::toScreen(message);
     }
     return false;
   }
@@ -732,8 +872,8 @@ void Hvvp::smoothHvvp(float* data) {
       int numPoints = 0;
       for(int j = i1; j <= i2; j++) {
 	if(data[j]!=velNull) {
-	  numPoints++;
 	  temp[numPoints] = data[j];
+	  numPoints++;
 	}
       }
       if(numPoints > 1) {
@@ -751,15 +891,18 @@ void Hvvp::smoothHvvp(float* data) {
 	  data[i] = temp[mid];
 	}
 	else {
-	  data[i] = (temp[mid]+temp[mid+1])/2.0;
+	  data[i] = (temp[mid]+temp[mid-1])/2.0;
 	}
       }
       else {
-	data[i] = temp[i];
+	if(numPoints == 1)
+	  data[i] = temp[0];
+	else
+	  data[i] = -velNull;
       }
     }
   }
-  delete temp;
+  delete [] temp;
 }
 
 void Hvvp::smoothHvvpVmSin(float* data1, float* data2) {
@@ -783,9 +926,9 @@ void Hvvp::smoothHvvpVmSin(float* data1, float* data2) {
       int numPoints = 0;
       for(int j = i1; j <= i2; j++) {
 	if(data1[j]!=velNull) {
-	  numPoints++;
 	  temp1[numPoints] = data1[j];
 	  temp2[numPoints] = data2[j];
+	  numPoints++;
 	}
       }
       if(numPoints > 1) {
@@ -810,17 +953,23 @@ void Hvvp::smoothHvvpVmSin(float* data1, float* data2) {
 	  data2[i] = temp2[mid];
 	}
 	else {
-	  data1[i] = (temp1[mid]+temp1[mid+1])/2.0;
-	  data2[i] = (temp2[mid]+temp2[mid+1])/2.0;
+	  data1[i] = (temp1[mid]+temp1[mid-1])/2.0;
+	  data2[i] = (temp2[mid]+temp2[mid-1])/2.0;
 	}
       }
       else {
-	data1[i] = temp1[i];
-	data2[i] = temp2[i];
+	if(numPoints==1) {
+	  data1[i] = temp1[0];
+	  data2[i] = temp2[0];
+	}
+	else{
+	  data1[i] = velNull;
+	  data2[i] = velNull;
+	}
       }
     }
   }
-  delete temp1;
-  delete temp2;
+  delete [] temp1;
+  delete [] temp2;
 }
 

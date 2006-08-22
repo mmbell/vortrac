@@ -313,12 +313,25 @@ void AnalysisThread::run()
 		float rt = sqrt(distance[0]*distance[0]+distance[1]*distance[1]);
 		float cca = atan2(distance[0], distance[1])*180/acos(-1);
 		delete[] distance;
-		float rmw = 12.5;
+		float rmw = 0;
+		int goodrmw = 0;
+		for(int level = 0; level < vortexData->getNumLevels(); level++) {
+		  if(vortexData->getRMW(level)!=-999) {
+		    //Message::toScreen("radius @ level "+QString().setNum(level)+" = "+QString().setNum(vortexData->getRMW(level)));
+		    rmw += vortexData->getRMW(level);
+		    goodrmw++;
+		  }
+		}
+		rmw = rmw/(1.0*goodrmw);
+		rmw*=2;
+	    
+       // RMW is the average rmw taken over all levels of the vortexData
+       // The multiplying by 2 bit is blatant cheating, I don't know 
+       // if this if the radius's returned need to be adjusted by spacing or
+       // or what the deal is but these numbers look closer to right for 
+       // the two volumes I am looking at.
 
-		// RMW is just a guess for the charley case right now, 
-		// we need this param before we can move on with HVVP
-
-		Message::toScreen("Hvvp Parameters: Distance to Radar"+QString().setNum(rt)+" angel to vortex center in degrees ccw from north "+QString().setNum(cca)+" rmw "+QString().setNum(rmw));
+		Message::toScreen("Hvvp Parameters: Distance to Radar "+QString().setNum(rt)+" angel to vortex center in degrees ccw from north "+QString().setNum(cca)+" rmw "+QString().setNum(rmw));
 
 		Hvvp *envWindFinder = new Hvvp;
 		envWindFinder->setRadarData(radarVolume,rt, cca, rmw);

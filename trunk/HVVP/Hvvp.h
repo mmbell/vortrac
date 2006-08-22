@@ -1,4 +1,4 @@
- /*
+/*
  *  Hvvp.h
  *  VORTRAC
  *
@@ -71,7 +71,7 @@ private:
    float** xls;
    int xlsDimension;
    float* yls;
-   //float* wgt;
+   float* wgt;
 
    float *z, *u, *v, *vm_sin, *var, av_VmSin, stdErr_VmSin;
    /*
@@ -126,13 +126,16 @@ private:
    float rotateAzimuth(const float &angle);
 
    int hvvpPrep(int m);
-
+   
+   
+   //Moved to static functions in Math/Matrix 
    bool lls(int numCoeff, int numData, int effective_nData, float** x, 
-	    float* y, float* weight, float stDeviation, float* stError, 
-	    float* coEff);
-
+	    float* y, float* weight, float &stDeviation, float* &stError, 
+	    float* &coEff);
+     
    bool gaussJordan(float **a, float **b, int n, int m);
-
+   
+     
    void smoothHvvp(float* data);
    void smoothHvvpVmSin(float* data1, float* data2);
 
