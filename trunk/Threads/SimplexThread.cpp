@@ -133,7 +133,8 @@ void SimplexThread::run()
 		// Create a simplexData object to hold the results;
 		simplexData = new SimplexData(int(lastLevel - firstLevel + 1), int(lastRing - firstRing + 1), (int)numPoints);
 		simplexData->setTime(vortexData->getTime());
-							 
+		simplexData->setNumPointsUsed((int)numPoints);
+		
 		// Allocate memory for the vertices	
 		vertex = new float*[3];
 		vertex[0] = new float[2];

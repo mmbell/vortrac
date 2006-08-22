@@ -134,7 +134,7 @@ bool VortexList::openNodeFile(const QDomNode &newNode)
 
 	  float newAlt = newConfig->getParam(childElement, "altitude", level,
 					  nString).toFloat();
-	  newData.setAltitude(n, newAlt);
+	  newData.setHeight(n, newAlt);
 
 	  float newRmw = newConfig->getParam(childElement, "rmw", level,
 					  nString).toFloat();
@@ -284,9 +284,9 @@ void VortexList::createDomVortexDataEntry(const VortexData &newData)
     if(newData.getLon(i)!=-999)  {
       newConfig->addDom(volParent, QString("longitude"),
 		     QString().setNum(newData.getLon(i)), level, ii); }
-    if(newData.getAltitude(i)!=-999) {
-      newConfig->addDom(volParent, QString("altitude"),
-		     QString().setNum(newData.getAltitude(i)), level, ii); }
+    if(newData.getHeight(i)!=-999) {
+      newConfig->addDom(volParent, QString("height"),
+		     QString().setNum(newData.getHeight(i)), level, ii); }
     if(newData.getRMW(i)!=-999)  {
       newConfig->addDom(volParent, QString("rmw"),
 		     QString().setNum(newData.getRMW(i)), level, ii); }

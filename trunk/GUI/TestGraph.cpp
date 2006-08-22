@@ -24,13 +24,13 @@ void TestGraph::examplePlot()
   // This parameter-less publics slot was created for connecting
   // to the button on screen that will launch the generic plot.
 
-  QList<VortexData> *globalVortexDataList = new QList<VortexData>();
-  QList<VortexData> *globalDropList = new QList<VortexData>();
+  VortexList *globalVortexDataList = new VortexList();
+  VortexList *globalDropList = new VortexList();
   examplePlotNumbers(globalVortexDataList, globalDropList,45);
 }
 
-void TestGraph::examplePlotNumbers(QList<VortexData>* VortexPointer,
-				   QList<VortexData> *dropPointer, 
+void TestGraph::examplePlotNumbers(VortexList* VortexPointer,
+				   VortexList *dropPointer, 
 				   int number_of_VortexData)
 {
 
@@ -72,15 +72,15 @@ void TestGraph::listPlot()
   // listPlotNumbers function. This file contains data from 
   // huricane Katrina
 
-  QList<VortexData> *globalVortexDataList = new QList<VortexData>();
-  QList<VortexData> *globalDropList = new QList<VortexData>();
-  QString file(QString("/scr/science40/mauger/Working/trunk/vortrac_testVortexData.xml"));
+  VortexList *globalVortexDataList = new VortexList();
+  VortexList *globalDropList = new VortexList();
+  QString file(QString("vortrac_testVortexData.xml"));
   listPlotNumbers(file, globalVortexDataList, globalDropList);
 }
 
 void TestGraph::listPlotNumbers(QString fileName,
-				QList<VortexData> *VortexPointer,
-				QList<VortexData> *dropPointer)
+				VortexList *VortexPointer,
+				VortexList *dropPointer)
 {
   
   // Creates a configuration to read in the data and retreive appropriate

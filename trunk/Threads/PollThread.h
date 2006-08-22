@@ -44,6 +44,8 @@ class PollThread : public QThread
   signals:
 	void log(const Message& message);
 	void newVCP(const int);
+	void vortexListUpdate(VortexList* list);
+	void dropListChanged(VortexList* list);
 	
   protected:
 	void run();
@@ -59,6 +61,7 @@ class PollThread : public QThread
 	VortexList *vortexList;
 	SimplexList *simplexList;
 	PressureList *pressureList;
+	PressureList *dropsondeList;
 	AnalysisThread *analysisThread;
 	Configuration *vortexConfig;
 	Configuration *simplexConfig;

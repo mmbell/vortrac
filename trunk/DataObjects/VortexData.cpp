@@ -122,7 +122,7 @@ void VortexData::setLon(const float a[], const int& howMany)
     centerLongitude[i] = a[i];
 }
 
-float VortexData::getAltitude(const int& i) const
+float VortexData::getHeight(const int& i) const
 {
   if (i < numLevels)
     return centerAltitude[i];
@@ -130,13 +130,13 @@ float VortexData::getAltitude(const int& i) const
 }
 
 
-void VortexData::setAltitude(const int& index, const float& altitude)
+void VortexData::setHeight(const int& index, const float& altitude)
 {
   if (index < numLevels)
     centerAltitude[index] = altitude;
 }
 
-void VortexData::setAltitude(const float a[],const int& howMany)
+void VortexData::setHeight(const float a[],const int& howMany)
 {
   for (int i = 0; i < howMany; i++)
     centerAltitude[i] = a[i];
@@ -303,7 +303,7 @@ void VortexData::printString()
   out<<              QString().setNum(getPressureUncertainty())<<endl;
   for(int i = 0; i < 2; i++) {
     QString ii = QString().setNum(i);
-    out<<"  altitude @ level:"+ii+": "+QString().setNum(getAltitude(i)) <<endl;
+    out<<"  altitude @ level:"+ii+": "+QString().setNum(getHeight(i)) <<endl;
     out<<"  latitude @ level:"+ii+": "+QString().setNum(getLat(i)) << endl;
     out<<"  longitude @ level:"+ii+": "+QString().setNum(getLon(i)) << endl;
     out<<"  rmw @ level:"+ii+": "+QString().setNum(getRMW(i)) << endl;

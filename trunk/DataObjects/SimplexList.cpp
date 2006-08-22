@@ -136,6 +136,8 @@ bool SimplexList::openNodeFile(const QDomNode &newNode)
 		       config->getParam(childElement, "meany").toFloat());
 	  newData.setHeight(level,
 			   config->getParam(childElement, "height").toFloat());
+	  newData.setRadius(radius,
+				config->getParam(childElement, "radius").toFloat());
 	  newData.setCenterStdDev(level, radius, 
 		  config->getParam(childElement, "center_stddev").toFloat());
 	  newData.setMaxVT(level, radius, 
@@ -273,6 +275,9 @@ void SimplexList::createDomSimplexDataEntry(const SimplexData &newData)
 	if(newData.getHeight(i)!=-999) 
 	  newConfig->addDom(volParent,  QString("height"), 
 			    QString().setNum(newData.getHeight(i)));
+	if(newData.getRadius(i)!=-999) 
+		newConfig->addDom(volParent,  QString("radius"), 
+						  QString().setNum(newData.getRadius(j)));
 	if(newData.getCenterStdDev(i,j)!=-999) 
 	  newConfig->addDom(volParent,  QString("center_stddev"), 
 			    QString().setNum(newData.getCenterStdDev(i,j)));
@@ -346,7 +351,7 @@ void SimplexList::timeSort()
 int SimplexList::getLatestIndex()
 {
   QDateTime startTime = this->value(0).getTime();
-  float timeRefIndex = 0;
+  int timeRefIndex = 0;
   for(int i = 1; i < this->count(); i++) {
     if(this->value(i).getTime() > startTime) {
       timeRefIndex = i;

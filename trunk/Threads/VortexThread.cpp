@@ -20,6 +20,24 @@ VortexThread::VortexThread(QObject *parent)
   : QThread(parent)
 {
 
+	  // Initialize RhoBar for pressure calculations (units are Pascal/m)
+	  rhoBar[0] = 10.672;
+	  rhoBar[1] = 9.703; 
+	  rhoBar[2] = 8.792;
+	  rhoBar[3] = 7.955;
+	  rhoBar[4] = 7.183;
+	  rhoBar[5] = 6.467;  
+	  rhoBar[6] = 5.817; 
+	  rhoBar[7] = 5.227; 
+	  rhoBar[8] = 4.689;
+	  rhoBar[9] = 4.207;
+	  rhoBar[10] = 3.8;
+	  rhoBar[11] = 3.3;
+	  rhoBar[12] = 2.9;
+	  rhoBar[13] = 2.6;
+	  rhoBar[14] = 2.2;
+	  rhoBar[15] = 1.8;
+	  	  
 	  abort = false;
 }
 
@@ -35,12 +53,15 @@ VortexThread::~VortexThread()
 
 }
 
-void VortexThread::getWinds(Configuration *wholeConfig, GriddedData *dataPtr, VortexData* vortexPtr)
+void VortexThread::getWinds(Configuration *wholeConfig, GriddedData *dataPtr, VortexData* vortexPtr, PressureList *pressurePtr)
 {
 
 	// Lock the thread
 	QMutexLocker locker(&mutex);
 
+	// Set the pressure List
+	pressureList = pressurePtr;
+	
 	// Set the grid object
 	gridData = dataPtr;
 
@@ -180,6 +201,15 @@ void VortexThread::run()
 		delete vtdCoeffs;
 		delete vtd;
 		
+		// Integrate the winds to get the pressure deficit at the 2nd level (presumably 2km)
+		pressureDeficit = new float[(int)lastRing+1];
+		getPressureDeficit(firstLevel+1);
+		
+		// Get the central pressure
+		calcCentralPressure();
+		vortexData->setPressure(centralPressure);
+		vortexData->setPressureUncertainty(centralPressureStdDev);
+		
 		if(!foundWinds)
 		{
 			// Some error occurred, notify the user
@@ -216,9 +246,148 @@ void VortexThread::archiveWinds(float& radius, float& height, float& maxCoeffs)
 	// Save the centers to the VortexData object
 	int level = int(height - firstLevel);
 	int ring = int(radius - firstRing);
+	
 	for (int coeff = 0; coeff < (int)(maxCoeffs); coeff++) {
 		vortexData->setCoefficient(level, ring, coeff, vtdCoeffs[coeff]);
 	}
+	
+}
+
+void VortexThread::getPressureDeficit(const float& height)
+{
+
+	float* dpdr = new float[(int)lastRing+1];
+
+	// Assuming radius is in KM here, when we correct for units later change this
+	float deltar = 1000;
+	
+	// Initialize arrays
+	for (float radius = 0; radius <= lastRing; radius++) {
+		dpdr[(int)radius] = -999;
+		pressureDeficit[(int)radius] = 0;
+	}
+	
+	// Get coriolis parameter
+	float f = 2 * 7.29e-5 * sin(vortexData->getLat(int(height-firstLevel)));
+	
+	for (float radius = firstRing; radius <= lastRing; radius++) {
+		if (vortexData->getCoefficient((int)height, (int)radius, 0).getParameter() == "VTC0") {
+			float meanVT = vortexData->getCoefficient((int)height, (int)radius, 0).getValue();
+			if (meanVT != 0) {
+				dpdr[(int)radius] = ((f * meanVT) + (meanVT * meanVT)/(radius * deltar)) * rhoBar[(int)height-1];
+			}
+		}
+	}
+	if (dpdr[(int)lastRing] != -999) {
+		pressureDeficit[(int)lastRing] = -dpdr[(int)lastRing] * deltar * 0.001;
+	}
+	
+	for (float radius = lastRing-1; radius >= 0; radius--) {
+		if (radius >= firstRing) {
+			if ((dpdr[(int)radius] != -999) and (dpdr[(int)radius+1] != -999)) {
+				pressureDeficit[(int)radius] = pressureDeficit[(int)radius+1] - 
+					(dpdr[(int)radius] + dpdr[(int)radius+1]) * deltar * 0.001/2;
+			} else if (dpdr[(int)radius] != -999) {
+				pressureDeficit[(int)radius] = pressureDeficit[(int)radius+1] - 
+					dpdr[(int)radius] * deltar * 0.001;
+			} else if (dpdr[(int)radius+1] != -999) {
+				pressureDeficit[(int)radius] = pressureDeficit[(int)radius+1] - 
+					dpdr[(int)radius+1] * deltar * 0.001;
+			}
+		} else {
+			pressureDeficit[(int)radius] = pressureDeficit[(int)firstRing];
+		}
+	}
+	
+	delete dpdr;
+	
+}
+
+void VortexThread::calcCentralPressure()
+{
+
+	// Set the maximum allowable radius and time difference
+	// Need to make this user configurable
+	float maxObRadius = lastRing + 50;
+	float maxObTimeDiff = 59 * 60;
+
+	// Sum values to hold pressure estimates
+	float pressWeight = 0;
+	float pressSum = 0;
+	int numEstimates = 0;
+	float pressEstimates[100];
+	float weightEstimates[100];
+	
+	// Iterate through the pressure data
+	for (int i = 0; i < pressureList->size(); i++) {
+		float obPressure = pressureList->at(i).getPressure();
+		if (obPressure > 0) {
+			// Check the time
+			QDateTime time = pressureList->at(i).getTime();
+			int obTimeDiff = time.secsTo(vortexData->getTime());
+			if ((obTimeDiff > 0) and (obTimeDiff <= maxObTimeDiff)) {
+				// Check the distance
+				float vortexLat = vortexData->getLat(1);
+				float vortexLon = vortexData->getLon(1);
+				float obLat = pressureList->at(i).getLat();
+				float obLon = pressureList->at(i).getLon();
+				float* relDist = gridData->getCartesianPoint(&vortexLat, &vortexLon,
+															 &obLat, &obLon);
+				float obRadius = sqrt(relDist[0]*relDist[0] + relDist[1]*relDist[1]);
+				delete relDist;
+			
+				if ((obRadius >= vortexData->getRMW(1)) and (obRadius <= maxObRadius)) {
+					// Good ob anchor!
+					float pPrimeOuter;
+					if (obRadius >= lastRing) {
+						pPrimeOuter = pressureDeficit[(int)lastRing];
+					} else {
+						pPrimeOuter = pressureDeficit[(int)obRadius];
+					}
+					float cpEstimate = obPressure - (pPrimeOuter - pressureDeficit[0]);
+					float weight = (((maxObTimeDiff - obTimeDiff) / maxObTimeDiff) +
+									((maxObRadius - obRadius) / maxObRadius)) / 2;
+					
+					// Sum the estimate and save the value for Std Dev calculation
+					pressWeight += weight;
+					pressSum += (weight * cpEstimate);
+					pressEstimates[numEstimates] = cpEstimate;
+					weightEstimates[numEstimates] = weight;
+					numEstimates++;
+					
+					// Log the estimate
+					QString station = pressureList->at(i).getStationName();
+					QString pressLog = "Anchor pressure " + QString::number(obPressure) + " found at " + station
+						+ " " + time.toString(Qt::ISODate) + "," + QString::number(obRadius) + " km"
+						+ "(CP = " + QString::number(cpEstimate) + ")";
+					emit log(Message(pressLog));
+				} else if (obRadius < vortexData->getRMW(1)) {
+					// Close enough to be called a central pressure
+					// Let PollThread handle that one
+				}
+			}
+		}
+	}
+	
+	// Should have a sum of pressure estimates now, if not use 1013
+	float avgPressure = 0;
+	float avgWeight = 0;
+	if (numEstimates > 0) {
+		avgPressure = pressSum/pressWeight;
+		avgWeight = pressWeight/(float)numEstimates;
+	} else {
+		avgPressure = 1013 - (pressureDeficit[(int)lastRing] - pressureDeficit[0]);
+	}
+	
+	// Calculate the standard deviation of the estimates and set the global variables
+	float sumSquares = 0;
+	for (int i = 0; i < numEstimates; i++) {
+		float square = weightEstimates[i] * (pressEstimates[i] - avgPressure) * (pressEstimates[i] - avgPressure);
+		sumSquares += square;
+	}
+	
+	centralPressureStdDev = sumSquares/(avgWeight * (numEstimates-1));
+	centralPressure = avgPressure;
 	
 }
 

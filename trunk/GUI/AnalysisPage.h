@@ -62,7 +62,7 @@ class AnalysisPage : public QWidget
     void tabLabelChanged(const QString& new_Label);
     void log(const Message& message);
     void saveGraphImage(const QString& name);
-  
+    void vortexListChanged(VortexList* list);
   
  private slots:
     void updatePage();
@@ -70,6 +70,7 @@ class AnalysisPage : public QWidget
     void abortThread();
     void autoScroll();
     void prepareToClose();
+	void pollVortexUpdate(VortexList* list);
 
  protected:
   void closeEvent(QCloseEvent *event);

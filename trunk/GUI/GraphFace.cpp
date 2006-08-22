@@ -51,8 +51,10 @@ GraphFace::GraphFace(QString& title, QWidget *parent)
   graph_width = GRAPH_WIDTH;
   z1 = 0.67;
   z2 = 0.95;
-  VortexDataList = new QList<VortexData>;
-  dropList = new QList<VortexData>;
+  
+  // Initialize empty lists since PollThread has not been created yet
+  VortexDataList = new VortexList;
+  dropList = new VortexList;
   setColors();
   QDateTime first();
 
@@ -221,21 +223,24 @@ void GraphFace::saveImage(QString fileName)
 */
 //***********************--newInfo (SLOT) --************************************
 
-void GraphFace::newInfo(QList<VortexData>* gList)
+void GraphFace::newInfo(VortexList* gList)
 { 
-  VortexData *new_point = new VortexData(gList->last()); 
+  VortexData new_point = gList->last(); 
 
-  if (first.isNull())
-    first = QDateTime(new_point->getTime());
-  checkPressure(new_point);
-  checkRmw(new_point);
+  if (first.isNull()) {
+	  first = QDateTime(new_point.getTime());
+  }
+  checkPressure(&new_point);
+  checkRmw(&new_point);
   checkRanges();
   
   // set time range as the number of seconds between the time of the first 
   // point and the time of this point
   
-  if(first.secsTo(new_point->getTime())> timeRange)
-    timeRange = first.secsTo(new_point->getTime());
+  if(first.secsTo(new_point.getTime())> timeRange)
+    timeRange = first.secsTo(new_point.getTime());
+  if (timeRange == 0)
+	  timeRange = 60;
   VortexDataList = gList;
   imageAltered = true;
   emit update(); 
@@ -246,16 +251,16 @@ void GraphFace::newInfo(QList<VortexData>* gList)
 
 
 //************************--newDropSonde (SLOT)--******************************
-void GraphFace::newDropSonde(QList<VortexData>* dropPointer)
+void GraphFace::newDropSonde(VortexList* dropPointer)
   // Checks the Drop Wind Sonde pressure values to make sure they don't 
   // change the range
 {
-  VortexData* new_drop = new VortexData(dropPointer->last()); 
-  checkPressure(new_drop);
+  VortexData new_drop = dropPointer->last(); 
+  checkPressure(&new_drop);
   checkRanges();
   
-  if (first.secsTo(new_drop->getTime())> timeRange)
-    timeRange = first.secsTo(new_drop->getTime());
+  if (first.secsTo(new_drop.getTime())> timeRange)
+    timeRange = first.secsTo(new_drop.getTime());
   
   dropList = dropPointer;  
   //connects member list pointer with global location of list

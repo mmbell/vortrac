@@ -33,7 +33,7 @@ AnalysisThread::AnalysisThread(QObject *parent)
 		  SLOT(catchLog(const Message&)), Qt::DirectConnection);
   connect(vortexThread, SIGNAL(windsFound()), 
 		  this, SLOT(foundWinds()), Qt::DirectConnection);
-  
+
 }
 
 AnalysisThread::~AnalysisThread()
@@ -346,22 +346,13 @@ void AnalysisThread::run()
 		mutex.lock();
 		if (!abort) {
 			// Get the GBVTD winds
-			vortexThread->getWinds(configData, gridData, vortexData);
+			vortexThread->getWinds(configData, gridData, vortexData, pressureList);
 			waitForWinds.wait(&mutex); 
 		}
 		else
 			return;
 		mutex.unlock();  
-		
-		/*
-		// Get current pressure values
-		PressureData *pressuredata = new PressureData;
-		pressuredata->setPressure(datasource->getPressure());
-		
-		// Calculate central pressure
-		vortexdata->setCentralPressure(pressuredata->getPressure());
-		*/
-		
+				 
 		// Should have all relevant variables now
 		// Update timeline and output
 		vortexList->append(*vortexData);		

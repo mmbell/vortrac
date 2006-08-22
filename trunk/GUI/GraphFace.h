@@ -20,6 +20,7 @@
 #include<QMatrix>
 #include<QDir>
 
+#include "DataObjects/VortexList.h"
 #include "DataObjects/VortexData.h"
 #include "KeyPicture.h"
 #include "Message.h"
@@ -43,9 +44,9 @@ public:
  
 public slots:
    void setWorkingDirectory(QDir &newDir);
-   void newInfo(QList<VortexData> *VortexPointer);
+   void newInfo(VortexList *VortexPointer);
    void makeKey();
-   void newDropSonde(QList<VortexData> *dropPointer);
+   void newDropSonde(VortexList *dropPointer);
        // This slot recieves a pointer to the dropSonde list when
        // changes to the list occur
        // this modifies nessecary ranges
@@ -87,8 +88,8 @@ private:
    QDir workingDirectory;
    QFile *imageFile;
 
-   QList<VortexData>* VortexDataList;      
-   QList<VortexData>*  dropList;         
+   VortexList* VortexDataList;      
+   VortexList*  dropList;         
    QDateTime first;                // Time of first data points
    QDialog* key;
    QString graphTitle;

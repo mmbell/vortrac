@@ -34,9 +34,9 @@ class VortexData
   void setLon(const int& index,const float& longitude);
   void setLon(const float a[], const int& howMany);
 
-  float getAltitude(const int& i) const;
-  void setAltitude(const int& index, const float& altitude);
-  void setAltitude(const float a[], const int& howMany);
+  float getHeight(const int& i) const;
+  void setHeight(const int& index, const float& altitude);
+  void setHeight(const float a[], const int& howMany);
 
   QDateTime getTime() const;
   void setTime(const QDateTime& radartime);

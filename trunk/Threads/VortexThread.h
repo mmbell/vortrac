@@ -24,7 +24,7 @@
 #include "DataObjects/VortexList.h"
 #include "DataObjects/VortexData.h"
 #include "ChooseCenter.h"
-
+#include "Pressure/PressureList.h"
 
 class VortexThread : public QThread
 {
@@ -33,7 +33,7 @@ class VortexThread : public QThread
  public:
      VortexThread(QObject *parent = 0);
      ~VortexThread();
-	 void getWinds(Configuration *wholeConfig, GriddedData *dataPtr, VortexData *vortexPtr);
+	 void getWinds(Configuration *wholeConfig, GriddedData *dataPtr, VortexData *vortexPtr, PressureList *pressurePtr);
 
  public slots:
      void catchLog(const Message& message);
@@ -43,6 +43,7 @@ class VortexThread : public QThread
  
  signals:
      void windsFound();
+     void pressureFound();
      void log(const Message& message);
  
  private:
@@ -51,6 +52,7 @@ class VortexThread : public QThread
      bool abort;
 	 GriddedData *gridData;
 	 VortexData *vortexData;
+	 PressureList *pressureList;
 	 Configuration *configData;
 	 QDomElement vtdConfig;
 	 float* refLat;
@@ -64,9 +66,13 @@ class VortexThread : public QThread
 	 float lastRing;
 	 float vtdStdDev;
 	 float convergingCenters;
-	 
+	 float rhoBar[16];
+	 float centralPressure;
+	 float centralPressureStdDev;
+	 float* pressureDeficit;
 	 void archiveWinds(float& radius,float& height,float& maxCoeffs);
-
+	 void getPressureDeficit(const float& height);
+	 void calcCentralPressure();
 
 };
 

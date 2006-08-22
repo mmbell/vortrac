@@ -107,6 +107,8 @@ void PollThread::run()
 		  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
   pressureList = new PressureList(pressureConfig);
   pressureList->open();
+  dropsondeList = new PressureList(pressureConfig);
+  dropsondeList->open();
   
   //Message::toScreen("Num simplex: "+QString().setNum(list->count()));
   /* Fake simplex list data
@@ -189,7 +191,7 @@ void PollThread::run()
   analysisThread->setVortexList(vortexList);
   analysisThread->setSimplexList(simplexList);
   analysisThread->setPressureList(pressureList);
-  
+
 	// Begin polling loop
 	forever {
 
@@ -219,6 +221,8 @@ void PollThread::run()
 					}
 					
 				}
+				// Done with radar volume, send a signal to the Graph to update
+				emit vortexListUpdate(vortexList);
 			  Message::toScreen("Wait for analysis done");
 			}
 			mutex.unlock();  

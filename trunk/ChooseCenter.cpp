@@ -85,7 +85,7 @@ bool ChooseCenter::findCenter()
     if(constructPolynomial()) {
       //emit log(Message("Choose Center failed to Construct Polynomial"));
       Message::toScreen("Choose Center failed to Construct Polynomial");
-      if(!fixCentersNoFit()) {
+      if(!fixCenters()) {
 	Message::toScreen("Choose Center failed to find individual centers w/o fit");
 	return false;
       }
@@ -971,7 +971,7 @@ void ChooseCenter::useLastMean()
 	  float centerLon = radarLon + simplexResults[i].getX(j,k)/fac_lon;
 	  vortexData->setLat(k, centerLat);
 	  vortexData->setLon(k, centerLon);
-	  vortexData->setAltitude(k, simplexResults[i].getHeight(k));
+	  vortexData->setHeight(k, simplexResults[i].getHeight(k));
 	  vortexData->setRMW(k, simplexResults[i].getRadius(j));
 	  vortexData->setRMWUncertainty(k, 1);
 	  vortexData->setCenterStdDev(k, simplexResults[i].getCenterStdDev(j,k));

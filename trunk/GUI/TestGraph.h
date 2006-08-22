@@ -14,17 +14,18 @@
 
 #include <QWidget>
 #include "DataObjects/VortexData.h"
+#include "DataObjects/VortexList.h"
 
 class TestGraph:public QWidget
 {
 Q_OBJECT
 public:
   TestGraph(QWidget *parent = 0);
-  void examplePlotNumbers(QList<VortexData> *VortexPointer,
-			  QList<VortexData> *dropPointer, 
+  void examplePlotNumbers(VortexList *VortexPointer,
+			  VortexList *dropPointer, 
 			  int number_of_VortexData);
-  void listPlotNumbers(QString fileName,QList<VortexData> *VortexPointer,
-		       QList<VortexData> *dropPointer);
+  void listPlotNumbers(QString fileName,VortexList *VortexPointer,
+		       VortexList *dropPointer);
   // These function allows us to plot sample data points;
   // All the data points viewed on the graph are generated within this function
 
@@ -33,8 +34,8 @@ public:
     void listPlot(); 
 
   signals:
-  void listChanged(QList<VortexData> *glist);
-  void dropListChanged(QList<VortexData> *gDropList);
+  void listChanged(VortexList *glist);
+  void dropListChanged(VortexList *gDropList);
 };
 
 #endif

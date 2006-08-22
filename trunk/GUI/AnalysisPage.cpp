@@ -83,11 +83,14 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 
   connect(example, SIGNAL(clicked()), 
 	  tester, SLOT(listPlot()));
-  connect(tester, SIGNAL(listChanged(QList<VortexData>*)), 
-	  graph, SLOT(newInfo(QList<VortexData>*)));
-  connect(tester, SIGNAL(dropListChanged(QList<VortexData>*)), 
-	  graph, SLOT(newDropSonde(QList<VortexData>*)));
+  connect(tester, SIGNAL(listChanged(VortexList*)), 
+	  graph, SLOT(newInfo(VortexList*)));
+  connect(tester, SIGNAL(dropListChanged(VortexList*)), 
+	  graph, SLOT(newDropSonde(VortexList*)));
   connect(legend, SIGNAL(clicked()), graph, SLOT(makeKey()));
+
+  connect(this, SIGNAL(vortexListChanged(VortexList*)), 
+  	  graph, SLOT(newInfo(VortexList*)));
 
   subLayout->addWidget(legend);
   subLayout->addWidget(example);
@@ -169,10 +172,12 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 			    QDateTime::currentDateTime().toUTC().toString()
 			    + " UTC"));
 
+  // Do I need this?
+  pollThread = new PollThread;
+
   //connect(this, SIGNAL(saveGraphImage(const QString&)),
   //   graph, SLOT(saveImage(const QString&)));
 
-  pollThread = new PollThread;
 }
 
 AnalysisPage::~AnalysisPage()
@@ -346,12 +351,12 @@ void AnalysisPage::updatePage()
 void AnalysisPage::runThread()
 {
   // Start a processing thread using the current configuration
-  pollThread = new PollThread;
+  //pollThread = new PollThread;
   connect(pollThread, SIGNAL(log(const Message&)),
 	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
   connect(pollThread, SIGNAL(newVCP(const int)),
 	  diagPanel, SLOT(updateVCP(const int)), Qt::DirectConnection);
-  
+
   if(configData->getParam(configData->getConfig("radar"), "format")
      == QString("MODEL")){
     if(analyticModel()) {
@@ -363,6 +368,13 @@ void AnalysisPage::runThread()
   else {
     pollThread->setConfig(configData);
     pollThread->start();
+	//connect(pollThread, SIGNAL(vortexListChanged(VortexList*)), 
+  	//	  graph, SLOT(newInfo(VortexList*)));
+    connect(pollThread, SIGNAL(vortexListUpdate(VortexList*)), 
+		  this, SLOT(pollVortexUpdate(VortexList*)));
+  //connect(pollThread, SIGNAL(dropListChanged(VortexList*)), 
+//		  graph, SLOT(newDropSonde(VortexList*)));
+  
   }
 }
 
@@ -479,3 +491,12 @@ bool AnalysisPage::analyticModel()
     return false;
 
 }
+
+void AnalysisPage::pollVortexUpdate(VortexList* list)
+{
+	currPressure->display((int)list->last().getPressure());
+	currRMW->display(list->last().getRMW());
+	emit vortexListChanged(list);
+	
+}
+
