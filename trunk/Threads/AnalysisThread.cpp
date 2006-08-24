@@ -323,7 +323,7 @@ void AnalysisThread::run()
 		  }
 		}
 		rmw = rmw/(1.0*goodrmw);
-		rmw*=2;
+		//rmw*=2;
 	    
        // RMW is the average rmw taken over all levels of the vortexData
        // The multiplying by 2 bit is blatant cheating, I don't know 

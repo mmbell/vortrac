@@ -393,7 +393,9 @@ void RadarQC::thresholdData()
     //Message::toScreen("Index of First Ray = "+QString().setNum(index));
     int numBins = radarData->getRay(index)->getVel_numgates();
     //Message::toScreen("Number of vel bins in that ray ="+QString().setNum(numBins));
-    validBinCount[i] = new float[numBins]; 
+    validBinCount[i] = new float[numBins];
+    for (int j=0; j < numBins; j++)
+	validBinCount[i][j]=0; 
   }
 
   int numRays = radarData->getNumRays();

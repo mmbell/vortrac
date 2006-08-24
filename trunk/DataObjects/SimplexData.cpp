@@ -54,7 +54,7 @@ SimplexData::SimplexData(int availLevels, int availRadii, int availCenters)
 	  centerStdDeviation[i][j] = velNull;
 	  meanVT[i][j] = velNull;
 	  meanVTUncertainty[i][j] = velNull;
-	  numConvergingCenters[i][j]= (int)velNull;
+	  numConvergingCenters[i][j]= int(velNull);
 	  radius[j] = velNull;
 	  for(int k = 0; k < numCenters; k++) {
 	    centers[i][j][k] = Center();
