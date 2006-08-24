@@ -43,6 +43,7 @@ SimplexData::SimplexData(int availLevels, int availRadii, int availCenters)
   numLevels = availLevels;
   numRadii = availRadii;
   numCenters = availCenters;
+  float velNull = -999.;
   
   for(int i = 0; i < numLevels; i++)
     {

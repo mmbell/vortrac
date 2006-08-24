@@ -48,6 +48,11 @@ VortexThread::~VortexThread()
   waitForData.wakeOne();
   mutex.unlock();
   
+  delete [] dataGaps;
+  delete [] refLat;
+  delete [] refLon;
+  delete [] pressureDeficit;
+  
   // Wait for the thread to finish running if it is still processing
   wait();
 
@@ -198,7 +203,7 @@ void VortexThread::run()
 		mutex.lock();
 		
 		// Clean up
-		delete vtdCoeffs;
+		delete [] vtdCoeffs;
 		delete vtd;
 		
 		// Integrate the winds to get the pressure deficit at the 2nd level (presumably 2km)
@@ -299,7 +304,7 @@ void VortexThread::getPressureDeficit(const float& height)
 		}
 	}
 	
-	delete dpdr;
+	delete [] dpdr;
 	
 }
 
@@ -334,7 +339,7 @@ void VortexThread::calcCentralPressure()
 				float* relDist = gridData->getCartesianPoint(&vortexLat, &vortexLon,
 															 &obLat, &obLon);
 				float obRadius = sqrt(relDist[0]*relDist[0] + relDist[1]*relDist[1]);
-				delete relDist;
+				delete [] relDist;
 			
 				if ((obRadius >= vortexData->getRMW(1)) and (obRadius <= maxObRadius)) {
 					// Good ob anchor!

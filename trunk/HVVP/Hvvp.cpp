@@ -46,24 +46,24 @@ Hvvp::Hvvp()
     vm_sin[i] = velNull;
   }
 
-  printOutput = true;
+  printOutput = false;
 
 }
 
 Hvvp::~Hvvp()
 {
-  delete z;
-  delete u;
-  delete v;
-  delete var;
-  delete vm_sin;
-  delete volume;
+  delete [] z;
+  delete [] u;
+  delete [] v;
+  delete [] var;
+  delete [] vm_sin;
+  delete [] volume;
   for(int i = 0; i < xlsDimension; i++) {
-    delete xls[i];
+    delete [] xls[i];
   }
-  delete yls;
-  delete xls;
-  delete wgt;
+  delete [] yls;
+  delete [] xls;
+  delete [] wgt;
 }
 
 void Hvvp::setRadarData(RadarData *newVolume, float range, float angle,
@@ -226,16 +226,16 @@ bool Hvvp::lls(int numCoeff, int numData, int effective_nData, float** x,
   //Matrix::printMatrix(stError, numCoeff);
 
   for(int i = 0; i < numCoeff; i++) {
-    delete A[i];
-    delete AA[i];
-    delete BB[i];
-    delete Ainv[i];
+    delete [] A[i];
+    delete [] AA[i];
+    delete [] BB[i];
+    delete [] Ainv[i];
   }
-  delete A;
-  delete B;
-  delete AA;
-  delete BB;
-  delete Ainv;
+  delete [] A;
+  delete [] B;
+  delete [] AA;
+  delete [] BB;
+  delete [] Ainv;
 
   //Message::toScreen("Printing coEff Again!!");
   //Matrix::printMatrix(coEff,numCoeff);
@@ -336,7 +336,7 @@ bool Hvvp::gaussJordan(float **a, float **b, int n, int m)
 
 int Hvvp::hvvpPrep(int m) {
 
-  // Message::toScreen("HVVP Prep");
+  //Message::toScreen("HVVP Prep");
 
   //**float hgtStart = .500;                // km
   float hgtStart = .600;                // km 
@@ -361,17 +361,26 @@ int Hvvp::hvvpPrep(int m) {
   rot = cca*deg2rad;               // ** 
   // float rot = (cca-4.22)*deg2rad; **
   // ** Special case scenerio for KBRO Data of Bret (1999)
+  
+  //float** old_xls = xls;
+  //float* old_yls = yls;
+  //float* old_wgt = wgt;
 
   xls = new float*[xlsDimension];
   wgt = new float[maxpoints];
   yls = new float[maxpoints];
   for(int k = 0; k < xlsDimension; k++) {
     xls[k] = new float[maxpoints];
+    //delete [] old_xls[k];
     for(int l = 0; l < maxpoints; l++) {
       xls[k][l] = 0;
       yls[l] = 0;
     }
   }
+  
+  //delete [] old_xls;
+  //delete [] old_yls;
+  //delete [] old_wgt;
   
   int count = 0;
   float h0 = hgtStart+hInc*m;
@@ -458,7 +467,7 @@ bool Hvvp::findHVVPWinds()
   float mod_Rankine_xt[levels];
 
   for(int m = 0; m < levels; m++) {
-
+    mod_Rankine_xt[m] = velNull;
     float hgtStart = .600;    
     float h0 = hgtStart+.1*m;
     
@@ -669,41 +678,41 @@ bool Hvvp::findHVVPWinds()
 	
 	// Set realistic limit on magnitude of results.
 	if((xt < 0)||(fabs(ue)>30.0)||(fabs(ve)>30)) {
-	  Message::toScreen("First Crappy Fail Option");
+	  //Message::toScreen("First Crappy Fail Option");
 	  //z[m] = h0;               
 	  u[m] = velNull;
 	  v[m] = velNull;
 	  vm_sin[m] = velNull;
 	}
 	else {
-	  Message::toScreen("Only Good Option");
+	  //Message::toScreen("Only Good Option");
 	  //z[m] = hgtStart+hInc*float(m);
 	  u[m] = ue;
 	  v[m] = ve;
 	  vm_sin[m] = vm_s;
 	}
-	delete [] stand_err;
-	delete [] cc;
       }
       else {
-	Message::toScreen("Second Crappy Fail Option");
+	//Message::toScreen("Second Crappy Fail Option");
 	//z[m] = h0;
 	u[m] = velNull;
 	v[m] = velNull;
 	vm_sin[m] = velNull;
       }
+      delete [] stand_err;
+      delete [] cc;
     }
     else {
-      Message::toScreen("Third Crappy Fail Option");
+      //Message::toScreen("Third Crappy Fail Option");
       //z[m] = h0;
       u[m] = velNull;
       v[m] = velNull;
       vm_sin[m] = velNull;
     }
     //Message::toScreen("HVVP Output From Level "+QString().setNum(m)+" z = "+QString().setNum(z[m])+" vm_sin = "+QString().setNum(vm_sin[m]));
-    
+     
   }
-
+  
   /*
    *  Reject results whose Xt is greater than one SD from average Xt
    */
@@ -729,7 +738,7 @@ bool Hvvp::findHVVPWinds()
     xtsd = sqrt(xtsd);
     for(int i = 0; i < levels; i++) {
       //if(mod_Rankine_xt[i] > xtsd) { // ----- Pauls code I don't agree -LM
-      if(fabs(mod_Rankine_xt[i]-xtav) > xtsd) {
+      if((fabs(mod_Rankine_xt[i]-xtav) > xtsd)||(mod_Rankine_xt[i]==velNull)) {
 	u[i] = velNull;
       }
     }

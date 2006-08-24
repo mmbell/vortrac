@@ -35,6 +35,9 @@ SimplexList::SimplexList(Configuration* newConfig)
 
 SimplexList::~SimplexList()
 {
+  delete config;
+  delete simplexDataConfigs;
+  delete configFileNames;
 }
 
 

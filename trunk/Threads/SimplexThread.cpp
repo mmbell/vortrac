@@ -442,8 +442,8 @@ void SimplexThread::archiveCenters(float& radius, float& height, float& numPoint
 	simplexData->setVTUncertainty(level, ring, stdDevVT);
 	simplexData->setNumConvergingCenters(level, ring, (int)convergingCenters);
 	for (int point = 0; point < (int)numPoints; point++) {
-		Center* indCenter = new Center(Xind[point], Yind[point], VTind[point], level, ring);
-		simplexData->setCenter(level, ring, point, *indCenter);
+	  Center indCenter(Xind[point], Yind[point], VTind[point], level, ring);
+	  simplexData->setCenter(level, ring, point, indCenter);
 	}
 	
 }

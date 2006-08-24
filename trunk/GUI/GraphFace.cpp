@@ -84,6 +84,8 @@ GraphFace::~GraphFace()
 {
   imageFile->remove();
 
+  delete image;
+  delete imageFile;
   delete VortexDataList;
   delete dropList;
   
@@ -1207,7 +1209,10 @@ void GraphFace::updateImage()
     }
   if (painter->isActive())
     painter->end();
+  QImage* holder = image;
   image = imageTemp;
+  delete painter;
+  delete holder;
   // Memory leak here?
   //delete imageTemp;
   //autoSave();

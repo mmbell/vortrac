@@ -42,6 +42,8 @@ public:
   float getNyquist_vel();
   int getFirst_ref_gate();
   int getFirst_vel_gate();
+  int getVel_numgates();
+  int getRef_numgates();
   
   /* These used to take int, I changed them to float, is there any reason
      they should be ints, I get the impression we are getting a value in feet
@@ -49,9 +51,7 @@ public:
   */
   float getRef_gatesp();
   float getVel_gatesp();
-  
-  int getRef_numgates();
-  int getVel_numgates();
+ 
   int getVcp();
   int getFirstRay();
   int getLastRay();

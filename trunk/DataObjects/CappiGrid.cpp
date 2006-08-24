@@ -53,7 +53,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 
 
   // Get the relative center and expand the grid around it
-  relDist = new float[2];
+  // relDist = new float[2];
 
   relDist = getCartesianPoint(radarData->getRadarLat(), 
 			     radarData->getRadarLon(),

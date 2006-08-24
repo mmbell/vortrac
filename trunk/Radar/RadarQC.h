@@ -44,8 +44,6 @@ class RadarQC : public QObject
   
   RadarData *radarData;
   // Volume of Radar Data to be dealiased
-  Matrix *llsSolver;
-  // Matrix solver
 
   float specWidthLimit, velMin, velMax, refMin, refMax;
   /*

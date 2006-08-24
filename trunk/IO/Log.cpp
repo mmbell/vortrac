@@ -42,7 +42,7 @@ Log::Log(QWidget *parent)
 
 Log::~Log()
 {
-
+  delete logFile;
 }
 
 void Log::setWorkingDirectory(QDir& newDir)
@@ -68,9 +68,11 @@ void Log::setWorkingDirectory(QDir& newDir)
     {
       i++;
       newName = newFileName+QString().setNum(i);
-      newLogFile = new QFile(workingDirectory.filePath(newName+".log"));
+      delete newLogFile;
+      QFile* newLogFile = new QFile(workingDirectory.filePath(newName+".log"));
     }
   newFileName = newName+".log";
+  delete newLogFile;
 
   if(!logFile->copy(newDir.filePath(newFileName))) {
     //Message::toScreen("Log::setWorkingDirectory: could not copy "+logFile->fileName()+" to "+newDir.filePath(logFileName));
@@ -81,6 +83,8 @@ void Log::setWorkingDirectory(QDir& newDir)
   workingDirectory = newDir;
   //Message::toScreen("log:afterChange: "+workingDirectory.path());
   logFileName = newFileName;
+  QFile* oldLogFile = logFile;
+  delete oldLogFile;
   logFile = new QFile(workingDirectory.filePath(logFileName));
   //Message::toScreen(" after working dir changed file = "+logFile->fileName());
   
@@ -182,17 +186,21 @@ void Log::catchLog(const Message& logEntry)
     absoluteProgress = 0;
     emit newProgressEntry(absoluteProgress);
   }
+  delete log;
 }
 
 
 bool Log::writeToFile(const QString& message)
 {
-
+  if(logFile->isOpen())
+    Message::toScreen("When logging message: "+message+" logFile was already open");
   if(logFile->open(QIODevice::Append)) 
     {
       logFile->write(message.toAscii());
       logFile->close();
       //Message::toScreen("Sucessfully saved to file named "+logFile->fileName());
+      if(logFile->isOpen())
+	Message::toScreen("When logging message: "+message+" logFile did not close but did not fail");
       return true;
     }
 

@@ -45,7 +45,10 @@ StopLight::StopLight(QSize hint, QWidget *parent)
 
 StopLight::~StopLight()
 {
-
+  delete brightRed;
+  delete brightGreen;
+  delete brightYellow;
+  delete timer;
 }
 
 QSize StopLight::sizeHint() const
@@ -90,6 +93,7 @@ void StopLight::paintEvent(QPaintEvent *event)
 
   if (painter->isActive())
     painter->end();
+  delete painter;
 }
 
 void StopLight::catchLog(const Message& message)

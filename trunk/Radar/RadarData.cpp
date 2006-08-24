@@ -24,6 +24,8 @@ RadarData::RadarData(QString radarname, float lat, float lon, QString filename)
 
 RadarData::~RadarData()
 {
+  delete [] Sweeps;
+  delete [] Rays;
 }
 
 bool RadarData::readVolume()

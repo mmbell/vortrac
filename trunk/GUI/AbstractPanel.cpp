@@ -52,7 +52,6 @@ AbstractPanel::~AbstractPanel()
   delete radarLatBox;
   delete radarLongBox;
   delete radarAltBox;
-  
 }
 
 void AbstractPanel::updatePanel(QDomElement panelElement)

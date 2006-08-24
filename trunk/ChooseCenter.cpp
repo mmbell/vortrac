@@ -16,6 +16,7 @@
 ChooseCenter::ChooseCenter(Configuration* newConfig, 
 			   const SimplexList &newList, VortexData* vortexPtr)
 {
+  velNull = -999.;
   config = newConfig;
   simplexResults = newList;
   vortexData = vortexPtr;
@@ -286,6 +287,8 @@ bool ChooseCenter::chooseMeanCenters()
       float *peakWinds = new float[simplexResults[i].getNumRadii()];
       float *peaks = new float[simplexResults[i].getNumRadii()];
       float meanPeak,meanStd;
+      peaks[0] = 0;
+      peaks[simplexResults[i].getNumRadii()-1] = 0;
       for(int a = 1; a < simplexResults[i].getNumRadii()-1; a++) {
 	if((winds[a] >= winds[a-1])&&(winds[a] >=winds[a+1])) {
 	  peakWinds[count] = winds[a];
@@ -316,8 +319,8 @@ bool ChooseCenter::chooseMeanCenters()
       // returned meanpeak, meanstd, peaks[array]
       
       for(int jj = 0; jj < simplexResults[i].getNumRadii(); jj++) {
-	if(((jj>0)&&(jj<simplexResults[i].getNumRadii()-1))
-	   &&((peaks[jj]==1)||(peaks[jj+1]==1)||(peaks[jj-1]))) {
+	if(((jj > 0)&&(jj < simplexResults[i].getNumRadii()-1))
+	   &&((peaks[jj] == 1)||(peaks[jj+1] == 1)||(peaks[jj-1] == 1))) {
 	  winds[jj] = simplexResults[i].getMaxVT(k,jj);
 	  // Keep an eye out for the maxima 
 	  if(winds[jj] > bestWind) {
