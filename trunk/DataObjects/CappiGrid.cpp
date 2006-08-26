@@ -20,7 +20,10 @@ CappiGrid::CappiGrid() : GriddedData()
   coordSystem = cartesian;
   iDim = jDim = kDim = 0;
   iGridsp = jGridsp = kGridsp = 0.0;
-
+  
+  // To make the cappi bigger but still compute it in a reasonable amount of time,
+  // skip the reflectivity grid, otherwise set this to true
+  gridReflectivity = false;
 }
 
 CappiGrid::~CappiGrid()
@@ -84,6 +87,26 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   ymin = nearbyintf(relDist[1] - (jDim/2)*jGridsp);
   ymax = nearbyintf(relDist[1] + (jDim/2)*jGridsp);
 
+  // Adjust the cappi so that it doesn't waste space on areas without velocity data
+  if (xmin < -180) {
+	  float adjust = -xmin - 180;
+	  xmin += adjust;
+	  xmax += adjust;
+  } else if (xmax > 180) {
+	  float adjust = -xmax + 180;
+	  xmin += adjust;
+	  xmax += adjust;
+  }
+  if (ymin < -180) {
+	  float adjust = -ymin - 180;
+	  ymin += adjust;
+	  ymax += adjust;
+  } else if (ymax > 180) {
+	  float adjust = -ymax + 180;
+	  ymin += adjust;
+	  ymax += adjust;
+  }
+  
   latReference = *radarData->getRadarLat();
   lonReference = *radarData->getRadarLon();
   
@@ -107,7 +130,8 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
     float theta = deg2rad * fmodf((450. - currentRay->getAzimuth()),360.);
     float phi = deg2rad * (90. - (currentRay->getElevation()));
     
-    if (currentRay->getRef_numgates() > 0) {
+    if ((currentRay->getRef_numgates() > 0) and 
+		(gridReflectivity)) {
 
       float* refData = currentRay->getRefData();
       for (int g = 0; g <= (currentRay->getRef_numgates()-1); g++) {

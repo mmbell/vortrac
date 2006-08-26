@@ -20,6 +20,7 @@
 
 #include "Message.h"
 #include "StopLight.h"
+#include "CappiDisplay.h"
 
 class DiagnosticPanel : public QWidget
 {
@@ -35,12 +36,15 @@ Q_OBJECT
       void pickColor();
       void testLight();
       void updateVCP(const int newVCP);
- 
+	  void launchCappi();
+	  
  private:
       QTimer *timer;
       QLCDNumber *clock;
       QLineEdit *vcp, *warning;
       StopLight *lights;
+	  QPushButton *cappiLaunch;
+	  CappiDisplay *cappiDisplay;
       int dummy;
 
  private slots:

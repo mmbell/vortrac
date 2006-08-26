@@ -33,7 +33,8 @@ HEADERS += Threads/AnalysisThread.h \
            GUI/panels.h \
            GUI/DiagnosticPanel.h \
            GUI/RadarListDialog.h \
-           GUI/StopLight.h \   
+           GUI/StopLight.h \ 
+           GUI/CappiDisplay.h \
            HVVP/Hvvp.h \
            IO/Message.h \
            IO/Log.h \
@@ -81,6 +82,7 @@ SOURCES += main.cpp \
            GUI/DiagnosticPanel.cpp \
            GUI/RadarListDialog.cpp \
            GUI/StopLight.cpp \
+           GUI/CappiDisplay.cpp \
            HVVP/Hvvp.cpp \
            IO/Message.cpp \
            IO/Log.cpp \

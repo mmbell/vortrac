@@ -92,12 +92,19 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   warning = new QLineEdit;
   warning->setReadOnly(true);
 
+  // Button and widget to display current Cappi
+  cappiLaunch = new QPushButton("View Current CAPPI", this);
+  connect(cappiLaunch, SIGNAL(pressed()), this, SLOT(launchCappi()));
+  cappiDisplay = new CappiDisplay();
+  
   QVBoxLayout *main = new QVBoxLayout();
   // main->addStretch();
   main->addWidget(clockBox);
 
   main->addWidget(vcpLabel);
   main->addWidget(vcp);
+  
+  main->addWidget(cappiLaunch);
   
   main->addStretch();
 
@@ -117,7 +124,7 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
 
 DiagnosticPanel::~DiagnosticPanel()
 {
-
+	delete cappiDisplay;
 }
 
 void DiagnosticPanel::updateClock()
@@ -154,4 +161,11 @@ void DiagnosticPanel::testLight()
     dummy++;
   else 
     dummy = 0;
+}
+
+void DiagnosticPanel::launchCappi()
+{
+	// Open the floating widget to look at the Cappi
+	cappiDisplay->show();
+	
 }
