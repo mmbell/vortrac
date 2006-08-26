@@ -61,18 +61,16 @@ void Log::setWorkingDirectory(QDir& newDir)
     newDir.makeAbsolute();
 
   QString newFileName("autoLog");
-  QFile* newLogFile = new QFile(newDir.filePath(newFileName+".log"));
+  QFile newLogFile(newDir.filePath(newFileName+".log"));
   int i = 1;
   QString newName(newFileName);
-  while(newLogFile->exists())
+  while(newLogFile.exists())
     {
       i++;
       newName = newFileName+QString().setNum(i);
-      delete newLogFile;
-      QFile* newLogFile = new QFile(workingDirectory.filePath(newName+".log"));
+      newLogFile.setFileName(workingDirectory.filePath(newName+".log"));
     }
   newFileName = newName+".log";
-  delete newLogFile;
 
   if(!logFile->copy(newDir.filePath(newFileName))) {
     //Message::toScreen("Log::setWorkingDirectory: could not copy "+logFile->fileName()+" to "+newDir.filePath(logFileName));

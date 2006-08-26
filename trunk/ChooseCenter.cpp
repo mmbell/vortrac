@@ -108,7 +108,7 @@ void ChooseCenter::initialize()
   // Pulls all the necessary user parameters from the configuration panel
   //  and initializes the array used for fTesting
   
-  minVolumes = 3;
+  minVolumes = 1;
 
   QDomElement ccElement = config->getConfig("choosecenter");
   windWeight = config->getParam(ccElement, QString("wind_weight")).toFloat();
@@ -472,10 +472,44 @@ bool ChooseCenter::constructPolynomial()
   // Construct a least squares polynomial to fit track
   // Export variance for analysis
   
-  float bestFitVariance[4][simplexResults[0].getNumLevels()];
-  float bestFitDegree[4][simplexResults[0].getNumLevels()];
-  // Things are stored here so far but never used
+  bestFitVariance = new float*[4];
+  bestFitDegree = new int*[4];
+  for(int criteria = 0; criteria < 4; criteria++) {
+	  bestFitVariance[criteria] = new float[simplexResults[0].getNumLevels()];
+	  bestFitDegree[criteria] = new int[simplexResults[0].getNumLevels()];
+  }
 
+  // Things are stored here so far but never used
+  float* squareVariance = new float[maxPoly];
+  // This goes from 0 to less than maxPoly, because this is the number
+  // of fits that we will examine the variance of.
+  
+  // What should the highest order basis polynomial;
+  if(simplexResults.count() > 20)
+	  maxPoly = 20;
+	else 
+		maxPoly = simplexResults.count()-1;
+	
+	if(maxPoly < 3){
+		return false;
+		// Expand this to get variables in the right places
+		// So the next member function can gracefully handle things
+	}
+	
+  float *lastFitCoeff;
+  lastFitCoeff = new float[maxPoly+1];
+  float *currentCoeff; 
+  currentCoeff = new float[maxPoly+1];
+  
+  bestFitCoeff = new float**[4];
+  for(int criteria = 0; criteria < 4; criteria++) {
+	  bestFitCoeff[criteria] = new float*[simplexResults[0].getNumLevels()];
+	  for (int k = 0; k < simplexResults[0].getNumLevels(); k++) {
+		  bestFitCoeff[criteria][k] = new float[maxPoly+1];
+	  }
+  }
+  // Things are stored here so far but it is never used
+  
   for(int k = 0; k < simplexResults[0].getNumLevels(); k++) {
     // had to pick a simplex data to get num levels from, this use requires 
     // that they all be the same, we can do some checking of this prior
@@ -487,29 +521,7 @@ bool ChooseCenter::constructPolynomial()
       // Iterates through the procedure for the four different
       // curve fitting criteria
       
-      // What should the highest order basis polynomial;
-      if(simplexResults.count() > 20)
-	maxPoly = 20;
-      else 
-	maxPoly = simplexResults.count()-1;
-
-      if(maxPoly < 3){
-	return false;
-	// Expand this to get variables in the right places
-	// So the next member function can gracefully handle things
-      }
-
-      float squareVariance[maxPoly];
-      // This goes from 0 to less than maxPoly, because this is the number
-      // of fits that we will examine the variance of.
-
-      float bestFitCoeff[4][simplexResults[0].getNumLevels()][maxPoly+1];
-      // Things are stored here so far but it is never used
-      
-      float *lastFitCoeff;
-      lastFitCoeff = new float[maxPoly+1];
-      float *currentCoeff; 
-      currentCoeff = new float[maxPoly+1];
+ 
       
       for(int n = 1; n <=maxPoly; n++) {
 	for(int m = 1; m < n; m++) {
@@ -647,6 +659,13 @@ bool ChooseCenter::constructPolynomial()
 bool ChooseCenter::fixCenters()
 {
   float **newVariance = new float*[4];
+  newBestRadius = new int*[simplexResults.count()];
+  newBestCenter = new int*[simplexResults.count()];
+  for(int i = 0; i < simplexResults.count(); i++) {
+	  newBestRadius[i] = new int[simplexResults[0].getNumLevels()];
+	  newBestCenter[i] = new int[simplexResults[0].getNumLevels()];
+  }
+  
   for(int m = 0; m < 4; m++) 
     newVariance[m] = new float[simplexResults[0].getNumLevels()];
 

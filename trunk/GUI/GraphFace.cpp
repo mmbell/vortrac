@@ -1209,12 +1209,12 @@ void GraphFace::updateImage()
     }
   if (painter->isActive())
     painter->end();
-  QImage* holder = image;
+  //QImage* holder = image;
   image = imageTemp;
   delete painter;
-  delete holder;
+  //delete holder;
   // Memory leak here?
-  //delete imageTemp;
+  delete imageTemp;
   //autoSave();
 }
 
