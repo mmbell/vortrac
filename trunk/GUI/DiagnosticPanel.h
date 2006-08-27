@@ -21,6 +21,7 @@
 #include "Message.h"
 #include "StopLight.h"
 #include "CappiDisplay.h"
+#include "DataObjects/GriddedData.h"
 
 class DiagnosticPanel : public QWidget
 {
@@ -36,6 +37,7 @@ Q_OBJECT
       void pickColor();
       void testLight();
       void updateVCP(const int newVCP);
+	  void updateCappi(const GriddedData* newCappi);
 	  void launchCappi();
 	  
  private:
@@ -45,6 +47,8 @@ Q_OBJECT
       StopLight *lights;
 	  QPushButton *cappiLaunch;
 	  CappiDisplay *cappiDisplay;
+	  const GriddedData *cappi;
+	  QString vcpString;
       int dummy;
 
  private slots:

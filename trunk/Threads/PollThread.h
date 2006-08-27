@@ -20,6 +20,7 @@
 #include "Config/Configuration.h"
 #include "DataObjects/VortexList.h"
 #include "DataObjects/SimplexList.h"
+#include "DataObjects/GriddedData.h"
 #include "Pressure/PressureFactory.h"
 #include "Pressure/PressureList.h"
 
@@ -38,6 +39,7 @@ class PollThread : public QThread
         void catchLog(const Message& message);
         void analysisDoneProcessing();
 	void catchVCP(const int vcp);
+	void catchCappi(const GriddedData* cappi);
 	void abortThread();
 	void setOnlyRunOnce(const bool newRunOnce = true);
 
@@ -46,6 +48,7 @@ class PollThread : public QThread
 	void newVCP(const int);
 	void vortexListUpdate(VortexList* list);
 	void dropListChanged(VortexList* list);
+	void newCappi(const GriddedData* cappi);
 	
   protected:
 	void run();

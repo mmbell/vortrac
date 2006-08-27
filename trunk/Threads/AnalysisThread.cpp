@@ -189,14 +189,15 @@ void AnalysisThread::run()
 		VortexData *vortexData = new VortexData(); 
 		vortexData->setTime(radarVolume->getDateTime());
 		
-		// Pass VCP value to display
-		emit newVCP(radarVolume->getVCP());
 		mutex.unlock();
 		if(abort)
 		  return;
 		mutex.lock();
-		// Dealias 
 		
+		// Pass VCP value to display
+		emit newVCP(radarVolume->getVCP());
+
+		// Dealias 		
 		if(!radarVolume->isDealiased()){
 		  
 		  RadarQC dealiaser(radarVolume);
@@ -249,6 +250,8 @@ void AnalysisThread::run()
 		  //Message::toScreen("AnalysisThread: outside makeCappi");
 
 		}
+		// Pass Cappi to display
+		emit newCappi(gridData);
 		
 		mutex.unlock();
 		if(abort)

@@ -25,9 +25,9 @@ class GriddedData
 
   virtual void writeAsi() = 0;
   
-  float getIdim() { return iDim; }
-  float getJdim() { return jDim; }
-  float getKdim() { return kDim; }
+  float getIdim() const { return iDim; }
+  float getJdim() const { return jDim; }
+  float getKdim() const { return kDim; }
   void setIdim(const int& dim);
   void setJdim(const int& dim);
   void setKdim(const int& dim);
@@ -71,11 +71,17 @@ class GriddedData
   /* these are all done in Math Coordinates, should we changes the names,
      so the sound less like meteorological coords?  -LM */
 
-  int getFieldIndex(QString& fieldName);
+  int getFieldIndex(QString& fieldName) const;
 
+  float getIndexValue(QString& fieldName, float& i, float& j, float& k) const;
 
   /* Needed a reference point before we could redo coordinate systems. -LM */
-
+  // Cartesian Coordinates
+  float* getCartesianXslice(float& y, float& z);
+  float* getCartesianYslice(float& x, float& z);
+  float* getCartesianZslice(float& x, float& y);
+  float getCartesianValue(float& x, float& y, float& z);
+  
   // Spherical Coordinates
 
   int getSphericalRangeLength(float azimuth, float elevation);

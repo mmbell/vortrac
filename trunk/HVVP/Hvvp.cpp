@@ -46,8 +46,8 @@ Hvvp::Hvvp()
     vm_sin[i] = velNull;
   }
 
-  printOutput = false;
-
+  printOutput = true;
+  
 }
 
 Hvvp::~Hvvp()
@@ -347,7 +347,7 @@ int Hvvp::hvvpPrep(int m) {
   float cuspec = 0.6;                   // Unitless
   float curmw = (rt - rmw)/rt;          // Unitless
   float cuthr;                          // Unitless
-  float ae = 4*6371/3.0;                // km
+  float ae = 4.0*6371.0/3.0;                // km
   int maxpoints = 200000;               // **
   Sweep* currentSweep;
   Ray* currentRay;
@@ -716,7 +716,9 @@ bool Hvvp::findHVVPWinds()
   /*
    *  Reject results whose Xt is greater than one SD from average Xt
    */
-  
+
+  /*  Comment this section out until further testing is complete
+
   float xtav=0;
   float xtsd=0;
   count=0;
@@ -735,15 +737,18 @@ bool Hvvp::findHVVPWinds()
 	xtsd+=((mod_Rankine_xt[i]-xtav)*(mod_Rankine_xt[i]-xtav));
       }
     }
-    xtsd = sqrt(xtsd);
+    // (count-1) added by PH - previously incorrect
+    xtsd = sqrt(xtsd/(count-1);
     for(int i = 0; i < levels; i++) {
       //if(mod_Rankine_xt[i] > xtsd) { // ----- Pauls code I don't agree -LM
+      // I agree LM, this is what I intended to write, but you forgot the additional correction noted above - PH
       if((fabs(mod_Rankine_xt[i]-xtav) > xtsd)||(mod_Rankine_xt[i]==velNull)) {
 	u[i] = velNull;
       }
     }
   }
-  
+   */  
+
   /*
    *   Calculate the layer, variance-weighted average of vm_sin. 
    */

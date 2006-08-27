@@ -51,7 +51,8 @@ class AnalysisThread : public QThread
      void doneProcessing();
      void log(const Message& message);
      void newVCP(const int);
- 
+	 void newCappi(const GriddedData*);
+	 
  private:
      QMutex mutex;
      QWaitCondition waitForData;

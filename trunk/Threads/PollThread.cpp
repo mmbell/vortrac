@@ -188,6 +188,8 @@ void PollThread::run()
 	  analysisThread, SLOT(terminate()));
   connect(analysisThread, SIGNAL(newVCP(const int)),
 	  this, SLOT(catchVCP(const int)), Qt::DirectConnection);
+  connect(analysisThread, SIGNAL(newCappi(const GriddedData*)),
+		  this, SLOT(catchCappi(const GriddedData*)), Qt::DirectConnection);
   analysisThread->setVortexList(vortexList);
   analysisThread->setSimplexList(simplexList);
   analysisThread->setPressureList(pressureList);
@@ -258,6 +260,11 @@ void PollThread::catchLog(const Message& message)
 void PollThread::catchVCP(const int vcp)
 {
   emit newVCP(vcp);
+}
+
+void PollThread::catchCappi(const GriddedData* cappi)
+{
+	emit newCappi(cappi);
 }
 
 void PollThread::setOnlyRunOnce(const bool newRunOnce) {

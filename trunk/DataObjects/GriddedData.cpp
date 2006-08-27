@@ -224,7 +224,7 @@ float GriddedData::getIndexFromCartesianPointK (float& cartK)
 	return (cartK/kGridsp) - zmin;
 }
 
-int GriddedData::getFieldIndex(QString& fieldName)
+int GriddedData::getFieldIndex(QString& fieldName) const
 {
   int field;
   if((fieldName == "dz")||(fieldName == "DZ"))
@@ -235,6 +235,30 @@ int GriddedData::getFieldIndex(QString& fieldName)
     field = 2;
   
   return field;
+}
+
+float GriddedData::getIndexValue(QString& fieldName, float& ii, float& jj, float& kk) const
+{
+	if((ii > iDim)||(ii < 0)||(jj > jDim)||(jj < 0)||(kk > kDim)||(kk < 0))
+		return -999.;
+	int field = getFieldIndex(fieldName);
+	return dataGrid[field][(int)ii][(int)jj][(int)kk];
+	
+}
+float* GriddedData::getCartesianXslice(float& y, float& z)
+{
+}
+
+float* GriddedData::getCartesianYslice(float& x, float& z)
+{
+}
+
+float* GriddedData::getCartesianZslice(float& x, float& y)
+{
+}
+
+float GriddedData::getCartesianValue(float& x, float& y, float& z)
+{
 }
 
 int GriddedData::getSphericalRangeLength(float azimuth, float elevation)
@@ -314,6 +338,7 @@ float* GriddedData::getSphericalRangePosition(float azimuth, float elevation)
   }
   return positions;
 }
+
 
 int GriddedData::getSphericalAzimuthLength(float range, float elevation)
 {

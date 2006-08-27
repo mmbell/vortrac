@@ -16,6 +16,7 @@
 #include <QImage>
 #include <QPoint>
 #include <QWidget>
+#include "DataObjects/GriddedData.h"
 
 class CappiDisplay : public QWidget
 {
@@ -26,10 +27,11 @@ public:
 
     bool openImage(const QString &fileName);
     bool saveImage(const QString &fileName, const char *fileFormat);
-
+						
 public slots:
     void clearImage();
-
+	void constructImage(const GriddedData* cappi);
+	
 protected:
     void mousePressEvent(QMouseEvent *event);
     void paintEvent(QPaintEvent *event);
@@ -37,7 +39,7 @@ protected:
 
 private:
     void resizeImage(QImage *image, const QSize &newSize);
-
+	QString cappiLabel;
     QImage image;
     QPoint lastPoint;
     int PaintEngineMode;

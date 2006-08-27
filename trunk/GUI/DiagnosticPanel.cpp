@@ -82,7 +82,8 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   // Displays current radar vcp
 
   QLabel *vcpLabel = new QLabel(tr("Current Radar VCP"));
-  vcp = new QLineEdit(QString("No VCP available")); 
+  vcpString = "No VCP available";
+  vcp = new QLineEdit(vcpString); 
   //vcp = new QLineEdit(QString("121"));
   vcp->setReadOnly(true);
 
@@ -94,6 +95,7 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
 
   // Button and widget to display current Cappi
   cappiLaunch = new QPushButton("View Current CAPPI", this);
+  cappiLaunch->setEnabled(false);
   connect(cappiLaunch, SIGNAL(pressed()), this, SLOT(launchCappi()));
   cappiDisplay = new CappiDisplay();
   
@@ -124,7 +126,7 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
 
 DiagnosticPanel::~DiagnosticPanel()
 {
-	delete cappiDisplay;
+
 }
 
 void DiagnosticPanel::updateClock()
@@ -132,7 +134,7 @@ void DiagnosticPanel::updateClock()
   // Updates display clock
   QString displayTime;
   displayTime = QDateTime::currentDateTime().toUTC().toString("hh:mm");
-  clock->display(displayTime);
+  clock->display(displayTime);	
   update();
 
 }
@@ -150,8 +152,17 @@ void DiagnosticPanel::pickColor()
 
 void DiagnosticPanel::updateVCP(const int newVCP)
 {
-  vcp->clear();
-  vcp->insert(QString().setNum(newVCP));
+	vcpString = QString().setNum(newVCP);
+	// CRASHING HERE!
+	vcp->clear();
+	//vcp->insert(vcpString);
+}
+
+void DiagnosticPanel::updateCappi(const GriddedData* newCappi)
+{
+	cappi=newCappi;
+	// Got a cappi now, turn on the button
+	cappiLaunch->setEnabled(true);
 }
 
 void DiagnosticPanel::testLight()
@@ -165,6 +176,9 @@ void DiagnosticPanel::testLight()
 
 void DiagnosticPanel::launchCappi()
 {
+	// Fill the pixmap with the current cappi data
+	cappiDisplay->constructImage(cappi);
+	
 	// Open the floating widget to look at the Cappi
 	cappiDisplay->show();
 	

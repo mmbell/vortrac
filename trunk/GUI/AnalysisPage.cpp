@@ -356,6 +356,8 @@ void AnalysisPage::runThread()
 	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
   connect(pollThread, SIGNAL(newVCP(const int)),
 	  diagPanel, SLOT(updateVCP(const int)), Qt::DirectConnection);
+  connect(pollThread, SIGNAL(newCappi(const GriddedData*)),
+		  diagPanel, SLOT(updateCappi(const GriddedData*)), Qt::DirectConnection);
 
   if(configData->getParam(configData->getConfig("radar"), "format")
      == QString("MODEL")){
