@@ -211,20 +211,21 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 		}
 		*/
 		v++;
-		if(v >199999)
+		if(v >999999)
 			Message::toScreen("Gone out of array bounds in CappiGrid.ccp velValues");
       }
       
     }
     
   }
-  //  Message::toScreen("r = "+QString().setNum(r)+" v = "+QString().setNum(v));
+  Message::toScreen("# of Reflectivity gates used in CAPPI = "+QString().setNum(r));
+  Message::toScreen("# of Velocity gates used in CAPPI = "+QString().setNum(v));
   
   // Subtract off one from the count for iterative purposes
   maxRefIndex = r - 1;
   maxVelIndex = v - 1;
 
-  if((maxRefIndex > 199999)||(maxVelIndex >199999))
+  if((maxRefIndex > 199999)||(maxVelIndex >999999))
     Message::toScreen("Gone out of array bounds in CappiGrid.ccp velValues or refValues");
   
   // Interpolate the data depending on method chosen

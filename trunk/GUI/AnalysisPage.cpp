@@ -355,8 +355,12 @@ void AnalysisPage::runThread()
   connect(pollThread, SIGNAL(log(const Message&)),
 	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
   connect(pollThread, SIGNAL(newVCP(const int)),
-	  diagPanel, SLOT(updateVCP(const int)), Qt::DirectConnection);
+	  this, SLOT(catchVCP(const int)), Qt::DirectConnection);
+  connect(this, SIGNAL(newVCP(const int)),
+		  diagPanel, SLOT(updateVCP(const int)), Qt::DirectConnection);  
   connect(pollThread, SIGNAL(newCappi(const GriddedData*)),
+		  this, SLOT(catchCappi(const GriddedData*)), Qt::DirectConnection);
+  connect(this, SIGNAL(newCappi(const GriddedData*)),
 		  diagPanel, SLOT(updateCappi(const GriddedData*)), Qt::DirectConnection);
 
   if(configData->getParam(configData->getConfig("radar"), "format")
@@ -415,6 +419,16 @@ void AnalysisPage::saveLog()
 void AnalysisPage::catchLog(const Message& message)
 {
   emit log(message);
+}
+
+void AnalysisPage::catchVCP(const int vcp)
+{
+	emit newVCP(vcp);
+}
+
+void AnalysisPage::catchCappi(const GriddedData* cappi)
+{
+	emit newCappi(cappi);
 }
 
 void AnalysisPage::autoScroll()

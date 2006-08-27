@@ -62,7 +62,7 @@ class CappiGrid : public GriddedData
 
   bool gridReflectivity;
   goodRef refValues[200000];
-  goodVel velValues[200000];
+  goodVel velValues[1000000];
   long maxRefIndex;
   long maxVelIndex;
   

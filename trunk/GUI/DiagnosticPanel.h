@@ -48,7 +48,7 @@ Q_OBJECT
 	  QPushButton *cappiLaunch;
 	  CappiDisplay *cappiDisplay;
 	  const GriddedData *cappi;
-	  QString vcpString;
+	  QString* vcpString;
       int dummy;
 
  private slots:

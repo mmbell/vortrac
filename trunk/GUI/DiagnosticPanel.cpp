@@ -80,13 +80,17 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   lightsLayout->addStretch();
 
   // Displays current radar vcp
-
+  QHBoxLayout *vcpLayout = new QHBoxLayout;
   QLabel *vcpLabel = new QLabel(tr("Current Radar VCP"));
-  vcpString = "No VCP available";
-  vcp = new QLineEdit(vcpString); 
+  vcpString = new QString("No VCP available");
+  vcp = new QLineEdit(*vcpString); 
   //vcp = new QLineEdit(QString("121"));
   vcp->setReadOnly(true);
-
+  vcpLayout->addStretch();
+  vcpLayout->addWidget(vcpLabel);
+  vcpLayout->addWidget(vcp);
+  vcpLayout->addStretch();
+  
   // Displays warning message that may accompany the change in stoplight
   // signal
 
@@ -97,14 +101,13 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   cappiLaunch = new QPushButton("View Current CAPPI", this);
   cappiLaunch->setEnabled(false);
   connect(cappiLaunch, SIGNAL(pressed()), this, SLOT(launchCappi()));
-  cappiDisplay = new CappiDisplay();
+  cappiDisplay = new CappiDisplay(this);
   
   QVBoxLayout *main = new QVBoxLayout();
   // main->addStretch();
   main->addWidget(clockBox);
 
-  main->addWidget(vcpLabel);
-  main->addWidget(vcp);
+  main->addLayout(vcpLayout);
   
   main->addWidget(cappiLaunch);
   
@@ -126,7 +129,7 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
 
 DiagnosticPanel::~DiagnosticPanel()
 {
-
+	delete vcpString;
 }
 
 void DiagnosticPanel::updateClock()
@@ -152,10 +155,10 @@ void DiagnosticPanel::pickColor()
 
 void DiagnosticPanel::updateVCP(const int newVCP)
 {
-	vcpString = QString().setNum(newVCP);
-	// CRASHING HERE!
+	vcpString->setNum(newVCP);
+	// Maybe fixed since there is no direct connection across threads now
 	vcp->clear();
-	//vcp->insert(vcpString);
+	vcp->insert(*vcpString);
 }
 
 void DiagnosticPanel::updateCappi(const GriddedData* newCappi)
