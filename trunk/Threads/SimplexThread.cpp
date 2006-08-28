@@ -149,28 +149,23 @@ void SimplexThread::run()
 			
 			// Set the reference point
 			gridData->setAbsoluteReferencePoint(refLat, refLon, height);
-			if ((gridData->getRefPointI() < 0) || 
-				(gridData->getRefPointJ() < 0) ||
-				(gridData->getRefPointK() < 0)) {
-				// Out of bounds problem
-				emit log(Message("Out of bounds in simplex!"));
-				continue;
-			}			
-
+			
 			if(!abort) {
 			for (float radius = firstRing; radius <= lastRing; radius++) {
 				
 				// Set the corner of the box
 				float cornerI = gridData->getCartesianRefPointI();
 				float cornerJ = gridData->getCartesianRefPointJ();
-				float cornerK = gridData->getCartesianRefPointK();
+				float RefK = gridData->getCartesianRefPointK();
 				float RefI = cornerI;
 				float RefJ = cornerJ;
-				float RefK = cornerK;
 				if ((gridData->getRefPointI() < 0) || 
-					(gridData->getRefPointJ() < 0)) {
+					(gridData->getRefPointJ() < 0) ||
+					(gridData->getRefPointK() < 0))  {
 					// Out of bounds problem
-					emit log(Message("Out of bounds in simplex!"));
+					emit log(Message("Initial simplex guess is outside CAPPI"));
+					archiveNull(radius, height, numPoints);
+					mutex.unlock();
 					continue;
 				}
 				// Initialize mean values
@@ -332,6 +327,12 @@ void SimplexThread::run()
 				}
 				
 				// All points done, calculate means
+				if (meanCount == 0) {
+					// No answer!
+					archiveNull(radius, height, numPoints);
+					mutex.unlock();
+					continue;
+				}
 				meanXall = meanXall / float(meanCount);
 				meanYall = meanYall / float(meanCount);
 				meanVTall = meanVTall / float(meanCount);
@@ -362,6 +363,11 @@ void SimplexThread::run()
 						}
 					}
 				}
+				if (meanCount == 0) {
+					// No answer!
+					mutex.unlock();
+					continue;
+				}				
 				meanX = meanX / float(meanCount);
 				meanY = meanY / float(meanCount);
 				meanVT = meanVT / float(meanCount);
@@ -444,6 +450,27 @@ void SimplexThread::archiveCenters(float& radius, float& height, float& numPoint
 	for (int point = 0; point < (int)numPoints; point++) {
 	  Center indCenter(Xind[point], Yind[point], VTind[point], level, ring);
 	  simplexData->setCenter(level, ring, point, indCenter);
+	}
+	
+}
+
+void SimplexThread::archiveNull(float& radius, float& height, float& numPoints)
+{
+	
+	// Save the centers to the SimplexData object
+	int level = int(height - firstLevel);
+	int ring = int(radius - firstRing);
+	simplexData->setHeight(level, height);
+	simplexData->setRadius(ring, radius);
+	simplexData->setX(level, ring, -999);
+	simplexData->setY(level, ring, -999);
+	simplexData->setMaxVT(level, ring, -999);
+	simplexData->setCenterStdDev(level, ring, 999);
+	simplexData->setVTUncertainty(level, ring, 999);
+	simplexData->setNumConvergingCenters(level, ring, (int)0);
+	for (int point = 0; point < (int)numPoints; point++) {
+		Center indCenter(-999, -999, -999, level, ring);
+		simplexData->setCenter(level, ring, point, indCenter);
 	}
 	
 }

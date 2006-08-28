@@ -185,6 +185,16 @@ void AnalysisThread::run()
 			pressureList->setNewWorkingDirectory(pressurePath + "/");
 		}
 		
+		// Check to see if the center is beyond 174 km
+		// If so, tell the user to wait!
+		float relDist = GriddedData::getCartesianDistance(radarVolume->getRadarLat(), 
+											  radarVolume->getRadarLon(),
+											  &vortexLat, &vortexLon);
+		if (relDist > 174) {
+			// Too far away for Doppler, need to send a signal
+			Message::report("Estimated center is out of Doppler range!");
+		}
+		
 		// Create data instance to hold the analysis results
 		VortexData *vortexData = new VortexData(); 
 		vortexData->setTime(radarVolume->getDateTime());
@@ -229,9 +239,8 @@ void AnalysisThread::run()
 
 		/* If Analytic Model is running we need to make an analytic
 		   gridded data rather than a cappi*/
-		
 		GriddedData *gridData;
-
+		
 		if(radarVolume->getNumSweeps() < 0) {
 		  Configuration *analyticConfig = new Configuration();
 		  QDomElement radar = configData->getConfig("radar");

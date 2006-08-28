@@ -84,6 +84,7 @@ class SimplexThread : public QThread
 
 	 
 	 void archiveCenters(float& radius,float& height,float& numPoints);
+	 void archiveNull(float& radius,float& height,float& numPoints);
 	 inline void getVertexSum(float**& vertex,float*& vertexSum);
 	 float simplexTest(float**& vertex, float*& VT, float*& vertexSum, 
 			   float& radius, float& height, float& RefK,

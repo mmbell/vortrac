@@ -40,6 +40,8 @@ class GriddedData
   void setAbsoluteReferencePoint(float Lat, float Lon, float Height);
   float* getCartesianPoint(float *Lat, float *Lon,
 		     float *relLat, float* relLon);
+  static float getCartesianDistance(float *Lat, float *Lon,
+									float *relLat, float* relLon);
   float getRefPointI();
   float getRefPointJ();
   float getRefPointK();

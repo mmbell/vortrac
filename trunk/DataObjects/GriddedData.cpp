@@ -160,6 +160,27 @@ float* GriddedData::getCartesianPoint(float *Lat, float *Lon,
 
 }
 
+float GriddedData::getCartesianDistance(float *Lat, float *Lon,
+										float *relLat, float *relLon)
+{
+	
+	// Thanks to Peter Dodge for some code used here
+	float LatRadians = *Lat * acos(-1.0)/180.0;
+	float fac_lat = 111.13209 - 0.56605 * cos(2.0 * LatRadians)
+		+ 0.00012 * cos(4.0 * LatRadians) - 0.000002 * cos(6.0 * LatRadians);
+	float fac_lon = 111.41513 * cos(LatRadians)
+		- 0.09455 * cos(3.0 * LatRadians) + 0.00012 * cos(5.0 * LatRadians);
+	
+	float relX = (*relLon - *Lon) * fac_lon;
+	float relY = (*relLat - *Lat) * fac_lat;
+	float dist = sqrt(relX * relX + relY * relY);
+	return dist;
+	
+	// This value is returned in KM ???? -LM
+	
+}
+
+
 // These functions return indices
 float GriddedData::getRefPointI ()
 {

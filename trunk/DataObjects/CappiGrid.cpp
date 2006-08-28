@@ -172,7 +172,8 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
       }
       
     }
-    if (currentRay->getVel_numgates() > 0) {
+	if ((currentRay->getVel_numgates() > 0) and
+		(currentRay->getUnambig_range() > 170)) {
       
       float* velData = currentRay->getVelData();
       float* swData = currentRay->getSwData();

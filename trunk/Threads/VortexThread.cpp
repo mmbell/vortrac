@@ -156,7 +156,8 @@ void VortexThread::run()
 				(gridData->getRefPointJ() < 0) ||
 				(gridData->getRefPointK() < 0)) {
 				// Out of bounds problem
-				emit log(Message("Out of bounds in simplex!"));
+				emit log(Message("Simplex center is outside CAPPI"));
+				mutex.unlock();
 				continue;
 			}			
 			
@@ -183,10 +184,10 @@ void VortexThread::run()
 						emit log(Message("Error retrieving VTC0 in vortex!"));
 					} 
 				} else {
-					QString err = "VTD failed at ";
+					QString err = "No VTD winds at radius ";
 					QString loc;
 					err.append(loc.setNum(radius));
-					err.append(",");
+					err.append(", height ");
 					err.append(loc.setNum(height));
 					emit log(Message(err));
 				}
@@ -380,19 +381,22 @@ void VortexThread::calcCentralPressure()
 	if (numEstimates > 0) {
 		avgPressure = pressSum/pressWeight;
 		avgWeight = pressWeight/(float)numEstimates;
+	
+		// Calculate the standard deviation of the estimates and set the global variables
+		float sumSquares = 0;
+		for (int i = 0; i < numEstimates; i++) {
+			float square = weightEstimates[i] * (pressEstimates[i] - avgPressure) * (pressEstimates[i] - avgPressure);
+			sumSquares += square;
+		}
+		
+		centralPressureStdDev = sumSquares/(avgWeight * (numEstimates-1));
+		centralPressure = avgPressure;
+	
 	} else {
-		avgPressure = 1013 - (pressureDeficit[(int)lastRing] - pressureDeficit[0]);
+		// Assume standard environmental pressure
+		centralPressure = 1013 - (pressureDeficit[(int)lastRing] - pressureDeficit[0]);
+		centralPressureStdDev = 5;
 	}
-	
-	// Calculate the standard deviation of the estimates and set the global variables
-	float sumSquares = 0;
-	for (int i = 0; i < numEstimates; i++) {
-		float square = weightEstimates[i] * (pressEstimates[i] - avgPressure) * (pressEstimates[i] - avgPressure);
-		sumSquares += square;
-	}
-	
-	centralPressureStdDev = sumSquares/(avgWeight * (numEstimates-1));
-	centralPressure = avgPressure;
 	
 }
 

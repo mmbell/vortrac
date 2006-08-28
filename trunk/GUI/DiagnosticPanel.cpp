@@ -101,7 +101,7 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   cappiLaunch = new QPushButton("View Current CAPPI", this);
   cappiLaunch->setEnabled(false);
   connect(cappiLaunch, SIGNAL(pressed()), this, SLOT(launchCappi()));
-  cappiDisplay = new CappiDisplay(this);
+  cappiDisplay = new CappiDisplay();
   
   QVBoxLayout *main = new QVBoxLayout();
   // main->addStretch();
@@ -130,6 +130,7 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
 DiagnosticPanel::~DiagnosticPanel()
 {
 	delete vcpString;
+	delete cappiDisplay;
 }
 
 void DiagnosticPanel::updateClock()
