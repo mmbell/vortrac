@@ -161,6 +161,18 @@ bool Hvvp::lls(int numCoeff, int numData, int effective_nData, float** x,
   for(int p = 0; p < numCoeff; p++) 
     Ainv[p] = new float[numCoeff];
 
+  float** Ainv2 = new float*[numCoeff];
+  for(int p = 0; p < numCoeff; p++) 
+    Ainv2[p] = new float[numCoeff];
+
+  float** AAA = new float*[numCoeff];
+  for(int p = 0; p < numCoeff; p++) {
+    AAA[p] = new float[numCoeff];
+    for(int q = 0; q < numCoeff; q++) {
+      AAA[p][q] = AA[p][q];
+    }
+  }
+
   //Message::toScreen("Printing AA Before");
   //Matrix::printMatrix(AA,numCoeff,numCoeff);
   //Message::toScreen("Printing BB Before");
@@ -171,6 +183,15 @@ bool Hvvp::lls(int numCoeff, int numData, int effective_nData, float** x,
     Message::toScreen("Least Squares Fail In Gauss Jordan");
     return false;
   }
+
+  for(int p = 0; p < numCoeff; p++) {
+    for(int q = 0; q < numCoeff; q++) {
+      if(AAA[p][q] == AA[p][q])
+	Message::toScreen("Issues with addresses");
+    }
+  }
+
+  Matrix::matrixInverse(AAA,numCoeff,numCoeff, Ainv2);
 
   //Message::toScreen("Printing AA After");
   //Matrix::printMatrix(AA,numCoeff,numCoeff);
@@ -184,7 +205,14 @@ bool Hvvp::lls(int numCoeff, int numData, int effective_nData, float** x,
       Ainv[i][j] = AA[i][j];
     }
   }
-
+  /*
+  for(int p = 0; p < numCoeff; p++) {
+    for(int q = 0; q < numCoeff; q++) {
+      if(Ainv[p][q] != Ainv2[p][q])
+	Message::toScreen("Issues with inverting matrixes Ainv["+QString().setNum(p)+"]["+QString().setNum(q)+"] = "+QString().setNum(Ainv[p][q])+" !! Ainv2["+QString().setNum(p)+"]["+QString().setNum(q)+"] = "+QString().setNum(Ainv2[p][q]));
+    }
+  }
+  */
   //Message::toScreen("Printing coEff");
   //Matrix::printMatrix(coEff,numCoeff);
   
@@ -212,14 +240,7 @@ bool Hvvp::lls(int numCoeff, int numData, int effective_nData, float** x,
   // calculate the standard error for the coefficients
 
   for(int i = 0; i < numCoeff; i++) {
-    if(Ainv[i][i] < 0) {
-      //Message::toScreen("Ainv[i][i] < 0 @ i = "+QString().setNum(i)+" = "+QString().setNum(Ainv[i][i]));
-      stError[i] = stDeviation*sqrt(fabs(Ainv[i][i]));
-    }
-    else {
-      //Message::toScreen("Ainv[i][i] @ i = "+QString().setNum(i)+" = "+QString().setNum(Ainv[i][i]));
-      stError[i] = stDeviation*sqrt(Ainv[i][i]);
-    }
+    stError[i] = stDeviation*sqrt(fabs(Ainv2[i][i]));
   }
 
   //Message::toScreen("Printing StError");
@@ -230,12 +251,16 @@ bool Hvvp::lls(int numCoeff, int numData, int effective_nData, float** x,
     delete [] AA[i];
     delete [] BB[i];
     delete [] Ainv[i];
+    delete [] AAA[i];
+    delete [] Ainv2[i];
   }
   delete [] A;
   delete [] B;
   delete [] AA;
   delete [] BB;
   delete [] Ainv;
+  delete [] AAA;
+  delete [] Ainv2;
 
   //Message::toScreen("Printing coEff Again!!");
   //Matrix::printMatrix(coEff,numCoeff);

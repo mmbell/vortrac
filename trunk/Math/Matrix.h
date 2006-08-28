@@ -37,15 +37,16 @@ public:
   static void printMatrix(float **A, int M, int N);
   static void printMatrix(float *A, int M);
 
+  static bool matrixInverse(float **A, int M, int N, float** &Ainv);
+  static bool reduceRow(float **A,int M, int N);
+  static bool matrixMultiply(float **A, int MA, int NA, 
+			     float **B, int MB, int NB, 
+			     float **C, int MC, int NC);
+  static bool matrixMultiply(float **A, int MA, int NA, 
+			     float *B, int MB, 
+			     float *C, int MC);
+
 private:
-  bool matrixInverse(float **A, int M, int N, float** &Ainv);
-  bool reduceRow(float **A,int M, int N);
-  bool matrixMultiply(float **A, int MA, int NA, 
-		      float **B, int MB, int NB, 
-		      float **C, int MC, int NC);
-  bool matrixMultiply(float **A, int MA, int NA, 
-		      float *B, int MB, 
-		      float *C, int MC);
   
 };
 

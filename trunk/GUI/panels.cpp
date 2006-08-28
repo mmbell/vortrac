@@ -1301,7 +1301,7 @@ void ChooseCenterPanel::updatePanel(const QDomElement panelElement)
       endDateTime->setTime(QTime::fromString(parameter, "hh:mm:ss")); }
     if (name == "wind_weight") {
       windWeightBox->setValue(parameter.toFloat()); }
-    if (name == "sttdev_weight") {
+    if (name == "stddev_weight") {
       stdDevWeightBox->setValue(parameter.toFloat()); }
     if (name == "pts_weight") {
       ptsWeightBox->setValue(parameter.toFloat()); }

@@ -136,7 +136,7 @@ QDomElement Configuration::getConfig(const QString &configName)
 
   QDomElement child = groupList.item(indexForTagName.value(configName)).toElement();
   if (child.isNull()) {
-    emit log(Message("Null Node!"));
+    emit log(Message("Null Config Node!"));
   }
 
   return child;

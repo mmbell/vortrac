@@ -260,7 +260,7 @@ void AnalysisThread::run()
 
 		}
 		// Pass Cappi to display
-		emit newCappi(gridData);
+		//emit newCappi(gridData);
 		
 		mutex.unlock();
 		if(abort)

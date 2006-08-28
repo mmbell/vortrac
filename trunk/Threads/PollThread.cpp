@@ -85,31 +85,80 @@ void PollThread::run()
   //vortexList->setNewWorkingDirectory(newWorkingDirectory);
   //vortexConfig->read(file);
   
-  QString file("vortrac_defaultVortexListStorage.xml");
-  vortexConfig = new Configuration(0, file);
-  connect(vortexConfig, SIGNAL(log(const Message&)), 
-	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
-  vortexList = new VortexList(vortexConfig);
-  vortexList->open();
-  
-  file = QString("vortrac_defaultSimplexListStorage.xml");
-  //simplexConfig = new Configuration(0,QString());
-  simplexConfig = new Configuration(0, file);
-  connect(simplexConfig, SIGNAL(log(const Message&)), 
-	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
-  simplexList = new SimplexList(simplexConfig);
-  simplexList->open();
+  //bool openOld = true;
+  bool openOld = false;  // For testing chooseCenter..... shouldn't interfere
 
-  file = QString("vortrac_defaultPressureListStorage.xml");
-  //pressureConfig = new Configuration(0,QString());
-  pressureConfig = new Configuration(0, file);
-  connect(pressureConfig, SIGNAL(log(const Message&)), 
-		  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
-  pressureList = new PressureList(pressureConfig);
-  pressureList->open();
-  dropsondeList = new PressureList(pressureConfig);
-  dropsondeList->open();
+  //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   
+  if(!openOld) {
+    QString file("vortrac_defaultVortexListStorage.xml");
+    vortexConfig = new Configuration(0, file);
+    connect(vortexConfig, SIGNAL(log(const Message&)), 
+	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+    vortexList = new VortexList(vortexConfig);
+    vortexList->open();
+  
+    file = QString("vortrac_defaultSimplexListStorage.xml");
+    //simplexConfig = new Configuration(0,QString());
+    simplexConfig = new Configuration(0, file);
+    connect(simplexConfig, SIGNAL(log(const Message&)), 
+	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+    simplexList = new SimplexList(simplexConfig);
+    simplexList->open();
+    
+    file = QString("vortrac_defaultPressureListStorage.xml");
+    //pressureConfig = new Configuration(0,QString());
+    pressureConfig = new Configuration(0, file);
+    connect(pressureConfig, SIGNAL(log(const Message&)), 
+	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+    pressureList = new PressureList(pressureConfig);
+    pressureList->open();
+    dropsondeList = new PressureList(pressureConfig);
+    dropsondeList->open();
+  
+  }
+  else {
+    QString file("vortrac_2004-08-13T18_24_04vortexList.xml");
+    vortexConfig = new Configuration(0, file);
+    connect(vortexConfig, SIGNAL(log(const Message&)), 
+	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+    vortexList = new VortexList(vortexConfig);
+    vortexList->open();
+    
+    QString outFileName = "/home/lmauger/NCAR/vortrac/trunk/workingDirs/centerTest_vortexList.xml";
+    vortexList->setFileName(outFileName);
+    vortexList->setNewWorkingDirectory("/home/lmauger/NCAR/vortrac/trunk/workingDirs/");
+  
+    file = QString("vortrac_2004-08-13T18_24_04simplexList.xml");
+    //simplexConfig = new Configuration(0,QString());
+    simplexConfig = new Configuration(0, file);
+    connect(simplexConfig, SIGNAL(log(const Message&)), 
+	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+    simplexList = new SimplexList(simplexConfig);
+    simplexList->open();
+   
+    outFileName = "/home/lmauger/NCAR/vortrac/trunk/workingDirs/centerTest_simplexList.xml";
+    simplexList->setFileName(outFileName);
+    simplexList->setNewWorkingDirectory("/home/lmauger/NCAR/vortrac/trunk/workingDirs/");
+    /*
+    Message::toScreen("Simplex count = "+QString().setNum(simplexList->count()));
+    for(int j = 0; j < simplexList->count(); j++) {
+      Message::toScreen("time of index j = "+QString().setNum(j)+" is "+simplexList->value(j).getTime().toString());
+    }
+    */
+    
+    file = QString("vortrac_defaultPressureListStorage.xml");
+    //pressureConfig = new Configuration(0,QString());
+    pressureConfig = new Configuration(0, file);
+    connect(pressureConfig, SIGNAL(log(const Message&)), 
+	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+    pressureList = new PressureList(pressureConfig);
+    pressureList->open();
+    dropsondeList = new PressureList(pressureConfig);
+    dropsondeList->open();
+
+  }  
+
   //Message::toScreen("Num simplex: "+QString().setNum(list->count()));
   /* Fake simplex list data
   SimplexData newData(15,6,2);
@@ -189,7 +238,7 @@ void PollThread::run()
   connect(analysisThread, SIGNAL(newVCP(const int)),
 	  this, SLOT(catchVCP(const int)), Qt::DirectConnection);
   connect(analysisThread, SIGNAL(newCappi(const GriddedData*)),
-		  this, SLOT(catchCappi(const GriddedData*)), Qt::DirectConnection);
+	  this, SLOT(catchCappi(const GriddedData*)), Qt::DirectConnection);
   analysisThread->setVortexList(vortexList);
   analysisThread->setSimplexList(simplexList);
   analysisThread->setPressureList(pressureList);

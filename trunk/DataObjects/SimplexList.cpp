@@ -75,11 +75,11 @@ bool SimplexList::open()
       radarName = config->getParam(currElement, "radar");
       productType = config->getParam(currElement, "product");
       numConfigsOpened++;
-      Message::toScreen("found the header config for index");
+      //Message::toScreen("found the header config for index");
     }
     else {
       // Has information about a simplexData
-      Message::toScreen("found data node");
+      //Message::toScreen("found data node");
       if(openNodeFile(node)) {
 	numConfigsOpened++;
       }
@@ -97,6 +97,7 @@ bool SimplexList::openNodeFile(const QDomNode &newNode)
   if(!newNode.isNull()) {
     QDomElement nodeElement = newNode.toElement();
     QString nodeTimeString = config->getParam(nodeElement, "time");
+    //Message::toScreen("Loading Simplex Run "+nodeTimeString);
     QDateTime nodeTime = QDateTime::fromString(nodeTimeString,Qt::ISODate);
     QString nodeFileName = config->getParam(nodeElement, "file");
     if(!QFile::exists(nodeFileName)) {
@@ -115,7 +116,7 @@ bool SimplexList::openNodeFile(const QDomNode &newNode)
     for(int i = 0; i < newConfig->getGroupList()->count(); i++) {
       QDomNode child = newConfig->getGroupList()->item(i);
       QDomElement childElement = child.toElement();
-      Message::toScreen("child Element = "+childElement.tagName());
+      //Message::toScreen("child Element = "+childElement.tagName());
       QString newName, newRadar, newType, newTime;
       if(childElement.tagName().startsWith(QString("simplex"))) {
 	newName = newConfig->getParam(childElement, "name");
@@ -171,8 +172,10 @@ bool SimplexList::openNodeFile(const QDomNode &newNode)
       }
     }
     QList<SimplexData>::append(newData);
+    //this->append(newData);
     simplexDataConfigs->append(newConfig);
     configFileNames->append(nodeFileName);
+    //newData.printString();
     return true;
   }
   return false;
@@ -340,11 +343,11 @@ void SimplexList::append(const SimplexData &value)
 void SimplexList::timeSort()
 {
   for(int i = 0; i < this->count(); i++) {
-    for(int j = 0; j < this->count()-1; j++) {
-      if(this->value(j).getTime() > this->value(j+1).getTime()) {
-	this->swap(j+1,j);
-	simplexDataConfigs->swap(j+1,j);
-	configFileNames->swap(j+1,j);
+    for(int j = i+1; j < this->count(); j++) {
+      if(this->value(i).getTime() > this->value(j).getTime()) {
+	this->swap(j,i);
+	simplexDataConfigs->swap(j,i);
+	configFileNames->swap(j,i);
       }
     }
   }

@@ -8,10 +8,10 @@
     </vortex>
     <radar>
         <name>Plea</name>
-        <lat>0.00</lat>
-        <lon>0.00</lon>
+        <lat>0.45</lat>
+        <lon>0.45</lon>
         <alt>0.00</alt>
-        <dir>/home/lmauger/NCAR/vortrac/trunk/vortrac_defaultAnalyticTC.xml</dir>
+        <dir>/scr/science40/mauger/Working/trunk/vortrac_defaultAnalyticTC.xml</dir>
         <format>MODEL</format>
         <startdate>2000-01-01</startdate>
         <enddate>2000-01-02</enddate>
@@ -19,10 +19,10 @@
         <endtime>00:00:00</endtime>
     </radar>
     <cappi>
-        <dir>/home/lmauger/NCAR/vortrac/trunk/workingDirs/cappi</dir>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs/cappi</dir>
         <xdim>200</xdim>
         <ydim>200</ydim>
-        <zdim>1</zdim>
+        <zdim>5</zdim>
         <xgridsp>1.0</xgridsp>
         <ygridsp>1.0</ygridsp>
         <zgridsp>1.0</zgridsp>
@@ -31,7 +31,7 @@
         <interpolation>cressman</interpolation>
     </cappi>
     <center>
-        <dir>/home/lmauger/NCAR/vortrac/trunk/workingDirs/center</dir>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs/center</dir>
         <geometry>GBVTD</geometry>
         <closure>original</closure>
         <reflectivity>DZ</reflectivity>
@@ -52,7 +52,7 @@
         <maxdatagap wavenum="1" >120</maxdatagap>
     </center>
     <choosecenter>
-        <dir>/home/lmauger/NCAR/vortrac/trunk/workingDirs/choosecenter</dir>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs/choosecenter</dir>
         <filename>nameOfCenterListFile</filename>
         <startdate>2005-01-01</startdate>
         <enddate>2005-01-02</enddate>
@@ -68,7 +68,7 @@
         <stats>99</stats>
     </choosecenter>
     <vtd>
-        <dir>/home/lmauger/NCAR/vortrac/trunk/workingDirs/vtd</dir>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs/vtd</dir>
         <geometry>GBVTD</geometry>
         <closure>original</closure>
         <reflectivity>DZ</reflectivity>

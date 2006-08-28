@@ -70,7 +70,7 @@ void ChooseCenter::setSimplexList(const SimplexList &newList)
 
 bool ChooseCenter::findCenter()
 {
-  //simplexResults.timeSort();   make sure this works first
+  simplexResults.timeSort();
   //Message::toScreen("ChooseCenter: Initializing Things");
   initialize();
   //Message::toScreen("ChooseCenter: Try Choose Mean Centers");
@@ -108,7 +108,7 @@ void ChooseCenter::initialize()
   // Pulls all the necessary user parameters from the configuration panel
   //  and initializes the array used for fTesting
   
-  minVolumes = 1;
+  minVolumes = 50;
 
   QDomElement ccElement = config->getConfig("choosecenter");
   windWeight = config->getParam(ccElement, QString("wind_weight")).toFloat();
@@ -460,14 +460,19 @@ bool ChooseCenter::constructPolynomial()
   // We want to find the eariliest time for this process;
   // we don't want to use (simplexList)sort this late in the game 
   // because it might ruin the member arrays
-  QDateTime startTime = simplexResults[0].getTime();
-  float timeRefIndex = 0;
-  for(int i = 1; i < simplexResults.count(); i++) {
-    if(simplexResults[i].getTime() < startTime) {
-      timeRefIndex = i;
-      startTime = simplexResults[i].getTime();
-    }
-  }
+  QDateTime startTime = simplexResults[1].getTime();
+  Message::toScreen("First time = "+startTime.toString());
+  float timeRefIndex = 1;
+  for(int i = 0; i < simplexResults.count(); i++) {
+    Message::toScreen("Time of index i = "+QString().setNum(i)+" "+simplexResults[i].getTime().toString()+" time between start and this one = "+QString().setNum(startTime.time().secsTo(simplexResults[i].getTime().time())));
+    //if(startTime.secsTo(simplexResults[i].getTime()) < 0) {
+    //  timeRefIndex = i;
+    //  startTime = simplexResults[i].getTime();
+    //}
+   }
+  Message::toScreen("timeRefIndex = "+QString().setNum(timeRefIndex));
+
+  Message::toScreen("First time = "+startTime.toString());
 
   // Construct a least squares polynomial to fit track
   // Export variance for analysis
@@ -486,27 +491,35 @@ bool ChooseCenter::constructPolynomial()
   
   // What should the highest order basis polynomial;
   if(simplexResults.count() > 20)
-	  maxPoly = 20;
-	else 
-		maxPoly = simplexResults.count()-1;
-	
-	if(maxPoly < 3){
-		return false;
-		// Expand this to get variables in the right places
-		// So the next member function can gracefully handle things
-	}
+    maxPoly = 20;
+  else 
+    maxPoly = simplexResults.count()-1;
+  
+  Message::toScreen("maxPoly = "+QString().setNum(maxPoly));
+
+  if(maxPoly < 3){
+    //Message::toScreen("Used to return false because the fitting order is limited to less than 3 by the number of volumes available");
+    return false;
+    // Expand this to get variables in the right places
+    // So the next member function can gracefully handle things
+  }
 	
   float *lastFitCoeff;
   lastFitCoeff = new float[maxPoly+1];
   float *currentCoeff; 
   currentCoeff = new float[maxPoly+1];
+
+  for(int ii = 0; ii <= maxPoly; ii++) {
+    lastFitCoeff[ii] = 0;
+    currentCoeff[ii] = 0;
+  }
   
   bestFitCoeff = new float**[4];
   for(int criteria = 0; criteria < 4; criteria++) {
-	  bestFitCoeff[criteria] = new float*[simplexResults[0].getNumLevels()];
-	  for (int k = 0; k < simplexResults[0].getNumLevels(); k++) {
-		  bestFitCoeff[criteria][k] = new float[maxPoly+1];
-	  }
+    bestFitCoeff[criteria] = new float*[simplexResults[0].getNumLevels()];
+    for (int k = 0; k < simplexResults[0].getNumLevels(); k++) {
+      bestFitCoeff[criteria][k] = new float[maxPoly+1];
+    }
   }
   // Things are stored here so far but it is never used
   
@@ -517,14 +530,15 @@ bool ChooseCenter::constructPolynomial()
     // there is overlap if volumes are pulled from multiple different
     // configurations
 
+    //Message::toScreen("Level = "+QString().setNum(k));
+
     for(int criteria = 0; criteria < 4; criteria++) {
       // Iterates through the procedure for the four different
       // curve fitting criteria
       
- 
-      
       for(int n = 1; n <=maxPoly; n++) {
-	for(int m = 1; m < n; m++) {
+	//Message::toScreen("Fitting to "+QString().setNum(n)+" order polynomial");
+	for(int m = 0; m < n; m++) {
 	  // Copy the last set into the lastFit array
 	  lastFitCoeff[m]= currentCoeff[m];
 	  currentCoeff[m] = 0;
@@ -533,11 +547,12 @@ bool ChooseCenter::constructPolynomial()
 	// degree = n; what - no one uses this and it is the same as best degree
 	float* B = new float[n+1];
 	float** M = new float*[n+1];
+	/*  - problem with this .... we does the multiple by inverse for us....
 	for(int r = 0; r <= n; r++) {
 	  M[r] = new float[n+1];
 	  for(int c = 0; c <= n; c++) {
 	    float sum = 0;
-	    for(int i = 0; i <simplexResults.count(); i++) {
+	    for(int i = 0; i < simplexResults.count(); i++) {
 	      float min = ((float)startTime.secsTo(simplexResults[i].getTime())/60.0);
 	      sum += pow(min,(double)(r+c));
 	    }
@@ -547,7 +562,7 @@ bool ChooseCenter::constructPolynomial()
 	  for(int i = 0; i <simplexResults.count(); i++) {
 	    float min = ((float)startTime.secsTo(simplexResults[i].getTime())/60.0);
 	    int jBest = bestRadius[i][k];
-	    float y;
+	    float y = 0;
 	    switch(criteria) {
 	    case 0:
 	      y = simplexResults[i].getX(k, jBest); break;
@@ -562,15 +577,43 @@ bool ChooseCenter::constructPolynomial()
 	  }
 	  B[r] = sum;
 	}
-	Matrix mathTool;
-	float stDev;
-	float *stError = new float[n];
-	if(!mathTool.lls(n, n, M, B, stDev, currentCoeff, stError)) {
-	  //  log(Message("least square fit failed in find center"));
+	*/
+
+	for(int r = 0; r <= n; r++) {
+	  M[r] = new float[n+1];
+	  for(int i = 0; i < simplexResults.count(); i++) {
+	    float min = ((float)startTime.time().secsTo(simplexResults[i].getTime().time())/60.0);
+	    M[r][i] = pow(min,(double)(r));
+	  }
 	}
+	
+	for(int i = 0; i < simplexResults.count(); i++) {
+	  float min = ((float)startTime.time().secsTo(simplexResults[i].getTime().time())/60.0);
+	  int jBest = bestRadius[i][k];
+	  float y = 0;
+	  switch(criteria) {
+	  case 0:
+	    y = simplexResults[i].getX(k, jBest); break;
+	  case 1:
+	    y = simplexResults[i].getY(k, jBest); break;
+	  case 2:
+	    y = simplexResults[i].getRadius(jBest); break;
+	  case 3:
+	    y = simplexResults[i].getMaxVT(k, jBest); break;
+	  }
+	  B[i] = y;
+	}
+	float stDev;
+	float *stError = new float[n+1];
+	//Matrix::printMatrix(M,n+1,simplexResults.count());
+	//Matrix::printMatrix(B,simplexResults.count());
+	if(!Matrix::lls(n+1, simplexResults.count(), M, B, stDev, currentCoeff, stError)) {
+	  Message::toScreen("least square fit failed in find center");
+	}
+	//Message::toScreen("Got past lls");
 	float errorSum = 0;
 	for(int i = 0; i < simplexResults.count(); i++) {
-	  float min = ((float)startTime.secsTo(simplexResults[i].getTime())/60.0);
+	  float min = ((float)startTime.time().secsTo(simplexResults[i].getTime().time())/60.0);
 	  float func_y  = 0;
 	  for(int m = 0; m <=n; m++) {
 	    func_y += currentCoeff[m]*pow(min,m);
@@ -587,67 +630,73 @@ bool ChooseCenter::constructPolynomial()
 	    errorSum = pow(func_y-simplexResults[i].getMaxVT(jBest, k), 2); 
 	    break;
 	  }
-	    
-	  int degFreedom = simplexResults.count()-n;
-	  squareVariance[n] = errorSum/(float)degFreedom;
-	  if(n > 1) {
-	    if(squareVariance[n] > squareVariance[n-1]) {
-	      // we found the best fit!!!!
-	      bestFitVariance[criteria][k] = squareVariance[n-1];
-	      bestFitDegree[criteria][k] = n-1;
-	      // degree = n-1; phasing out
-	      // Now we have to revert back to the old set
-	      // This is why everything is kept in storage
-	      for(int l = 0; l <= (n-1); l++) {
-		bestFitCoeff[criteria][k][l] = lastFitCoeff[l];
-	      }
-	    }
-	    else {
-	      if(n == maxPoly) {
-		// Maxed out
-		bestFitVariance[criteria][k] = squareVariance[n];
-		bestFitDegree[criteria][k] = n;
-		for(int l = 0; l < n; l++) {
-		  bestFitCoeff[criteria][k][l] = currentCoeff[l];
-		}
-	      }
-	      else {
-		// preform the f test to see if a higher polynomial is
-		// warranted
-		float fTest;
-		float m_delta = squareVariance[n-1]*(float)(degFreedom+1) ;
-		m_delta-= squareVariance[n]*(float)degFreedom;
-		if(squareVariance[n] > 0) 
-		  fTest = m_delta/squareVariance[n];
-		else 
-		  fTest = 0;
-		if(degFreedom >30) 
-		  degFreedom = 30;
-		float fCrit = fCriteria[degFreedom-1];
-		if(fTest < fCrit) {
-		  // Found the best center
-		  bestFitVariance[criteria][k] = squareVariance[n-1];
-		  bestFitDegree[criteria][k] = n-1;
-		  // degree = n-1; phasing out
-		  for(int l = 0; l <= (n-1); l++) {
-		    bestFitCoeff[criteria][k][l] = lastFitCoeff[l];
-		  }		  
-		}
-	      }
+	} 
+	int degFreedom = simplexResults.count()-n;
+	squareVariance[n] = errorSum/(float)degFreedom;
+	//Message::toScreen("Got to here");
+	if(n > 1) {
+	  if(squareVariance[n] > squareVariance[n-1]) {
+	    // we found the best fit!!!!
+	    bestFitVariance[criteria][k] = squareVariance[n-1];
+	    bestFitDegree[criteria][k] = n-1;
+	    // degree = n-1; phasing out
+	    // Now we have to revert back to the old set
+	    // This is why everything is kept in storage
+	    for(int l = 0; l <= (n-1); l++) {
+	      bestFitCoeff[criteria][k][l] = lastFitCoeff[l];
 	    }
 	  }
 	  else {
-	    // Check to see if this really goes here???
-	    // brackets are scary
-	    // Doing a linear fit with only 3 points
-	    bestFitVariance[criteria][k] = squareVariance[n];
-	    bestFitDegree[criteria][k] = n;
-	    // degree = n; phasing out
-	    for(int l = 0; l < n; l++) {
-	      bestFitCoeff[criteria][k][l] = currentCoeff[l];
+	    if(n == maxPoly) {
+	      // Maxed out
+	      bestFitVariance[criteria][k] = squareVariance[n];
+	      bestFitDegree[criteria][k] = n;
+	      for(int l = 0; l < n; l++) {
+		bestFitCoeff[criteria][k][l] = currentCoeff[l];
+	      }
+	    }
+	    else {
+	      // preform the f test to see if a higher polynomial is
+	      // warranted
+	      float fTest;
+	      float m_delta = squareVariance[n-1]*(float)(degFreedom+1) ;
+	      m_delta-= squareVariance[n]*(float)degFreedom;
+	      if(squareVariance[n] > 0) 
+		fTest = m_delta/squareVariance[n];
+	      else 
+		fTest = 0;
+	      if(degFreedom >30) 
+		degFreedom = 30;
+	      float fCrit = fCriteria[degFreedom-1];
+	      if(fTest < fCrit) {
+		// Found the best center
+		bestFitVariance[criteria][k] = squareVariance[n-1];
+		bestFitDegree[criteria][k] = n-1;
+		// degree = n-1; phasing out
+		for(int l = 0; l <= (n-1); l++) {
+		  bestFitCoeff[criteria][k][l] = lastFitCoeff[l];
+		}		  
+	      }
 	    }
 	  }
 	}
+	else {
+	  // Check to see if this really goes here???
+	  // brackets are scary
+	  // Doing a linear fit with only 3 points
+	  bestFitVariance[criteria][k] = squareVariance[n];
+	  bestFitDegree[criteria][k] = n;
+	  // degree = n; phasing out
+	  for(int l = 0; l < n; l++) {
+	    bestFitCoeff[criteria][k][l] = currentCoeff[l];
+	  }
+	}
+      
+	for(int ii = 0; ii <= n; ii++) 
+	  delete [] M[ii];
+	delete [] M;
+	delete [] B;
+	delete [] stError;
       }
     }
   }
@@ -1001,3 +1050,4 @@ void ChooseCenter::useLastMean()
   } 
   
 }
+

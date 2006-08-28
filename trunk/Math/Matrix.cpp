@@ -150,7 +150,7 @@ bool Matrix::lls(const int &numCoeff,const int &numData,
   // calculate the standard error for the coefficients
 
   for(int i = 0; i < numCoeff; i++) {
-    stError[i] = stDeviation*sqrt(Ainv[i][i]);
+    stError[i] = stDeviation*sqrt(fabs(Ainv[i][i]));
   }
 
   // Clean up
