@@ -104,7 +104,7 @@ struct nexrad_vol_scan_title {  /* "ARCHIVE2.001,..." */
     char extension[3];
     long julian_date;           /* from 1/1/70 */
     long milliseconds_past_midnight;
-    long filler_1;
+    char radarid[4];
 };
 
 struct CTM_info {               /* ignored */

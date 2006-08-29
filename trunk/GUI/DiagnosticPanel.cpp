@@ -157,9 +157,9 @@ void DiagnosticPanel::pickColor()
 void DiagnosticPanel::updateVCP(const int newVCP)
 {
 	vcpString->setNum(newVCP);
-	// Maybe fixed since there is no direct connection across threads now
+	// Still not fixed even though there is no direct connection across threads now
 	vcp->clear();
-	vcp->insert(*vcpString);
+	//vcp->insert(*vcpString);
 }
 
 void DiagnosticPanel::updateCappi(const GriddedData* newCappi)

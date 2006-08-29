@@ -40,6 +40,8 @@ HEADERS += Threads/AnalysisThread.h \
            IO/Log.h \
            Radar/RadarFactory.h \
            Radar/LevelII.h \
+           Radar/NcdcLevelII.h \
+           Radar/LdmLevelII.h \
            Radar/AnalyticRadar.h \
            Radar/nexh.h \
            Radar/RadarQC.h \
@@ -88,6 +90,8 @@ SOURCES += main.cpp \
            IO/Log.cpp \
            Radar/RadarFactory.cpp \
            Radar/LevelII.cpp \
+           Radar/NcdcLevelII.cpp \
+           Radar/LdmLevelII.cpp \
            Radar/AnalyticRadar.cpp\
            Radar/RadarQC.cpp \
            Radar/RadarData.cpp \
@@ -101,12 +105,6 @@ SOURCES += main.cpp \
            Pressure/PressureFactory.cpp \
            Pressure/Metar.cpp \
            Pressure/AWIPS.cpp
-F95 = gfortran
-g95.output = ${QMAKE_FILE_BASE}.o
-g95.commands = $$F95 -c -g  -O0 ${QMAKE_FILE_NAME} \
-  -o ${QMAKE_FILE_OUT} ${INCPATH}
-g95.input    = FORTRAN_SOURCES
-FORTRAN_SOURCES = 
-QMAKE_EXTRA_UNIX_COMPILERS += g95 
 RESOURCES += vortrac.qrc
+LIBS += -lbz2
 QT += xml

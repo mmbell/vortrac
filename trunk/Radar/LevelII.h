@@ -22,11 +22,12 @@ class LevelII : public RadarData
 
  public:
   LevelII(const QString &radarname, const float &lat, const float &lon, const QString &filename);
-  bool readVolume();
+  virtual ~LevelII();
+  virtual bool readVolume() = 0;
   Sweep addSweep();
   Ray addRay();
 
- private:
+ protected:
   nexrad_vol_scan_title *volHeader;
   digital_radar_data_header *radarHeader; 
   nexrad_message_header *msgHeader;

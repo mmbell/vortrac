@@ -19,6 +19,8 @@
 #include <QHash>
 #include "Radar/RadarData.h"
 #include "Radar/LevelII.h"
+#include "Radar/NcdcLevelII.h"
+#include "Radar/LdmLevelII.h"
 #include "Radar/AnalyticRadar.h"
 #include "IO/Message.h"
 #include "GUI/ConfigTree.h"
@@ -42,7 +44,8 @@ class RadarFactory : public QObject
 
  private:
   enum dataFormat {
-	levelII,
+	ncdclevelII,
+	ldmlevelII,
 	model,
 	dorade,
 	netcdf

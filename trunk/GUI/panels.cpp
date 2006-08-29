@@ -212,7 +212,8 @@ RadarPanel::RadarPanel()
   radarFormatOptions = new QHash<QString, QString>;
   radarFormatOptions->insert(QString("Select a Radar Data Format"),
 			     QString(""));
-  radarFormatOptions->insert(QString("Level II"), QString("LEVELII"));
+  radarFormatOptions->insert(QString("NCDC Level II"), QString("NCDCLEVELII"));
+  radarFormatOptions->insert(QString("LDM Level II"), QString("LDMLEVELII"));
   radarFormatOptions->insert(QString("Analytic Model"), QString("MODEL"));
   radarFormat = new QComboBox();
   QList<QString> options = radarFormatOptions->keys();

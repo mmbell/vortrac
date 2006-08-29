@@ -43,10 +43,11 @@ RadarFactory::RadarFactory(QDomElement radarConfig, QObject *parent)
   dataPath = QDir(path);
 
   QString format = radarConfig.firstChildElement("format").text();
-  if (format == "LEVELII") {
-    radarFormat = levelII;
-  } 
-  if (format == "MODEL") {
+  if (format == "LDMLEVELII") {
+    radarFormat = ldmlevelII;
+  } else if (format == "NCDCLEVELII") {
+	radarFormat = ncdclevelII;
+  } else if (format == "MODEL") {
     radarFormat = model;
   }
   else { 
@@ -78,14 +79,22 @@ RadarData* RadarFactory::getUnprocessedData()
     
   // Now make a new radar object from that file and send it back
   switch(radarFormat) {
-  case levelII :
+  case ncdclevelII :
     {
-      LevelII *radarData = new LevelII(radarName, radarLat, 
-				       radarLon, fileName);
+      NcdcLevelII *radarData = new NcdcLevelII(radarName, radarLat, 
+											   radarLon, fileName);
       radarData->setAltitude(radarAlt);
       return radarData;
       break;
     }
+  case ldmlevelII :
+  {
+      LdmLevelII *radarData = new LdmLevelII(radarName, radarLat, 
+											 radarLon, fileName);
+      radarData->setAltitude(radarAlt);
+      return radarData;
+      break;
+  }  
   case model:
     {
       AnalyticRadar *radarData = new AnalyticRadar(radarName, 
@@ -125,7 +134,7 @@ bool RadarFactory::hasUnprocessedData()
   // Otherwise, check the directory for appropriate files
 
   switch(radarFormat) {
-  case levelII:
+  case ncdclevelII:
     {
       // Should have filenames starting with radar ID
       dataPath.setNameFilters(QStringList(radarName + "*"));
@@ -135,27 +144,57 @@ bool RadarFactory::hasUnprocessedData()
       
       // Check to see which are in the time limits
       for (int i = 0; i < filenames.size(); ++i) {
-	QString file = filenames.at(i);
-	QString timepart = file;
-	// Replace the radarname so we just have timestamps
-	timepart.replace(radarName, "");
-	QStringList timestamp = timepart.split("_");
-	QDate fileDate = QDate::fromString(timestamp.at(0), "yyyyMMdd");
-	QTime fileTime = QTime::fromString(timestamp.at(1), "hhmmss");
-	QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
-	
-	if (fileDateTime >= startDateTime && fileDateTime <= endDateTime) {	
-	  // Valid time and radar name, check to see if it has been processed
-	  if (!fileAnalyzed[dataPath.filePath(file)]) {
-	    // File has not been analyzed, add it to the queue
-	    radarQueue->enqueue(file);
-	  }
-	}
+		  QString file = filenames.at(i);
+		  QString timepart = file;
+		  // Replace the radarname so we just have timestamps
+		  timepart.replace(radarName, "");
+		  QStringList timestamp = timepart.split("_");
+		  QDate fileDate = QDate::fromString(timestamp.at(0), "yyyyMMdd");
+		  QTime fileTime = QTime::fromString(timestamp.at(1), "hhmmss");
+		  QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
+		  
+		  if (fileDateTime >= startDateTime && fileDateTime <= endDateTime) {	
+			  // Valid time and radar name, check to see if it has been processed
+			  if (!fileAnalyzed[dataPath.filePath(file)]) {
+				  // File has not been analyzed, add it to the queue
+				  radarQueue->enqueue(file);
+			  }
+		  }
       }
-    }
-   
+
     break;
-    
+	}
+  case ldmlevelII:
+  {
+      // Should have filenames starting with radar ID
+      dataPath.setNameFilters(QStringList(radarName + "*"));
+      dataPath.setFilter(QDir::Files);
+      dataPath.setSorting(QDir::Time | QDir::Reversed);
+      QStringList filenames = dataPath.entryList();
+      
+      // Check to see which are in the time limits
+      for (int i = 0; i < filenames.size(); ++i) {
+		  QString file = filenames.at(i);
+		  QString timepart = file;
+		  // Replace the radarname so we just have timestamps
+		  timepart.replace(radarName, "");
+		  QStringList timestamp = timepart.split("_");
+		  QDate fileDate = QDate::fromString(timestamp.at(0), "yyyyMMdd");
+		  QTime fileTime = QTime::fromString(timestamp.at(1), "hhmmss");
+		  QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
+		  
+		  if (fileDateTime >= startDateTime && fileDateTime <= endDateTime) {	
+			  // Valid time and radar name, check to see if it has been processed
+			  if (!fileAnalyzed[dataPath.filePath(file)]) {
+				  // File has not been analyzed, add it to the queue
+				  radarQueue->enqueue(file);
+			  }
+		  }
+      }
+	  
+	  break;
+  }
+	  
   case model:
     {
       // Currently the GUI is set up to take the XML config in the 
