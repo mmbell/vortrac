@@ -49,8 +49,7 @@ bool LdmLevelII::readVolume()
 	  int recSize;
 	  dataIn.readRawData((char *)&recSize, 4);
 	  if (swap_bytes) {
-		  swab((char *)&recSize, 
-			   (char *)&recSize, 2);
+		  recSize = swap4((char *)&recSize); 
 	  }
   
 	  // Read in the compressed record

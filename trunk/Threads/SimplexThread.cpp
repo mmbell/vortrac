@@ -330,9 +330,7 @@ void SimplexThread::run()
 				if (meanCount == 0) {
 					// No answer!
 					archiveNull(radius, height, numPoints);
-					mutex.unlock();
-					continue;
-				}
+				} else {
 				meanXall = meanXall / float(meanCount);
 				meanYall = meanYall / float(meanCount);
 				meanVTall = meanVTall / float(meanCount);
@@ -365,9 +363,8 @@ void SimplexThread::run()
 				}
 				if (meanCount == 0) {
 					// No answer!
-					mutex.unlock();
-					continue;
-				}				
+					archiveNull(radius, height, numPoints);
+				} else {				
 				meanX = meanX / float(meanCount);
 				meanY = meanY / float(meanCount);
 				meanVT = meanVT / float(meanCount);
@@ -382,6 +379,8 @@ void SimplexThread::run()
 				
 				// All done with this radius and height, archive it
 				archiveCenters(radius, height, numPoints);
+				}
+				}
 			}
 			}
 			mutex.unlock();

@@ -178,9 +178,9 @@ bool RadarFactory::hasUnprocessedData()
 		  QString timepart = file;
 		  // Replace the radarname so we just have timestamps
 		  timepart.replace(radarName, "");
-		  QStringList timestamp = timepart.split("_");
-		  QDate fileDate = QDate::fromString(timestamp.at(0), "yyyyMMdd");
-		  QTime fileTime = QTime::fromString(timestamp.at(1), "hhmmss");
+		  QStringList timestamp = timepart.split(".");
+		  QDate fileDate = QDate::fromString(timestamp.at(1).left(8), "yyyyMMdd");
+		  QTime fileTime = QTime::fromString(timestamp.at(1).right(6), "hhmmss");
 		  QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
 		  
 		  if (fileDateTime >= startDateTime && fileDateTime <= endDateTime) {	
