@@ -342,6 +342,7 @@ void SimplexList::append(const SimplexData &value)
 
 void SimplexList::timeSort()
 {
+  // This is still pretty not working, it screws up good orders
   for(int i = 0; i < this->count(); i++) {
     for(int j = i+1; j < this->count(); j++) {
       if(this->value(i).getTime() > this->value(j).getTime()) {

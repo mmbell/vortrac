@@ -34,7 +34,7 @@ class ChooseCenter
     bool chooseMeanCenters();
     bool constructPolynomial();
     bool fixCenters();
-    bool fixCentersNoFit();
+    //bool fixCentersNoFit();
     void useLastMean();
     // void checkHeights();
 
@@ -42,8 +42,9 @@ class ChooseCenter
  private:
     Configuration* config;       // Should this be a constant parameter
     SimplexList simplexResults;
-	VortexData* vortexData;
+    VortexData* vortexData;
     float velNull;
+    int numLevels;
   
     float windWeight, stdWeight, ptsWeight;
     float positionWeight, rmwWeight, velWeight;

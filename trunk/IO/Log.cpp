@@ -198,8 +198,10 @@ void Log::catchLog(const Message& logEntry)
 
 bool Log::writeToFile(const QString& message)
 {
-  if(logFile->isOpen())
+  if(logFile->isOpen()) {
     Message::toScreen("When logging message: "+message+" logFile was already open");
+    logFile->close();
+  }
   if(logFile->open(QIODevice::Append)) 
     {
       logFile->write(message.toAscii());

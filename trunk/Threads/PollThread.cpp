@@ -157,6 +157,8 @@ void PollThread::run()
     dropsondeList = new PressureList(pressureConfig);
     dropsondeList->open();
 
+    emit vortexListUpdate(vortexList);
+
   }  
 
   //Message::toScreen("Num simplex: "+QString().setNum(list->count()));
@@ -274,7 +276,7 @@ void PollThread::run()
 				}
 				// Done with radar volume, send a signal to the Graph to update
 				emit vortexListUpdate(vortexList);
-			  Message::toScreen("Wait for analysis done");
+				Message::toScreen("Wait for analysis done");
 			}
 			mutex.unlock();  
 			//Message::toScreen("After mutex unlock in pollThread");

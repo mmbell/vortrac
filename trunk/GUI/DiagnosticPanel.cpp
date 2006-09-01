@@ -86,10 +86,10 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   vcp = new QLineEdit(*vcpString); 
   //vcp = new QLineEdit(QString("121"));
   vcp->setReadOnly(true);
-  vcpLayout->addStretch();
+  //vcpLayout->addStretch();
   vcpLayout->addWidget(vcpLabel);
   vcpLayout->addWidget(vcp);
-  vcpLayout->addStretch();
+  //vcpLayout->addStretch();
   
   // Displays warning message that may accompany the change in stoplight
   // signal
@@ -159,7 +159,7 @@ void DiagnosticPanel::updateVCP(const int newVCP)
 	vcpString->setNum(newVCP);
 	// Still not fixed even though there is no direct connection across threads now
 	vcp->clear();
-	//vcp->insert(*vcpString);
+	vcp->insert(*vcpString);
 }
 
 void DiagnosticPanel::updateCappi(const GriddedData* newCappi)

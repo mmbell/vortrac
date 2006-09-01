@@ -82,6 +82,7 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
       clockwise = false;
   }
   
+  /*
   //Check to see which sweeps have reflectivity data...
   for(int s = 0; s < radarData->getNumSweeps(); s++) {
     int num = radarData->getRay(radarData->getSweep(s)->getFirstRay())->getRef_numgates();
@@ -90,7 +91,11 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
   }
 
   //Message::toScreen("q = "+QString().setNum(q)+" qinc "+QString().setNum(qinc));
-		    
+	
+  */	    
+
+  // This parts interpolates reflectivity data onto levels which only contain
+  // velocity data.
 
   int ifoundit = 0;
   float a, b, c, den;

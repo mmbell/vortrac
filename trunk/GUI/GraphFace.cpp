@@ -228,26 +228,46 @@ void GraphFace::saveImage(QString fileName)
 
 void GraphFace::newInfo(VortexList* gList)
 { 
-  VortexData new_point = gList->last(); 
-
+    
   if (first.isNull()) {
-	  first = QDateTime(new_point.getTime());
+    // Find the earilier vortexData in the new list
+    QDateTime initialTime = gList->value(0).getTime(); 
+    int initialTimeIndex = 0;
+    for(int i = 1; i < gList->count(); i++) {
+      if(gList->value(i).getTime().time() < initialTime.time()) {
+	initialTime = gList->value(i).getTime();
+	initialTimeIndex = i;
+      }	
+      if(gList->value(i).getTime().date() < initialTime.date()) {
+	initialTime = gList->value(i).getTime();
+	initialTimeIndex = i;
+      }
+    }
+
+    first = QDateTime(initialTime);
   }
-  checkPressure(&new_point);
-  checkRmw(&new_point);
-  checkRanges();
-  
-  // set time range as the number of seconds between the time of the first 
-  // point and the time of this point
-  
-  if(first.secsTo(new_point.getTime())> timeRange)
-    timeRange = first.secsTo(new_point.getTime());
-  if (timeRange == 0)
-	  timeRange = 60;
+
+  for(int i = 0; i < gList->count(); i++) {
+    
+    VortexData new_point = gList->value(i);
+ 
+    checkPressure(&new_point);
+    checkRmw(&new_point);
+    checkRanges();
+    
+    // set time range as the number of seconds between the time of the first 
+    // point and the time of this point
+    
+    if(first.secsTo(new_point.getTime())> timeRange)
+      timeRange = first.secsTo(new_point.getTime());
+    if (timeRange == 0)
+      timeRange = 60;
+  }
+    
   VortexDataList = gList;
   imageAltered = true;
   emit update(); 
-  
+  //  Message::toScreen("Should have loaded everything");
   // puts out signal that starts paintEvent to repaint;
 }
 
