@@ -711,6 +711,8 @@ bool ChooseCenter::constructPolynomial()
   delete [] MM;
   delete [] BB;
   delete [] squareVariance;
+  delete [] lastFitCoeff;
+  delete [] currentCoeff;
   //delete [] stError;
   //Message::toScreen("Finished deleting arrays");
   return true;
@@ -892,40 +894,43 @@ bool ChooseCenter::fixCenters()
     // is this intentional or not??
     // my best guess is that degree will be set to the high degree for wind
     // so that is what I will set it to here
+    
+    /*
+    
+    // This part generates details on the average over all volumes
+    // for each level examined - I am not sure exactly what these need to
+    // be used for
+    
+    for(int i = 0; i <= simplexResults.count(); i++) {
+      float radiusSum = 0;
+      float xSum = 0;
+      float ySum = 0;
+      float centerDeviation = 0;
+      float radiusDeviation = 0;
+      for(int k = 0; k < numLevels; k++) {
+	Center bestCenter = simplexResults[i].getCenter(k, newBestRadius[i][k],
+							newBestCenter[i][k]);
+	radiusSum += bestCenter.getRadius();
+	xSum = bestCenter.getX();
+	ySum = bestCenter.getY();
+      }
+      float radiusMean = radiusSum/numLevels;
+      float xMean = xSum/numLevels;
+      float yMean = ySum/numLevels;
+      
+      for(int k = 0; k < simplexResults[i].getNumLevels(); k++) {
+	Center bestCenter = simplexResults[i].getCenter(k,newBestRadius[i][k],
+							newBestCenter[i][k]);
+	centerDeviation += pow((xMean - bestCenter.getX()),2);
+	centerDeviation += pow((yMean - bestCenter.getY()),2);
+	radiusDeviation +=pow((radiusMean -bestCenter.getRadius()),2);
+      }
+      centerDeviation = sqrt(centerDeviation/numLevels);
+      radiusDeviation = sqrt(radiusDeviation/numLevels);
+    }
+    */ 
   }
 
-  /*
-  //This part generates details on the average over all volumes
-  //what use is this? It is also current failing because it looks beyond
-
-  for(int i = 0; i <= simplexResults.count(); i++) {
-    float radiusSum = 0;
-    float xSum = 0;
-    float ySum = 0;
-    float centerDeviation = 0;
-    float radiusDeviation = 0;
-    for(int k = 0; k < numLevels; k++) {
-      Center bestCenter = simplexResults[i].getCenter(k, newBestRadius[i][k],
-						      newBestCenter[i][k]);
-      radiusSum += bestCenter.getRadius();
-      xSum = bestCenter.getX();
-      ySum = bestCenter.getY();
-    }
-    float radiusMean = radiusSum/numLevels;
-    float xMean = xSum/numLevels;
-    float yMean = ySum/numLevels;
-
-    for(int k = 0; k < simplexResults[i].getNumLevels(); k++) {
-      Center bestCenter = simplexResults[i].getCenter(k,newBestRadius[i][k],
-						      newBestCenter[i][k]);
-      centerDeviation += pow((xMean - bestCenter.getX()),2);
-      centerDeviation += pow((yMean - bestCenter.getY()),2);
-      radiusDeviation +=pow((radiusMean -bestCenter.getRadius()),2);
-    }
-    centerDeviation = sqrt(centerDeviation/numLevels);
-    radiusDeviation = sqrt(radiusDeviation/numLevels);
-  }
-  */
   for(int i = 0; i < 4; i++)
     delete [] newVariance[i];
   delete [] newVariance;

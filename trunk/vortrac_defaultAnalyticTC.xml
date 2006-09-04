@@ -16,7 +16,7 @@
      <vt2angle>45</vt2angle>
      <vr2>0</vr2>
      <vr2angle>0</vr2angle>
-     <env_speed>80</env_speed>
+     <env_speed>40</env_speed>
      <env_dir>0</env_dir>
   </wind_field>
   <lamb>
@@ -33,12 +33,12 @@
      <velgatesp>1</velgatesp>
      <refgatesp>1</refgatesp>
      <beamwidth>1</beamwidth>
-     <nyquistVel>85</nyquistVel>
-     <dealiasdata>false</dealiasdata>
+     <nyquistVel>25</nyquistVel>
+     <dealiasdata>true</dealiasdata>
      <noiseScale>10</noiseScale>
      <percent_noisy_gates>0</percent_noisy_gates>
      <numgates>300</numgates>
-     <numsweeps>4</numsweeps>
+     <numsweeps>2</numsweeps>
      <sweep0>0.5</sweep0>
      <sweep1>1.5</sweep1>
      <sweep2>2.5</sweep2>

@@ -236,6 +236,10 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
 
 void AnalyticGrid::gridWindFieldData()
 
+  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // Working on math this is the only right option right now
+  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
   /*
    * Creates data from user specified winds based on the rankine vortex model
    * allows for asymmetries in tangential and radial flows within the idealized
@@ -257,7 +261,11 @@ void AnalyticGrid::gridWindFieldData()
 	}
 
 	float vx = 0;
+	// Wind component in the positive x direction in a cartesian 
+	// system where positive y is north
 	float vy = 0;
+	// Wind component in the positive y direction in a cartesian 
+	// system where positive y is north
 	float ref = 0;
 	float delX, delY, r, theta, delRX, delRY, radR;
 	delX = centX-(iGridsp*i);
@@ -281,7 +289,8 @@ void AnalyticGrid::gridWindFieldData()
 	  for(int a = 0; a < vT.count(); a++) {
 	    float tangentialV =  vT[a]*cos(a*(Pi-theta+vTAngle[a]))*(rmw/r);
 	    vx +=tangentialV*(delY/r);
-	    vy +=tangentialV*(delX/r);
+	    //vy +=tangentialV*(delX/r);
+	    vy += tangentialV*(-1*delX/r);
 	    ref += tangentialV;
 	  } 
 	}
@@ -290,11 +299,15 @@ void AnalyticGrid::gridWindFieldData()
 	    for(int a = 0; a < vT.count(); a++) {
 	      float tangentialV =vT[a]*cos(a*(Pi-theta+vTAngle[a]))*(r/rmw);
 	      vx+=tangentialV*(delY/r);
-	      vy+=tangentialV*(delX/r);
+	      //vy+=tangentialV*(delX/r);
+	      vy+= tangentialV*(-1*delX/r);
 	      ref+=tangentialV;
 	    } 
 	  }
 	}
+
+	// Haven't fixed radial yet
+	
 	if(r>rmw) {
 	  for(int a = 0; a < vR.count(); a++) {
 	    float radialV = vR[a]*-c2*sqrt(r-rmw)*(rmw/r);
@@ -323,17 +336,18 @@ void AnalyticGrid::gridWindFieldData()
     * (0 north, clockwise)
     */
 
-	float vex = envSpeed*sin(Pi+(envDir)*deg2rad);
-	float vey = envSpeed*cos(Pi+(envDir)*deg2rad);
+	float vex = envSpeed*-1*sin(envDir*deg2rad);
+	float vey = envSpeed*-1*cos(envDir*deg2rad);
 	
 	vx += vex;
 	vy += vey;
 	//ref+= sqrt(vex*vex+vey*vey);
+	ref += 5;
 	
 	// Sample in direction of radar
 	if(radR != 0) {
       
-	  dataGrid[1][i][j][k] = -(delRX*vx-delRY*vy)/radR;
+	  dataGrid[1][i][j][k] = -(delRX*vx+delRY*vy)/radR;
 	  //dataGrid[1][i][j][k] = envSpeed*radR/200;
      
 	}      	
@@ -347,6 +361,7 @@ void AnalyticGrid::gridWindFieldData()
       // out << endl;
     } 
   }
+  Message::toScreen("Finished Grid Wind Field");
 }
 
 void AnalyticGrid::gridLambData()

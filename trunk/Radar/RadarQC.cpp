@@ -37,6 +37,12 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
   int vcp = radarData->getVCP();
   float zero = 0.0;
   radarHeight = radarData->absoluteRadarBeamHeight(zero,zero);
+
+  Message::toScreen("Radar Height = "+QString().setNum(radarHeight)+" check units and values");
+
+  // Used to determine how the reflectivity data should be interpolated based
+  // on the vcp of the radar volume
+
   if(vcp < 33) {
     q = 3;
     if(vcp == 12) {
@@ -55,7 +61,7 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
   // Interpolating reflectivity to split levels
 
   // Determine rotational direction of radar
-  bool clockwise;
+  bool clockwise = false;
   float sumazdiff = 0.;
   int k = 0;
   Sweep *currentSweep = radarData->getSweep(k);
@@ -237,6 +243,8 @@ RadarQC::~RadarQC()
     delete [] aveVADHeight[i];
   }
   delete [] aveVADHeight;
+  delete [] envWind;
+  delete [] envDir;
 }
 
 void RadarQC::getConfig(QDomElement qcConfig)
@@ -707,16 +715,37 @@ bool RadarQC::findVADStart(bool useGVAD)
 	}
 
 	if(useGVAD) {
+	  /*
+	  VAD(lowLevelVel, currentSweep, speedl, dirl, rmsl);
+	  Message::toScreen("VAD Low m="+QString().setNum(m)+", n="
+			    +QString().setNum(n)+" speed = "
+			    +QString().setNum(speedl)+", dir = "
+			    +QString().setNum(dirl)+" rms = "
+			    +QString().setNum(rmsl));
+
+	  VAD(highLevelVel, currentSweep, speedu, diru, rmsu);
+	  Message::toScreen("VAD High m="+QString().setNum(m)+", n="
+			    +QString().setNum(n)+" speed = "
+			    +QString().setNum(speedu)+", dir = "
+			    +QString().setNum(diru)+" rms = "
+			    +QString().setNum(rmsu));
+	  */
 	 
 	  GVAD(lowLevelVel, currentSweep, speedl, dirl, rmsl);
-	  /*Message::toScreen("!!Speed = "+QString().setNum(speedl)+" dir = "
-		    +QString().setNum(dirl)+" low, m = "
-		    +QString().setNum(m)+", n = "+QString().setNum(n));
+	  /*
+	  Message::toScreen("GVAD Low m="+QString().setNum(m)+", n="
+			    +QString().setNum(n)+" speed = "
+			    +QString().setNum(speedl)+", dir = "
+			    +QString().setNum(dirl)+" rms = "
+			    +QString().setNum(rmsl));
 	  */
 	  GVAD(highLevelVel, currentSweep, speedu, diru, rmsu);
-	  /*Message::toScreen("!!Speed = "+QString().setNum(speedl)+" dir = "
-		    +QString().setNum(dirl)+" low, m = "
-		    +QString().setNum(m)+", n = "+QString().setNum(n));
+	  /*
+	  Message::toScreen("GVAD High m="+QString().setNum(m)+", n="
+			    +QString().setNum(n)+" speed = "
+			    +QString().setNum(speedu)+", dir = "
+			    +QString().setNum(diru)+" rms = "
+			    +QString().setNum(rmsu));
 	  */
 	}
 	else {
@@ -740,6 +769,7 @@ bool RadarQC::findVADStart(bool useGVAD)
       highSpeed[m][n] = speedu;
       highDir[m][n] = diru;
       highRMS[m][n] = rmsu;
+      //Message::toScreen("for m,n = "+QString().setNum(m)+", "+QString().setNum(n)+" lowDir = "+QString().setNum(lowDir[m][n])+" highDir = "+QString().setNum(highDir[m][n])+" lowRMS = "+QString().setNum(lowRMS[m][n])+" highRMS = "+QString().setNum(highRMS[m][n]));
     }
   }
 
@@ -897,52 +927,48 @@ void RadarQC::vadPrep()
   for (int m = 0; m < vadLevels; m++) {
     for(int n = 0; n < numSweeps; n++) {
       Sweep* currentSweep = radarData->getSweep(n);
-      int start = currentSweep->getFirstRay();
-      int stop = currentSweep->getLastRay();
       if(currentSweep->getVel_numgates() > 0) {
-	for(int r = start; r <= stop; r++) {
-	  //int r = start;
-	  Ray *currentRay = radarData->getRay(r);
-	  int numVBins = currentRay->getVel_numgates();
-	  float max_up = 0;
-	  float max_low = 0;
-	  bool hasHighVel = false;
-	  bool hasLowVel = false;
-	  for(int v = 0; v < numVBins; v++) {
-	    float height = (aveVADHeight[n][v] - radarHeight)*3.281;
-	    // Here height is in thousands of feet relative to radar (AGL?)
-	    if((height >= m)&&(height < m+1)) {
-	      if((validBinCount[n][v] > max_up)
-		 &&(validBinCount[n][v] < last_count_up[m][n])) {
-		max_up = validBinCount[n][v];
-		highVelGate[m][n] = v;
-		if(max_up > thr) {
-		  hasHighVel = true;
-		}
-	      } 
-
+	int numVBins = currentSweep->getVel_numgates();
+	float max_up = 0;
+	float max_low = 0;
+	bool hasHighVel = false;
+	bool hasLowVel = false;
+	for(int v = 0; v < numVBins; v++) {
+	  float height = (aveVADHeight[n][v] - radarHeight)*3.281;
+	  // Here height is in thousands of feet relative to radar (AGL?)
+	  if((height >= m)&&(height < m+1)) {
+	    if((validBinCount[n][v] > max_up)
+	       &&(validBinCount[n][v] < last_count_up[m][n])) {
+	      max_up = validBinCount[n][v];
+	      highVelGate[m][n] = v;
 	    }
-	    if((height >= m-1)&&(height < m)) {
-	      if((validBinCount[n][v] > max_low)
-	       &&(validBinCount[n][v] < last_count_low[m][n])) {
-		max_low = validBinCount[n][v];
-		lowVelGate[m][n] = v;
-		if(max_low > thr)
-		  hasLowVel = true;  
-	      }
+	    if(max_up > thr) {
+	      hasHighVel = true;
 	    }
+	      
 	  }
-	  if(hasHighVel && hasLowVel) {
-	    hasVelData[m][n] = true;
-	    goodRings++;
-	    last_count_up[m][n] = max_up;
-	    last_count_low[m][n] = max_low;
+	  if((height >= m-1)&&(height < m)) {
+	    if((validBinCount[n][v] > max_low)
+	       &&(validBinCount[n][v] < last_count_low[m][n])) {
+	      max_low = validBinCount[n][v];
+	      lowVelGate[m][n] = v;
+	    }
+	    if(max_low > thr) {
+	      hasLowVel = true;
+	    }  
 	  }
 	}
-      } 
+	if(hasHighVel && hasLowVel) {
+	  hasVelData[m][n] = true;
+	  goodRings++;
+	  last_count_up[m][n] = max_up;
+	  last_count_low[m][n] = max_low;
+	  //Message::toScreen("m = "+QString().setNum(m)+" n = "+QString().setNum(n)+" last count up = "+QString().setNum(max_up)+" last count low = "+QString().setNum(max_low));
+	}
+      }
     }
   }
-  //Message::toScreen("How many rings have vel data after vad prep: "+QString().setNum(goodRings));
+  Message::toScreen("How many rings have vel data after vad prep: "+QString().setNum(goodRings));
 }
 
 
@@ -1095,7 +1121,7 @@ bool RadarQC::GVAD(float* &vel, Sweep* &currentSweep,
       float AA = radarData->getRay(rr+start)->getAzimuth();
       A *= deg2rad;
       AA *= deg2rad;
-      float deltaA;
+      float deltaA = 0;
       if(fabs(AA-A) >  pi) {
 	if(AA>A) 
 	  deltaA = AA-A-2*pi;
@@ -1236,7 +1262,7 @@ float RadarQC::getStart(Ray *currentRay)
 
   // There as some adjustment factors in here that seem bad!!!!
     
-  float startVelocity;
+  float startVelocity = 0;
   
   if(useUserWinds) {
     float phi = currentRay->getAzimuth();
@@ -1262,7 +1288,7 @@ float RadarQC::getStart(Ray *currentRay)
       }
     }
     if(hasDopplerData) {
-      //QString d("In getStart vadLevels = "+QString().setNum(vadLevels)+" dataHeight = "+QString().setNum(dataHeight)+" envWind @ dataHeight = "+QString().setNum(envWind[dataHeight]));
+      //QString d("In getStart rayIndex,sweepIndex = "+QString().setNum(currentRay->getRayIndex())+", "+QString().setNum(currentRay->getSweepIndex())+" azimuth = "+QString().setNum(azimuth)+" envWind @ dataHeight = "+QString().setNum(envWind[dataHeight])+" envDir @ dataHeight = "+QString().setNum(envDir[dataHeight]));
       //emit log(Message(d));
     
       if(envWind[dataHeight] != velNull) {
@@ -1293,7 +1319,12 @@ float RadarQC::getStart(Ray *currentRay)
       }
       if(envWindFound) {
 
-	startVelocity = envWind[dataHeight]*cos(elevAngle)*cos((180+envDir[dataHeight]-azimuth)*deg2rad);
+	//startVelocity = envWind[dataHeight]*cos(elevAngle)*cos((180+envDir[dataHeight]-azimuth)*deg2rad);
+	startVelocity = -1*envWind[dataHeight]*cos(elevAngle)*cos((envDir[dataHeight]-azimuth)*deg2rad);
+	//if((currentRay->getRayIndex()%45) == 0) {
+	  //QString d("In getStart rayIndex,sweepIndex = "+QString().setNum(currentRay->getRayIndex())+", "+QString().setNum(currentRay->getSweepIndex())+" azimuth = "+QString().setNum(azimuth)+" envWind @ dataHeight = "+QString().setNum(envWind[dataHeight])+" envDir @ dataHeight = "+QString().setNum(envDir[dataHeight])+" startVelocity = "+QString().setNum(startVelocity));
+	  //emit log(Message(d));
+	//}
       }
       else {
 	startVelocity = velNull;
@@ -1326,7 +1357,8 @@ bool RadarQC::BB()
       float startVelocity = getStart(currentRay);
       float nyquistVelocity = currentRay->getNyquist_vel();
       int numVelocityGates = currentRay->getVel_numgates();
-      //Message::toScreen("DRay #"+QString().setNum(i)+" startVelocity "+QString().setNum(startVelocity)+" nyquist = "+QString().setNum(nyquistVelocity));
+      //if((currentRay->getRayIndex()%45)==0)
+	//Message::toScreen("DRay #"+QString().setNum(currentRay->getRayIndex())+" startVelocity "+QString().setNum(startVelocity)+" nyquist = "+QString().setNum(nyquistVelocity));
       if((numVelocityGates!=0)&&(startVelocity!=velNull))
 	{
 	  float sum = float(numVGatesAveraged)*startVelocity;

@@ -125,9 +125,9 @@ void PollThread::run()
     vortexList = new VortexList(vortexConfig);
     vortexList->open();
     
-    QString outFileName = "/home/lmauger/NCAR/vortrac/trunk/workingDirs/centerTest_vortexList.xml";
+    QString outFileName = "/scr/science40/mauger/Working/trunk/workingDirs/centerTest_vortexList.xml";
     vortexList->setFileName(outFileName);
-    vortexList->setNewWorkingDirectory("/home/lmauger/NCAR/vortrac/trunk/workingDirs/");
+    vortexList->setNewWorkingDirectory("/scr/science40/mauger/Working/trunk/workingDirs/");
   
     file = QString("vortrac_2004-08-13T18_24_04simplexList.xml");
     //simplexConfig = new Configuration(0,QString());
@@ -137,9 +137,9 @@ void PollThread::run()
     simplexList = new SimplexList(simplexConfig);
     simplexList->open();
    
-    outFileName = "/home/lmauger/NCAR/vortrac/trunk/workingDirs/centerTest_simplexList.xml";
+    outFileName = "/scr/science40/mauger/Working/trunk/workingDirs/centerTest_simplexList.xml";
     simplexList->setFileName(outFileName);
-    simplexList->setNewWorkingDirectory("/home/lmauger/NCAR/vortrac/trunk/workingDirs/");
+    simplexList->setNewWorkingDirectory("/scr/science40/mauger/Working/trunk/workingDirs/");
     /*
     Message::toScreen("Simplex count = "+QString().setNum(simplexList->count()));
     for(int j = 0; j < simplexList->count(); j++) {

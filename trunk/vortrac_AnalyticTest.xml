@@ -22,7 +22,7 @@
         <dir>/scr/science40/mauger/Working/trunk/workingDirs/cappi</dir>
         <xdim>200</xdim>
         <ydim>200</ydim>
-        <zdim>5</zdim>
+        <zdim>2</zdim>
         <xgridsp>1.0</xgridsp>
         <ygridsp>1.0</ygridsp>
         <zgridsp>1.0</zgridsp>
@@ -100,13 +100,13 @@
         <ref_min>-15</ref_min>
         <ref_max>85</ref_max>
         <sw_threshold>30.0</sw_threshold>
-        <bbcount>30</bbcount>
+        <bbcount>20</bbcount>
         <maxfold>4</maxfold>
         <windspeed>0</windspeed>
         <winddirection>0</winddirection>
         <awips_dir>/path/to/awips/data</awips_dir>
-        <gvad>false</gvad>
-        <vadlevels>25</vadlevels>
+        <gvad>true</gvad>
+        <vadlevels>8</vadlevels>
         <numcoeff>3</numcoeff>
     </qc>
 </vortrac>

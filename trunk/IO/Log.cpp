@@ -198,6 +198,7 @@ void Log::catchLog(const Message& logEntry)
 
 bool Log::writeToFile(const QString& message)
 {
+  
   if(logFile->isOpen()) {
     Message::toScreen("When logging message: "+message+" logFile was already open");
     logFile->close();
@@ -214,4 +215,5 @@ bool Log::writeToFile(const QString& message)
 
   // Message::toScreen("Failed to write Log message to file");
   return false;
+  
 }

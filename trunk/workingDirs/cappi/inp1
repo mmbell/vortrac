@@ -2,11 +2,11 @@
 # INPUT FILE FOR GRID2PS (MANDATORY PARAMETERS)
 #**************************************************
 #OUTPUT_NAME  !name of the output file
-'charley_cappi_1829.ps'
+'cappi_input.ps'
 #INPUT_FLAG (C or T)  !C=Cedric; T=Text; 
 W
 #DATA_FILE (if input_flag='T')  !name of the text file if input_flag=T
-'2004-08-13T18_29_12.asi'
+'analyticModel.asi'
 #COLOR (Y or N)  !color plot? Y=yes;N=no 
 Y
 #CONTOUR_TYPE (0=gray at 0;1=gray at midpoint of range;2=no gray)
@@ -28,17 +28,17 @@ Y
 #FILL_BEG   !if fill_flag=Y, begin contour value
 0.0
 #FILL_END   !if fill_flag=Y, end contour value
-64.0
+20.0
 #FILL_INC   !if fill_flag=Y, contour increment
-4.0
+2.0
 #NOFILL_BEG !if fill_flag=N, begin contour value
--90.0
+-40.0
 #NOFILL_END !if fill_flag=N, end contour value
-90.0 
+40.0 
 #NOFILL_INC !if fill_flag=N, contour increment
-5.0
+2.0
 #PANEL_TITLE !title of the panel
-'Rankine Vortex (2006)'
+'Rankine Vortex For GVAD dealiasing - Cappi Input (2006)'
 #SCALE_TITLE !title for the color bar (usually units)
 dBZ
 #TITLE !title of the plot (top of page)
