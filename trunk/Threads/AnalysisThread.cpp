@@ -370,6 +370,11 @@ void AnalysisThread::run()
 		vortexList->append(*vortexData);		
 		vortexList->save();
 		
+		// Delete CAPPI, RadarData and HVVP objects
+		delete gridData;
+		delete radarVolume;
+		delete envWindFinder;
+		
 		mutex.lock(); // Added this one....
 
 		// delete vortexData;

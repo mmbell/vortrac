@@ -64,7 +64,7 @@ Hvvp::~Hvvp()
   delete [] v;
   delete [] var;
   delete [] vm_sin;
-  delete [] volume;
+
   for(int i = 0; i < xlsDimension; i++) {
     delete [] xls[i];
   }
