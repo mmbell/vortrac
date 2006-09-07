@@ -16,6 +16,7 @@ class Ray
 
  public:
   Ray();
+  ~Ray();
   void setTime(const int &value);
   void setDate(const int &value);
   void setAzimuth(const float &value);

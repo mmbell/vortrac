@@ -253,7 +253,7 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
 			image.setPixel(x,y,color);
 		}
 	}
-	image = image.scaled((int)iDim*10,(int)jDim*10);
+	image = image.scaled((int)500,(int)500);
 	cappiLabel = "Velocities = " +QString().setNum(maxVel) + " to " 
 		+ QString().setNum(minVel) + " in " + QString().setNum(velIncr) + " m/s incr.";
 	QSize textSize(0, (int)(image.height() * 0.05));

@@ -14,6 +14,13 @@ Ray::Ray()
 {
 }
 
+Ray::~Ray()
+{
+	delete [] refData;
+	delete [] velData;
+	delete [] swData;
+}
+
 void Ray::setTime(const int &value) {
   time = value;
 }

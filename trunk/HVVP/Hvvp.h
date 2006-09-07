@@ -70,6 +70,7 @@ private:
 
    float** xls;
    int xlsDimension;
+   int maxpoints;
    float* yls;
    float* wgt;
 

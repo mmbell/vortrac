@@ -28,6 +28,9 @@ LevelII::LevelII(const QString &radarname, const float &lat, const float &lon, c
 
 LevelII::~LevelII()
 {
+	delete volHeader;
+	delete radarHeader;
+	delete msgHeader;
 	delete Sweeps;
 	delete Rays;
 	
@@ -41,11 +44,12 @@ bool LevelII::readVolume()
 	return false;
 }
 
-Sweep LevelII::addSweep()
+void LevelII::addSweep(Sweep* newSweep)
 {
 
   // Add a Sweep to the volume
-  Sweep *newSweep = new Sweep;
+  // Already allocated memory for the sweep in the LevelII constructor
+  //Sweep *newSweep = new Sweep;
   numSweeps += 1;
   newSweep->setSweepIndex( numSweeps );
   newSweep->setFirstRay(numRays);
@@ -60,14 +64,14 @@ Sweep LevelII::addSweep()
   newSweep->setVel_numgates( radarHeader->vel_num_gates );
   newSweep->setVcp( radarHeader->vol_coverage_pattern );
   
-  return *newSweep;
+  //return *newSweep;
 }
 
-Ray LevelII::addRay()
+void LevelII::addRay(Ray* newRay)
 {
 
   // Add a new ray to the sweep
-  Ray *newRay = new Ray();
+  //Ray *newRay = new Ray();
   numRays++;
   newRay->setSweepIndex( (numSweeps - 1) );
   newRay->setTime( radarHeader->milliseconds_past_midnight );
@@ -89,7 +93,7 @@ Ray LevelII::addRay()
   newRay->setVel_numgates( radarHeader->vel_num_gates );
   newRay->setVcp( radarHeader->vol_coverage_pattern );
 
-  return *newRay;
+  //return *newRay;
 }
 
 float* LevelII::decode_ref(const char *buffer, short int numGates)

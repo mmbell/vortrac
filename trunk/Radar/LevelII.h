@@ -24,8 +24,8 @@ class LevelII : public RadarData
   LevelII(const QString &radarname, const float &lat, const float &lon, const QString &filename);
   virtual ~LevelII();
   virtual bool readVolume() = 0;
-  Sweep addSweep();
-  Ray addRay();
+  void addSweep(Sweep* newSweep);
+  void addRay(Ray* newRay);
 
  protected:
   nexrad_vol_scan_title *volHeader;

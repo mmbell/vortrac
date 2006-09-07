@@ -31,7 +31,8 @@ Hvvp::Hvvp()
   rad2deg = 1.0/deg2rad;
   levels = 14;       
   xlsDimension = 16;
-
+  maxpoints = 200000;               // **
+  
   z = new float[levels];
   u = new float[levels];
   v = new float[levels];
@@ -46,6 +47,12 @@ Hvvp::Hvvp()
     vm_sin[i] = velNull;
   }
 
+  xls = new float*[xlsDimension];
+  wgt = new float[maxpoints];
+  yls = new float[maxpoints];
+  for(int k = 0; k < xlsDimension; k++)
+	  xls[k] = new float[maxpoints];
+	  
   printOutput = true;
   
 }
@@ -373,7 +380,6 @@ int Hvvp::hvvpPrep(int m) {
   float curmw = (rt - rmw)/rt;          // Unitless
   float cuthr;                          // Unitless
   float ae = 4.0*6371.0/3.0;                // km
-  int maxpoints = 200000;               // **
   Sweep* currentSweep;
   Ray* currentRay;
   float* vel; 
@@ -391,11 +397,7 @@ int Hvvp::hvvpPrep(int m) {
   //float* old_yls = yls;
   //float* old_wgt = wgt;
 
-  xls = new float*[xlsDimension];
-  wgt = new float[maxpoints];
-  yls = new float[maxpoints];
   for(int k = 0; k < xlsDimension; k++) {
-    xls[k] = new float[maxpoints];
     //delete [] old_xls[k];
     for(int l = 0; l < maxpoints; l++) {
       xls[k][l] = 0;
@@ -488,7 +490,7 @@ bool Hvvp::findHVVPWinds()
    *
    */
 
-  int count; 
+  int count = 0; 
   float mod_Rankine_xt[levels];
 
   for(int m = 0; m < levels; m++) {
@@ -529,213 +531,210 @@ bool Hvvp::findHVVPWinds()
        */
       
       if(flag) {
-	outlier = false;
-	int cgood = 0;
-	for (int n = 0; n < count; n++) {
-	  float vr_est = 0;
-	  for(int p = 0; p < xlsDimension; p++) {
-	    vr_est = vr_est+cc[p]*xls[p][n];
-	  }
-	  if(fabs(vr_est-yls[n])>2.0*sse) {
-	    yls[n] = velNull;
-	    outlier = true;
-	  }
-	  else {
-	    cgood++;
-	  }
-	}
-	
-	// Re-calculate the least squares solution if outliers are found.
-	
-	
-	int qc_count;
-	
-	float** qcxls = new float*[xlsDimension];
-	float* qcyls = new float[count];
-	float* qcwgt = new float[count];
-	for(int d = 0; d < xlsDimension; d++) {
-	  qcxls[d] = new float[count];
-	}
-	
-	if(outlier && (cgood >=6500)) {
-	  
-	  qc_count = 0;
-	  
-	  for (int n = 0; n < count; n++) {
-	    
-	    qcwgt[n] = 0;
-	    qcyls[n] = 0;
-	    for(int p = 0; p < xlsDimension; p++) {
-	      qcxls[p][n] = 0;
-	    }
-	    
-	    if(yls[n] != velNull) {
-	      qcyls[qc_count] = yls[n];
-	      qcwgt[qc_count] = 1;
-	      for(int p = 0; p < xlsDimension; p++) {
-		qcxls[p][qc_count] = xls[p][n];
-	      }
-	      qc_count++;
-	    }
-	  }
-	  flag = lls(16, qc_count, qc_count, qcxls, qcyls, qcwgt, sse, stand_err,cc);
-
-	  //Message::toScreen("qc_count = "+QString().setNum(qc_count));
-	  //flag=Matrix::lls(xlsDimension,qc_count,qcxls,qcyls,sse,cc,stand_err);
-	  /*
-	  if(flag)
-	    Message::toScreen("Second Least Squares Attempt = True");
-	  else
-	    Message::toScreen("Second Least Squares Attempt = False");
-	  */
-
-	  for(int ii = 0; ii < xlsDimension; ii++) {
-	    delete [] qcxls[ii];
-	  }
-
-	  delete [] qcxls;
-	  delete [] qcyls;
-	  delete [] qcwgt;
-
-	}
-	QString ccmessage;
-	for(int ii = 0; ii < xlsDimension; ii++) {
-	  ccmessage += "cc["+QString().setNum(ii)+"] = "+QString().setNum(cc[ii])+" ";
-	}
-	//Message::toScreen(ccmessage);
-	//Message::toScreen("--------------------------------");
-
-	ccmessage = QString();
-	for(int ii = 0; ii < xlsDimension; ii++) {
-	  ccmessage += "stand_err["+QString().setNum(ii)+"] = "+QString().setNum(stand_err[ii])+" ";
-	}
-	//Message::toScreen(ccmessage);
-	//Message::toScreen("--------------------------------");
-	
-	// Calculate the HVVP wind parameters:
-	
-	// Radial wind above the radar.
-	float vr = rt*cc[1];
-	//Message::toScreen(" vr = "+QString().setNum(vr));
-	
-	// Along beam component of the environmental wind above the radar.
-	float vm_c = cc[3]+vr;
-	//Message::toScreen(" vm_c = "+QString().setNum(vm_c));
-	
-	// Rankine exponent of the radial wind.
-	float xr = -1*cc[4]/cc[1];
-	//Message::toScreen(" xr = "+QString().setNum(xr));
-	
-	/* 
-	 * Variance of xr.  This is used in the
-	 *  weigthed average of the across beam component of the environmental wind,
-	 *  c and is calculated along the way as follows:
-	 */
-	
-	float temp = ((stand_err[4]/cc[4])*(stand_err[4]/cc[4]));
-	temp += ((stand_err[1]/cc[1])*(stand_err[1]/cc[1]));
-	var[m] = fabs(xr)*sqrt(temp);
-	
-	/*
-	 * Relations between the Rankine exponent of the tangential wind, xt,
-	 *   and xr, determined by theoretical (boundary layer) arguments of 
-	 *   Willoughby (1995) for the case of inflow, and by extension
-	 *   (constinuity equation considerations) by Harasti for the case
-	 *   of outflow.
-	 */
-	
-	float xt = 0;
-	
-	if(vr > 0) {
-	  if(xr > 0)
-	    xt = 1-xr;
-	  //if(xr < 0)
-	  else
-	    xt = -1.0*xr/2.0;
-	}
-	else {
-	  if(xr >= 0)
-	    xt = xr/2.0;
-	  //if(xr < 0) 
-	  else
-	    xt = 1+xr;
-	}
-
-	//Message::toScreen(" xt = "+QString().setNum(xt));
-	
-	mod_Rankine_xt[m] = xt;
-	
-	if(fabs(xt) == xr/2.0) 
-	  var[m] = .5*var[m];
-	
-	// Tangential wind above the radar
-	// Assume error in rt is 2 km
-	
-	float vt = rt*cc[6]/(xt+1.0);
-
-	//Message::toScreen(" vt = "+QString().setNum(vt));
-
-	if(xt == 0)
-	  Message::toScreen("Going to have issues in xt");
-	
-	temp = (2./rt)*(2./rt)+(stand_err[6]/cc[6])*(stand_err[6]/cc[6]);
-	temp += (var[m]/xt)*(var[m]/xt);
-	var[m] = vt*sqrt(temp);
-	
-	// Across-beam component of the environmental wind
-	float vm_s = cc[0]-vt;
-	//Message::toScreen(" vm_s = "+QString().setNum(vm_s));
-	
-	var[m] = sqrt(stand_err[0]*stand_err[0]+var[m]*var[m]);
-	
-	// rotate vm_c and vm_s to standard cartesian U and V components,
-	// ue and ve, csing cca.
-	// cca  = cca *deg2rad;
-	// float ue = vm_s*cos(cca)+vm_c*sin(cca);
-	// float ve = vm_c*cos(cca)-vm_s*sin(cca);
-	//Message::toScreen("rot = "+QString().setNum(rot));
-	
-	float ue = vm_s*cos(rot)+vm_c*sin(rot);
-	float ve = vm_c*cos(rot)-vm_s*sin(rot);
-	//Message::toScreen(" ve = "+QString().setNum(ve));
-	//Message::toScreen(" ue = "+QString().setNum(ue));
-	//Message::toScreen(" z[m] = "+QString().setNum(z[m]));
-	
-	// Set realistic limit on magnitude of results.
-	if((xt < 0)||(fabs(ue)>30.0)||(fabs(ve)>30)) {
-	  //Message::toScreen("First Crappy Fail Option");
-	  //z[m] = h0;               
-	  u[m] = velNull;
-	  v[m] = velNull;
-	  vm_sin[m] = velNull;
-	}
-	else {
-	  //Message::toScreen("Only Good Option");
-	  //z[m] = hgtStart+hInc*float(m);
-	  u[m] = ue;
-	  v[m] = ve;
-	  vm_sin[m] = vm_s;
-	}
-      }
-      else {
-	//Message::toScreen("Second Crappy Fail Option");
-	//z[m] = h0;
-	u[m] = velNull;
-	v[m] = velNull;
-	vm_sin[m] = velNull;
+		  outlier = false;
+		  int cgood = 0;
+		  for (int n = 0; n < count; n++) {
+			  float vr_est = 0;
+			  for(int p = 0; p < xlsDimension; p++) {
+				  vr_est = vr_est+cc[p]*xls[p][n];
+			  }
+			  if(fabs(vr_est-yls[n])>2.0*sse) {
+				  yls[n] = velNull;
+				  outlier = true;
+			  }
+			  else {
+				  cgood++;
+			  }
+		  }
+		  
+		  // Re-calculate the least squares solution if outliers are found.
+		  
+		  
+		  int qc_count;
+		  
+		  float** qcxls = new float*[xlsDimension];
+		  float* qcyls = new float[count];
+		  float* qcwgt = new float[count];
+		  for(int d = 0; d < xlsDimension; d++) {
+			  qcxls[d] = new float[count];
+		  }
+		  
+		  if(outlier && (cgood >=6500)) {
+			  
+			  qc_count = 0;
+			  
+			  for (int n = 0; n < count; n++) {
+				  
+				  qcwgt[n] = 0;
+				  qcyls[n] = 0;
+				  for(int p = 0; p < xlsDimension; p++) {
+					  qcxls[p][n] = 0;
+				  }
+				  
+				  if(yls[n] != velNull) {
+					  qcyls[qc_count] = yls[n];
+					  qcwgt[qc_count] = 1;
+					  for(int p = 0; p < xlsDimension; p++) {
+						  qcxls[p][qc_count] = xls[p][n];
+					  }
+					  qc_count++;
+				  }
+			  }
+			  flag = lls(16, qc_count, qc_count, qcxls, qcyls, qcwgt, sse, stand_err,cc);
+			  
+			  //Message::toScreen("qc_count = "+QString().setNum(qc_count));
+			  //flag=Matrix::lls(xlsDimension,qc_count,qcxls,qcyls,sse,cc,stand_err);
+			  /*
+				  if(flag)
+			   Message::toScreen("Second Least Squares Attempt = True");
+			   else
+			   Message::toScreen("Second Least Squares Attempt = False");
+			   */
+			  
+			  for(int ii = 0; ii < xlsDimension; ii++) {
+				  delete [] qcxls[ii];
+			  }
+			  
+			  delete [] qcxls;
+			  delete [] qcyls;
+			  delete [] qcwgt;
+			  
+		  }
+		  QString ccmessage;
+		  for(int ii = 0; ii < xlsDimension; ii++) {
+			  ccmessage += "cc["+QString().setNum(ii)+"] = "+QString().setNum(cc[ii])+" ";
+		  }
+		  //Message::toScreen(ccmessage);
+		  //Message::toScreen("--------------------------------");
+		  
+		  ccmessage = QString();
+		  for(int ii = 0; ii < xlsDimension; ii++) {
+			  ccmessage += "stand_err["+QString().setNum(ii)+"] = "+QString().setNum(stand_err[ii])+" ";
+		  }
+		  //Message::toScreen(ccmessage);
+		  //Message::toScreen("--------------------------------");
+		  
+		  // Calculate the HVVP wind parameters:
+		  
+		  // Radial wind above the radar.
+		  float vr = rt*cc[1];
+		  //Message::toScreen(" vr = "+QString().setNum(vr));
+		  
+		  // Along beam component of the environmental wind above the radar.
+		  float vm_c = cc[3]+vr;
+		  //Message::toScreen(" vm_c = "+QString().setNum(vm_c));
+		  
+		  // Rankine exponent of the radial wind.
+		  float xr = -1*cc[4]/cc[1];
+		  //Message::toScreen(" xr = "+QString().setNum(xr));
+		  
+		  /* 
+			  * Variance of xr.  This is used in the
+			  *  weigthed average of the across beam component of the environmental wind,
+			  *  c and is calculated along the way as follows:
+			  */
+		  
+		  float temp = ((stand_err[4]/cc[4])*(stand_err[4]/cc[4]));
+		  temp += ((stand_err[1]/cc[1])*(stand_err[1]/cc[1]));
+		  var[m] = fabs(xr)*sqrt(temp);
+		  
+		  /*
+			  * Relations between the Rankine exponent of the tangential wind, xt,
+		   *   and xr, determined by theoretical (boundary layer) arguments of 
+		   *   Willoughby (1995) for the case of inflow, and by extension
+		   *   (constinuity equation considerations) by Harasti for the case
+		   *   of outflow.
+		   */
+		  
+		  float xt = 0;
+		  
+		  if(vr > 0) {
+			  if(xr > 0)
+				  xt = 1-xr;
+			  //if(xr < 0)
+			  else
+				  xt = -1.0*xr/2.0;
+		  }
+		  else {
+			  if(xr >= 0)
+				  xt = xr/2.0;
+			  //if(xr < 0) 
+			  else
+				  xt = 1+xr;
+		  }
+		  
+		  //Message::toScreen(" xt = "+QString().setNum(xt));
+		  
+		  mod_Rankine_xt[m] = xt;
+		  
+		  if(fabs(xt) == xr/2.0) 
+			  var[m] = .5*var[m];
+		  
+		  // Tangential wind above the radar
+		  // Assume error in rt is 2 km
+		  
+		  float vt = rt*cc[6]/(xt+1.0);
+		  
+		  //Message::toScreen(" vt = "+QString().setNum(vt));
+		  
+		  if(xt == 0)
+			  Message::toScreen("Going to have issues in xt");
+		  
+		  temp = (2./rt)*(2./rt)+(stand_err[6]/cc[6])*(stand_err[6]/cc[6]);
+		  temp += (var[m]/xt)*(var[m]/xt);
+		  var[m] = vt*sqrt(temp);
+		  
+		  // Across-beam component of the environmental wind
+		  float vm_s = cc[0]-vt;
+		  //Message::toScreen(" vm_s = "+QString().setNum(vm_s));
+		  
+		  var[m] = sqrt(stand_err[0]*stand_err[0]+var[m]*var[m]);
+		  
+		  // rotate vm_c and vm_s to standard cartesian U and V components,
+		  // ue and ve, csing cca.
+		  // cca  = cca *deg2rad;
+		  // float ue = vm_s*cos(cca)+vm_c*sin(cca);
+		  // float ve = vm_c*cos(cca)-vm_s*sin(cca);
+		  //Message::toScreen("rot = "+QString().setNum(rot));
+		  
+		  float ue = vm_s*cos(rot)+vm_c*sin(rot);
+		  float ve = vm_c*cos(rot)-vm_s*sin(rot);
+		  //Message::toScreen(" ve = "+QString().setNum(ve));
+		  //Message::toScreen(" ue = "+QString().setNum(ue));
+		  //Message::toScreen(" z[m] = "+QString().setNum(z[m]));
+		  
+		  // Set realistic limit on magnitude of results.
+		  if((xt < 0)||(fabs(ue)>30.0)||(fabs(ve)>30)) {
+			  //Message::toScreen("First Crappy Fail Option");
+			  //z[m] = h0;               
+			  u[m] = velNull;
+			  v[m] = velNull;
+			  vm_sin[m] = velNull;
+		  } else {
+			  //Message::toScreen("Only Good Option");
+			  //z[m] = hgtStart+hInc*float(m);
+			  u[m] = ue;
+			  v[m] = ve;
+			  vm_sin[m] = vm_s;
+		  }
+      } else {
+		  //Message::toScreen("Second Crappy Fail Option");
+		  //z[m] = h0;
+		  u[m] = velNull;
+		  v[m] = velNull;
+		  vm_sin[m] = velNull;
       }
       delete [] stand_err;
       delete [] cc;
-    }
-    else {
-      //Message::toScreen("Third Crappy Fail Option");
-      //z[m] = h0;
-      u[m] = velNull;
-      v[m] = velNull;
-      vm_sin[m] = velNull;
+    } else {
+		//Message::toScreen("Third Crappy Fail Option");
+		//z[m] = h0;
+		u[m] = velNull;
+		v[m] = velNull;
+		vm_sin[m] = velNull;
     }
     //Message::toScreen("HVVP Output From Level "+QString().setNum(m)+" z = "+QString().setNum(z[m])+" vm_sin = "+QString().setNum(vm_sin[m]));
-     
+	
   }
   
   /*

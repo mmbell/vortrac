@@ -85,7 +85,7 @@ bool NcdcLevelII::readVolume()
 	radarDateTime = radarDateTime.addMSecs((qint64)volumeTime);
 	
 	// First sweep and ray
-	*Sweeps = addSweep();
+	addSweep(Sweeps);
 	Sweeps[0].setFirstRay(0);
 
       } else if (radarHeader->radial_status == 0) {
@@ -95,7 +95,7 @@ bool NcdcLevelII::readVolume()
 	// Count up rays in sweep
 	Sweeps[numSweeps-1].setLastRay(numRays-1);
 	// Increment array
-	Sweeps[numSweeps] = addSweep();
+	addSweep(&Sweeps[numSweeps]);
 	// Sweeps[numSweeps].setFirstRay(numRays);
 
       }
@@ -121,7 +121,7 @@ bool NcdcLevelII::readVolume()
       }
 
       // Put more rays in the volume, associated with the current Sweep;
-      Rays[numRays] = addRay();
+      addRay(&Rays[numRays]);
 
     } else {
       // Some other junk, no need to skip
