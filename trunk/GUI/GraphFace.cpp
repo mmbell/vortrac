@@ -243,7 +243,6 @@ void GraphFace::newInfo(VortexList* gList)
 	initialTimeIndex = i;
       }
     }
-
     first = QDateTime(initialTime);
   }
 
@@ -258,8 +257,9 @@ void GraphFace::newInfo(VortexList* gList)
     // set time range as the number of seconds between the time of the first 
     // point and the time of this point
     
-    if(first.secsTo(new_point.getTime())> timeRange)
-      timeRange = first.secsTo(new_point.getTime());
+    if(first.time().secsTo(new_point.getTime().time())> timeRange){
+      timeRange = first.time().secsTo(new_point.getTime().time());
+    }
     if (timeRange == 0)
       timeRange = 60;
   }
@@ -605,7 +605,7 @@ float GraphFace::scaleTime(QDateTime unscaled_time)
   // scales time and offsets the range so that no points hit the edges
 
   float temp;
-  temp = first.secsTo(unscaled_time);
+  temp = first.time().secsTo(unscaled_time.time());
   temp = temp + 60;
   temp = temp *((graph_width)/(timeRange+120));
   return temp;

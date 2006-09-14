@@ -45,11 +45,12 @@ Q_OBJECT
       QLCDNumber *clock;
       QLineEdit *vcp, *warning;
       StopLight *lights;
-	  QPushButton *cappiLaunch;
-	  CappiDisplay *cappiDisplay;
-	  const GriddedData *cappi;
-	  QString* vcpString;
+      QPushButton *cappiLaunch;
+      CappiDisplay *cappiDisplay;
+      const GriddedData *cappi;
+      QString* vcpString;
       int dummy;
+      bool hasNewCappi;
 
  private slots:
       void updateClock();

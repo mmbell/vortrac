@@ -333,11 +333,11 @@ void VortexList::append(const VortexData &value)
 void VortexList::timeSort()
 {
   for(int i = 0; i < this->count(); i++) {
-    for(int j = 0; j < this->count()-1; j++) {
-      if(this->value(j)>this->value(j+1)) {
-	this->swap(j+1,j);
-	vortexDataConfigs->swap(j+1,j);
-	configFileNames->swap(j+1,j);
+    for(int j = i+1; j < this->count(); j++) {
+      if(this->value(i).getTime().time()>this->value(j).getTime().time()) {
+	this->swap(j,i);
+	vortexDataConfigs->swap(j,i);
+	configFileNames->swap(j,i);
       }
     }
   }

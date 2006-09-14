@@ -45,7 +45,7 @@ class VortexPanel:public AbstractPanel
   QLineEdit *vortexName;   
   // Widget used to receive/display hurricane name
   
-  QDoubleSpinBox *latBox, *longBox;
+  QDoubleSpinBox *latBox, *longBox, *directionBox, *speedBox;
   // Widgets used to recieve/display hurricane latitude and longitude
 
 };

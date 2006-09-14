@@ -4,6 +4,8 @@
         <name>Analytic Storm</name>
         <lat>.90</lat>
         <lon>.90</lon>
+        <direction>35</direction>
+        <speed>10</speed>
         <dir>workingDirs/</dir>
     </vortex>
     <radar>
@@ -82,7 +84,8 @@
         <maxdatagap wavenum="0" >180</maxdatagap>
         <maxdatagap wavenum="1" >120</maxdatagap>
     </vtd>
-    <hvvp/>
+    <hvvp>
+    </hvvp> 
     <pressure>
         <dir>/home/lmauger/NCAR/vortrac/trunk/workingDirs</dir>
     </pressure>

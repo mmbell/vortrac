@@ -37,6 +37,7 @@ class ChooseCenter
     //bool fixCentersNoFit();
     void useLastMean();
     // void checkHeights();
+    float getSecsTo(const QDateTime &volTime);
 
   
  private:
@@ -50,6 +51,7 @@ class ChooseCenter
     float positionWeight, rmwWeight, velWeight;
     float fCriteria[30];
     QDateTime startTime, endTime;
+    QDateTime firstTime;
     /* 
      * windWeight is a user set parameter which dictates the relative 
      *   importance of windSpeed to the initial rmw selection

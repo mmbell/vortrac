@@ -19,7 +19,7 @@ PollThread::PollThread(QObject *parent)
   Message::toScreen("PollThread Constructor");
   abort = false;
   runOnce = false;
-  analysisThread = new AnalysisThread();
+  //analysisThread = new AnalysisThread();
 }
 
 PollThread::~PollThread()
@@ -67,9 +67,9 @@ void PollThread::analysisDoneProcessing()
 
 void PollThread::run()
 {
+  //analysisThread = new AnalysisThread();
   abort = false;
   emit log(Message("Polling for data..."));
-  //Message::toScreen("Breaks connections but gets back to run??");
   RadarFactory *dataSource = new RadarFactory(configData->getConfig("radar"));
   connect(dataSource, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
@@ -78,19 +78,7 @@ void PollThread::run()
   connect(pressureSource, SIGNAL(log(const Message&)),
 		  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
   
-  //QString file("/scr/science40/mauger/Working/trunk/LisaList.xml");
-  //vortexConfig = new Configuration(0, QString());
-  //  QString newWorkingDirectory = "/scr/science40/mauger/WorkingDir/trunk/";
-  //QString newWorkingDirectory = QString("");
-  //vortexList->setNewWorkingDirectory(newWorkingDirectory);
-  //vortexConfig->read(file);
-  
-  //bool openOld = true;
-  bool openOld = false;  // For testing chooseCenter..... shouldn't interfere
-
-  //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-  
-  if(!openOld) {
+  if(!continuePreviousRun) {
     QString file("vortrac_defaultVortexListStorage.xml");
     vortexConfig = new Configuration(0, file);
     connect(vortexConfig, SIGNAL(log(const Message&)), 
@@ -113,49 +101,68 @@ void PollThread::run()
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     pressureList = new PressureList(pressureConfig);
     pressureList->open();
-    dropsondeList = new PressureList(pressureConfig);
-    dropsondeList->open();
+
+    dropSondeConfig = new Configuration(0, file);
+    connect(dropSondeConfig, SIGNAL(log(const Message&)), 
+	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+    dropSondeList = new PressureList(dropSondeConfig);
+    dropSondeList->open();
   
   }
   else {
-    QString file("vortrac_2004-08-13T18_24_04vortexList.xml");
-    vortexConfig = new Configuration(0, file);
+
+    // Gather information about the files in the working directory so we can 
+    // load information about a previous run
+
+    QString workingDirectoryPath = configData->getParam(configData->getConfig("vortex"),"dir");
+    QDir workingDirectory(workingDirectoryPath);
+    QString vortexName = configData->getParam(configData->getConfig("vortex"), "name");
+    QString radarName = configData->getParam(configData->getConfig("radar"), "name");
+    QString nameFilter = vortexName+"_"+radarName+"_";
+    QStringList allPossibleFiles = workingDirectory.entryList(QDir::Files);
+    allPossibleFiles = allPossibleFiles.filter(nameFilter, Qt::CaseInsensitive);
+
+    QString file = allPossibleFiles.filter("vortexList").value(0);
+    emit log(Message(file));
+    vortexConfig = new Configuration(0, workingDirectoryPath+file);
     connect(vortexConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     vortexList = new VortexList(vortexConfig);
     vortexList->open();
-    
-    QString outFileName = "/scr/science40/mauger/Working/trunk/workingDirs/centerTest_vortexList.xml";
-    vortexList->setFileName(outFileName);
-    vortexList->setNewWorkingDirectory("/scr/science40/mauger/Working/trunk/workingDirs/");
   
-    file = QString("vortrac_2004-08-13T18_24_04simplexList.xml");
-    //simplexConfig = new Configuration(0,QString());
-    simplexConfig = new Configuration(0, file);
+    file = allPossibleFiles.filter("simplexList").value(0);
+    emit log(Message(file));
+    simplexConfig = new Configuration(0, workingDirectoryPath+file);
     connect(simplexConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     simplexList = new SimplexList(simplexConfig);
     simplexList->open();
-   
-    outFileName = "/scr/science40/mauger/Working/trunk/workingDirs/centerTest_simplexList.xml";
-    simplexList->setFileName(outFileName);
-    simplexList->setNewWorkingDirectory("/scr/science40/mauger/Working/trunk/workingDirs/");
-    /*
-    Message::toScreen("Simplex count = "+QString().setNum(simplexList->count()));
-    for(int j = 0; j < simplexList->count(); j++) {
-      Message::toScreen("time of index j = "+QString().setNum(j)+" is "+simplexList->value(j).getTime().toString());
-    }
-    */
     
-    file = QString("vortrac_defaultPressureListStorage.xml");
-    //pressureConfig = new Configuration(0,QString());
-    pressureConfig = new Configuration(0, file);
+    if(allPossibleFiles.filter("pressureList").count() > 0) {
+      file = allPossibleFiles.filter("pressureList").value(0);
+    }
+    else {
+      file = QString("vortrac_defaultPressureListStorage.xml");
+    }
+    emit log(Message(file));
+    pressureConfig = new Configuration(0, workingDirectoryPath+file);
     connect(pressureConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     pressureList = new PressureList(pressureConfig);
     pressureList->open();
-    dropsondeList = new PressureList(pressureConfig);
-    dropsondeList->open();
+
+    if(allPossibleFiles.filter("dropSondeList").count() > 0) {
+      file = allPossibleFiles.filter("dropSondeList").value(0);
+    }
+    else {
+      file = QString("vortrac_defaultPressureListStorage.xml");
+    }
+    emit log(Message(file));
+    dropSondeConfig = new Configuration(0, workingDirectoryPath+file);
+    connect(dropSondeConfig, SIGNAL(log(const Message&)), 
+	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+    dropSondeList = new PressureList(dropSondeConfig);
+    dropSondeList->open();
 
     emit vortexListUpdate(vortexList);
 
@@ -197,7 +204,8 @@ void PollThread::run()
   
   VortexData test(15,2,2);
   test.setPressure(7);
-  test.setPressureUncertainty(7);
+  test.setPressureUncertainty(7);  if(pollThread->isNull())
+    return false;
   test.setTime(QDateTime::currentDateTime());
   for(int i = 0; i < 3; i++ ){
 	test.setLat(i,7.0);
@@ -244,6 +252,7 @@ void PollThread::run()
   analysisThread->setVortexList(vortexList);
   analysisThread->setSimplexList(simplexList);
   analysisThread->setPressureList(pressureList);
+  analysisThread->setDropSondeList(dropSondeList);
 
 	// Begin polling loop
 	forever {
@@ -252,8 +261,8 @@ void PollThread::run()
 		if (dataSource->hasUnprocessedData()) {
 
 			// Fire up the analysis thread to process it
-			analysisThread->analyze(dataSource->getUnprocessedData(),
-					       configData);
+		        RadarData *newVolume = dataSource->getUnprocessedData();
+			analysisThread->analyze(newVolume,configData);
 			//Message::toScreen("Before mutex lock in pollThread");
 			
 			mutex.lock();
@@ -280,6 +289,8 @@ void PollThread::run()
 			}
 			mutex.unlock();  
 			//Message::toScreen("After mutex unlock in pollThread");
+			//delete newVolume;
+			Message::toScreen("used to delete new volume");
 		}
 		
 		// Check to see if we should quit
@@ -322,4 +333,9 @@ void PollThread::setOnlyRunOnce(const bool newRunOnce) {
   mutex.lock();
   runOnce = newRunOnce;
   mutex.unlock();
+}
+
+void PollThread::setContinuePreviousRun(const bool &decision)
+{
+  continuePreviousRun = decision;
 }

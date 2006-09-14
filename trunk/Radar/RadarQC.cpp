@@ -38,7 +38,7 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
   float zero = 0.0;
   radarHeight = radarData->absoluteRadarBeamHeight(zero,zero);
 
-  Message::toScreen("Radar Height = "+QString().setNum(radarHeight)+" check units and values");
+  //Message::toScreen("Radar Height = "+QString().setNum(radarHeight)+" check units and values");
 
   // Allocate memory for the bincount
   int numSweeps = radarData->getNumSweeps();
@@ -243,7 +243,7 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
   }
 
 
-  Message::toScreen("After interpolation");
+  //Message::toScreen("After interpolation");
  //checkRay();
 
 
@@ -268,9 +268,9 @@ void RadarQC::getConfig(QDomElement qcConfig)
    */
 
   // Get Thresholding and BB Parameters
-
+  //Message::toScreen("In QC get Config");
   if(!qcConfig.isNull()) {
-
+    
     velMin = qcConfig.firstChildElement("vel_min").text().toFloat();
     velMax = qcConfig.firstChildElement("vel_max").text().toFloat();
     refMin = qcConfig.firstChildElement("ref_min").text().toFloat();
@@ -340,6 +340,7 @@ void RadarQC::getConfig(QDomElement qcConfig)
     maxFold = 4;
     useVADWinds = true;
   }
+  //Message::toScreen("leaving get config");
 }
 
 
@@ -380,7 +381,7 @@ bool RadarQC::dealias()
     Message::toScreen("Failed finding environmental wind");
   }
   //Message::toScreen("findEnvironmentalWind");
-  //crazyCheck();
+  crazyCheck();
   
   if(!BB()) {
     Message::toScreen("Failed in Bargen-Brown dealising");

@@ -42,6 +42,7 @@ class PollThread : public QThread
 	void catchCappi(const GriddedData* cappi);
 	void abortThread();
 	void setOnlyRunOnce(const bool newRunOnce = true);
+	void setContinuePreviousRun(const bool &decision);
 
   signals:
 	void log(const Message& message);
@@ -58,17 +59,19 @@ class PollThread : public QThread
 	bool runOnce;
 	QWaitCondition waitForAnalysis;
 	bool abort;
+	bool continuePreviousRun;
 	RadarFactory *dataSource;
 	PressureFactory *pressureSource;
 	Configuration *configData;
 	VortexList *vortexList;
 	SimplexList *simplexList;
 	PressureList *pressureList;
-	PressureList *dropsondeList;
+	PressureList *dropSondeList;
 	AnalysisThread *analysisThread;
 	Configuration *vortexConfig;
 	Configuration *simplexConfig;
 	Configuration *pressureConfig;
+	Configuration *dropSondeConfig;
 	
 };
 

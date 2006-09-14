@@ -75,6 +75,10 @@ class SimplexData
   int getNumRadii() const { return numRadii; }
   int getNumCenters() const { return numCenters; }
 
+  void setNumLevels(int newNumLevels);
+  void setNumRadii(int newNumRadii);
+  void setNumCenters(int newNumCenters);
+
   bool isNull();
   bool emptyLevelRadius(const int& l, const int& r) const;
 

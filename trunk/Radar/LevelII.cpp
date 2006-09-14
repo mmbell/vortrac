@@ -28,12 +28,13 @@ LevelII::LevelII(const QString &radarname, const float &lat, const float &lon, c
 
 LevelII::~LevelII()
 {
-	delete volHeader;
-	delete radarHeader;
-	delete msgHeader;
-	delete Sweeps;
-	delete Rays;
-	
+  delete volHeader;
+  //delete radarHeader;
+  //delete msgHeader;
+  //delete [] ref_data;
+  //delete [] vel_data;
+  //delete [] sw_data;
+  	
 }
 
 bool LevelII::readVolume()

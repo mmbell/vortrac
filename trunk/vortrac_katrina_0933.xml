@@ -4,6 +4,8 @@
         <name>Katrina</name>
         <lat>28.94</lat>
         <lon>-89.68</lon>
+        <direction>35</direction>
+        <speed>10</speed>
         <dir>/scr/science40/mauger/Working/trunk/test</dir>
     </vortex>
     <radar>

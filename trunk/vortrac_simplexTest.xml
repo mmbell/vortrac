@@ -4,6 +4,8 @@
         <name>Analytic Storm</name>
         <lat>.90</lat>
         <lon>.90</lon>
+        <direction>35</direction>
+        <speed>10</speed>
         <dir>/Users/mbell/Development/vortrac/trunk/workingDirs</dir>
     </vortex>
     <radar>

@@ -45,7 +45,6 @@ AnalysisThread::~AnalysisThread()
   
   // Wait for the thread to finish running if it is still processing
   wait();
-
 }
 
 void AnalysisThread::setConfig(Configuration *configPtr)
@@ -74,6 +73,13 @@ void AnalysisThread::setPressureList(PressureList *archivePtr)
 	
 	pressureList = archivePtr;
 	
+}
+
+void AnalysisThread::setDropSondeList(PressureList *archivePtr)
+{
+
+        dropSondeList = archivePtr;
+
 }
 
 void AnalysisThread::abortThread()
@@ -154,20 +160,19 @@ void AnalysisThread::run()
 			
 			QDomElement vortex = configData->getConfig("vortex");
 			QString vortexName = configData->getParam(vortex,"name");
+			QString year;
+			year.setNum(QDate::fromString(configData->getParam(radar,"startdate"), "yyyy-MM-dd").year());
 			
-			QString vortexPath = configData->getConfig("vortex").firstChildElement("dir").text();
-			QString vortexFile = radarVolume->getDateTimeString();
-			vortexFile.replace(QString(":"),QString("_"));
-			QString outFileName = vortexPath + "/" + vortexFile + "vortexList.xml";
+			QString workingPath = configData->getParam(configData->getConfig("vortex"),"dir");
+			QString vortexPath = configData->getParam(configData->getConfig("vtd"), "dir");
+			QString outFileName = workingPath + "/"+vortexName+"_"+radarName+"_"+year+"_vortexList.xml";
 			vortexList->setFileName(outFileName);
 			vortexList->setRadarName(radarName);
 			vortexList->setVortexName(vortexName);
 			vortexList->setNewWorkingDirectory(vortexPath + "/");
 			
 			QString simplexPath = configData->getConfig("center").firstChildElement("dir").text();
-			QString simplexFile = radarVolume->getDateTimeString();
-			simplexFile.replace(QString(":"),QString("_"));
-			outFileName = simplexPath + "/" + simplexFile + "simplexList.xml";
+			outFileName = workingPath + "/"+vortexName+"_"+radarName+"_"+year+"_simplexList.xml";
 			simplexList->setFileName(outFileName);
 			simplexList->setRadarName(radarName);
 			simplexList->setVortexName(vortexName);
@@ -175,14 +180,20 @@ void AnalysisThread::run()
 			
 			// Put the pressure output in the workingDir for now, since the pressure obs
 			// may be somewhere where we can't write
-			QString pressurePath = configData->getConfig("vortex").firstChildElement("dir").text();
-			QString pressureFile = radarVolume->getDateTimeString();
-			pressureFile.replace(QString(":"),QString("_"));
-			outFileName = pressurePath + "/" + pressureFile + "pressureList.xml";
+ 
+			outFileName = workingPath + "/"+vortexName+"_"+radarName+"_"+year+"_pressureList.xml";
 			pressureList->setFileName(outFileName);
 			pressureList->setRadarName(radarName);
 			pressureList->setVortexName(vortexName);
-			pressureList->setNewWorkingDirectory(pressurePath + "/");
+			pressureList->setNewWorkingDirectory(workingPath + "/");
+
+			// Put the dropSonde output in the workingDir for now
+
+			outFileName = workingPath + "/"+vortexName+"_"+radarName+"_"+year+"_dropSondeList.xml";
+			dropSondeList->setFileName(outFileName);
+			dropSondeList->setRadarName(radarName);
+			dropSondeList->setVortexName(vortexName);
+			dropSondeList->setNewWorkingDirectory(workingPath + "/");
 		}
 		
 		// Check to see if the center is beyond 174 km
@@ -372,7 +383,7 @@ void AnalysisThread::run()
 		
 		// Delete CAPPI, RadarData and HVVP objects
 		delete gridData;
-		delete radarVolume;
+		//delete radarVolume;
 		delete envWindFinder;
 		
 		mutex.lock(); // Added this one....

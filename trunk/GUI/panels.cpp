@@ -38,16 +38,38 @@ VortexPanel::VortexPanel()
   QLabel *latLabel = new QLabel(tr("Vortex Latitude:"));
   latBox = new QDoubleSpinBox();
   latBox->setRange(-999,999);
+  latBox->setDecimals(2);
   QHBoxLayout *lat = new QHBoxLayout;
   lat->addWidget(latLabel);
+  lat->addStretch();
   lat->addWidget(latBox);
       
   QLabel *longLabel = new QLabel(tr("Vortex Longitude"));
   longBox = new QDoubleSpinBox();
   longBox->setRange(-999, 999);
+  longBox->setDecimals(2);
   QHBoxLayout *longitude = new QHBoxLayout;
   longitude->addWidget(longLabel);
+  longitude->addStretch();
   longitude->addWidget(longBox);
+
+  QLabel *directionLabel = new QLabel(tr("Direction of vortex movement (degrees ccw from north)"));
+  directionBox = new QDoubleSpinBox();
+  directionBox->setRange(0, 360);
+  directionBox->setDecimals(2);
+  QHBoxLayout *direction = new QHBoxLayout;
+  direction->addWidget(directionLabel);
+  direction->addStretch();
+  direction->addWidget(directionBox);
+
+  QLabel *speedLabel = new QLabel(tr("Speed of vortex movement (m/s)"));
+  speedBox = new QDoubleSpinBox();
+  speedBox->setRange(0,100);
+  speedBox->setDecimals(2);
+  QHBoxLayout *speed = new QHBoxLayout;
+  speed->addWidget(speedLabel);
+  speed->addStretch();
+  speed->addWidget(speedBox);
 
   QLabel *workingDirLabel = new QLabel(tr("Working Directory"));
   dir = new QLineEdit();
@@ -65,6 +87,8 @@ VortexPanel::VortexPanel()
   layout->addWidget(stormType);
   layout->addLayout(lat);
   layout->addLayout(longitude);
+  layout->addLayout(direction);
+  layout->addLayout(speed);
   layout->addLayout(dirLayout);
   layout->addStretch(1);
   setLayout(layout);
@@ -74,6 +98,10 @@ VortexPanel::VortexPanel()
   connect(latBox, SIGNAL(valueChanged(const QString&)), 
 	  this, SLOT(valueChanged(const QString&)));
   connect(longBox, SIGNAL(valueChanged(const QString&)), 
+	  this, SLOT(valueChanged(const QString&)));
+  connect(directionBox, SIGNAL(valueChanged(const QString&)),
+	  this, SLOT(valueChanged(const QString&)));
+  connect(speedBox, SIGNAL(valueChanged(const QString&)),
 	  this, SLOT(valueChanged(const QString&)));
   connect(dir, SIGNAL(textChanged(const QString&)),
 	  this, SLOT(valueChanged(const QString&)));
@@ -86,6 +114,8 @@ VortexPanel::~VortexPanel()
   delete vortexName;
   delete latBox;
   delete longBox;
+  delete directionBox;
+  delete speedBox;
 }
     
 void VortexPanel::updatePanel(const QDomElement panelElement)
@@ -108,6 +138,10 @@ void VortexPanel::updatePanel(const QDomElement panelElement)
 	latBox->setValue(parameter.toDouble()); }
       if (name == "lon") {
 	longBox->setValue(parameter.toDouble()); }
+      if(name == "direction"){
+	directionBox->setValue(parameter.toDouble()); }
+      if(name == "speed") {
+	speedBox->setValue(parameter.toDouble());}
       if(name == "dir")  {
 	if(parameter!=QString("default")) {
 	  dir->clear();
@@ -142,6 +176,16 @@ bool VortexPanel::updateConfig()
 	 !=longBox->value()) {
 	emit changeDom(element, QString("lon"), 
 		       QString().setNum(longBox->value()));
+      }
+      if(element.firstChildElement("direction").text().toDouble()
+	 !=directionBox->value()) {
+	emit changeDom(element, QString("direction"), 
+		       QString().setNum(directionBox->value()));
+      }
+      if(element.firstChildElement("speed").text().toDouble()
+	 !=speedBox->value()) {
+	emit changeDom(element, QString("speed"), 
+		       QString().setNum(speedBox->value()));
       }
       if(element.firstChildElement("dir").text()!=dir->text()) {
 	emit changeDom(element, QString("dir"), dir->text());

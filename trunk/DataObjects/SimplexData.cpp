@@ -9,6 +9,7 @@
  */
 
 #include "SimplexData.h"
+#include "Message.h"
 #include <QTextStream>
 
 SimplexData::SimplexData()
@@ -252,7 +253,9 @@ void SimplexData::setNumConvergingCenters(const int** a, const int& numLev,
 Center SimplexData::getCenter(const int& lev, const int& rad, 
 			      const int& waveNum) const
 {
-  return centers[lev][rad][waveNum];
+  if((lev < numLevels)&&(rad < numRadii)&&(waveNum < numCenters))
+    return centers[lev][rad][waveNum];
+  return Center();
 }
 
 void SimplexData::setCenter(const int& lev, const int& rad, 
@@ -309,12 +312,15 @@ bool SimplexData::isNull()
 
 bool SimplexData::emptyLevelRadius(const int& l, const int& r) const 
 {
-  if((meanX[l][r]!=velNull)||(meanY[l][r]!=velNull)
-     ||(centerStdDeviation[l][r]!=velNull)
-     ||(numConvergingCenters[l][r]!=(int)velNull)||(meanVT[l][r]!=velNull)
-     ||(meanVTUncertainty[l][r]!=velNull))
-    return false;
-  return true;
+  if((l < numLevels)&&(r < numRadii)){
+    if((meanX[l][r]!=velNull)||(meanY[l][r]!=velNull)
+       ||(centerStdDeviation[l][r]!=velNull)
+       ||(numConvergingCenters[l][r]!=(int)velNull)||(meanVT[l][r]!=velNull)
+       ||(meanVTUncertainty[l][r]!=velNull))
+      return false;
+    return true;
+  }
+  return false;
 }
 
 void SimplexData::printString()
@@ -341,4 +347,19 @@ void SimplexData::printString()
     out<<         QString().setNum(getCenter(i,0,0).getMaxVT()) << endl;
     out<<"  ----------------------------------------------------------" <<endl;
   }
+}
+
+void SimplexData::setNumLevels(int newNumLevels)
+{
+  this->numLevels = newNumLevels;
+}
+
+void SimplexData::setNumRadii(int newNumRadii)
+{
+  this->numRadii = newNumRadii;
+}
+
+void SimplexData::setNumCenters(int newNumCenters) 
+{
+  this->numCenters = newNumCenters;
 }

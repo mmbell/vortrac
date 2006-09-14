@@ -108,4 +108,4 @@ SOURCES += main.cpp \
 RESOURCES += vortrac.qrc
 LIBS += -lbz2
 QT += xml
-CONFIG += release
+//CONFIG += release

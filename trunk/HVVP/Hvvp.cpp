@@ -90,7 +90,6 @@ float Hvvp::rotateAzimuth(const float &angle)
   newAngle = angle - cca;
   if (newAngle < 0)
     newAngle +=360;
-  
   return newAngle;
 }
 
@@ -393,21 +392,12 @@ int Hvvp::hvvpPrep(int m) {
   // float rot = (cca-4.22)*deg2rad; **
   // ** Special case scenerio for KBRO Data of Bret (1999)
   
-  //float** old_xls = xls;
-  //float* old_yls = yls;
-  //float* old_wgt = wgt;
-
   for(int k = 0; k < xlsDimension; k++) {
-    //delete [] old_xls[k];
     for(int l = 0; l < maxpoints; l++) {
       xls[k][l] = 0;
       yls[l] = 0;
     }
   }
-  
-  //delete [] old_xls;
-  //delete [] old_yls;
-  //delete [] old_wgt;
   
   int count = 0;
   float h0 = hgtStart+hInc*m;
@@ -516,9 +506,9 @@ bool Hvvp::findHVVPWinds()
       float *cc = new float[xlsDimension];
       bool flag, outlier;
 
-      flag = lls(16, count, count, xls, yls, wgt, sse, stand_err, cc);
+      //flag = lls(16, count, count, xls, yls, wgt, sse, stand_err, cc);
 
-      //flag = Matrix::lls(xlsDimension, count, xls, yls, sse, cc, stand_err);
+      flag = Matrix::lls(xlsDimension, count, xls, yls, sse, cc, stand_err);
       //if(flag)
 	//Message::toScreen("First Least Squares Attempt = True");
       //else
@@ -580,10 +570,10 @@ bool Hvvp::findHVVPWinds()
 					  qc_count++;
 				  }
 			  }
-			  flag = lls(16, qc_count, qc_count, qcxls, qcyls, qcwgt, sse, stand_err,cc);
+			  //flag = lls(16, qc_count, qc_count, qcxls, qcyls, qcwgt, sse, stand_err,cc);
 			  
 			  //Message::toScreen("qc_count = "+QString().setNum(qc_count));
-			  //flag=Matrix::lls(xlsDimension,qc_count,qcxls,qcyls,sse,cc,stand_err);
+			  flag=Matrix::lls(xlsDimension,qc_count,qcxls,qcyls,sse,cc,stand_err);
 			  /*
 				  if(flag)
 			   Message::toScreen("Second Least Squares Attempt = True");

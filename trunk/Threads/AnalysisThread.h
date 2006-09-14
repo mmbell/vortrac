@@ -36,7 +36,8 @@ class AnalysisThread : public QThread
      void setConfig(Configuration *configPtr);
      void setVortexList(VortexList *archivePtr);
      void setSimplexList(SimplexList *archivePtr);
-	 void setPressureList(PressureList *archivePtr);
+     void setPressureList(PressureList *archivePtr);
+     void setDropSondeList(PressureList *archivePtr);
 	 
  public slots:
      void catchLog(const Message& message);
@@ -66,7 +67,8 @@ class AnalysisThread : public QThread
 	 VortexThread *vortexThread;
      VortexList *vortexList;
      SimplexList *simplexList;
-	 PressureList *pressureList;
+     PressureList *pressureList;
+     PressureList *dropSondeList;
      void archiveAnalysis();
      float vortexLat, vortexLon;
 

@@ -171,6 +171,31 @@ bool SimplexList::openNodeFile(const QDomNode &newNode)
 	}
       }
     }
+    int currentMaxLevel = 0;
+    int currentMaxRadius = 0;
+    int maxCenters = 0;
+    for(int level = 0; level < 15; level++) {
+      int levelSum = 0;
+      for(int rad = 0; rad < 30; rad++) {
+	levelSum += centIndex[level][rad]; 
+	if((centIndex[level][rad] > 0)&&(rad > currentMaxRadius)) {
+	  currentMaxRadius = rad;
+	}
+	if(centIndex[level][rad] > maxCenters)
+	  maxCenters = centIndex[level][rad];
+      }
+      if((levelSum > 0) && (level > currentMaxLevel)) {
+	currentMaxLevel = level;
+      }
+    }
+
+    // Set the number centers collected on which levels and radii so the
+    // get functions in SimplexData will be able to iterate correctly
+
+    newData.setNumLevels(currentMaxLevel+1);
+    newData.setNumRadii(currentMaxRadius+1);
+    newData.setNumCenters(maxCenters);
+
     QList<SimplexData>::append(newData);
     //this->append(newData);
     simplexDataConfigs->append(newConfig);
@@ -345,7 +370,7 @@ void SimplexList::timeSort()
   // This is still pretty not working, it screws up good orders
   for(int i = 0; i < this->count(); i++) {
     for(int j = i+1; j < this->count(); j++) {
-      if(this->value(i).getTime() > this->value(j).getTime()) {
+      if(this->value(i).getTime().time() > this->value(j).getTime().time()) {
 	this->swap(j,i);
 	simplexDataConfigs->swap(j,i);
 	configFileNames->swap(j,i);

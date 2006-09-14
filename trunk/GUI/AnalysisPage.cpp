@@ -351,17 +351,42 @@ void AnalysisPage::updatePage()
 void AnalysisPage::runThread()
 {
   // Start a processing thread using the current configuration
-  //pollThread = new PollThread;
+ 
   connect(pollThread, SIGNAL(log(const Message&)),
 	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
   connect(pollThread, SIGNAL(newVCP(const int)),
 	  this, SLOT(catchVCP(const int)), Qt::DirectConnection);
   connect(this, SIGNAL(newVCP(const int)),
-		  diagPanel, SLOT(updateVCP(const int)), Qt::DirectConnection);  
+	  diagPanel, SLOT(updateVCP(const int)), Qt::DirectConnection);  
   connect(pollThread, SIGNAL(newCappi(const GriddedData*)),
-		  this, SLOT(catchCappi(const GriddedData*)), Qt::DirectConnection);
+	  this, SLOT(catchCappi(const GriddedData*)), Qt::DirectConnection);
   connect(this, SIGNAL(newCappi(const GriddedData*)),
-		  diagPanel, SLOT(updateCappi(const GriddedData*)), Qt::DirectConnection);
+	  diagPanel, SLOT(updateCappi(const GriddedData*)), Qt::DirectConnection);
+
+  // Check to see if there are old list files that we want to start from in
+  // the working directory. We have to do this here because we cannot create 
+  // widgets in the threads.
+
+  QString workingDirectoryPath = configData->getParam(configData->getConfig("vortex"),"dir");
+  QDir workingDirectory(workingDirectoryPath);
+  QString vortexName = configData->getParam(configData->getConfig("vortex"), "name");
+  QString radarName = configData->getParam(configData->getConfig("radar"), "name");
+  QString nameFilter = vortexName+"_"+radarName+"_";
+  QStringList allPossibleFiles = workingDirectory.entryList(QDir::Files);
+  allPossibleFiles = allPossibleFiles.filter(nameFilter, Qt::CaseInsensitive);
+  bool continuePreviousRun = false;
+  QString openOldMessage = QString(tr("Vortrac has found information about a previously started run. Would you like to continue this run?\nPress 'Yes' to continue a previous run. Press 'No' to start a new run."));
+  if(allPossibleFiles.count()> 0){
+    if(allPossibleFiles.filter("vortexList").count()>0)
+      if(allPossibleFiles.filter("simplexList").count()>0)
+	//if(allPossibleFiles.filter("pressureList").count()>0)
+	//if(allPossibleFiles.filter("dropSondeList").count()>0)
+	if(QMessageBox::information(this,tr("VORTRAC"),openOldMessage,3,4,0) == 3)
+	  continuePreviousRun = true;
+    
+  }
+  
+  pollThread->setContinuePreviousRun(continuePreviousRun);
 
   if(configData->getParam(configData->getConfig("radar"), "format")
      == QString("MODEL")){
@@ -374,12 +399,12 @@ void AnalysisPage::runThread()
   else {
     pollThread->setConfig(configData);
     pollThread->start();
-	//connect(pollThread, SIGNAL(vortexListChanged(VortexList*)), 
-  	//	  graph, SLOT(newInfo(VortexList*)));
+    //connect(pollThread, SIGNAL(vortexListChanged(VortexList*)), 
+    //	  graph, SLOT(newInfo(VortexList*)));
     connect(pollThread, SIGNAL(vortexListUpdate(VortexList*)), 
-		  this, SLOT(pollVortexUpdate(VortexList*)));
-  //connect(pollThread, SIGNAL(dropListChanged(VortexList*)), 
-//		  graph, SLOT(newDropSonde(VortexList*)));
+	    this, SLOT(pollVortexUpdate(VortexList*)));
+    //connect(pollThread, SIGNAL(dropListChanged(VortexList*)), 
+    //		  graph, SLOT(newDropSonde(VortexList*)));
   
   }
 }
@@ -510,9 +535,14 @@ bool AnalysisPage::analyticModel()
 
 void AnalysisPage::pollVortexUpdate(VortexList* list)
 {
-	currPressure->display((int)list->last().getPressure());
-	currRMW->display(list->last().getRMW());
-	emit vortexListChanged(list);
-	
+  if(list->count() > 0) {
+    currPressure->display((int)list->last().getPressure());
+    currRMW->display(list->last().getRMW());
+    emit vortexListChanged(list);
+  }
+  else {
+    currPressure->display(0);
+    currRMW->display(0);
+  }
 }
 

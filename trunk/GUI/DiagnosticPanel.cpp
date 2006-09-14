@@ -55,12 +55,6 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   clockLayout->setRowStretch(0,8);
   clockBox->setLayout(clockLayout);
   //clockBox->resize(230,150);
-  
-
-  connect(timer, SIGNAL(timeout()), 
-	  this, SLOT(updateClock()), Qt::DirectConnection);
-  
-  updateClock();
 
   //QPushButton *color = new QPushButton("color", this);
   //connect(color, SIGNAL(pressed()), this, SLOT(pickColor()));
@@ -102,6 +96,7 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   cappiLaunch->setEnabled(false);
   connect(cappiLaunch, SIGNAL(pressed()), this, SLOT(launchCappi()));
   cappiDisplay = new CappiDisplay();
+  hasNewCappi = false;
   
   QVBoxLayout *main = new QVBoxLayout();
   // main->addStretch();
@@ -125,6 +120,11 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   lights->changeColor(6);
 
   dummy = 0;
+  
+  connect(timer, SIGNAL(timeout()), 
+	  this, SLOT(updateClock()), Qt::DirectConnection);
+  
+  updateClock();
 }
 
 DiagnosticPanel::~DiagnosticPanel()
@@ -139,6 +139,9 @@ void DiagnosticPanel::updateClock()
   QString displayTime;
   displayTime = QDateTime::currentDateTime().toUTC().toString("hh:mm");
   clock->display(displayTime);	
+  if(hasNewCappi && !cappiLaunch->isEnabled()) {
+    cappiLaunch->setEnabled(true);
+  }
   update();
 
 }
@@ -164,9 +167,10 @@ void DiagnosticPanel::updateVCP(const int newVCP)
 
 void DiagnosticPanel::updateCappi(const GriddedData* newCappi)
 {
-	cappi=newCappi;
+        cappi=newCappi;
 	// Got a cappi now, turn on the button
-	cappiLaunch->setEnabled(true);
+	cappiDisplay->constructImage(cappi);
+	hasNewCappi = true;
 }
 
 void DiagnosticPanel::testLight()
@@ -180,8 +184,8 @@ void DiagnosticPanel::testLight()
 
 void DiagnosticPanel::launchCappi()
 {
-	// Fill the pixmap with the current cappi data
-	cappiDisplay->constructImage(cappi);
+	// Fill the pixmap with the current cappi dat
+	//cappiDisplay->constructImage(cappi);
 	
 	// Open the floating widget to look at the Cappi
 	cappiDisplay->show();

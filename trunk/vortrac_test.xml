@@ -4,6 +4,8 @@
         <name>Charley</name>
         <lat>26.2</lat>
         <lon>-82.3</lon>
+        <direction>35</direction>
+        <speed>10</speed>
         <dir>/Users/mbell/Development/vortrac/trunk/workingDirs</dir>
     </vortex>
     <radar>

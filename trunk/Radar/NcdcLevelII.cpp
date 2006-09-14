@@ -129,6 +129,7 @@ bool NcdcLevelII::readVolume()
     }
 
   }
+  delete [] nexBuffer;
   
   // Record the number of rays in the last sweep
   Sweeps[numSweeps-1].setLastRay(numRays-1);
