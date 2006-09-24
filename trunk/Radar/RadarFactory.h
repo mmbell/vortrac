@@ -24,6 +24,7 @@
 #include "Radar/AnalyticRadar.h"
 #include "IO/Message.h"
 #include "GUI/ConfigTree.h"
+#include "DataObjects/VortexList.h"
 
 class RadarFactory : public QObject
 {
@@ -38,6 +39,7 @@ class RadarFactory : public QObject
 
  public slots:
    void catchLog(const Message& message);
+   void updateDataQueue(const VortexList* list);
 
  signals:
    void log(const Message& message);

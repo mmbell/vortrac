@@ -41,9 +41,14 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   connect(diagPanel, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)));
 
+  QTabWidget *visuals = new QTabWidget;
+  visuals->setTabPosition(QTabWidget::West);
+
   GraphFace *graph = new GraphFace(vortexLabel);
   connect(graph, SIGNAL(log(const Message&)), 
 	  this, SLOT(catchLog(const Message&)));
+
+  cappiDisplay = new CappiDisplay();
 
   imageFileName = graph->getImageFileName();
 
@@ -57,14 +62,17 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 
 
   // Construct Analysis Page Layout
- 
+  deficitLabel = new QLabel(tr("Pressure Deficit From 0 km (mb):"));
+  currDeficit = new QLCDNumber;
+  currDeficit->setSegmentStyle(QLCDNumber::Flat);
+  currDeficit->resize(100,100);
   QLabel *pressureLabel = new QLabel(tr("Current Pressure (mb):"));
   currPressure = new QLCDNumber;
   //currPressure->display(917);
   currPressure->setSegmentStyle(QLCDNumber::Flat);
   currPressure->resize(100,100);
   QLabel *rmwLabel = new QLabel(tr("Current RMW (km):"));
- currRMW = new QLCDNumber;
+  currRMW = new QLCDNumber;
   //currRMW->display(16);
   currRMW->setSegmentStyle(QLCDNumber::Flat);
   currRMW->resize(100,100);
@@ -109,6 +117,17 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   layout->addWidget(graph, 100);
   layout->addLayout(subLayout);
   pressureGraph->setLayout(layout);
+
+  QScrollArea* cappiBox = new QScrollArea;
+  QHBoxLayout *cappiLayout = new QHBoxLayout(cappiBox);
+  cappiLayout->addStretch();
+  cappiLayout->addWidget(cappiDisplay);
+  cappiLayout->addStretch();
+  cappiBox->setLayout(cappiLayout);
+
+  visuals->addTab(pressureGraph, "Pressure & RMW");
+  visuals->addTab(cappiBox, "Current Cappi");
+  //visuals->setTabEnabled(visuals->indexOf(cappiBox), false);
   
   statusText = new QTextEdit;
   statusText->setReadOnly(true);
@@ -128,6 +147,9 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   // Lay them out
   QHBoxLayout *lcdLayout = new QHBoxLayout;
   lcdLayout->addStretch();
+  lcdLayout->addWidget(deficitLabel);
+  lcdLayout->addWidget(currDeficit);
+  lcdLayout->addStretch();
   lcdLayout->addWidget(pressureLabel);
   lcdLayout->addWidget(currPressure);
   lcdLayout->addStretch();
@@ -142,7 +164,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 
   QGridLayout *displayPanel = new QGridLayout;
   displayPanel->addLayout(lcdLayout,0,0);
-  displayPanel->addWidget(pressureGraph,1,0);
+  displayPanel->addWidget(visuals,1,0);
   displayPanel->addWidget(hLine,2,0);
   displayPanel->addWidget(statusText,3,0);
   displayPanel->addLayout(runLayout,4,0);
@@ -183,6 +205,15 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 AnalysisPage::~AnalysisPage()
 {
   prepareToClose();
+  delete cappiDisplay;
+  delete statusText;
+  //delete graph;
+  delete configDialog;
+  delete currPressure;
+  delete currRMW;
+  delete currDeficit;
+  delete deficitLabel;
+  delete visuals;
 }
 
 void AnalysisPage::newFile()
@@ -359,9 +390,7 @@ void AnalysisPage::runThread()
   connect(this, SIGNAL(newVCP(const int)),
 	  diagPanel, SLOT(updateVCP(const int)), Qt::DirectConnection);  
   connect(pollThread, SIGNAL(newCappi(const GriddedData*)),
-	  this, SLOT(catchCappi(const GriddedData*)), Qt::DirectConnection);
-  connect(this, SIGNAL(newCappi(const GriddedData*)),
-	  diagPanel, SLOT(updateCappi(const GriddedData*)), Qt::DirectConnection);
+	  this, SLOT(updateCappi(const GriddedData*)), Qt::DirectConnection);
 
   // Check to see if there are old list files that we want to start from in
   // the working directory. We have to do this here because we cannot create 
@@ -451,9 +480,18 @@ void AnalysisPage::catchVCP(const int vcp)
 	emit newVCP(vcp);
 }
 
-void AnalysisPage::catchCappi(const GriddedData* cappi)
+void AnalysisPage::updateCappi(const GriddedData* cappi)
 {
-	emit newCappi(cappi);
+  Message::toScreen("Creating Cappi Image");
+  // Got a cappi now, create a new image
+  cappiDisplay->constructImage(cappi);
+  //cappiDisplay->show();
+  //cappiDisplay->setVisible(true);
+ 
+  // Add the tab to the tab widget if it is not already available
+  //visuals->setTabEnabled(visuals->indexOf(cappiDisplay), true);
+  //visuals->setTabEnabled(1, true);
+  
 }
 
 void AnalysisPage::autoScroll()
@@ -538,11 +576,15 @@ void AnalysisPage::pollVortexUpdate(VortexList* list)
   if(list->count() > 0) {
     currPressure->display((int)list->last().getPressure());
     currRMW->display(list->last().getRMW());
+    currDeficit->display(10);
+    deficitLabel->setText(tr("Pressure Deficit From ")+QString().setNum(currRMW->value())+tr(" km (mb):"));
     emit vortexListChanged(list);
   }
   else {
     currPressure->display(0);
     currRMW->display(0);
+    currDeficit->display(0);
+    deficitLabel->setText(tr("Pressure Deficit From 0 km (mb):"));
   }
 }
 

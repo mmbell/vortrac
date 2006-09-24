@@ -112,6 +112,7 @@ bool Configuration::write(const QString &filename)
     isModified = false;
     return true;
   }
+  Message::toScreen("CONFIGURATION: Failed to save to file");
   return false;
 }
 

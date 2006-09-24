@@ -118,25 +118,44 @@ void PollThread::run()
     QDir workingDirectory(workingDirectoryPath);
     QString vortexName = configData->getParam(configData->getConfig("vortex"), "name");
     QString radarName = configData->getParam(configData->getConfig("radar"), "name");
-    QString nameFilter = vortexName+"_"+radarName+"_";
+    QString year;
+    year.setNum(QDate::fromString(configData->getParam(configData->getConfig("radar"),"startdate"), "yyyy-MM-dd").year());
+
+    QString nameFilter = vortexName+"_"+radarName+"_"+year;
     QStringList allPossibleFiles = workingDirectory.entryList(QDir::Files);
     allPossibleFiles = allPossibleFiles.filter(nameFilter, Qt::CaseInsensitive);
 
     QString file = allPossibleFiles.filter("vortexList").value(0);
     emit log(Message(file));
-    vortexConfig = new Configuration(0, workingDirectoryPath+file);
+    vortexConfig = new Configuration(0, workingDirectory.filePath(file));
     connect(vortexConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     vortexList = new VortexList(vortexConfig);
     vortexList->open();
+    
+    QString vortexPath = configData->getParam(configData->getConfig("vtd"), 
+					      "dir");
+    QDir vortexWorkingDirectory(vortexPath);
+    QString outFileName = workingDirectory.path()+"/";
+    outFileName += vortexName+"_"+radarName+"_"+year+"_vortexList.xml";
+    vortexList->setFileName(outFileName);
+    vortexList->setNewWorkingDirectory(vortexWorkingDirectory.path());
   
     file = allPossibleFiles.filter("simplexList").value(0);
     emit log(Message(file));
-    simplexConfig = new Configuration(0, workingDirectoryPath+file);
+    simplexConfig = new Configuration(0, workingDirectory.filePath(file));
     connect(simplexConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     simplexList = new SimplexList(simplexConfig);
     simplexList->open();
+
+    QString simplexPath = configData->getParam(configData->getConfig("center"),
+					       "dir");
+    QDir simplexWorkingDirectory(simplexPath);
+    outFileName = workingDirectory.path() + "/";
+    outFileName += vortexName+"_"+radarName+"_"+year+"_simplexList.xml";
+    simplexList->setFileName(outFileName);
+    simplexList->setNewWorkingDirectory(simplexWorkingDirectory.path());
     
     if(allPossibleFiles.filter("pressureList").count() > 0) {
       file = allPossibleFiles.filter("pressureList").value(0);
@@ -150,6 +169,11 @@ void PollThread::run()
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     pressureList = new PressureList(pressureConfig);
     pressureList->open();
+    
+    outFileName = workingDirectory.path()+"/";
+    outFileName+= vortexName+"_"+radarName+"_"+year+"_pressureList.xml";
+    pressureList->setFileName(outFileName);
+    pressureList->setNewWorkingDirectory(workingDirectory.path());
 
     if(allPossibleFiles.filter("dropSondeList").count() > 0) {
       file = allPossibleFiles.filter("dropSondeList").value(0);
@@ -163,6 +187,11 @@ void PollThread::run()
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     dropSondeList = new PressureList(dropSondeConfig);
     dropSondeList->open();
+
+    outFileName = workingDirectory.path()+"/";
+    outFileName += vortexName+"_"+radarName+"_"+year+"_dropSondeList.xml";
+    dropSondeList->setFileName(outFileName);
+    dropSondeList->setNewWorkingDirectory(workingDirectory.path());
 
     emit vortexListUpdate(vortexList);
 
@@ -259,6 +288,7 @@ void PollThread::run()
 
 		// Check for new data
 		if (dataSource->hasUnprocessedData()) {
+		  dataSource->updateDataQueue(vortexList);
 
 			// Fire up the analysis thread to process it
 		        RadarData *newVolume = dataSource->getUnprocessedData();

@@ -76,7 +76,7 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   // Displays current radar vcp
   QHBoxLayout *vcpLayout = new QHBoxLayout;
   QLabel *vcpLabel = new QLabel(tr("Current Radar VCP"));
-  vcpString = new QString("No VCP available");
+  vcpString = new QString(tr("N/A"));
   vcp = new QLineEdit(*vcpString); 
   //vcp = new QLineEdit(QString("121"));
   vcp->setReadOnly(true);
@@ -90,21 +90,21 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
 
   warning = new QLineEdit;
   warning->setReadOnly(true);
-
+  /*
   // Button and widget to display current Cappi
   cappiLaunch = new QPushButton("View Current CAPPI", this);
   cappiLaunch->setEnabled(false);
   connect(cappiLaunch, SIGNAL(pressed()), this, SLOT(launchCappi()));
   cappiDisplay = new CappiDisplay();
   hasNewCappi = false;
-  
+  */
   QVBoxLayout *main = new QVBoxLayout();
   // main->addStretch();
   main->addWidget(clockBox);
 
   main->addLayout(vcpLayout);
   
-  main->addWidget(cappiLaunch);
+  //main->addWidget(cappiLaunch);
   
   main->addStretch();
 
@@ -130,7 +130,7 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
 DiagnosticPanel::~DiagnosticPanel()
 {
 	delete vcpString;
-	delete cappiDisplay;
+	//delete cappiDisplay;
 }
 
 void DiagnosticPanel::updateClock()
@@ -139,9 +139,9 @@ void DiagnosticPanel::updateClock()
   QString displayTime;
   displayTime = QDateTime::currentDateTime().toUTC().toString("hh:mm");
   clock->display(displayTime);	
-  if(hasNewCappi && !cappiLaunch->isEnabled()) {
-    cappiLaunch->setEnabled(true);
-  }
+  //if(hasNewCappi && !cappiLaunch->isEnabled()) {
+  //  cappiLaunch->setEnabled(true);
+  //}
   update();
 
 }
@@ -164,7 +164,7 @@ void DiagnosticPanel::updateVCP(const int newVCP)
 	vcp->clear();
 	vcp->insert(*vcpString);
 }
-
+/*
 void DiagnosticPanel::updateCappi(const GriddedData* newCappi)
 {
         cappi=newCappi;
@@ -172,7 +172,7 @@ void DiagnosticPanel::updateCappi(const GriddedData* newCappi)
 	cappiDisplay->constructImage(cappi);
 	hasNewCappi = true;
 }
-
+*/
 void DiagnosticPanel::testLight()
 {
   lights->changeColor(dummy);
@@ -181,7 +181,7 @@ void DiagnosticPanel::testLight()
   else 
     dummy = 0;
 }
-
+/*
 void DiagnosticPanel::launchCappi()
 {
 	// Fill the pixmap with the current cappi dat
@@ -191,3 +191,4 @@ void DiagnosticPanel::launchCappi()
 	cappiDisplay->show();
 	
 }
+*/

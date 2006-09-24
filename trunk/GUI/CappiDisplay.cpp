@@ -18,6 +18,9 @@ CappiDisplay::CappiDisplay(QWidget *parent)
 {
     setAttribute(Qt::WA_StaticContents);
     PaintEngineMode = -5;
+    connect(this, SIGNAL(hasImage(bool)),
+	    this, SLOT(setVisible(bool)));
+    emit hasImage(false);
 	
 	//Set the palette
 	image = QImage(50,50,QImage::Format_Indexed8);
@@ -158,7 +161,7 @@ void CappiDisplay::mousePressEvent(QMouseEvent *event)
 
 void CappiDisplay::paintEvent(QPaintEvent * /* event */)
 {
-    QPainter painter(this);
+  QPainter painter(this);
     painter.drawImage(QPoint(0, 0), image);
 	painter.drawText(QPoint(0, this->height()), cappiLabel);
     if(painter.paintEngine()->type() == QPaintEngine::X11)
@@ -259,7 +262,7 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
 	QSize textSize(0, (int)(image.height() * 0.05));
 	this->setMinimumSize(image.size() + textSize);
 	this->resize(image.size() + textSize);
-	update();
+	emit hasImage(true);
 	
 }
 

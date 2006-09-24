@@ -53,6 +53,7 @@ bool SimplexList::save()
     }
     if(fileSaves == QList<SimplexData>::count())
       return true;
+    Message::toScreen("SIMPLEXLIST FAIL:Failed to save all subFiles");
   }
 
   Message::toScreen("SIMPLEXLIST FAIL:Failed to save to file");
@@ -97,8 +98,15 @@ bool SimplexList::openNodeFile(const QDomNode &newNode)
   if(!newNode.isNull()) {
     QDomElement nodeElement = newNode.toElement();
     QString nodeTimeString = config->getParam(nodeElement, "time");
+    QStringList timeParts =  nodeTimeString.remove("volume_").split("T");
+    if(timeParts.count()!=2){
+      Message::toScreen("Failing to read the volume times correctly");
+      return false;
+    }
     //Message::toScreen("Loading Simplex Run "+nodeTimeString);
-    QDateTime nodeTime = QDateTime::fromString(nodeTimeString,Qt::ISODate);
+    QDate nodeDate = QDate::fromString(timeParts[0],Qt::ISODate);
+    QTime nodeTime = QTime::fromString(timeParts[1],Qt::ISODate);
+    QDateTime nodeDateTime = QDateTime(nodeDate, nodeTime, Qt::UTC);
     QString nodeFileName = config->getParam(nodeElement, "file");
     if(!QFile::exists(nodeFileName)) {
       Message::toScreen("SIMPLEXLIST FAIL: File not found for simplexdata: "+nodeFileName);
@@ -123,7 +131,16 @@ bool SimplexList::openNodeFile(const QDomNode &newNode)
 	newRadar = newConfig->getParam(childElement, "radar");
 	newType = newConfig->getParam(childElement, "product");
 	newTime = newConfig->getParam(childElement, "time");
-	newData.setTime(QDateTime::fromString(newTime, Qt::ISODate));
+	QStringList timeParts =  newTime.remove("volume_").split("T");
+	if(timeParts.count()!=2){
+	  Message::toScreen("SimplexList: OpenNodeFile: Error - Failing to read the volume times correctly - 135");
+	  return false;
+	}
+	//Message::toScreen("Loading Simplex Run "+nodeTimeString);
+	QDate nodeDate = QDate::fromString(timeParts[0],Qt::ISODate);
+	QTime nodeTime = QTime::fromString(timeParts[1],Qt::ISODate);
+	QDateTime nodeDateTime = QDateTime(nodeDate, nodeTime, Qt::UTC);
+	newData.setTime(nodeDateTime);
 	newData.setNumPointsUsed(newConfig->getParam(childElement, 
 						     "numpoints").toInt());
 	// Check to make sure these line up........
@@ -367,10 +384,9 @@ void SimplexList::append(const SimplexData &value)
 
 void SimplexList::timeSort()
 {
-  // This is still pretty not working, it screws up good orders
   for(int i = 0; i < this->count(); i++) {
     for(int j = i+1; j < this->count(); j++) {
-      if(this->value(i).getTime().time() > this->value(j).getTime().time()) {
+      if(this->value(i).getTime() > this->value(j).getTime()) {
 	this->swap(j,i);
 	simplexDataConfigs->swap(j,i);
 	configFileNames->swap(j,i);

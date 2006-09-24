@@ -37,7 +37,7 @@ class ChooseCenter
     //bool fixCentersNoFit();
     void useLastMean();
     // void checkHeights();
-    float getSecsTo(const QDateTime &volTime);
+    float getMinutesTo(const QDateTime &volTime);
 
   
  private:

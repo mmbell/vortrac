@@ -616,10 +616,10 @@ bool RadarQC::findVADStart(bool useGVAD)
 {
   
   QString boolString("True");
-  if(!useGVAD)
+  if(!useGVAD){
     boolString = "False";
-  Message::toScreen("In findVADStart with useGVAD = "+boolString);
-  
+    //Message::toScreen("In findVADStart with useGVAD = "+boolString);
+  }
   // This method is used to run either the VAD or GVAD algorithms including
   // any intiailization or preparation algoriths
 

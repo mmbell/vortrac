@@ -430,9 +430,14 @@ int Hvvp::hvvpPrep(int m) {
 	for(int v = first; v < numGates; v++) {
 	  if(vel[v]!=velNull) {
 	    float srange = (rangeStart+float(v)*vGateSpace);
-	    float cu = srange * (cos(elevation)/rt);    // unitless
+	    float cu = srange/rt * cos(elevation*deg2rad);    // unitless
 	    float alt = volume->radarBeamHeight(srange, elevation);  // km
-	    if((cu >= cumin)&&(cu < cuthr)&&(alt >= hLow)&&(alt < hHigh)) {
+	    /*
+	    if((s==6)&&(r == startRay)&&(v==48)&&(m==0)) {
+	      Message::toScreen("startRay = "+QString().setNum(startRay)+" srange = "+QString().setNum(srange)+" cu = "+QString().setNum(cu)+" alt = "+QString().setNum(alt)+" aa = "+QString().setNum(aa)+ " original az = "+QString().setNum(currentRay->getAzimuth())+" vel = "+QString().setNum(vel[v])+" "+QString().setNum(vel[v+1])+" "+QString().setNum(vel[v+2])+" "+QString().setNum(vel[v+3])+" "+QString().setNum(vel[v+4])+" "+QString().setNum(vel[v+5]));
+	    }
+	    */
+	    if((cu > cumin)&&(cu < cuthr)&&(alt >= hLow)&&(alt < hHigh)) {
 	      float ee = elevation*deg2rad;
 	      ee+=asin(srange*cos(elevation)/(ae+alt));
 	      float cosee = cos(ee);
@@ -497,6 +502,8 @@ bool Hvvp::findHVVPWinds()
      *
      */
     
+    //Message::toScreen("Level "+QString().setNum(m)+" count "+QString().setNum(count));
+
     if(count >= 6500) {
       
       //Message::toScreen("Enough Info On Level "+QString().setNum(m)+" to located HVVP - GO.....");

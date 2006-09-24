@@ -151,8 +151,6 @@ void AnalysisThread::run()
 			vortexLat = vortexList->last().getLat();
 			vortexLon = vortexList->last().getLon();
 		} else {
-			vortexLat = configData->getConfig("vortex").firstChildElement("lat").text().toFloat();
-			vortexLon = configData->getConfig("vortex").firstChildElement("lon").text().toFloat();
 			
 			// Need to initialize the Lists
 			QDomElement radar = configData->getConfig("radar");
@@ -160,6 +158,8 @@ void AnalysisThread::run()
 			
 			QDomElement vortex = configData->getConfig("vortex");
 			QString vortexName = configData->getParam(vortex,"name");
+			vortexLat = configData->getParam(vortex,"lat").toFloat();
+			vortexLon = configData->getParam(vortex,"lon").toFloat();
 			QString year;
 			year.setNum(QDate::fromString(configData->getParam(radar,"startdate"), "yyyy-MM-dd").year());
 			
@@ -171,7 +171,7 @@ void AnalysisThread::run()
 			vortexList->setVortexName(vortexName);
 			vortexList->setNewWorkingDirectory(vortexPath + "/");
 			
-			QString simplexPath = configData->getConfig("center").firstChildElement("dir").text();
+			QString simplexPath = configData->getParam(configData->getConfig("center"),"dir");
 			outFileName = workingPath + "/"+vortexName+"_"+radarName+"_"+year+"_simplexList.xml";
 			simplexList->setFileName(outFileName);
 			simplexList->setRadarName(radarName);
@@ -239,6 +239,10 @@ void AnalysisThread::run()
 		}
 		else
 		  emit log(Message("RadarVolume is Dealiased"));
+
+		//QString name("f.dat");
+		//Message::toScreen("Writing Vortrac Input "+name);
+		//radarVolume->writeToFile(name);
 				
 		mutex.unlock();
 		if(abort)

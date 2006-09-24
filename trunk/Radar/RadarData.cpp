@@ -10,6 +10,8 @@
 
 #include "RadarData.h"
 #include <math.h>
+#include <QFile>
+#include <QTextStream>
 
 RadarData::RadarData(QString radarname, float lat, float lon, QString filename)
 {
@@ -120,3 +122,87 @@ void RadarData::setAltitude(const float newAltitude)
 {
   altitude = newAltitude;
 }
+
+/*
+bool RadarData::writeToFile(const QString fileName)
+{
+  QFile* outputFile = new QFile(fileName);
+  outputFile->open(QIODevice::WriteOnly);
+  QTextStream out(outputFile);
+  out << "vbin" << endl;
+  for(int i = 0; i < numSweeps; i++) {
+    out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << Sweeps[i].getVel_numgates();
+    out << endl;
+  }
+  int line = 0;
+  out << "az: " << endl;
+  out << numSweeps << endl;
+  for(int i = 0; i < numSweeps; i++) {
+    int start = Sweeps[i].getFirstRay();
+    int stop = Sweeps[i].getLastRay();
+    out << stop-start+1 << endl;
+    for(int j = start; j <= stop; j++) {
+      out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << Rays[j].getAzimuth();
+      line++;
+      if(line == 8) {
+	out << endl;
+	line = 0;
+      }
+    }
+    line = 0;
+    out << endl;
+  }
+  out << "el: " << endl;
+  out << numSweeps << endl;
+  for(int i = 0; i < numSweeps; i++) {
+    int start = Sweeps[i].getFirstRay();
+    int stop = Sweeps[i].getLastRay();
+    out << stop-start+1 << endl;
+    for(int j = start; j <= stop; j++) {
+      out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << Rays[j].getElevation();
+      line++;
+      if(line==8){
+	out << endl;
+	line = 0;
+      }
+     }
+    line = 0;
+    out << endl;
+  }
+  out << "vd: " << endl;
+  out << numSweeps << endl;
+  for(int i = 0; i < numSweeps; i++) {
+    int start = Sweeps[i].getFirstRay();
+    int stop = Sweeps[i].getLastRay();
+    out << stop-start+1 << endl;
+    for(int j = start; j <= stop; j++) {
+      float* vel_data = Rays[j].getVelData();
+      out << Rays[j].getVel_numgates() << endl;
+      for(int k = 0; k < Rays[j].getVel_numgates(); k++) {
+	out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << vel_data[k];
+	line++;
+	if(line==8){
+	  out << endl;
+	  line = 0;
+	}
+      }
+      if(line!=0){
+	line = 0;
+	out <<endl;
+      }
+    }
+    if(line!=0) {
+      line = 0;
+      out << endl;
+    }
+  }
+  line = 0;
+  out << endl;
+  outputFile->close();
+  return true;
+}
+*/ 
+  
+  
+
+

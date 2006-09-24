@@ -37,8 +37,8 @@ Q_OBJECT
       void pickColor();
       void testLight();
       void updateVCP(const int newVCP);
-	  void updateCappi(const GriddedData* newCappi);
-	  void launchCappi();
+      //	  void updateCappi(const GriddedData* newCappi);
+      //	  void launchCappi();
 	  
  private:
       QTimer *timer;
@@ -46,11 +46,11 @@ Q_OBJECT
       QLineEdit *vcp, *warning;
       StopLight *lights;
       QPushButton *cappiLaunch;
-      CappiDisplay *cappiDisplay;
-      const GriddedData *cappi;
+      //CappiDisplay *cappiDisplay;
+      //const GriddedData *cappi;
       QString* vcpString;
       int dummy;
-      bool hasNewCappi;
+      //bool hasNewCappi;
 
  private slots:
       void updateClock();

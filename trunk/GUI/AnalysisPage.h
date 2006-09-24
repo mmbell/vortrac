@@ -22,6 +22,7 @@
 #include "GraphFace.h"
 #include "ConfigurationDialog.h"
 #include "DiagnosticPanel.h"
+#include "CappiDisplay.h"
 
 #include "TestGraph.h"
 
@@ -57,8 +58,8 @@ class AnalysisPage : public QWidget
   public slots:
     void saveLog();
     void catchLog(const Message& message); 
-	void catchVCP(const int vcp); 
-	void catchCappi(const GriddedData* cappi);
+    void catchVCP(const int vcp); 
+    void updateCappi(const GriddedData* cappi);
 	
  signals:
     void tabLabelChanged(const QString& new_Label);
@@ -96,6 +97,10 @@ class AnalysisPage : public QWidget
   QString imageFileName;
   QLCDNumber *currPressure;
   QLCDNumber *currRMW;
+  QLCDNumber *currDeficit;
+  QTabWidget* visuals;
+  CappiDisplay* cappiDisplay;
+  QLabel* deficitLabel;
 
   bool analyticModel();
 

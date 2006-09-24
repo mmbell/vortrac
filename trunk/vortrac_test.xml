@@ -60,6 +60,7 @@
         <enddate>2005-01-02</enddate>
         <starttime>00:00:00</starttime>
         <endtime>00:00:00</endtime>
+        <min_volumes>6</min_volumes>
         <dist_weight>0.0</dist_weight>
         <wind_weight>0.2</wind_weight>
         <stddev_weight>0</stddev_weight>
@@ -95,6 +96,10 @@
         <pressmax>1013.0</pressmax>
         <rmwmin>0.0</rmwmin>
         <rmwmax>60.0</rmwmax>
+        <startdate>2005-01-01</startdate>
+        <enddate>2005-01-02</enddate>
+        <starttime>00:00:00</starttime>
+        <endtime>00:00:00</endtime>
     </graphics>
     <qc>
         <wind_method>vad</wind_method>

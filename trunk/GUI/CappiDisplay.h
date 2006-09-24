@@ -29,9 +29,12 @@ public:
     bool saveImage(const QString &fileName, const char *fileFormat);
 						
 public slots:
-    void clearImage();
-	void constructImage(const GriddedData* cappi);
+  void clearImage();
+  void constructImage(const GriddedData* cappi);
 	
+signals:
+    void hasImage(bool imageAvailable); 
+
 protected:
     void mousePressEvent(QMouseEvent *event);
     void paintEvent(QPaintEvent *event);
@@ -39,10 +42,11 @@ protected:
 
 private:
     void resizeImage(QImage *image, const QSize &newSize);
-	QString cappiLabel;
+    QString cappiLabel;
     QImage image;
     QPoint lastPoint;
     int PaintEngineMode;
+
 };
 
 #endif

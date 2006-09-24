@@ -90,9 +90,13 @@ class AbstractPanel:public QWidget
 
  protected:
    void connectBrowse();
-   // sets the browse button to allow the user to select a directory
+     // sets the browse button to allow the user to select a directory
    void connectFileBrowse();
-   // sets the browse button to allow the user to select a file
+     // sets the browse button to allow the user to select a file
+   QString getFromElement(const QString& childElemName);
+     // Interacts with the panel element in a way that produces errors
+     // if the correct child is not found. Use this rather than
+     // firstChildElement for safety.
 
  private:
    bool panelChanged;

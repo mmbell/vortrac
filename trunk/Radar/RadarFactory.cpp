@@ -74,6 +74,7 @@ RadarData* RadarFactory::getUnprocessedData()
 
   // Get the files off the queue
   QString fileName = dataPath.filePath(radarQueue->dequeue());
+  Message::toScreen("Using "+fileName);
   // Mark it as processed
   fileAnalyzed[fileName] = true;
     
@@ -163,7 +164,7 @@ bool RadarFactory::hasUnprocessedData()
       }
 
     break;
-	}
+    }
   case ldmlevelII:
   {
       // Should have filenames starting with radar ID
@@ -241,4 +242,75 @@ bool RadarFactory::hasUnprocessedData()
 void RadarFactory::catchLog(const Message& message)
 {
   emit log (message);
+}
+
+void RadarFactory::updateDataQueue(const VortexList* list)
+{
+  if(!list->count()>0)
+    return;
+  int totalFiles = radarQueue->count();
+  for(int i = totalFiles-1; i >= 0; i--)
+    {
+      switch(radarFormat) {
+      case ncdclevelII:
+	{
+	  // Should have filenames starting with radar ID
+      
+	  // Check to see which are in the time limits
+	  QString file = radarQueue->at(i);
+	  QString timepart = file;
+	  // Replace the radarname so we just have timestamps
+	  timepart.replace(radarName, "");
+	  QStringList timestamp = timepart.split("_");
+	  QDate fileDate = QDate::fromString(timestamp.at(0), "yyyyMMdd");
+	  QTime fileTime = QTime::fromString(timestamp.at(1), "hhmmss");
+	  QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
+	  
+	  if (fileDateTime >= startDateTime && fileDateTime <= endDateTime){
+	    // Valid time and radar name, check to see if it 
+	    //  has been processed in vortexList
+	    for(int j = 0; j < list->size(); j++) {
+	      QDateTime processedTime = list->at(j).getTime();
+	      if(abs(processedTime.secsTo(fileDateTime)) < 30) {
+		if (!fileAnalyzed[dataPath.filePath(file)]) {
+		  // File has been analyzed, remove it from the queue
+		  radarQueue->removeAt(radarQueue->indexOf(file));
+		  fileAnalyzed[dataPath.filePath(file)] = true; 
+		}
+	      }
+	    }
+	  }
+	  break;
+	}
+      case ldmlevelII:
+	{
+	  // Should have filenames starting with radar ID
+	  // Check to see which are already in vortexList
+	  QString file = radarQueue->at(i);
+	  QString timepart = file;
+	  // Replace the radarname so we just have timestamps
+	  timepart.replace(radarName, "");
+	  QStringList timestamp = timepart.split(".");
+	  QDate fileDate = QDate::fromString(timestamp.at(1).left(8),"yyyyMMdd");
+	  QTime fileTime = QTime::fromString(timestamp.at(1).right(6), "hhmmss");
+	  QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
+	  if (fileDateTime >= startDateTime && fileDateTime <= endDateTime){
+	    // Valid time and radar name, check to see if it 
+	    //  has been processed in vortexList
+	    for(int j = 0; j < list->size(); j++) {
+	      QDateTime processedTime = list->at(j).getTime();
+	      if(abs(processedTime.secsTo(fileDateTime)) < 30) {
+		if (!fileAnalyzed[dataPath.filePath(file)]) {
+		  // File has been analyzed, remove it from the queue
+		  radarQueue->removeAt(radarQueue->indexOf(file));
+		  fileAnalyzed[dataPath.filePath(file)] = true; 
+		  Message::toScreen("Plucked file "+file+" from the list");
+		}
+	      }
+	    }
+	  }
+	  break;
+	}
+      }
+    }
 }

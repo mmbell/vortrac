@@ -31,6 +31,11 @@ AbstractPanel::AbstractPanel(QWidget *parent)
   dir->setText(defaultDirectory->currentPath());
   browse = new QPushButton("Browse..");
   connectBrowse();
+  maxWaveNumBox = new QSpinBox();
+  radarLatBox = new QDoubleSpinBox();
+  radarLongBox = new QDoubleSpinBox();
+  radarAltBox = new QDoubleSpinBox();
+  //createDataGaps();
 }
 
 AbstractPanel::~AbstractPanel()
@@ -39,16 +44,14 @@ AbstractPanel::~AbstractPanel()
   delete browse;
   delete defaultDirectory;
   delete maxWaveNumBox;
-  delete dataGap;
-  delete dataGapLayout;
-  //  delete dataGapBoxes;
   for(int i = 0; i < dataGapBoxes.count(); i++) {
     delete dataGapBoxes[i];
   }
-  //  delete dataGapLabels;
   for(int i = 0; i < dataGapLabels.count(); i++) {
     delete dataGapLabels[i];
   }
+  delete dataGapLayout;
+  delete dataGap;
   delete radarLatBox;
   delete radarLongBox;
   delete radarAltBox;
@@ -243,4 +246,15 @@ void AbstractPanel::setDefaultDirectory(QDir* newDir)
   
   defaultDirectory = newDir;
    
+}
+
+QString AbstractPanel::getFromElement(const QString& childElemName){
+  QDomElement child = elem.firstChildElement(childElemName);
+  if(child.tagName()!=childElemName) {
+    // This is a failure to find the correct element.
+    // We need angry messages because something is wrong with the configuration
+    emit log(Message("ABSTRACTPANEL: Failed to locate child element "+childElemName+" in panel "+elem.tagName()+" in the configuration!"));
+    return QString();
+  }
+  return child.text();
 }

@@ -52,6 +52,7 @@ bool VortexList::save()
     }
     if(fileSaves == QList<VortexData>::count())
       return true;
+    Message::toScreen("VORTEXLIST FAIL:Failed to save all the files");
   }
 
   Message::toScreen("VORTEXLIST FAIL:Failed to save to file");
@@ -92,7 +93,14 @@ bool VortexList::openNodeFile(const QDomNode &newNode)
   if(!newNode.isNull()) {
     QDomElement nodeElement = newNode.toElement();
     QString nodeTimeString = config->getParam(nodeElement, "time");
-    QDateTime nodeTime = QDateTime::fromString(nodeTimeString,Qt::ISODate);
+    QStringList timeParts =  nodeTimeString.remove("volume_").split("T");
+    if(timeParts.count()!=2){
+      Message::toScreen("VortexList: OpenNodeFile: Failing to read the volume times correctly - 97");
+      return false;
+    }
+    QDate nodeDate = QDate::fromString(timeParts[0],Qt::ISODate);
+    QTime nodeTime = QTime::fromString(timeParts[1],Qt::ISODate);
+    QDateTime nodeDateTime = QDateTime(nodeDate, nodeTime, Qt::UTC);
     QString nodeFileName = config->getParam(nodeElement, "file");
     if(!QFile::exists(nodeFileName)) {
       Message::toScreen("VORTEXLIST FAIL: File not found for vortexdata: "+nodeFileName);
@@ -114,8 +122,16 @@ bool VortexList::openNodeFile(const QDomNode &newNode)
       else {
 	// Has information about a vortexData;
 	QString newTimeString = newConfig->getParam(childElement, "time");
-	QDateTime newTime = QDateTime::fromString(newTimeString,Qt::ISODate);
-	newData.setTime(newTime);
+	QStringList timeParts =  newTimeString.remove("volume_").split("T");
+	if(timeParts.count()!=2){
+	  Message::toScreen("Failing to read the volume times correctly");
+	  return false;
+	}
+	//Message::toScreen("Loading Simplex Run "+nodeTimeString);
+	QDate nodeDate = QDate::fromString(timeParts[0],Qt::ISODate);
+	QTime nodeTime = QTime::fromString(timeParts[1],Qt::ISODate);
+	QDateTime nodeDateTime = QDateTime(nodeDate, nodeTime, Qt::UTC);
+	newData.setTime(nodeDateTime);
 	float newPressure = newConfig->getParam(childElement,
 					     "pressure").toFloat();
 	newData.setPressure(newPressure);
@@ -334,7 +350,7 @@ void VortexList::timeSort()
 {
   for(int i = 0; i < this->count(); i++) {
     for(int j = i+1; j < this->count(); j++) {
-      if(this->value(i).getTime().time()>this->value(j).getTime().time()) {
+      if(this->value(i).getTime()>this->value(j).getTime()) {
 	this->swap(j,i);
 	vortexDataConfigs->swap(j,i);
 	configFileNames->swap(j,i);

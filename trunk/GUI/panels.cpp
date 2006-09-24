@@ -163,31 +163,26 @@ bool VortexPanel::updateConfig()
   QDomElement element = getPanelElement();
   if (checkPanelChanged())
     {
-      if(element.firstChildElement("name").text()
-	 !=vortexName->text()) {
+      if(getFromElement("name")!=vortexName->text()) {
 	emit changeDom(element, "name", vortexName->text());
       }
-      if(element.firstChildElement("lat").text().toDouble()
-	 !=latBox->value()) {
+      if(getFromElement("lat").toDouble()!=latBox->value()) {
 	emit changeDom(element, QString("lat"), 
 		       QString().setNum(latBox->value()));
       }
-      if(element.firstChildElement("lon").text().toDouble()
-	 !=longBox->value()) {
+      if(getFromElement("lon").toDouble()!=longBox->value()) {
 	emit changeDom(element, QString("lon"), 
 		       QString().setNum(longBox->value()));
       }
-      if(element.firstChildElement("direction").text().toDouble()
-	 !=directionBox->value()) {
+      if(getFromElement("direction").toDouble()!=directionBox->value()) {
 	emit changeDom(element, QString("direction"), 
 		       QString().setNum(directionBox->value()));
       }
-      if(element.firstChildElement("speed").text().toDouble()
-	 !=speedBox->value()) {
+      if(getFromElement("speed").toDouble()!=speedBox->value()) {
 	emit changeDom(element, QString("speed"), 
 		       QString().setNum(speedBox->value()));
       }
-      if(element.firstChildElement("dir").text()!=dir->text()) {
+      if(getFromElement("dir")!=dir->text()) {
 	emit changeDom(element, QString("dir"), dir->text());
 	emit workingDirectoryChanged();
       }
@@ -395,51 +390,47 @@ bool RadarPanel::updateConfig()
 	emit log(Message("Start Date and Time must occur before End Date and Time"));
 	return false;
       }
-      if(element.firstChildElement("name").text()!=
-	 radarName->currentText().left(4)) {
+      if(getFromElement("name")!= radarName->currentText().left(4)) {
 	emit changeDom(element, "name", 
 		       radarName->currentText().left(4));
       }
-      if(element.firstChildElement("lat").text().toDouble()
-	 !=radarLatBox->value()) {
+      if(getFromElement("lat").toDouble() !=radarLatBox->value()) {
 	emit changeDom(element, QString("lat"), 
 		       QString().setNum(radarLatBox->value()));
       }
-      if(element.firstChildElement("lon").text().toDouble()
-	 !=radarLongBox->value()) {
+      if(getFromElement("lon").toDouble() !=radarLongBox->value()) {
 	emit changeDom(element, QString("lon"), 
 		       QString().setNum(radarLongBox->value()));
       }
-      if(element.firstChildElement("alt").text().toFloat()
-	 !=radarAltBox->value()) {
+      if(getFromElement("alt").toFloat() !=radarAltBox->value()) {
 	emit changeDom(element, QString("alt"),
 		       QString().setNum(radarAltBox->value()));
       }
-      if(element.firstChildElement("dir").text()!=dir->text()) {
+      if(getFromElement("dir")!=dir->text()) {
 	emit changeDom(element, QString("dir"), dir->text());
 	emit workingDirectoryChanged();
       }
-      if(element.firstChildElement("startdate").text()
+      if(getFromElement("startdate")
 	 !=startDateTime->date().toString("yyyy-MM-dd")) {
 	emit changeDom(element, QString("startdate"), 
 		       startDateTime->date().toString("yyyy-MM-dd"));
       }
-      if(element.firstChildElement("enddate").text()
+      if(getFromElement("enddate")
 	 !=endDateTime->date().toString("yyyy-MM-dd")) {
 	emit changeDom(element, QString("enddate"), 
 		       endDateTime->date().toString("yyyy-MM-dd"));
       }
-      if(element.firstChildElement("starttime").text()
+      if(getFromElement("starttime")
 	 !=startDateTime->time().toString("hh:mm:ss")) {
 	emit changeDom(element, QString("starttime"), 
 		       startDateTime->time().toString("hh:mm:ss"));
       }
-      if(element.firstChildElement("endtime").text()
+      if(getFromElement("endtime")
 	 !=endDateTime->time().toString("hh:mm:ss")) {
 	emit changeDom(element, QString("endtime"), 
 		       endDateTime->time().toString("hh:mm:ss"));
       }
-      if(element.firstChildElement("format").text()
+      if(getFromElement("format")
 	 !=radarFormatOptions->value(radarFormat->currentText())) {
 	if (radarFormat->currentText()==QString("Analytic Model")) 
 	  connectFileBrowse();
@@ -655,52 +646,43 @@ bool CappiPanel::updateConfig()
   QDomElement element = getPanelElement();
   if (checkPanelChanged())
     {
-      if(element.firstChildElement("dir").text()!=dir->text()) {
+      if(getFromElement("dir")!=dir->text()) {
 	emit changeDom(element, QString("dir"), dir->text());
 	emit workingDirectoryChanged();
       }
-      if(element.firstChildElement("xdim").text().toDouble()
-	 !=xDimBox->value()) {
+      if(getFromElement("xdim").toDouble() !=xDimBox->value()) {
 	emit changeDom(element, QString("xdim"), 
 		       QString().setNum(xDimBox->value()));
       }
-      if(element.firstChildElement("ydim").text().toDouble()
-	 !=yDimBox->value()) {
+      if(getFromElement("ydim").toDouble() !=yDimBox->value()) {
 	emit changeDom(element, QString("ydim"), 
 		       QString().setNum(yDimBox->value()));
       }
-      if(element.firstChildElement("zdim").text().toDouble()
-	 !=zDimBox->value()) {
+      if(getFromElement("zdim").toDouble() !=zDimBox->value()) {
     emit changeDom(element, QString("zdim"), 
 		   QString().setNum(zDimBox->value()));
       }
-      if(element.firstChildElement("xgridsp").text().toDouble()
-	 !=xGridBox->value()) {
+      if(getFromElement("xgridsp").toDouble() !=xGridBox->value()) {
 	emit changeDom(element, QString("xgridsp"), 
 		       QString().setNum(xGridBox->value()));
       }
-      if(element.firstChildElement("ygridsp").text().toDouble()
-	 !=yGridBox->value()) {
+      if(getFromElement("ygridsp").toDouble() !=yGridBox->value()) {
 	emit changeDom(element, QString("ygridsp"), 
 		       QString().setNum(yGridBox->value()));
       }
-      if(element.firstChildElement("zgridsp").text().toDouble()
-	 !=zGridBox->value()) {
+      if(getFromElement("zgridsp").toDouble() !=zGridBox->value()) {
 	emit changeDom(element, QString("zgridsp"), 
 		       QString().setNum(zGridBox->value()));
       }
-      if(element.firstChildElement("adv_u").text().toDouble()
-	 !=advUWindBox->value()) {
+      if(getFromElement("adv_u").toDouble() !=advUWindBox->value()) {
 	emit changeDom(element, QString("adv_u"), 
 		       QString().setNum(advUWindBox->value()));
       }
-      if(element.firstChildElement("adv_v").text().toDouble()
-	 !=advVWindBox->value()) {
+      if(getFromElement("adv_v").toDouble() !=advVWindBox->value()) {
 	emit changeDom(element, QString("adv_v"), 
 		       QString().setNum(advVWindBox->value()));
       }
-      if(element.firstChildElement("interpolation").text()
-	 !=interpolationMethod->value(intBox->currentText())) 
+      if(getFromElement("interpolation") !=interpolationMethod->value(intBox->currentText())) 
 	{
 	  emit changeDom(element, QString("interpolation"),
 			 interpolationMethod->value(intBox->currentText()));
@@ -1053,61 +1035,56 @@ bool CenterPanel::updateConfig()
   QDomElement element = getPanelElement();
   if (checkPanelChanged())
     {
-      if(element.firstChildElement("dir").text()!=dir->text()) {
+      if(getFromElement("dir")!=dir->text()) {
 	emit changeDom(element, QString("dir"), dir->text());
 	emit workingDirectoryChanged();
       }
-      if(element.firstChildElement("geometry").text()
+      if(getFromElement("geometry")
 	 !=geometryOptions->value(geometryBox->currentText())) {
 	emit changeDom(element, QString("geometry"), 
 		       geometryOptions->value(geometryBox->currentText()));
       }
-      if(element.firstChildElement("closure").text()
-	 !=closureOptions->value(closureBox->currentText()))
+      if(getFromElement("closure")
+	!=closureOptions->value(closureBox->currentText()))
 	{
 	  emit changeDom(element, QString("closure"), 
 			 closureOptions->value(closureBox->currentText()));
 	}
-      if(element.firstChildElement("reflectivity").text()
+      if(getFromElement("reflectivity")
 	 !=reflectivityOptions->value(refBox->currentText())) {
 	emit changeDom(element, QString("reflectivity"), 
 		       reflectivityOptions->value(refBox->currentText()));
       }
-      if(element.firstChildElement("velocity").text()
+      if(getFromElement("velocity")
 	 !=velocityOptions->value(velBox->currentText())) {
 	emit changeDom(element, QString("velocity"), 
 		       velocityOptions->value(velBox->currentText()));
       }
-      if(element.firstChildElement("search").text()
+      if(getFromElement("search")
 	 !=criteriaOptions->value(critBox->currentText())) {
 	emit changeDom(element, QString("search"), 
 		       criteriaOptions->value(critBox->currentText()));
       }
-      if(element.firstChildElement("bottomlevel").text().toInt()
-	 !=bLBox->value()) {
+      if(getFromElement("bottomlevel").toInt() !=bLBox->value()) {
 	emit changeDom(element, QString("bottomlevel"), 
 		       QString().setNum(bLBox->value()));
       }
-      if(element.firstChildElement("toplevel").text().toInt()
-	 !=tLBox->value()) {
+      if(getFromElement("toplevel").toInt() !=tLBox->value()) {
 	emit changeDom(element, QString("toplevel"), 
 		       QString().setNum(tLBox->value()));
       }
-      if(element.firstChildElement("innerradius").text().toInt()
-	 !=iRBox->value()) {
+      if(getFromElement("innerradius").toInt() !=iRBox->value()) {
 	emit changeDom(element, QString("innerradius"), 
 		       QString().setNum(iRBox->value()));
       }
-      if(element.firstChildElement("outerradius").text().toInt()
-	 !=oRBox->value()) {
+      if(getFromElement("outerradius").toInt() !=oRBox->value()) {
 	emit changeDom(element, QString("outerradius"), 
 		       QString().setNum(oRBox->value()));
       }
-      if(element.firstChildElement("maxwavenumber").text().toInt()
-	 !=maxWaveNumBox->value()) {
+      if(getFromElement("maxwavenumber").toInt() !=maxWaveNumBox->value()) {
 
 	int box = maxWaveNumBox->value();
-	int elem = element.firstChildElement("maxwavenumber").text().toInt();
+	int elem = getFromElement("maxwavenumber").toInt();
 
 	emit changeDom(element, QString("maxwavenumber"), 
 		       QString().setNum(maxWaveNumBox->value()));
@@ -1135,35 +1112,38 @@ bool CenterPanel::updateConfig()
 			QString().setNum(dataGapBoxes[waveNum]->value()),
 			QString("wavenum"), QString().setNum(waveNum));
 	  }
+	  for(int waveNum = 0; waveNum <= box; waveNum++) {
+	    emit changeDom(element, QString("maxdatagap"),
+			   QString().setNum(dataGapBoxes[waveNum]->value()),
+			   QString("wavenum"), QString().setNum(waveNum));
+	  }
 	}
       }
-      if(element.firstChildElement("ringwidth").text().toDouble()
-	 !=ringBox->value()) {
+      else{
+
+      }
+      if(getFromElement("ringwidth").toDouble() !=ringBox->value()) {
 	emit changeDom(element, QString("ringwidth"), 
 		       QString().setNum(ringBox->value()));
       }
-      if(element.firstChildElement("influenceradius").text().toDouble()
+      if(getFromElement("influenceradius").toDouble()
 	 !=influenceBox->value()) {
 	emit changeDom(element, QString("influenceradius"), 
 		       QString().setNum(influenceBox->value()));
       }
-      if(element.firstChildElement("convergence").text().toDouble()
-	 !=convergenceBox->value()) {
+      if(getFromElement("convergence").toDouble() !=convergenceBox->value()) {
 	emit changeDom(element, QString("convergence"), 
 		       QString().setNum(convergenceBox->value()));
       }
-      if(element.firstChildElement("maxiterations").text().toInt()
-	 !=iterations->value()) {
+      if(getFromElement("maxiterations").toInt() !=iterations->value()) {
 	emit changeDom(element, QString("maxiterations"), 
 		       QString().setNum(iterations->value()));
       }
-      if(element.firstChildElement("boxdiameter").text().toDouble()
-	 !=diameterBox->value()) {
+      if(getFromElement("boxdiameter").toDouble() !=diameterBox->value()) {
 	emit changeDom(element, QString("boxdiameter"), 
 		       QString().setNum(diameterBox->value()));
       }
-      if(element.firstChildElement("numpoints").text().toDouble()
-	 !=numPointsBox->value()) {
+      if(getFromElement("numpoints").toDouble() !=numPointsBox->value()) {
 	emit changeDom(element, QString("numpoints"), 
 		       QString().setNum(numPointsBox->value()));
       }
@@ -1213,6 +1193,14 @@ ChooseCenterPanel::ChooseCenterPanel()
   QHBoxLayout *endLayout = new QHBoxLayout;
   endLayout->addWidget(end);
   endLayout->addWidget(endDateTime);
+
+  QLabel* minVolumesLabel = new QLabel(tr("Number of Volumes Required to Begin Curve Fitting"));
+  minVolumes = new QSpinBox();
+  minVolumes->setRange(3,100);
+  QHBoxLayout *minVolumesLayout = new QHBoxLayout();
+  minVolumesLayout->addWidget(minVolumesLabel);
+  minVolumesLayout->addStretch();
+  minVolumesLayout->addWidget(minVolumes);
 
   QGroupBox *weightsMeanGroup = new QGroupBox(tr("Mean Weighting Scheme"));
   QGridLayout *weightsMeanLayout = new QGridLayout;
@@ -1276,6 +1264,7 @@ ChooseCenterPanel::ChooseCenterPanel()
   main->addLayout(dirLayout);
   main->addLayout(startLayout);
   main->addLayout(endLayout);
+  main->addLayout(minVolumesLayout);
   main->addWidget(weightsMeanGroup);
   main->addWidget(weightsSingleGroup);
   main->addWidget(fTestGroup);
@@ -1304,6 +1293,8 @@ ChooseCenterPanel::ChooseCenterPanel()
 	  this, SLOT(valueChanged(const bool)));
   connect(fTest95Button, SIGNAL(clicked(const bool)),
 	  this, SLOT(valueChanged(const bool)));
+  connect(minVolumes, SIGNAL(valueChanged(const QString&)),
+	  this, SLOT(valueChanged(const QString&)));
 
   setPanelChanged(false);
 }
@@ -1320,6 +1311,7 @@ ChooseCenterPanel::~ChooseCenterPanel()
   delete velWeightBox;
   delete fTest95Button;
   delete fTest99Button;
+  delete minVolumes;
 }
 
 void ChooseCenterPanel::updatePanel(const QDomElement panelElement)
@@ -1362,6 +1354,9 @@ void ChooseCenterPanel::updatePanel(const QDomElement panelElement)
       else
 	fTest95Button->setChecked(true);
     }
+    if (name == "min_volumes") {
+      minVolumes->setValue(parameter.toInt()); 
+    }
     child = child.nextSiblingElement();
   }
   setPanelChanged(false);
@@ -1376,57 +1371,56 @@ bool ChooseCenterPanel::updateConfig()
 	emit log(Message("Start Date and Time must occur before End Date and Time"));
 	return false;
       }
-       if(element.firstChildElement("startdate").text()
+       if(getFromElement("startdate")
 	 !=startDateTime->date().toString("yyyy-MM-dd")) {
 	emit changeDom(element, QString("startdate"), 
 		       startDateTime->date().toString("yyyy-MM-dd"));
       }
-      if(element.firstChildElement("enddate").text()
+      if(getFromElement("enddate")
 	 !=endDateTime->date().toString("yyyy-MM-dd")) {
 	emit changeDom(element, QString("enddate"), 
 		       endDateTime->date().toString("yyyy-MM-dd"));
       }
-      if(element.firstChildElement("starttime").text()
+      if(getFromElement("starttime")
 	 !=startDateTime->time().toString("hh:mm:ss")) {
 	emit changeDom(element, QString("starttime"), 
 		       startDateTime->time().toString("hh:mm:ss"));
       }
-      if(element.firstChildElement("endtime").text()
+      if(getFromElement("endtime")
 	 !=endDateTime->time().toString("hh:mm:ss")) {
 	emit changeDom(element, QString("endtime"), 
 		       endDateTime->time().toString("hh:mm:ss"));
       }
-      if(element.firstChildElement("dir").text()!=dir->text()) {
+      if(getFromElement("dir")!=dir->text()) {
 	emit changeDom(element, QString("dir"), dir->text());
 	emit workingDirectoryChanged();
       }
-      if(element.firstChildElement("wind_weight").text().toFloat()
-	 !=windWeightBox->value()) {
+      if(getFromElement("min_volumes").toInt() !=minVolumes->value()) {
+	emit changeDom(element, QString("min_volumes"),
+		       QString().setNum(minVolumes->value()));
+      }
+      if(getFromElement("wind_weight").toFloat() !=windWeightBox->value()) {
 	emit changeDom(element, QString("wind_weight"),
 		       QString().setNum(windWeightBox->value()));
       }
-      if(element.firstChildElement("stddev_weight").text().toFloat()
-	 !=stdDevWeightBox->value()) {
+      if(getFromElement("stddev_weight").toFloat()!=stdDevWeightBox->value()) {
 	emit changeDom(element, QString("stddev_weight"),
 		       QString().setNum(stdDevWeightBox->value()));
       }
-      if(element.firstChildElement("pts_weight").text().toFloat()
-	 !=ptsWeightBox->value()) {
+      if(getFromElement("pts_weight").toFloat() !=ptsWeightBox->value()) {
 	emit changeDom(element, QString("pts_weight"),
 		       QString().setNum(ptsWeightBox->value()));
       }
-      if(element.firstChildElement("position_weight").text().toFloat()
+      if(getFromElement("position_weight").toFloat()
 	 !=positionWeightBox->value()) {
 	emit changeDom(element, QString("position_weight"),
 		       QString().setNum(positionWeightBox->value()));
       }
-      if(element.firstChildElement("rmw_weight").text().toFloat()
-	 !=rmwWeightBox->value()) {
+      if(getFromElement("rmw_weight").toFloat() !=rmwWeightBox->value()) {
 	emit changeDom(element, QString("rmw_weight"),
 		       QString().setNum(rmwWeightBox->value()));
       }
-      if(element.firstChildElement("vt_weight").text().toFloat()
-	 !=velWeightBox->value()) {
+      if(getFromElement("vt_weight").toFloat() !=velWeightBox->value()) {
 	emit changeDom(element, QString("vt_weight"),
 		       QString().setNum(velWeightBox->value()));
       }
@@ -1700,56 +1694,51 @@ bool VTDPanel::updateConfig()
   QDomElement element = getPanelElement();
   if (checkPanelChanged())
     {
-      if(element.firstChildElement("dir").text()!=dir->text()) {
+      if(getFromElement("dir")!=dir->text()) {
 	emit changeDom(element, QString("dir"), dir->text());
 	emit workingDirectoryChanged();
       }
-      if(element.firstChildElement("geometry").text()
+      if(getFromElement("geometry")
 	 !=geometryOptions->value(geometryBox->currentText())) {
 	emit changeDom(element, QString("geometry"), 
 		       geometryOptions->value(geometryBox->currentText()));
       }
-      if(element.firstChildElement("closure").text()
+      if(getFromElement("closure")
 	 !=closureOptions->value(closureBox->currentText()))
 	{
 	  emit changeDom(element, QString("closure"), 
 			 closureOptions->value(closureBox->currentText()));
 	}
-      if(element.firstChildElement("reflectivity").text()
+      if(getFromElement("reflectivity")
 	 !=reflectivityOptions->value(refBox->currentText())) {
 	emit changeDom(element, QString("reflectivity"), 
 		       reflectivityOptions->value(refBox->currentText()));
       }
-      if(element.firstChildElement("velocity").text()
+      if(getFromElement("velocity")
 	 !=velocityOptions->value(velBox->currentText())) {
 	emit changeDom(element, QString("velocity"), 
 		       velocityOptions->value(velBox->currentText()));
       }
-      if(element.firstChildElement("bottomlevel").text().toInt()
-	 !=bLBox->value()) {
+      if(getFromElement("bottomlevel").toInt() !=bLBox->value()) {
 	emit changeDom(element, QString("bottomlevel"), 
 		       QString().setNum(bLBox->value()));
       }
-      if(element.firstChildElement("toplevel").text().toInt()
-	 !=tLBox->value()) {
+      if(getFromElement("toplevel").toInt() !=tLBox->value()) {
 	emit changeDom(element, QString("toplevel"), 
 		       QString().setNum(tLBox->value()));
       }
-      if(element.firstChildElement("innerradius").text().toInt()
-	 !=iRBox->value()) {
+      if(getFromElement("innerradius").toInt() !=iRBox->value()) {
 	emit changeDom(element, QString("innerradius"), 
 		       QString().setNum(iRBox->value()));
       }
-      if(element.firstChildElement("outerradius").text().toInt()
-	 !=oRBox->value()) {
+      if(getFromElement("outerradius").toInt() !=oRBox->value()) {
 	emit changeDom(element, QString("outerradius"), 
 		       QString().setNum(oRBox->value()));
       }
-      if(element.firstChildElement("maxwavenumber").text().toInt()
-	 !=maxWaveNumBox->value()) {
+      if(getFromElement("maxwavenumber").toInt() !=maxWaveNumBox->value()) {
 	
 	int box = maxWaveNumBox->value();
-	int elem = element.firstChildElement("maxwavenumber").text().toInt();
+	int elem = getFromElement("maxwavenumber").toInt();
 
 	emit changeDom(element, QString("maxwavenumber"), 
 		       QString().setNum(maxWaveNumBox->value()));
@@ -1777,10 +1766,14 @@ bool VTDPanel::updateConfig()
 			QString().setNum(dataGapBoxes[waveNum]->value()),
 			QString("wavenum"), QString().setNum(waveNum));
 	  }
+	  for(int waveNum = 0; waveNum <= box; waveNum++) {
+	    emit changeDom(element, QString("maxdatagap"),
+			   QString().setNum(dataGapBoxes[waveNum]->value()),
+			   QString("wavenum"), QString().setNum(waveNum));
+	  }
 	}
       }
-      if(element.firstChildElement("ringwidth").text().toDouble()
-	 !=ringBox->value()) {
+      if(getFromElement("ringwidth").toDouble() !=ringBox->value()) {
 	emit changeDom(element, QString("ringwidth"), 
 		       QString().setNum(ringBox->value()));
       }
@@ -1906,12 +1899,13 @@ void PressurePanel::updatePanel(const QDomElement panelElement)
       else 
 	setPanelChanged(true);}
 	if (name == "format") {
-		int index = pressureFormat->findText(pressureFormatOptions->key(parameter), 
-										 Qt::MatchStartsWith);
-		if (index != -1)
-			pressureFormat->setCurrentIndex(index); }
+	  int index = pressureFormat->findText(
+				   pressureFormatOptions->key(parameter), 
+				   Qt::MatchStartsWith);
+	  if (index != -1)
+	    pressureFormat->setCurrentIndex(index); }
 	
-    child = child.nextSiblingElement();
+	child = child.nextSiblingElement();
   }
   setPanelChanged(false);
 }
@@ -1924,17 +1918,16 @@ bool PressurePanel::updateConfig()
   QDomElement element = getPanelElement();
   if (checkPanelChanged())
     {
-      if(element.firstChildElement("dir").text()!=dir->text()) {
+      if(getFromElement("dir")!=dir->text()) {
 	emit changeDom(element, QString("dir"), dir->text());
 	emit workingDirectoryChanged();
       }
-	  if(element.firstChildElement("format").text()
-		 !=pressureFormatOptions->value(pressureFormat->currentText()))
-	  {
-		  emit changeDom(element, QString("format"), 
-						 pressureFormatOptions->value(pressureFormat->currentText()));
-	  }
-	  
+      if(getFromElement("format")
+	 !=pressureFormatOptions->value(pressureFormat->currentText()))
+	{
+	  emit changeDom(element, QString("format"), 
+	    pressureFormatOptions->value(pressureFormat->currentText()));
+	}
     }
   setPanelChanged(false);
   return true;
@@ -1978,10 +1971,10 @@ GraphicsPanel::GraphicsPanel()
   rmwMinBox->setDecimals(1);
   
   QLabel *beginTimeLabel = new QLabel(tr("Beginning Time"));
-  beginTime = new QDateTimeEdit();
+  startDateTime = new QDateTimeEdit();
   
   QLabel *endTimeLabel = new QLabel (tr("Endding Time"));
-  endTime = new QDateTimeEdit();
+  endDateTime = new QDateTimeEdit();
   
   graph->addWidget(pMax, 0,0);
   graph->addWidget(pMaxBox, 0, 1);
@@ -1992,9 +1985,9 @@ GraphicsPanel::GraphicsPanel()
   graph->addWidget(rmwMin, 1, 2);
   graph->addWidget(rmwMinBox, 1, 3);
   graph->addWidget(beginTimeLabel, 2, 0);
-  graph->addWidget(beginTime, 2,1);
+  graph->addWidget(startDateTime, 2,1);
   graph->addWidget(endTimeLabel, 3, 0);
-  graph->addWidget(endTime, 3,1);
+  graph->addWidget(endDateTime, 3,1);
   graphParameters->setLayout(graph);
   graphParameters->setChecked(false);
   QVBoxLayout *main = new QVBoxLayout;
@@ -2012,9 +2005,9 @@ GraphicsPanel::GraphicsPanel()
 	  this, SLOT(valueChanged(const QString&))); 
   connect(rmwMinBox, SIGNAL(valueChanged(const QString&)), 
 	  this, SLOT(valueChanged(const QString&)));
-  connect(beginTime, SIGNAL(dateTimeChanged(const QDateTime&)),
+  connect(startDateTime, SIGNAL(dateTimeChanged(const QDateTime&)),
 	  this, SLOT(valueChanged(const QDateTime&)));
-  connect(endTime, SIGNAL(dateTimeChanged(const QDateTime&)), 
+  connect(endDateTime, SIGNAL(dateTimeChanged(const QDateTime&)), 
 	  this, SLOT(valueChanged(const QDateTime&)));
 
   setPanelChanged(false);
@@ -2026,8 +2019,8 @@ GraphicsPanel::~GraphicsPanel()
   delete pMinBox;
   delete rmwMaxBox;
   delete rmwMinBox;
-  delete beginTime;
-  delete endTime;
+  delete startDateTime;
+  delete endDateTime;
   delete graphParameters;
 }
 
@@ -2051,6 +2044,14 @@ void GraphicsPanel::updatePanel(const QDomElement panelElement)
       rmwMinBox->setValue(parameter.toDouble()); }
     if (name == "rmwmax") {
       rmwMaxBox->setValue(parameter.toDouble()); }
+    if (name == "startdate") {
+      startDateTime->setDate(QDate::fromString(parameter, "yyyy-MM-dd")); }
+    if (name == "enddate") {
+      endDateTime->setDate(QDate::fromString(parameter, "yyyy-MM-dd")); }
+    if (name == "starttime") {
+      startDateTime->setTime(QTime::fromString(parameter, "hh:mm:ss")); }
+    if (name == "endtime") {
+      endDateTime->setTime(QTime::fromString(parameter, "hh:mm:ss")); }
     child = child.nextSiblingElement();
   }
   setPanelChanged(false);
@@ -2078,6 +2079,18 @@ bool GraphicsPanel::updateConfig()
 
 	emit changeDom(element, QString("rmwmax"), 
 		       QString().setNum(rmwMaxBox->value()));
+
+	emit changeDom(element, QString("startdate"), 
+		       startDateTime->date().toString("yyyy-MM-dd"));
+
+	emit changeDom(element, QString("enddate"), 
+		       endDateTime->date().toString("yyyy-MM-dd"));
+
+	emit changeDom(element, QString("starttime"), 
+		       startDateTime->time().toString("hh:mm:ss"));
+  
+	emit changeDom(element, QString("endtime"), 
+		       endDateTime->time().toString("hh:mm:ss"));
       }
     }
   setPanelChanged(false);
@@ -2345,51 +2358,42 @@ bool QCPanel::updateConfig()
   QDomElement element = getPanelElement();
   if (checkPanelChanged()) 
     {
-      if(element.firstChildElement("vel_min").text().toDouble()
-	!=velocityMinimum->value()) {
+      if(getFromElement("vel_min").toDouble()!=velocityMinimum->value()) {
 	emit changeDom(element, QString("vel_min"), 
 		       QString().setNum(velocityMinimum->value()));
       }
-      if(element.firstChildElement("vel_max").text().toDouble()
-	 !=velocityMaximum->value()) {
+      if(getFromElement("vel_max").toDouble() !=velocityMaximum->value()) {
 	emit changeDom(element, QString("vel_max"), 
 		       QString().setNum(velocityMaximum->value()));
       }
-      if(element.firstChildElement("ref_min").text().toDouble()
-	!=reflectivityMinimum->value()) {
+      if(getFromElement("ref_min").toDouble()!=reflectivityMinimum->value()) {
 	emit changeDom(element, QString("ref_min"), 
 		       QString().setNum(reflectivityMinimum->value()));
       }
-      if(element.firstChildElement("ref_max").text().toDouble()
-	 !=reflectivityMaximum->value()) {
+      if(getFromElement("ref_max").toDouble() !=reflectivityMaximum->value()) {
 	emit changeDom(element, QString("ref_max"), 
 		       QString().setNum(reflectivityMaximum->value()));
       }
-      if(element.firstChildElement("sw_threshold").text().toDouble()
-	 !=spectralThreshold->value()) {
+      if(getFromElement("sw_threshold").toDouble()!=spectralThreshold->value()) {
 	emit changeDom(element, QString("sw_threshold"),
 		       QString().setNum(spectralThreshold->value()));
       }
-      if(element.firstChildElement("bbcount").text().toInt()
-	 !=bbSegmentSize->value()) {
+      if(getFromElement("bbcount").toInt() !=bbSegmentSize->value()) {
 	emit changeDom(element,QString("bbcount"),
 		       QString().setNum(bbSegmentSize->value()));
       }
-      if(element.firstChildElement("maxfold").text().toInt()
-	 !=maxFoldCount->value()) {
+      if(getFromElement("maxfold").toInt()!=maxFoldCount->value()) {
 	emit changeDom(element, QString("maxfold"),
 		       QString().setNum(maxFoldCount->value()));
       }
       if(vad->isChecked()) {
 	emit changeDom(element, QString("wind_method"), QString("vad"));
 	
-	if(element.firstChildElement("vadlevels").text().toInt()
-	   != vadLevels->value()) {
+	if(getFromElement("vadlevels").toInt()!= vadLevels->value()) {
 	  emit changeDom(element, QString("vadlevels"),
 			  QString().setNum(vadLevels->value()));
 	}
-	if(element.firstChildElement("numcoeff").text().toInt()
-	   != numCoefficients->value()) {
+	if(getFromElement("numcoeff").toInt()!= numCoefficients->value()) {
 	  emit changeDom(element, QString("numcoeff"),
 			 QString().setNum(numCoefficients->value()));
 	}
@@ -2397,13 +2401,11 @@ bool QCPanel::updateConfig()
       if(user->isChecked()) {
 	emit changeDom(element, QString("wind_method"), QString("user"));
 	
-	if(element.firstChildElement("windspeed").text().toDouble()
-	   != windSpeed->value()) {
+	if(getFromElement("windspeed").toDouble()!= windSpeed->value()) {
 	  emit changeDom(element, QString("windspeed"),
 			  QString().setNum(windSpeed->value()));
 	}
-	if(element.firstChildElement("winddirection").text().toDouble()
-	   != windDirection->value()) {
+	if(getFromElement("winddirection").toDouble()!=windDirection->value()){
 	  emit changeDom(element, QString("winddirection"),
 			 QString().setNum(windDirection->value()));
 	}
@@ -2411,8 +2413,7 @@ bool QCPanel::updateConfig()
       if(known->isChecked()) {
 	emit changeDom(element, QString("wind_method"), QString("known"));
 	
-	if(element.firstChildElement("awips_dir").text()
-	   != dir->text()) {
+	if(getFromElement("awips_dir")!= dir->text()) {
 	  emit changeDom(element, QString("awips_dir"),dir->text());
 	}
       }

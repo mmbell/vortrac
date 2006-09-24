@@ -165,7 +165,7 @@ void SimplexThread::run()
 					// Out of bounds problem
 					emit log(Message("Initial simplex guess is outside CAPPI"));
 					archiveNull(radius, height, numPoints);
-					mutex.unlock();
+					//mutex.unlock();
 					continue;
 				}
 				// Initialize mean values

@@ -46,7 +46,19 @@ class VortexPanel:public AbstractPanel
   // Widget used to receive/display hurricane name
   
   QDoubleSpinBox *latBox, *longBox, *directionBox, *speedBox;
-  // Widgets used to recieve/display hurricane latitude and longitude
+  /*
+   * latBox & lonBox are used to adjust the starting latitude and longitude
+   *   of the storm of interest. This only needs to be initialized for the 
+   *   volume analyzed, all subsequent volumes use previous centers as 
+   *   analysis starting points.
+   *
+   * directionBox & speedBox are used to set the initial direction of motion
+   *   and the initial speed of the storm. Supply this information is not
+   *   required. If this information is supplied it will be used to 
+   *   extrapolate a starting point if the program is initialized when the
+   *   storm is still out of radar range.
+   *
+   */
 
 };
 
@@ -229,6 +241,14 @@ class ChooseCenterPanel:public AbstractPanel
    *
    */
 
+  QSpinBox *minVolumes;
+  /*
+   * minVolumes contains the valuse of the minimum number of volumes required
+   *   before fitting should be used to determine the best center for the 
+   *   analysis. Prior to accumulating this number of processed volumes the
+   *   mean center will be used.
+   *
+   */
 };
 
 class VTDPanel:public AbstractPanel
@@ -311,7 +331,7 @@ class GraphicsPanel:public AbstractPanel
   bool updateConfig();
  private:
   QDoubleSpinBox *pMaxBox, *pMinBox, *rmwMaxBox, *rmwMinBox;
-  QDateTimeEdit *beginTime, *endTime;
+  QDateTimeEdit *startDateTime, *endDateTime;
   /*
    * These are used to manipulate the visible limits of the pressure &
    *   rmw display graph
@@ -319,8 +339,8 @@ class GraphicsPanel:public AbstractPanel
    * pMinBox: minimum pressure displayed on graph
    * rmwMaxBox: maximum rmw displayed on graph
    * rmwMinBox: minimum rmw displayed on graph
-   * beginTime: controls lower time limit on graph
-   * endTime: controls upper time limit displayed on graph
+   * startDateTime: controls lower time limit on graph
+   * endDateTime: controls upper time limit displayed on graph
    */
 
   QGroupBox *graphParameters;

@@ -228,7 +228,7 @@ void GraphFace::saveImage(QString fileName)
 
 void GraphFace::newInfo(VortexList* gList)
 { 
-    
+  /*
   if (first.isNull()) {
     // Find the earilier vortexData in the new list
     QDateTime initialTime = gList->value(0).getTime(); 
@@ -245,6 +245,10 @@ void GraphFace::newInfo(VortexList* gList)
     }
     first = QDateTime(initialTime);
   }
+  */
+  gList->timeSort();
+  if(first.isNull())
+    first = gList->at(0).getTime();;
 
   for(int i = 0; i < gList->count(); i++) {
     

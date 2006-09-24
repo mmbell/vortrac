@@ -20,6 +20,7 @@ ChooseCenter::ChooseCenter(Configuration* newConfig,
   config = newConfig;
   simplexResults = newList;
   vortexData = vortexPtr;
+  simplexResults.timeSort();
 }
 
 ChooseCenter::~ChooseCenter()
@@ -115,9 +116,9 @@ void ChooseCenter::initialize()
     if(simplexResults[i].getNumLevels() < numLevels) 
       numLevels = simplexResults[i].getNumLevels();
   }
-  minVolumes = 5;
 
   QDomElement ccElement = config->getConfig("choosecenter");
+  minVolumes = config->getParam(ccElement, QString("min_volumes")).toInt();
   windWeight = config->getParam(ccElement, QString("wind_weight")).toFloat();
   stdWeight = config->getParam(ccElement, QString("stddev_weight")).toFloat();
   ptsWeight = config->getParam(ccElement, QString("pts_weight")).toFloat();
@@ -474,12 +475,8 @@ bool ChooseCenter::constructPolynomial()
   //Message::toScreen("First time = "+firstTime.toString());
   float timeRefIndex = 0;
   for(int i = 1; i < simplexResults.count(); i++) {
-     //Message::toScreen("Time of index i = "+QString().setNum(i)+" "+simplexResults[i].getTime().toString()+" time between start and this one = "+QString().setNum(firstTime.time().secsTo(simplexResults[i].getTime().time())));
-    if(firstTime.time().secsTo(simplexResults[i].getTime().time()) < 0) {
-      timeRefIndex = i;
-      firstTime = simplexResults[i].getTime();
-    }
-    if(firstTime.date().daysTo(simplexResults[i].getTime().date())<0){
+     //Message::toScreen("Time of index i = "+QString().setNum(i)+" "+simplexResults[i].getTime().toString()+" time between start and this one = "+QString().setNum(firstTime.secsTo(simplexResults[i].getTime())));
+    if(firstTime.secsTo(simplexResults[i].getTime()) < 0) {
       timeRefIndex = i;
       firstTime = simplexResults[i].getTime();
     }
@@ -589,8 +586,8 @@ bool ChooseCenter::constructPolynomial()
 	
 	for(int r = 0; r <= n; r++) {
 	  for(int i = 0; i < simplexResults.count(); i++) {
-	    float min = ((float)firstTime.time().secsTo(simplexResults[i].getTime().time())/60.0);
-	    float othermin = getSecsTo(simplexResults[i].getTime());
+	    float min = ((float)firstTime.secsTo(simplexResults[i].getTime())/60.0);
+	    float othermin = getMinutesTo(simplexResults[i].getTime());
 	    //if(othermin != min)
 	      //Message::toScreen("Angry time issues! - 595");
 	    MM[r][i] = pow(min,(double)(r));
@@ -598,8 +595,8 @@ bool ChooseCenter::constructPolynomial()
 	}
 	
 	for(int i = 0; i < simplexResults.count(); i++) {
-	  float min = ((float)firstTime.time().secsTo(simplexResults[i].getTime().time())/60.0);
-	  float othermin = getSecsTo(simplexResults[i].getTime());
+	  float min = ((float)firstTime.secsTo(simplexResults[i].getTime())/60.0);
+	  float othermin = getMinutesTo(simplexResults[i].getTime());
 	  //if(othermin != min)
 	  //Message::toScreen("Angry time issues! - 604");
 	  int jBest = bestRadius[i][k];
@@ -633,8 +630,8 @@ bool ChooseCenter::constructPolynomial()
 	float errorSum = 0;
 	delete [] stError;
 	for(int i = 0; i < simplexResults.count(); i++) {
-	  float min = ((float)firstTime.time().secsTo(simplexResults[i].getTime().time())/60.0);
-	  float othermin = getSecsTo(simplexResults[i].getTime());
+	  float min = ((float)firstTime.secsTo(simplexResults[i].getTime())/60.0);
+	  float othermin = getMinutesTo(simplexResults[i].getTime());
 	  //if(othermin != min)
 	  //  Message::toScreen("Angry time issues! - 639");
 	  float func_y  = 0;
@@ -751,11 +748,7 @@ bool ChooseCenter::fixCenters()
   firstTime = simplexResults[0].getTime();
   float timeRefIndex = 0;
   for(int i = 1; i < simplexResults.count(); i++) {
-    if(firstTime.time().secsTo(simplexResults[i].getTime().time()) < 0) {
-      timeRefIndex = i;
-      firstTime = simplexResults[i].getTime();
-    }
-    if(firstTime.date().daysTo(simplexResults[i].getTime().date())<0){
+    if(firstTime.secsTo(simplexResults[i].getTime()) < 0) {
       timeRefIndex = i;
       firstTime = simplexResults[i].getTime();
     }
@@ -765,9 +758,9 @@ bool ChooseCenter::fixCenters()
   int lastTimeIndex = 0;
   float longestTime = 0;
   for(int i = 0; i < simplexResults.count(); i++) {
-    if(getSecsTo(simplexResults[i].getTime()) > longestTime) {
+    if(getMinutesTo(simplexResults[i].getTime()) > longestTime) {
       lastTimeIndex = i;
-      longestTime = getSecsTo(simplexResults[i].getTime());
+      longestTime = getMinutesTo(simplexResults[i].getTime());
       }
   }
   
@@ -803,8 +796,8 @@ bool ChooseCenter::fixCenters()
       float finalStd = 0;
       float confidence = 0;
       float stdError = 0;
-      float min = ((float)firstTime.time().secsTo(simplexResults[i].getTime().time())/60.0);
-      float othermin = getSecsTo(simplexResults[i].getTime());
+      float min = ((float)firstTime.secsTo(simplexResults[i].getTime())/60.0);
+      float othermin = getMinutesTo(simplexResults[i].getTime());
       //if(othermin != min)
       //  Message::toScreen("Angry time issues! - 799");
       //check out use of n up to best degree of fit based on assignment
@@ -1014,12 +1007,8 @@ void ChooseCenter::useLastMean()
   
 }
 
-float ChooseCenter::getSecsTo(const QDateTime &volTime)
+float ChooseCenter::getMinutesTo(const QDateTime &volTime)
 {
-  float min = ((float)firstTime.time().secsTo(volTime.time())/60.0);
-  if (volTime.date()!=firstTime.date()) {
-    int numDays = firstTime.date().daysTo(volTime.date());
-    min+= numDays*24*3600;
-  }
+  float min = ((float)firstTime.secsTo(volTime)/60.0);
   return min;
 }
