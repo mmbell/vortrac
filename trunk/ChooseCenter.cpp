@@ -21,11 +21,24 @@ ChooseCenter::ChooseCenter(Configuration* newConfig,
   simplexResults = newList;
   vortexData = vortexPtr;
   simplexResults.timeSort();
+  score = NULL;
+  bestRadius = NULL;
+  centerDev = NULL;
+  radiusDev = NULL;
+  bestFitVariance = NULL;
+  bestFitDegree = NULL;
+  bestFitCoeff = NULL;
+  newBestRadius = NULL;
+  newBestCenter = NULL;
 }
 
 ChooseCenter::~ChooseCenter()
 {
-  //delete config;
+  config = NULL;
+  delete config;
+  vortexData = NULL;
+  delete vortexData;
+  
   
   for(int i = 0; i < simplexResults.count(); i++) {
     for(int j = 0; j < simplexResults[i].getNumRadii(); j++) {
@@ -245,8 +258,13 @@ bool ChooseCenter::chooseMeanCenters()
   for(int i = 0; i < simplexResults.count(); i++) {
     bestRadius[i] = new int[simplexResults[i].getNumLevels()];
     score[i] = new float*[simplexResults[i].getNumRadii()];
-    for(int rad = 0; rad < simplexResults[i].getNumRadii(); rad++) 
+    for(int rad = 0; rad < simplexResults[i].getNumRadii(); rad++) {
       score[i][rad] = new float[simplexResults[i].getNumLevels()];
+      for(int level = 0; level < simplexResults[i].getNumLevels(); level++){
+	score[i][rad][level] = 0;
+	bestRadius[i][level] = 0;
+      }
+    }
 
     // Now we zero out the variables used for finding the mean of each volume
 
@@ -624,9 +642,7 @@ bool ChooseCenter::constructPolynomial()
 	if(!Matrix::lls(n+1, simplexResults.count(), MM, BB, stDev, currentCoeff, stError)) {
 	  Message::toScreen("least square fit failed in find center");
 	}
-	//Message::toScreen("Got past lls");
-	//if(criteria ==2)
-	  //Matrix::printMatrix(currentCoeff, n+1);
+       
 	float errorSum = 0;
 	delete [] stError;
 	for(int i = 0; i < simplexResults.count(); i++) {

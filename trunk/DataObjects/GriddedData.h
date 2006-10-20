@@ -31,17 +31,23 @@ class GriddedData
   void setIdim(const int& dim);
   void setJdim(const int& dim);
   void setKdim(const int& dim);
+  float getIGridsp() const { return iGridsp; }
+  float getJGridsp() const { return jGridsp; }
+  float getKGridsp() const { return kGridsp; }
+  void setIGridsp(const float& iSpacing);
+  void setJGridsp(const float& jSpacing);
+  void setKGridsp(const float& kSpacing);
   int getCoordSystem() { return coordSystem; }
   float fixAngle(float angle);
   void setLatLonOrigin(float *knownLat, float *knownLon, float *relX, 
 		       float *relY);
   void setReferencePoint(int ii, int jj, int kk);
-  void setCartesianReferencePoint(int ii, int jj, int kk); 
+  void setCartesianReferencePoint(float ii, float jj, float kk); 
   void setAbsoluteReferencePoint(float Lat, float Lon, float Height);
   float* getCartesianPoint(float *Lat, float *Lon,
 		     float *relLat, float* relLon);
   static float getCartesianDistance(float *Lat, float *Lon,
-									float *relLat, float* relLon);
+				    float *relLat, float* relLon);
   float getRefPointI();
   float getRefPointJ();
   float getRefPointK();
@@ -50,13 +56,13 @@ class GriddedData
   float getCartesianRefPointJ();
   float getCartesianRefPointK();
   
-  float getCartesianPointFromIndexI (float& indexI);
-  float getCartesianPointFromIndexJ (float& indexJ);
-  float getCartesianPointFromIndexK (float& indexK);
+  float getCartesianPointFromIndexI (const float& indexI);
+  float getCartesianPointFromIndexJ (const float& indexJ);
+  float getCartesianPointFromIndexK (const float& indexK);
   
-  float getIndexFromCartesianPointI (float& cartI);
-  float getIndexFromCartesianPointJ (float& cartJ);
-  float getIndexFromCartesianPointK (float& cartK);
+  float getIndexFromCartesianPointI (const float& cartI);
+  float getIndexFromCartesianPointJ (const float& cartJ);
+  float getIndexFromCartesianPointK (const float& cartK);
   
   // Return a 1D array of values
   float* getNativeData();
@@ -73,16 +79,20 @@ class GriddedData
   /* these are all done in Math Coordinates, should we changes the names,
      so the sound less like meteorological coords?  -LM */
 
-  int getFieldIndex(QString& fieldName) const;
+  int getFieldIndex(const QString& fieldName) const;
 
   float getIndexValue(QString& fieldName, float& i, float& j, float& k) const;
 
   /* Needed a reference point before we could redo coordinate systems. -LM */
   // Cartesian Coordinates
-  float* getCartesianXslice(float& y, float& z);
-  float* getCartesianYslice(float& x, float& z);
-  float* getCartesianZslice(float& x, float& y);
-  float getCartesianValue(float& x, float& y, float& z);
+  float* getCartesianXslice(const QString& fieldName, const float& y, 
+			    const float& z);
+  float* getCartesianYslice(const QString& fieldName, const float& x, 
+			    const float& z);
+  float* getCartesianZslice(const QString& fieldName, const float& x, 
+			    const float& y);
+  float getCartesianValue(const QString& fieldName, const float& x, 
+			  const float& y, const float& z);
   
   // Spherical Coordinates
 
@@ -164,6 +174,8 @@ class GriddedData
   float xmin, xmax;
   float ymin, ymax;
   float zmin, zmax;
+
+  bool test();
   
 };
 

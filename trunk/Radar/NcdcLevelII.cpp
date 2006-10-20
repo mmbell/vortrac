@@ -74,7 +74,7 @@ bool NcdcLevelII::readVolume()
 
       // Is this a new sweep? Check radial status
       if (radarHeader->radial_status == 3) {
-
+	
 	// Beginning of volume
 	volumeTime = radarHeader->milliseconds_past_midnight;
 	volumeDate = radarHeader->julian_date;
@@ -141,4 +141,8 @@ bool NcdcLevelII::readVolume()
 
   return true;
 
+}
+
+NcdcLevelII::~NcdcLevelII()
+{
 }

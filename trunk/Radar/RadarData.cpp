@@ -12,6 +12,7 @@
 #include <math.h>
 #include <QFile>
 #include <QTextStream>
+#include "Message.h"
 
 RadarData::RadarData(QString radarname, float lat, float lon, QString filename)
 {
@@ -123,7 +124,7 @@ void RadarData::setAltitude(const float newAltitude)
   altitude = newAltitude;
 }
 
-/*
+
 bool RadarData::writeToFile(const QString fileName)
 {
   QFile* outputFile = new QFile(fileName);
@@ -201,7 +202,7 @@ bool RadarData::writeToFile(const QString fileName)
   outputFile->close();
   return true;
 }
-*/ 
+ 
   
   
 

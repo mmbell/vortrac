@@ -9,16 +9,36 @@
  */
 
 #include "Ray.h"
+#include "Message.h"
 
 Ray::Ray()
 {
+  sweepIndex = -999;
+  time = -999;
+  date = -999;
+  azimuth = -999;
+  elevation = -999;
+  velResolution = -999;
+  rayIndex = -999;
+  refData = NULL;
+  velData = NULL;
+  swData = NULL;
+  unambig_range = -999;
+  nyquist_vel = -999;
+  first_ref_gate = -999;
+  first_vel_gate = -999;
+  ref_gatesp = -999;
+  vel_gatesp = -999;
+  ref_numgates = -999;
+  vel_numgates = -999;
+  vcp = -999;
 }
 
 Ray::~Ray()
 {
-	delete [] refData;
-	delete [] velData;
-	delete [] swData;
+  delete [] refData;
+  delete [] velData;
+  delete [] swData;
 }
 
 void Ray::setTime(const int &value) {

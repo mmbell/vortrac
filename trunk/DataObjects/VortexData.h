@@ -54,6 +54,8 @@ class VortexData
   void setPressure(const float& pressure);
   float getPressureUncertainty() const;
   void setPressureUncertainty(const float& dPressure);
+  float getPressureDeficit() const;
+  void setPressureDeficit(const float& newPressureDeficit);
 
   int getNumConvergingCenters(const int& i)const;
   void setNumConvergingCenters(const int& index, const int& number);
@@ -98,6 +100,7 @@ class VortexData
 
   float centralPressure;
   float centralPressureUncertainty;
+  float pressureDeficit;
 
   int numConvergingCenters[maxLevels];
   float centerStdDeviation[maxLevels];

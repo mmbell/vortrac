@@ -49,10 +49,12 @@ bool SimplexList::save()
       Configuration *currConfig= simplexDataConfigs->value(i);
       if(currConfig->write(configFileNames->value(i)))
 	fileSaves++;
-      Message::toScreen(QString().setNum(fileSaves));
+      //Message::toScreen(QString().setNum(fileSaves));
     }
-    if(fileSaves == QList<SimplexData>::count())
+    if(fileSaves == QList<SimplexData>::count()) {
+      Message::toScreen(QString().setNum(fileSaves));
       return true;
+    }
     Message::toScreen("SIMPLEXLIST FAIL:Failed to save all subFiles");
   }
 

@@ -30,7 +30,7 @@ class GraphFace:public QWidget
 Q_OBJECT
 
 public:
-   GraphFace(QString& title, QWidget *parent = 0);
+   GraphFace(QWidget *parent = 0, const QString& title = QString());
        // The constructor takes a parent and returns a GraphFace object
        // it also preforms several initialization for the object
    ~GraphFace();

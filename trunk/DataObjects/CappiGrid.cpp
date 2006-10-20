@@ -132,7 +132,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
     
     if ((currentRay->getRef_numgates() > 0) and 
 		(gridReflectivity)) {
-
+      
       float* refData = currentRay->getRefData();
       for (int g = 0; g <= (currentRay->getRef_numgates()-1); g++) {
 		if (refData[g] == -999.) { continue; }
@@ -172,8 +172,8 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
       }
       
     }
-	if ((currentRay->getVel_numgates() > 0) and
-		(currentRay->getUnambig_range() > 170)) {
+    if ((currentRay->getVel_numgates() > 0) and
+	(currentRay->getUnambig_range() > 170)) {
       
       float* velData = currentRay->getVelData();
       float* swData = currentRay->getSwData();
@@ -213,11 +213,15 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 		*/
 		v++;
 		if(v >999999)
-			Message::toScreen("Gone out of array bounds in CappiGrid.ccp velValues");
+		  Message::toScreen("Gone out of array bounds in CappiGrid.ccp velValues");
       }
-      
+      velData = NULL;
+      swData = NULL;
+      delete velData;
+      delete swData;
     }
-    
+    currentRay = NULL;
+    delete currentRay;
   }
   Message::toScreen("# of Reflectivity gates used in CAPPI = "+QString().setNum(r));
   Message::toScreen("# of Velocity gates used in CAPPI = "+QString().setNum(v));

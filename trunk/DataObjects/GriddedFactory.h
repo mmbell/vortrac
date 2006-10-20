@@ -22,10 +22,10 @@ class GriddedFactory
 		~GriddedFactory();
 		GriddedData* makeEmptyGrid(const char *coordinates);
 		GriddedData* makeCappi(RadarData *radarData, 
-				       QDomElement cappiConfig,
+				       Configuration* mainConfig,
 				       float *vortexLat, float *vortexLon);
 		GriddedData* makeAnalytic(RadarData *radarData,
-					  QDomElement cappiConfig,
+					  Configuration* mainConfig,
 					  Configuration* analyticConfig,
 					  float *vortexLat, float *vortexLon,
 					  float *radarLat, float *radarLon);

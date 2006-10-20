@@ -215,6 +215,7 @@ void VortexThread::run()
 		calcCentralPressure();
 		vortexData->setPressure(centralPressure);
 		vortexData->setPressureUncertainty(centralPressureStdDev);
+		vortexData->setPressureDeficit(pressureDeficit[(int)lastRing]-pressureDeficit[(int)firstRing]);
 		
 		if(!foundWinds)
 		{
@@ -311,11 +312,19 @@ void VortexThread::getPressureDeficit(const float& height)
 
 void VortexThread::calcCentralPressure()
 {
-
-	// Set the maximum allowable radius and time difference
-	// Need to make this user configurable
-	float maxObRadius = lastRing + 50;
-	float maxObTimeDiff = 59 * 60;
+  /*
+  // Set the maximum allowable radius and time difference
+  // Need to make this user configurable
+  float maxObRadius = lastRing + 50;
+  float maxObTimeDiff = 59 * 60;
+  */
+  QDomElement pressure = configData->getConfig("pressure");
+  float maxObTimeDiff = configData->getParam(pressure, "maxobstime").toFloat();
+  float maxObRadius = 0;
+  if(configData->getParam(pressure, "maxobsmethod") == "center")
+    maxObRadius = configData->getParam(pressure, "maxobdist").toFloat();
+  if(configData->getParam(pressure, "maxobsmethod") == "ring")
+    maxObRadius = lastRing+configData->getParam(pressure, "maxobsdist").toFloat();
 
 	// Sum values to hold pressure estimates
 	float pressWeight = 0;
@@ -391,6 +400,7 @@ void VortexThread::calcCentralPressure()
 		
 		centralPressureStdDev = sumSquares/(avgWeight * (numEstimates-1));
 		centralPressure = avgPressure;
+		
 	
 	} else {
 		// Assume standard environmental pressure

@@ -217,6 +217,10 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
 	  }
       }
       current->setRefData(newRef);
+      refValues1 = NULL;
+      refValues2 = NULL;
+      delete refValues1;
+      delete refValues2;
     }
   }
   // Get maximum number of velocity gates in each sweep to get
@@ -237,6 +241,8 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
 	  count++;
 	  aveVADHeight[n][v] += findHeight(currentRay,v); 
 	}
+	currentRay = NULL;
+	delete currentRay;
       }
       aveVADHeight[n][v] /= float(count);
     }
@@ -420,13 +426,12 @@ void RadarQC::thresholdData()
     int numBins = currentSweep->getVel_numgates();
     //Message::toScreen("Number of vel bins in that ray ="+QString().setNum(numBins));
     for (int j=0; j < numBins; j++)
-		validBinCount[i][j]=0; 
+      validBinCount[i][j]=0; 
   }
 
   int numRays = radarData->getNumRays();
   //Message::toScreen("total ray count = "+QString().setNum(numRays));
   // Do we need a new call here? I think just defining a pointer is okay
-  //Ray* currentRay = new Ray;
   Ray* currentRay;
   int numVGates = 0;
   for(int i = 0; i < numRays; i++)
@@ -450,7 +455,12 @@ void RadarQC::thresholdData()
 	    validBinCount[sweepIndex][j]++;
 	  }
 	}
+      vGates = NULL;
+      swGates = NULL;
+      refGates = NULL;
     }
+  currentRay = NULL;
+  delete currentRay;
 }
 
 
@@ -550,7 +560,10 @@ bool RadarQC::terminalVelocity()
       	  vGates[j] = velNull;
       	}
       }
+      vGates = NULL;
+      rGates = NULL;
     }
+  currentRay = NULL;
   return true;
 }
 
@@ -727,6 +740,8 @@ bool RadarQC::findVADStart(bool useGVAD)
 				  lowLevelVel[index] = vel[lowestGate];
 				  highLevelVel[index] = vel[highestGate];
 				  index++;
+				  vel = NULL;
+				  delete vel;
 			  }
 			  
 			  if(useGVAD) {
@@ -1329,6 +1344,7 @@ float RadarQC::getStart(Ray *currentRay)
 	}
       }
     }
+    velGates = NULL;
     if(hasDopplerData) {
       //QString d("In getStart rayIndex,sweepIndex = "+QString().setNum(currentRay->getRayIndex())+", "+QString().setNum(currentRay->getSweepIndex())+" azimuth = "+QString().setNum(azimuth)+" envWind @ dataHeight = "+QString().setNum(envWind[dataHeight])+" envDir @ dataHeight = "+QString().setNum(envDir[dataHeight]));
       //emit log(Message(d));
@@ -1462,8 +1478,11 @@ bool RadarQC::BB()
 		}
 	    }
 	}
-      //delete vGates;
+      vGates = NULL;
+      delete vGates;
+      currentRay = NULL;
     }
+  delete currentRay;
   //Message::toScreen("Getting out of dealias");
   return true;
 }
@@ -1489,6 +1508,10 @@ void RadarQC::crazyCheck()
 			   +QString().setNum(vbins[v])));
 	  }
 	}
+      vbins = NULL;
+      currentRay = NULL;
+      delete vbins;
+      delete currentRay;
     }
   emit log(Message("Crazy Check Done"));
 }
@@ -1514,6 +1537,11 @@ void RadarQC::checkRay()
   Message::toScreen("num ref gates = "+QString().setNum(check->getRef_numgates()));
   //Message::toScreen("Reflectivity");
   Message::toScreen(checkPrint2);
+  check = NULL;
+  checkVel = NULL;
+  delete check;
+  delete checkVel;
+    
 }
 
 float RadarQC::bilinear(float value_high,float value_low,

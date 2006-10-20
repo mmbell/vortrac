@@ -38,6 +38,7 @@ AnalysisThread::AnalysisThread(QObject *parent)
 
 AnalysisThread::~AnalysisThread()
 {
+  Message::toScreen("AnalysisThread Destructor IN");
   mutex.lock();
   abort = true;
   waitForData.wakeOne();
@@ -45,6 +46,9 @@ AnalysisThread::~AnalysisThread()
   
   // Wait for the thread to finish running if it is still processing
   wait();
+  simplexThread->terminate();
+  delete simplexThread;
+  Message::toScreen("AnalysisThread Destructor OUT");
 }
 
 void AnalysisThread::setConfig(Configuration *configPtr)
@@ -142,7 +146,7 @@ void AnalysisThread::run()
 
 		mutex.unlock();
 		if(abort)
-			return;
+		  return;
 		mutex.lock();
 		
 		// Check the vortex list for a current center		
@@ -201,9 +205,14 @@ void AnalysisThread::run()
 		float relDist = GriddedData::getCartesianDistance(radarVolume->getRadarLat(), 
 											  radarVolume->getRadarLon(),
 											  &vortexLat, &vortexLon);
-		if (relDist > 174) {
-			// Too far away for Doppler, need to send a signal
-			Message::report("Estimated center is out of Doppler range!");
+		bool beyondRadar = true;
+		for(int i = 0; i < radarVolume->getNumSweeps(); i++) {
+		  if(relDist < radarVolume->getSweep(i)->getUnambig_range())
+		    beyondRadar = false;
+		}
+		if (beyondRadar) {
+		  // Too far away for Doppler, need to send a signal
+		  emit log(Message("Estimated center is out of Doppler range!"));
 		}
 		
 		// Create data instance to hold the analysis results
@@ -221,14 +230,14 @@ void AnalysisThread::run()
 		// Dealias 		
 		if(!radarVolume->isDealiased()){
 		  
-		  RadarQC dealiaser(radarVolume);
+		  RadarQC *dealiaser = new RadarQC(radarVolume);
 
-		  connect(&dealiaser, SIGNAL(log(const Message&)), this, 
+		  connect(dealiaser, SIGNAL(log(const Message&)), this, 
 			  SLOT(catchLog(const Message&)), Qt::DirectConnection);
 		  
-		  dealiaser.getConfig(configData->getConfig("qc"));
+		  dealiaser->getConfig(configData->getConfig("qc"));
 		  
-		  if(dealiaser.dealias()) {
+		  if(dealiaser->dealias()) {
 		    emit log(Message("Finished QC and Dealiasing", 10));
 		    radarVolume->isDealiased(true);
 		  } else {
@@ -236,14 +245,19 @@ void AnalysisThread::run()
 		    analysisGood = false;
 		    // Something went wrong
 		  }
+		  delete dealiaser;
 		}
 		else
 		  emit log(Message("RadarVolume is Dealiased"));
 
-		//QString name("f.dat");
-		//Message::toScreen("Writing Vortrac Input "+name);
-		//radarVolume->writeToFile(name);
-				
+		/*
+		  // Using this for running FORTRAN version
+		  QString name("fkat1044.dat");
+		  Message::toScreen("Writing Vortrac Input "+name);
+		  radarVolume->writeToFile(name);
+		  Message::toScreen("Wrote Vortrac Input "+name);
+		*/
+ 
 		mutex.unlock();
 		if(abort)
 		  return;
@@ -263,13 +277,12 @@ void AnalysisThread::run()
 		  float radarLon = configData->getParam(radar,"lon").toFloat();
 		  analyticConfig->read(configData->getParam(radar, "dir"));
 		  gridData = gridFactory.makeAnalytic(radarVolume,
-					   configData->getConfig("cappi"),
-					   analyticConfig, &vortexLat, 
-					   &vortexLon, &radarLat, &radarLon);
+					   configData,analyticConfig, 
+					   &vortexLat, &vortexLon, 
+					   &radarLat, &radarLon);
 		}
 		else {
-		  gridData = gridFactory.makeCappi(radarVolume,
-						configData->getConfig("cappi"),
+		  gridData = gridFactory.makeCappi(radarVolume, configData,
 			 			&vortexLat, &vortexLon);
 		  //Message::toScreen("AnalysisThread: outside makeCappi");
 
@@ -350,7 +363,6 @@ void AnalysisThread::run()
 		  }
 		}
 		rmw = rmw/(1.0*goodrmw);
-		//rmw*=2;
 	    
        // RMW is the average rmw taken over all levels of the vortexData
        // The multiplying by 2 bit is blatant cheating, I don't know 
@@ -386,9 +398,9 @@ void AnalysisThread::run()
 		vortexList->save();
 		
 		// Delete CAPPI, RadarData and HVVP objects
-		delete gridData;
-		//delete radarVolume;
 		delete envWindFinder;
+		delete radarVolume;
+		delete gridData;
 		
 		mutex.lock(); // Added this one....
 

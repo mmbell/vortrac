@@ -1858,17 +1858,55 @@ PressurePanel::PressurePanel()
   pressureFormatLayout->addWidget(pressureFormatLabel);
   pressureFormatLayout->addWidget(pressureFormat);
   // add more formats when found
+
+  QLabel *maxObsTimeLabel = new QLabel(tr("Don't use pressure observations older than (minutes)"));
+  maxObsTime = new QSpinBox;
+  maxObsTime->setValue(59);
+  maxObsTime->setRange(0,500);
+  QHBoxLayout *maxObsTimeLayout = new QHBoxLayout;
+  maxObsTimeLayout->addWidget(maxObsTimeLabel);
+  maxObsTimeLayout->addWidget(maxObsTime);
+
+  QGroupBox *maxObsDistBox = new QGroupBox(tr("Maximum distance to pressure observations"));
+  maxObsDistCenter = new QRadioButton(tr("Measure from TC center"),maxObsDistBox);
+ 
+  maxObsDistRing = new QRadioButton(tr("Measure from edge of analysis"),maxObsDistBox);
+  
+  QLabel *maxObsDistLabel = new QLabel(tr("Maximum distance (km)"));
+  maxObsDist = new QDoubleSpinBox(maxObsDistBox);
+  maxObsDist->setDecimals(2);
+  maxObsDist->setRange(0,1000);
+  maxObsDist->setValue(50);
+  QHBoxLayout *maxObsDistLayout = new QHBoxLayout;
+  maxObsDistLayout->addWidget(maxObsDistLabel);
+  maxObsDistLayout->addWidget(maxObsDist);
+ 
+  QVBoxLayout *maxObsDistBoxLayout = new QVBoxLayout;
+  maxObsDistBoxLayout->addWidget(maxObsDistCenter);
+  maxObsDistBoxLayout->addWidget(maxObsDistRing);
+  maxObsDistBoxLayout->addLayout(maxObsDistLayout);
+  maxObsDistBox->setLayout(maxObsDistBoxLayout);
   
   QVBoxLayout *main = new QVBoxLayout;
   main->addLayout(dirLayout);
   main->addLayout(pressureFormatLayout);
+  main->addLayout(maxObsTimeLayout);
+  main->addWidget(maxObsDistBox);
   main->addStretch(1);
   setLayout(main);
 
   connect(dir, SIGNAL(textChanged(const QString&)),
 	  this, SLOT(valueChanged(const QString&)));
   connect(pressureFormat, SIGNAL(activated(const QString&)), 
-		  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged(const QString&)));
+  connect(maxObsTime, SIGNAL(valueChanged(const QString&)),
+	  this, SLOT(valueChanged(const QString&)));
+  connect(maxObsDist, SIGNAL(valueChanged(const QString&)),
+	  this, SLOT(valueChanged(const QString&)));
+  connect(maxObsDistCenter, SIGNAL(toggled(const bool)),
+	  this, SLOT(valueChanged(const bool)));
+  connect(maxObsDistRing, SIGNAL(toggled(const bool)),
+	  this, SLOT(valueChanged(const bool)));
 
   setPanelChanged(false);
 }
@@ -1876,7 +1914,11 @@ PressurePanel::PressurePanel()
 PressurePanel::~PressurePanel()
 {
     delete pressureFormat;
-	delete pressureFormatOptions;
+    delete pressureFormatOptions;
+    delete maxObsTime;
+    delete maxObsDist;
+    delete maxObsDistCenter;
+    delete maxObsDistRing;
 }
 
 void PressurePanel::updatePanel(const QDomElement panelElement)
@@ -1898,14 +1940,27 @@ void PressurePanel::updatePanel(const QDomElement panelElement)
 	emit workingDirectoryChanged();}
       else 
 	setPanelChanged(true);}
-	if (name == "format") {
-	  int index = pressureFormat->findText(
-				   pressureFormatOptions->key(parameter), 
-				   Qt::MatchStartsWith);
-	  if (index != -1)
-	    pressureFormat->setCurrentIndex(index); }
-	
-	child = child.nextSiblingElement();
+    if (name == "format") {
+      int index = pressureFormat->findText(
+		 pressureFormatOptions->key(parameter), 
+		 Qt::MatchStartsWith);
+      if (index != -1)
+	pressureFormat->setCurrentIndex(index); }
+    if(name == "maxobstime") {
+      if(parameter.toInt()!=maxObsTime->value())
+	maxObsTime->setValue(parameter.toInt()); }
+    if(name == "maxobsdist") {
+      if(parameter.toFloat()!=maxObsDist->value())
+	maxObsDist->setValue(parameter.toFloat()); }
+    if(name == "maxobsmethod"){
+      if(parameter == "center"){
+	maxObsDistCenter->setChecked(true);
+      }
+      if(parameter == "ring"){
+	maxObsDistRing->setChecked(true);
+      }
+    }
+    child = child.nextSiblingElement();
   }
   setPanelChanged(false);
 }
@@ -1928,6 +1983,18 @@ bool PressurePanel::updateConfig()
 	  emit changeDom(element, QString("format"), 
 	    pressureFormatOptions->value(pressureFormat->currentText()));
 	}
+      if(getFromElement("maxobstime").toInt()!=maxObsTime->value()) {
+	emit changeDom(element, QString("maxobstime"), 
+		       QString().setNum(maxObsTime->value()));
+      }
+      if(getFromElement("maxobsdist").toFloat()!=maxObsDist->value()) {
+	emit changeDom(element, QString("maxobsdist"), 
+		       QString().setNum(maxObsDist->value()));
+      }
+      if(maxObsDistCenter->isChecked())
+	emit changeDom(element, QString("maxobsmethod"), QString("center"));
+      if(maxObsDistRing->isChecked())
+	emit changeDom(element, QString("maxobsmethod"), QString("ring"));
     }
   setPanelChanged(false);
   return true;

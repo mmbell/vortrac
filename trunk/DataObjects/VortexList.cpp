@@ -138,6 +138,9 @@ bool VortexList::openNodeFile(const QDomNode &newNode)
 	float newPressureUncertainty = newConfig->getParam(childElement,
 					     "pressure_uncertainty").toFloat();
 	newData.setPressureUncertainty(newPressureUncertainty);
+	float newPressureDeficit = newConfig->getParam(childElement,
+						 "pressure_deficit").toFloat();
+	newData.setPressureDeficit(newPressureDeficit);
      
 	for(int n = 0; n < newData.getNumLevels(); n++) {
 	  QString nString = QString().setNum(n);
@@ -292,7 +295,10 @@ void VortexList::createDomVortexDataEntry(const VortexData &newData)
   if(newData.getPressureUncertainty()!=-999) {
     newConfig->addDom(volParent, QString("pressure_uncertainty"),
 		   QString().setNum(newData.getPressureUncertainty())); }
-
+  if(newData.getPressureDeficit()!=-999) {
+    newConfig->addDom(volParent, QString("pressure_deficit"), 
+		      QString().setNum(newData.getPressureDeficit()));
+  }
 
   for(int i = 0; i < newData.getNumLevels(); i++) {
     QString ii = QString().setNum(i);

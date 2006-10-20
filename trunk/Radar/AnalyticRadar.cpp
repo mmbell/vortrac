@@ -35,7 +35,8 @@
   QString sampling = config->getParam(radar, "sample");
   
   if (sampling == QString("false") || sampling == QString("no")) {
-    isDealiased(true);
+    isDealiased(true
+);
   }
   else { 
     //Message::toScreen("Analytic Radar Not Dealaised");
@@ -53,9 +54,9 @@ AnalyticRadar::~AnalyticRadar()
   delete elevations;
 }
 
-void AnalyticRadar::setConfigElement(QDomElement configRoot)
+void AnalyticRadar::setConfigElement(Configuration* newConfig)
 {
-  masterRoot = configRoot;
+  mainConfig = newConfig;
 }
 
 bool AnalyticRadar::readVolume()
@@ -111,6 +112,7 @@ Ray AnalyticRadar::addRay()
   newRay->setRayIndex(numRays);
   
   float elevAngle = Sweeps[numSweeps-1].getElevation();
+  //Message::toScreen("Analytic Radar Trying To Find Sweep Elevation"+QString().setNum(elevAngle));
  
   float metAzimAngle =  beamWidth*(float)(newRay->getRayIndex()-Sweeps[numSweeps-1].getFirstRay());
   // metAzimAngle is in meterological angle system (cw from 12 o'clock)
@@ -124,6 +126,8 @@ Ray AnalyticRadar::addRay()
   newRay->setNyquist_vel( nyqVel );
 
   int numPoints = data->getSphericalRangeLength(azimAngle, elevAngle);
+  if((numPoints==0)||(numRays%45==0))
+    Message::toScreen("ray = "+QString().setNum(numRays)+" = "+QString().setNum(numPoints));
   float *raw_ref_data = new float[numPoints];
   float *raw_ref_positions = new float[numPoints];
 
@@ -159,8 +163,11 @@ Ray AnalyticRadar::addRay()
 	  count++;
 	}
       }
-      if(count!=0)
+      if(count!=0){
 	ref_data[gateNum] = refSum/(float)count;
+	if((gateNum%10==0)&&(numRays%45==0))
+	  Message::toScreen("gate "+QString().setNum(gateNum)+" ref "+QString().setNum(refSum/(float)count));
+      }
       else
 	ref_data[gateNum] = velNull;
     }
@@ -209,7 +216,9 @@ Ray AnalyticRadar::addRay()
       else {
 	// Good velocity data in this gate
 	vel_data[gateNum] = velSum*cos(elevAngle*deg2rad)/(float)count;
-
+	if((gateNum%10==0)&&(numRays%45==0))
+	  Message::toScreen("gate "+QString().setNum(gateNum)+" vel "+QString().setNum(vel_data[gateNum]));
+	
 	// Add in noise factor, method borrowed from analyticTC
 	// the variable noiseScale changes the relative magnetude of the noise
 	// while the variable noisyGates holds the relative percentage of
@@ -281,7 +290,9 @@ Ray AnalyticRadar::addRay()
   // With Useful info
 
   //newRay->setVelResolution( radarHeader->velocity_resolution );
-  newRay->setUnambig_range( numVelGates*velGateSp);
+  //newRay->setUnambig_range(numVelGates*velGateSp);
+  newRay->setUnambig_range(200); // We now threshold rays against this so 
+  // it must be large enough to beat that threshold.
   newRay->setFirst_ref_gate(0);
   newRay->setFirst_vel_gate(0);
 
@@ -308,28 +319,29 @@ bool AnalyticRadar::readVolumeAnalytic()
   // This section creates a griddedData to be sampled by the theoretical
   // radar and go through all the RadarQC
   
-  vortexLat = masterRoot.firstChildElement("vortex").firstChildElement("lat").text().toFloat();
-  vortexLon = masterRoot.firstChildElement("vortex").firstChildElement("lon").text().toFloat();
+  QDomElement vortex = mainConfig->getConfig("vortex");
+  QDomElement radar = mainConfig->getConfig("radar");
+  vortexLat = mainConfig->getParam(vortex,"lat").toFloat();
+  vortexLon = mainConfig->getParam(vortex,"lon").toFloat();
 
+  QDomElement analytic_radar = config->getRoot().firstChildElement("analytic_radar");
 
-  QDomElement radar = config->getRoot().firstChildElement("analytic_radar");
-
-  radarLat =  masterRoot.firstChildElement("radar").firstChildElement("lat").text().toFloat();
-  radarLon =  masterRoot.firstChildElement("radar").firstChildElement("lon").text().toFloat(); 
+  radarLat =  mainConfig->getParam(radar,"lat").toFloat();
+  radarLon =  mainConfig->getParam(radar,"lon").toFloat(); 
  
-  //  radarLat = config->getParam(radar, "radarY").toFloat();
-  //  radarLon = config->getParam(radar, "radarX").toFloat();
-  nyqVel= config->getParam(radar, "nyquistVel").toFloat();
+  //  radarLat = config->getParam(analytic_radar, "radarY").toFloat();
+  //  radarLon = config->getParam(analytic_radar, "radarX").toFloat();
+  nyqVel= config->getParam(analytic_radar, "nyquistVel").toFloat();
 
-  refGateSp = config->getParam(radar, "refgatesp").toFloat();
-  velGateSp = config->getParam(radar, "velgatesp").toFloat();
-  beamWidth = config->getParam(radar, "beamwidth").toFloat();
-  noiseScale = config->getParam(radar, "noiseScale").toFloat();
-  noisyGates = config->getParam(radar, "percent_noisy_gates").toInt();
-  int numGates = config->getParam(radar, "numgates").toInt();
-  int totNumSweeps = config->getParam(radar, "numsweeps").toInt();
+  refGateSp = config->getParam(analytic_radar, "refgatesp").toFloat();
+  velGateSp = config->getParam(analytic_radar, "velgatesp").toFloat();
+  beamWidth = config->getParam(analytic_radar, "beamwidth").toFloat();
+  noiseScale = config->getParam(analytic_radar, "noiseScale").toFloat();
+  noisyGates = config->getParam(analytic_radar, "percent_noisy_gates").toInt();
+  int numGates = config->getParam(analytic_radar, "numgates").toInt();
+  int totNumSweeps = config->getParam(analytic_radar, "numsweeps").toInt();
   
-  QString sendToDealias = config->getParam(radar, "dealiasdata");
+  QString sendToDealias = config->getParam(analytic_radar, "dealiasdata");
   if((sendToDealias == "true")||(sendToDealias == "True")
      ||(sendToDealias=="TRUE")){
     isDealiased(false);
@@ -345,14 +357,13 @@ bool AnalyticRadar::readVolumeAnalytic()
   radarName = QString("Analytic Radar"); 
   
   GriddedFactory *factory = new GriddedFactory();
-  data = factory->makeAnalytic(this, masterRoot.firstChildElement("cappi"), 
-			       config, &vortexLat, &vortexLon, 
-			       &radarLat, &radarLon);
+  data = factory->makeAnalytic(this, mainConfig, config, &vortexLat, 
+			       &vortexLon, &radarLat, &radarLon);
   data->writeAsi();
   // writes out the base cappi data set before sampling
 
-  data->setAbsoluteReferencePoint(radarLat,radarLon,0);
-  // data->setCartesianReferencePoint(0,0,0);
+  //data->setAbsoluteReferencePoint(radarLat,radarLon,0);
+  //data->setCartesianReferencePoint(28,28,0);
  
   // Sample with theoretical radar
   // VCP 0 : flat cappi sample
@@ -384,6 +395,7 @@ bool AnalyticRadar::readVolumeAnalytic()
   
   Sweeps = new Sweep[totNumSweeps];
   Rays = new Ray[totNumSweeps*numRaysPerSweep]; 
+  Message::toScreen("num rays per sweep"+QString().setNum(numRaysPerSweep));
 
   for(int n = 0; n < totNumSweeps; n++) {
     //testing Message::toScreen("Trying to Make Sweep Number "+QString().setNum(n));
@@ -397,7 +409,6 @@ bool AnalyticRadar::readVolumeAnalytic()
   }
 
   Message::toScreen("Left Analytic Radar");
-
   return true;
 }
 

@@ -18,14 +18,16 @@
 #include <QPushButton>
 
 
-ConfigurationDialog::ConfigurationDialog(Configuration *initialConfig)
-  :configData(initialConfig)
+ConfigurationDialog::ConfigurationDialog(QWidget* parent,
+					 Configuration *initialConfig)
+  :QDialog(parent)
 {
+  configData = initialConfig;
   setWindowTitle(tr("VORTRAC CONFIGURATION"));
   panels = new QStackedWidget(this);
   populatePanels();
   makePanelForString();
-  workingDirectory = new QDir(vortex->getCurrentDirectoryPath());
+  workingDirectory = vortex->getDefaultDirectory();
   connect(vortex, SIGNAL(workingDirectoryChanged()),
   	  this, SLOT(setPanelDirectories()));
 
@@ -65,11 +67,8 @@ ConfigurationDialog::~ConfigurationDialog()
 {
   delete selection;
   delete panels;
-  QList<AbstractPanel*> deleteList = panelForString.values();
-  for(int i = 0; i < deleteList.count(); i++) {
-    delete deleteList[i];
-  }
-  delete workingDirectory;
+
+  panelForString.clear();
 }
 
 void ConfigurationDialog::switchPanel(QListWidgetItem *current, QListWidgetItem *previous)

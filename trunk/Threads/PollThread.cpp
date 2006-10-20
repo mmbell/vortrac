@@ -19,16 +19,21 @@ PollThread::PollThread(QObject *parent)
   Message::toScreen("PollThread Constructor");
   abort = false;
   runOnce = false;
-  //analysisThread = new AnalysisThread();
+  analysisThread = NULL;
 }
 
 PollThread::~PollThread()
 {
+  Message::toScreen("PollThread Destructor IN");
   mutex.lock();
   abort = true;
   waitForAnalysis.wakeOne();
   mutex.unlock();
+  if(analysisThread!=NULL && analysisThread->isRunning())
+    analysisThread->exit();
+  delete analysisThread;
   wait();
+  Message::toScreen("PollThread Destructor OUT");
 }
 
 void PollThread::setConfig(Configuration *configPtr)
@@ -70,7 +75,7 @@ void PollThread::run()
   //analysisThread = new AnalysisThread();
   abort = false;
   emit log(Message("Polling for data..."));
-  RadarFactory *dataSource = new RadarFactory(configData->getConfig("radar"));
+  RadarFactory *dataSource = new RadarFactory(configData);
   connect(dataSource, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
 
@@ -315,12 +320,12 @@ void PollThread::run()
 				}
 				// Done with radar volume, send a signal to the Graph to update
 				emit vortexListUpdate(vortexList);
-				Message::toScreen("Wait for analysis done");
+				//Message::toScreen("Wait for analysis done");
 			}
 			mutex.unlock();  
 			//Message::toScreen("After mutex unlock in pollThread");
 			//delete newVolume;
-			Message::toScreen("used to delete new volume");
+			//Message::toScreen("used to delete new volume");
 		}
 		
 		// Check to see if we should quit

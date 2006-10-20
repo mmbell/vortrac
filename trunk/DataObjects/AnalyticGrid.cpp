@@ -43,50 +43,65 @@ AnalyticGrid::AnalyticGrid()
 
 AnalyticGrid::~AnalyticGrid()
 {
+  delete [] relDist;
+  delete vLat;
+  delete vLon;
+  delete rLat;
+  delete rLon;
 }
 
-bool AnalyticGrid::getConfigInfo(QDomElement cappiConfig,
+bool AnalyticGrid::getConfigInfo(Configuration* mainConfig,
 				 Configuration* analyticConfig)
 {
  // Set the output file
-  QString filePath = cappiConfig.firstChildElement("dir").text();
+  QDomElement cappi = mainConfig->getConfig("cappi");
+  QString filePath = mainConfig->getParam(cappi,"dir");
   QString fileName("analyticModel");
   outFileName = filePath + "/" + fileName;
 
   // Get the dimensions from the configuration
-  iDim = cappiConfig.firstChildElement("xdim").text().toFloat();
+  iDim = mainConfig->getParam(cappi, "xdim").toFloat()*2;
   // iDim: Number of data points running on the i-axis
 
-  jDim = cappiConfig.firstChildElement("ydim").text().toFloat();
+  jDim = mainConfig->getParam(cappi, "ydim").toFloat()*2;
   // jDim: Number of data points running on the j-axis
 
-  kDim = cappiConfig.firstChildElement("zdim").text().toFloat();
+  kDim = mainConfig->getParam(cappi, "zdim").toFloat();
   // kDim: Number of data points running on the k-axis
+  zmin = 0;
+  zmax = kDim;
 
-  xmin = ymin = zmin = 0;
-  xmax = xmin+iDim;
-  ymax = ymin+jDim;
-  zmax = zmin+kDim;
-  iGridsp = cappiConfig.firstChildElement("xgridsp").text().toFloat();
-  jGridsp = cappiConfig.firstChildElement("ygridsp").text().toFloat();
-  kGridsp = cappiConfig.firstChildElement("zgridsp").text().toFloat();
+  iGridsp = mainConfig->getParam(cappi, "xgridsp").toFloat();
+  jGridsp = mainConfig->getParam(cappi, "ygridsp").toFloat();
+  kGridsp = mainConfig->getParam(cappi, "zgridsp").toFloat();
 
   // Determine what type of analytic storm is desired
   QString sourceString = analyticConfig->getRoot().firstChildElement("source").text();
   
-  QDomElement radar = analyticConfig->getRoot().firstChildElement("analytic_radar");
+  QDomElement radar = analyticConfig->getConfig("analytic_radar");
   
-  float* radLocation = getCartesianPoint(vLat,vLon,rLat,rLon);
+  float* radLocation = getCartesianPoint(rLat,rLon,vLat,vLon);
+
+  float rXDistance =  0;
+  float rYDistance =  0;
+
+  // connects the (0,0) point on the cappi grid, to the latitude and
+  // longitude of the radar.
+
+  setLatLonOrigin(rLat, rLon,&rXDistance,&rYDistance);
+
+  // Defines iteration indexes for cappi grid
+
+  xmin = nearbyintf(radLocation[0] - (iDim/2)*iGridsp);
+  xmax = nearbyintf(radLocation[0] + (iDim/2)*iGridsp);
+  ymin = nearbyintf(radLocation[1] - (jDim/2)*jGridsp);
+  ymax = nearbyintf(radLocation[1] + (jDim/2)*jGridsp);
+
+  setCartesianReferencePoint(-1*xmin,-1*ymin,0);
   
-  centX = iDim/2*iGridsp;  // x coordinate of storm center on grid
-  centY = jDim/2*jGridsp;  // y coordinate of storm center on grid
+  centX = iDim/2*iGridsp+xmin;  // x coordinate of storm center on grid
+  centY = jDim/2*jGridsp+ymin;  // y coordinate of storm center on grid
   
-  // Connects the gridded dimensions on the cappi with the correct latitude
-  // and longitude coordinates for the area
-  setLatLonOrigin(vLat, vLon, &centX, &centY);
-  
-  radX = centX+radLocation[0];  // x coordinate of radar on grid
-  radY = centY+radLocation[1];  // y coordinate of radar on grid
   delete[] radLocation;
   
   //testing Message::toScreen("RadX,Y ="+QString().setNum(radX)+", "+QString().setNum(radY)+"  VortX,Y ="+QString().setNum(centX)+", "+QString().setNum(centY));
@@ -111,7 +126,7 @@ bool AnalyticGrid::getConfigInfo(QDomElement cappiConfig,
    
   // Get the needed configuration parameters
   if((source == windFields)||(source == lamb)||(source == deformation)) {
-    QDomElement winds =analyticConfig->getRoot().firstChildElement("wind_field");
+    QDomElement winds =analyticConfig->getConfig("wind_field");
     
     // radius of maximum wind for analytic storm
     rmw = analyticConfig->getParam(winds, "rmw").toFloat();
@@ -149,7 +164,7 @@ bool AnalyticGrid::getConfigInfo(QDomElement cappiConfig,
 	
       // Analytic Storm based on Lamb Model
       
-      QDomElement lamb = analyticConfig->getRoot().firstChildElement("lamb");
+      QDomElement lamb = analyticConfig->getConfig("lamb");
       vorDisturbance = analyticConfig->getParam(lamb, "disturbance").toFloat();
       lambAmplitude = analyticConfig->getParam(lamb, "amplitude").toFloat();
       lambAngle = analyticConfig->getParam(lamb, "angle").toFloat()*deg2rad;
@@ -193,7 +208,7 @@ bool AnalyticGrid::getConfigInfo(QDomElement cappiConfig,
 
 }
 
-void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
+void AnalyticGrid::gridAnalyticData(Configuration* mainConfig,
 				    Configuration* analyticConfig, 
 				    float *vortexLat, float *vortexLon,
 				    float *radarLat, float *radarLon)
@@ -213,7 +228,7 @@ void AnalyticGrid::gridAnalyticData(QDomElement cappiConfig,
   rLat = radarLat;
   rLon = radarLon;
 
-  getConfigInfo(cappiConfig, analyticConfig);
+  getConfigInfo(mainConfig, analyticConfig);
   
   if (source == windFields) { 
     Message::toScreen("Hit Enum to Wind Field");
@@ -252,9 +267,9 @@ void AnalyticGrid::gridWindFieldData()
    */
 
   //QTextStream out(stdout);
-  for(int k = 0; k < kDim; k++) {
-    for(int j = int(jDim) - 1; j >= 0; j--) {
-      for(int i = int(iDim) - 1; i >= 0; i--) {
+  for(int k = 0; k < int(kDim); k++) {
+    for(int j = int(jDim)-1; j >= 0; j--) {
+      for(int i = int(iDim)-1; i >= 0; i--) {
 	for(int a = 0; a < 3; a++) {
 	  // zero out all the points
 	  dataGrid[a][i][j][k] = 0;
@@ -268,12 +283,12 @@ void AnalyticGrid::gridWindFieldData()
 	// system where positive y is north
 	float ref = 0;
 	float delX, delY, r, theta, delRX, delRY, radR;
-	delX = centX-(iGridsp*i);
-	delY = centY-(jGridsp*j);
+	delX = centX-(iGridsp*i+xmin);
+	delY = centY-(jGridsp*j+ymin);
 	r = sqrt(delX*delX+delY*delY);
 	theta = atan2(delX,delY);
-	delRX = radX-(iGridsp*i);
-	delRY = radY-(jGridsp*j);
+	delRX = radX-(iGridsp*i+xmin);
+	delRY = radY-(jGridsp*j+ymin);
 	radR = sqrt(delRX*delRX+delRY*delRY);
 	float c1 = .1;
 	float c2 = 3;
@@ -784,6 +799,6 @@ void AnalyticGrid::testRange()
     print+=QString().setNum(refData[n])+" ";
   }
   delete[] refData;
-  //testing Message::toScreen("testRange");
-  //testing Message::toScreen(print);
+  Message::toScreen("testRange");
+  Message::toScreen(print);
 }

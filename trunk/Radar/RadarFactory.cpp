@@ -12,37 +12,38 @@
 #include <iostream>
 #include <QPushButton>
 
-RadarFactory::RadarFactory(QDomElement radarConfig, QObject *parent)
+RadarFactory::RadarFactory(Configuration* radarConfig, QObject *parent)
   : QObject(parent)
 {
-  radarConfiguration = radarConfig;
+  mainConfig = radarConfig;
 
   // Will poll for data and return radar objects in a queue
   radarQueue = new QQueue<QString>;
 
   // Get relevant configuration info
-  radarName = radarConfig.firstChildElement("name").text();
-  radarLat = radarConfig.firstChildElement("lat").text().toFloat();
-  radarLon = radarConfig.firstChildElement("lon").text().toFloat();
-  radarAlt = radarConfig.firstChildElement("alt").text().toFloat();
+  QDomElement radar = mainConfig->getConfig("radar");
+  radarName = mainConfig->getParam(radar,"name");
+  radarLat = mainConfig->getParam(radar,"lat").toFloat();
+  radarLon = mainConfig->getParam(radar,"lon").toFloat();
+  radarAlt = mainConfig->getParam(radar,"alt").toFloat();
   // radarAltitude is given in meters, convert to km
   radarAlt = radarAlt/1000;
 
-  QDate startDate = QDate::fromString(radarConfig.firstChildElement("startdate").text(),
+  QDate startDate = QDate::fromString(mainConfig->getParam(radar,"startdate"),
 				      Qt::ISODate);
-  QDate endDate = QDate::fromString(radarConfig.firstChildElement("enddate").text(),
+  QDate endDate = QDate::fromString(mainConfig->getParam(radar,"enddate"),
 				    Qt::ISODate);
-  QTime startTime = QTime::fromString(radarConfig.firstChildElement("starttime").text(),
+  QTime startTime = QTime::fromString(mainConfig->getParam(radar,"starttime"),
 				      "hh:mm:ss");
-  QTime endTime = QTime::fromString(radarConfig.firstChildElement("endtime").text(),
+  QTime endTime = QTime::fromString(mainConfig->getParam(radar,"endtime"),
 				    "hh:mm:ss");
   startDateTime = QDateTime(startDate, startTime, Qt::UTC);
   endDateTime = QDateTime(endDate, endTime, Qt::UTC);
-
-  QString path = radarConfig.firstChildElement("dir").text();
+  
+  QString path = mainConfig->getParam(radar,"dir");
   dataPath = QDir(path);
 
-  QString format = radarConfig.firstChildElement("format").text();
+  QString format = mainConfig->getParam(radar,"format");
   if (format == "LDMLEVELII") {
     radarFormat = ldmlevelII;
   } else if (format == "NCDCLEVELII") {
@@ -102,7 +103,7 @@ RadarData* RadarFactory::getUnprocessedData()
 						   radarLat, radarLon,
 						   fileName);
       radarData->setAltitude(radarAlt);
-      radarData->setConfigElement(radarConfiguration.parentNode().toElement());
+      radarData->setConfigElement(mainConfig);
       return radarData;
       break;
     }
@@ -204,7 +205,8 @@ bool RadarFactory::hasUnprocessedData()
       
       // Here we will pass that xml file through the queue to be processed
       
-      QString fileName = radarConfiguration.firstChildElement("dir").text();
+      QString fileName = mainConfig->getParam(mainConfig->getConfig("radar"),
+					      "dir");
 
       //Message::toScreen("Radar Factory:analytic config filename: "+fileName);
       

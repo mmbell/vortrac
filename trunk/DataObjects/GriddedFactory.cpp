@@ -44,20 +44,20 @@ GriddedData* GriddedFactory::makeEmptyGrid(const char *coordinates)
 }
 
 GriddedData* GriddedFactory::makeCappi(RadarData *radarData, 
-				       QDomElement cappiConfig,
+				       Configuration* mainConfig,
 				       float *vortexLat, float *vortexLon)
 {
 
 		coordSystem = cartesian;
 		CappiGrid* cappi = new CappiGrid;
-		cappi->gridRadarData(radarData,cappiConfig,
+		cappi->gridRadarData(radarData,mainConfig->getConfig("cappi"),
 				     vortexLat,vortexLon);
 		return cappi;
 		
 }
 
 GriddedData* GriddedFactory::makeAnalytic(RadarData *radarData,
-					  QDomElement cappiConfig, 
+					  Configuration* mainConfig, 
 					  Configuration* analyticConfig,
 					  float *vortexLat, float *vortexLon,
 					  float *radarLat, float *radarLon)
@@ -66,17 +66,17 @@ GriddedData* GriddedFactory::makeAnalytic(RadarData *radarData,
                 if(radarData->getNumRays() <= 0) {
 		     coordSystem = cartesian;
 		     AnalyticGrid *data = new AnalyticGrid();
-		     data->gridAnalyticData(cappiConfig, analyticConfig, 
+		     data->gridAnalyticData(mainConfig, analyticConfig, 
 					    vortexLat, vortexLon,radarLat,
 					    radarLon);
 		     return data;
 		}
 		else {
-		    return makeCappi(radarData, cappiConfig, 
+		    return makeCappi(radarData, mainConfig, 
 				     vortexLat, vortexLon);
 		}
 		
-		Message::toScreen("Error in makeAnalytic GriddedFactory");
+		Message::toScreen("Error in make Analytic GriddedFactory");
 		return new CappiGrid();
 	      
 }

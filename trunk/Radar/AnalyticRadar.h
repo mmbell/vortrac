@@ -26,7 +26,7 @@ class AnalyticRadar : public RadarData
 	const QString& configFile = QString("vortrac_defaultAnalyticTC.xml"));
   
   ~AnalyticRadar();
-  void setConfigElement(QDomElement configRoot);
+  void setConfigElement(Configuration *newConfig);
   bool readVolume();
 
  private:
@@ -52,7 +52,7 @@ class AnalyticRadar : public RadarData
   // theoretical radar properties only it is not connected to the 
   // Configuration object that runs the GUI and Analysis
 
-  QDomElement masterRoot;
+  Configuration *mainConfig;
   // This is the root configuration element of the master config file
   // which controlls input to GUI and Analysis
 

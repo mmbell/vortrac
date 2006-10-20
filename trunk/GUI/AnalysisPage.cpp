@@ -32,7 +32,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 
   // Define all the widgets
 
-  configDialog = new ConfigurationDialog(configData);
+  configDialog = new ConfigurationDialog(this, configData);
   connect(configDialog, SIGNAL(log(const Message&)),
 	  this, SLOT(catchLog(const Message&)));
   
@@ -44,7 +44,8 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   QTabWidget *visuals = new QTabWidget;
   visuals->setTabPosition(QTabWidget::West);
 
-  GraphFace *graph = new GraphFace(vortexLabel);
+  GraphFace *graph = new GraphFace();
+  graph->updateTitle(vortexLabel);
   connect(graph, SIGNAL(log(const Message&)), 
 	  this, SLOT(catchLog(const Message&)));
 
@@ -205,15 +206,19 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 AnalysisPage::~AnalysisPage()
 {
   prepareToClose();
+  //  pollThread->exit();
+  delete pollThread;
   delete cappiDisplay;
+  //delete graph; this gets deleted anyway, not sure how
+  delete configData;
+  delete diagPanel;
+  delete statusLog;
   delete statusText;
-  //delete graph;
   delete configDialog;
   delete currPressure;
   delete currRMW;
   delete currDeficit;
   delete deficitLabel;
-  delete visuals;
 }
 
 void AnalysisPage::newFile()
@@ -507,6 +512,7 @@ void AnalysisPage::autoScroll()
 
 void AnalysisPage::prepareToClose()
 {
+  //abortThread();
   //Message::toScreen("prepare to Close "+workingDirectory.path());
   QString autoLogName = statusLog->getLogFileName();
   QFile autoLog(workingDirectory.filePath(autoLogName));
@@ -574,10 +580,22 @@ bool AnalysisPage::analyticModel()
 void AnalysisPage::pollVortexUpdate(VortexList* list)
 {
   if(list->count() > 0) {
+    
+    // Find the outermost vtd mean wind coefficient that is not equal to -999
+    float maxRadius = 0;
+    for(int level = 0; level < list->last().getNumLevels(); level++) {
+      for(int rad = 0; rad < list->last().getNumRadii(); rad++) {
+	Coefficient current = list->last().getCoefficient(level,rad,0);
+	if((current.getValue()!=-999)&&(current.getValue()!=0)) {
+	  if(current.getRadius()>maxRadius)
+	    maxRadius = list->last().getCoefficient(level,rad,0).getRadius();
+	}
+      }
+    }
     currPressure->display((int)list->last().getPressure());
     currRMW->display(list->last().getRMW());
-    currDeficit->display(10);
-    deficitLabel->setText(tr("Pressure Deficit From ")+QString().setNum(currRMW->value())+tr(" km (mb):"));
+    currDeficit->display(list->last().getPressureDeficit());
+    deficitLabel->setText(tr("Pressure Deficit From ")+QString().setNum(maxRadius)+tr(" km (mb):"));
     emit vortexListChanged(list);
   }
   else {

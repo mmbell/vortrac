@@ -32,7 +32,7 @@ class RadarFactory : public QObject
   Q_OBJECT
 
  public:
-  RadarFactory(QDomElement radarConfig, QObject *parent = 0);
+  RadarFactory(Configuration* radarConfig, QObject *parent = 0);
   ~RadarFactory();
   RadarData* getUnprocessedData();
   bool hasUnprocessedData();
@@ -64,7 +64,7 @@ class RadarFactory : public QObject
   QDateTime endDateTime;
   QHash<QString, bool> fileAnalyzed;
   QDateTime radarDateTime;
-  QDomElement radarConfiguration;
+  Configuration* mainConfig;
 
 };
   

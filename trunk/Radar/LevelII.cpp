@@ -23,17 +23,21 @@ LevelII::LevelII(const QString &radarname, const float &lat, const float &lon, c
   Sweeps = new Sweep[20];
   Rays = new Ray[7500];
   swap_bytes = false;
-  
+  vel_data = NULL;
+  sw_data = NULL;
+  ref_data = NULL;
 }
 
 LevelII::~LevelII()
 {
+  radarHeader = NULL;
+  msgHeader = NULL;
   delete volHeader;
-  //delete radarHeader;
-  //delete msgHeader;
-  //delete [] ref_data;
-  //delete [] vel_data;
-  //delete [] sw_data;
+  delete radarHeader;
+  delete msgHeader;
+  delete ref_data;
+  delete vel_data;
+  delete sw_data;
   	
 }
 
@@ -93,6 +97,9 @@ void LevelII::addRay(Ray* newRay)
   newRay->setRef_numgates( radarHeader->ref_num_gates );
   newRay->setVel_numgates( radarHeader->vel_num_gates );
   newRay->setVcp( radarHeader->vol_coverage_pattern );
+  vel_data = NULL;
+  sw_data = NULL;
+  ref_data = NULL;
 
   //return *newRay;
 }

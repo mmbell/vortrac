@@ -27,7 +27,8 @@ class ConfigurationDialog:public QDialog
 {
        Q_OBJECT
 public:
-       ConfigurationDialog(Configuration *initialConfig = 0);
+       ConfigurationDialog(QWidget* parent = 0, 
+			   Configuration *initialConfig = 0);
        ~ConfigurationDialog();
        bool read();
        void checkConfig();

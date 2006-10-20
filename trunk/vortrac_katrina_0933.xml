@@ -87,7 +87,10 @@
     <hvvp/>
     <pressure>
         <dir>/scr/science40/mauger/Working/trunk/pressure</dir>
-        <format/>
+        <format>AWIPS</format>
+        <maxobstime>59</maxobstime>
+        <maxobsdist>50</maxobsdist>
+        <maxobsmethod>ring</maxobsmethod>
     </pressure>
     <graphics>
         <autolimits>on</autolimits>

@@ -44,14 +44,16 @@ AbstractPanel::~AbstractPanel()
   delete browse;
   delete defaultDirectory;
   delete maxWaveNumBox;
-  for(int i = 0; i < dataGapBoxes.count(); i++) {
-    delete dataGapBoxes[i];
+  if(!dataGapBoxes.isEmpty()) {
+    for(int i = 0; i < dataGapBoxes.count(); i++) {
+      delete dataGapBoxes[i];
+    }
+    for(int i = 0; i < dataGapLabels.count(); i++) {
+      delete dataGapLabels[i];
+    }
+    delete dataGapLayout;
+    delete dataGap;
   }
-  for(int i = 0; i < dataGapLabels.count(); i++) {
-    delete dataGapLabels[i];
-  }
-  delete dataGapLayout;
-  delete dataGap;
   delete radarLatBox;
   delete radarLongBox;
   delete radarAltBox;

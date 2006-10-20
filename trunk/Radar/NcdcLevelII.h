@@ -17,7 +17,9 @@ class NcdcLevelII : public LevelII
 {
 
  public:
-  NcdcLevelII(const QString &radarname, const float &lat, const float &lon, const QString &filename);
+  NcdcLevelII(const QString &radarname, const float &lat, const float &lon, 
+	      const QString &filename);
+  ~NcdcLevelII();
   bool readVolume();
 
 };

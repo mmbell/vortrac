@@ -318,6 +318,19 @@ class PressurePanel:public AbstractPanel
   QHash<QString, QString> *pressureFormatOptions;
   // The pressureFormatOptions hash is used to relate combobox entries 
   // to the correct element in the xml file.
+
+  QSpinBox *maxObsTime;
+  // The number of minutes to threshold pressure observations
+
+  QDoubleSpinBox *maxObsDist;
+  // The maximum distance to threshold pressure observations on
+
+  QRadioButton *maxObsDistCenter, *maxObsDistRing;
+  // Determining the method for thresholding pressure observations
+  // If maxObsDistCenter is used the measurement will be made from the
+  //    TC center.
+  // If maxObsDistRing is used the measurement will be made from the largest
+  //    analysis ring.
   
 };
 

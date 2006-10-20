@@ -89,6 +89,9 @@
     <pressure>
         <dir>/Volumes/artemis1/mbell/charley/pressureobs</dir>
         <format>AWIPS</format>
+        <maxobstime>59</maxobstime>
+        <maxobsdist>50</maxobsdist>
+        <maxobsmethod>ring</maxobsmethod>
     </pressure>
     <graphics>
         <autolimits>on</autolimits>

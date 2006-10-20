@@ -2,8 +2,8 @@
 <vortrac xmnls="http://www.eol.ucar.edu/ns/vortrac" >
     <vortex>
         <name>Analytic Storm</name>
-        <lat>.90</lat>
-        <lon>.90</lon>
+        <lat>.65</lat>
+        <lon>.65</lon>
         <direction>35</direction>
         <speed>10</speed>
         <dir>workingDirs/</dir>
@@ -22,9 +22,9 @@
     </radar>
     <cappi>
         <dir>/scr/science40/mauger/Working/trunk/workingDirs/cappi</dir>
-        <xdim>200</xdim>
-        <ydim>200</ydim>
-        <zdim>2</zdim>
+        <xdim>100</xdim>
+        <ydim>100</ydim>
+        <zdim>4</zdim>
         <xgridsp>1.0</xgridsp>
         <ygridsp>1.0</ygridsp>
         <zgridsp>1.0</zgridsp>
@@ -85,11 +85,13 @@
         <maxdatagap wavenum="0" >180</maxdatagap>
         <maxdatagap wavenum="1" >120</maxdatagap>
     </vtd>
-    <hvvp>
-    </hvvp> 
+    <hvvp/>
     <pressure>
-        <dir>/home/lmauger/NCAR/vortrac/trunk/workingDirs</dir>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs/pressure</dir>
         <format>AWIPS</format>
+        <maxobstime>59</maxobstime>
+        <maxobsdist>50</maxobsdist>
+        <maxobsmethod>ring</maxobsmethod>
     </pressure>
     <graphics>
         <autolimits>on</autolimits>
@@ -115,7 +117,7 @@
         <winddirection>0</winddirection>
         <awips_dir>/path/to/awips/data</awips_dir>
         <gvad>true</gvad>
-        <vadlevels>8</vadlevels>
+        <vadlevels>6</vadlevels>
         <numcoeff>3</numcoeff>
     </qc>
 </vortrac>

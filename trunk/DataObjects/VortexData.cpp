@@ -37,6 +37,7 @@ VortexData::VortexData()
 
   centralPressure = -999;
   centralPressureUncertainty = -999;
+  pressureDeficit = -999;
 
 }
 
@@ -66,6 +67,7 @@ VortexData::VortexData(int availLevels, int availRadii, int availWaveNum)
   
   centralPressure = -999;
   centralPressureUncertainty = -999;
+  pressureDeficit = -999;
   
 }
 
@@ -220,6 +222,16 @@ float VortexData::getPressureUncertainty() const
 void VortexData::setPressureUncertainty(const float& dPressure)
 {
   centralPressureUncertainty = dPressure;
+}
+
+float VortexData::getPressureDeficit() const
+{
+  return pressureDeficit;
+}
+
+void VortexData::setPressureDeficit(const float& newPressureDeficit)
+{
+  pressureDeficit = newPressureDeficit;
 }
 
 int VortexData::getNumConvergingCenters(const int& i) const

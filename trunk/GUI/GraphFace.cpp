@@ -20,7 +20,7 @@
 
 #include "GraphFace.h"
 
-GraphFace::GraphFace(QString& title, QWidget *parent)
+GraphFace::GraphFace(QWidget *parent, const QString& title)
   : QWidget(parent)
   //constructor to create the GraphFace object
 { 
@@ -88,6 +88,7 @@ GraphFace::~GraphFace()
   delete imageFile;
   delete VortexDataList;
   delete dropList;
+  // delete key;
   
 }
 

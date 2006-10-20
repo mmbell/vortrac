@@ -180,7 +180,7 @@ void Log::catchLog(const Message& logEntry)
       message = location+": "+message;
     }
     message+="\n";
-    writeToFile(message);
+    //writeToFile(message);
     emit(newLogEntry(message));
   }
   

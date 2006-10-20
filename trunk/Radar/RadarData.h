@@ -42,7 +42,7 @@ class RadarData
   // returns height in km from sea level;
   int getVCP() {return vcp;} 
   void setAltitude(const float newAltitude);
-  //  bool writeToFile(const QString fileName);
+  bool writeToFile(const QString fileName);
 
 
  protected:

@@ -89,6 +89,9 @@
     <pressure>
         <dir>/path/to/pressure/data</dir>
         <format>AWIPS</format>
+        <maxobstime>59</maxobstime>
+        <maxobsdist>50</maxobsdist>
+        <maxobsmethod>ring</maxobsmethod>
     </pressure>
     <graphics>
         <autolimits>on</autolimits>

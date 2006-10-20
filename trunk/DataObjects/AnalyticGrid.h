@@ -11,7 +11,6 @@
 #ifndef ANALYTICGRID_H
 #define ANALYTICGRID_H
 
-#include <QDomElement>
 #include <QFile>
 #include "DataObjects/GriddedData.h"
 #include "Config/Configuration.h"
@@ -24,7 +23,8 @@ class AnalyticGrid : public GriddedData
 
   ~AnalyticGrid();
 
-  void gridAnalyticData(QDomElement cappiConfig,Configuration* analyticConfig,
+  void gridAnalyticData(Configuration* mainConfig,
+			Configuration* analyticConfig,
 			float *vortexLat, float *vortexLon, float *radarLat,
 			float *radarLon);
 
@@ -75,7 +75,7 @@ class AnalyticGrid : public GriddedData
 
   float *vLat, *vLon, *rLat, *rLon;
   
-  bool getConfigInfo(QDomElement cappiConfig,Configuration* analyticConfig);
+  bool getConfigInfo(Configuration* mainConfig,Configuration* analyticConfig);
   
   
 };

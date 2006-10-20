@@ -129,7 +129,10 @@ void SimplexThread::run()
 		// Create a GBVTD object to process the rings
 		vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
 		vtdCoeffs = new Coefficient[20];
-
+		
+		if(abort)
+		  return;
+		
 		// Create a simplexData object to hold the results;
 		simplexData = new SimplexData(int(lastLevel - firstLevel + 1), int(lastRing - firstRing + 1), (int)numPoints);
 		simplexData->setTime(vortexData->getTime());
@@ -284,6 +287,8 @@ void SimplexThread::run()
 										gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);
 									
 										// Call gbvtd
+										if(abort)
+										  return;
 										if (vtd->analyzeRing(vertex[v][0], vertex[v][1], radius, height, numData, ringData,
 															 ringAzimuths, vtdCoeffs, vtdStdDev)) {
 											if (vtdCoeffs[0].getParameter() == "VTC0") {
@@ -383,6 +388,8 @@ void SimplexThread::run()
 				}
 			}
 			}
+			if(abort)
+			  return;
 			mutex.unlock();
 		}
 		mutex.lock();

@@ -381,7 +381,7 @@ int Hvvp::hvvpPrep(int m) {
   float ae = 4.0*6371.0/3.0;                // km
   Sweep* currentSweep;
   Ray* currentRay;
-  float* vel; 
+  float* vel = NULL; 
 
   if(cuspec < curmw)
     cuthr = cuspec; 
@@ -467,11 +467,11 @@ int Hvvp::hvvpPrep(int m) {
 	    }
 	  }
 	}
-	//delete currentRay;
-	//delete [] vel;
+	currentRay = NULL;
+	vel = NULL;
       }
     }
-    //delete currentSweep;
+    currentSweep = NULL;
   }
   return count;
 }
@@ -814,7 +814,7 @@ bool Hvvp::findHVVPWinds()
   }
   //Message::toScreen("ifoundit = "+QString().setNum(ifoundit));
   QString message;
-  if(ifoundit >= 1) {
+  //if(ifoundit >= 1) {
     // Here Pauls code does a lot of printing which I will make optional 
     // depending on whether or not printOutput is set to true, the default
     // is false
@@ -864,7 +864,7 @@ bool Hvvp::findHVVPWinds()
       Message::toScreen(message);
     }
     return true;
-  }
+    /*}
   else {
     message = "No Hvvp Results Found";
     if(printOutput) {
@@ -873,7 +873,7 @@ bool Hvvp::findHVVPWinds()
     }
     return false;
   }
-  
+    */
 }
 
 
