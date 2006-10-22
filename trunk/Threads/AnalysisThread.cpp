@@ -33,7 +33,7 @@ AnalysisThread::AnalysisThread(QObject *parent)
 		  SLOT(catchLog(const Message&)), Qt::DirectConnection);
   connect(vortexThread, SIGNAL(windsFound()), 
 		  this, SLOT(foundWinds()), Qt::DirectConnection);
-
+  numVolProcessed = 0;
 }
 
 AnalysisThread::~AnalysisThread()
@@ -155,8 +155,10 @@ void AnalysisThread::run()
 			vortexLat = vortexList->last().getLat();
 			vortexLon = vortexList->last().getLon();
 		} else {
-			
-			// Need to initialize the Lists
+
+		  if(numVolProcessed == 0) {
+		    //Message::toScreen("Initializing the lists....");
+		        // Need to initialize the Lists
 			QDomElement radar = configData->getConfig("radar");
 			QString radarName = configData->getParam(radar,"name");
 			
@@ -198,6 +200,60 @@ void AnalysisThread::run()
 			dropSondeList->setRadarName(radarName);
 			dropSondeList->setVortexName(vortexName);
 			dropSondeList->setNewWorkingDirectory(workingPath + "/");
+		  }
+		  else {
+		    // We have already attempted to process volumes which 
+		    // means that the vortex was effectively out of radar
+		    // range.  Get interpolated lat and lon coordinates
+		    // from initial position and velocity guess
+		    
+		    // get start date and time from radar config
+		    
+		    QDomElement radar = configData->getConfig("radar");
+		    QString dateString = configData->getParam(radar,
+							      "startdate");
+		    QString timeString = configData->getParam(radar,
+							      "starttime");
+		    QDate radarStartDate = QDate::fromString(dateString,
+							     Qt::ISODate);
+		    QTime radarStartTime = QTime::fromString(timeString,
+							     Qt::ISODate);
+		    QDateTime radarStartDateTime = QDateTime(radarStartDate, 
+							     radarStartTime, 
+							     Qt::UTC);
+		    // Get direction (degrees cw from north) and speed (m/s)
+		    // of initial storm position
+		    
+		    QDomElement vortex = configData->getConfig("vortex");
+		    float stormSpeed = configData->getParam(vortex, 
+							    "speed").toFloat();
+		    float stormDirection = configData->getParam(vortex, 
+								"direction").toFloat();
+		    // Put the storm direction in math coordinates 
+		    // radians ccw from east
+
+		    stormDirection = 450-stormDirection;
+		    if(stormDirection > 360)
+		      stormDirection -=360;
+		    stormDirection*=acos(-1)/180.;
+
+		    // Get initial lat and lon
+		    vortexLat = configData->getParam(vortex,"lat").toFloat();
+		    vortexLon = configData->getParam(vortex,"lon").toFloat();
+
+		    // Get this volume's time
+		    
+		    QDateTime volDateTime = radarVolume->getDateTime();
+		    
+		    int elapsedSeconds =radarStartDateTime.secsTo(volDateTime);
+		    float distanceMoved = elapsedSeconds*stormSpeed;
+		    float changeInX = distanceMoved*cos(stormDirection);
+		    float changeInY = distanceMoved*sin(stormDirection);
+		    float *newLatLon = GriddedData::getAdjustedLatLon(vortexLat,vortexLon, changeInX, changeInY);
+		    vortexLat = newLatLon[0];
+		    vortexLon = newLatLon[1];
+		    
+		  }
 		}
 		
 		// Check to see if the center is beyond 174 km
@@ -433,7 +489,7 @@ void AnalysisThread::run()
 			waitForData.wait(&mutex);
 		mutex.unlock();
 		
-	}
+       }
 	emit log(Message("End of Analysis Thread Run"));
 }
 
@@ -455,4 +511,9 @@ void AnalysisThread::foundWinds()
 void AnalysisThread::catchLog(const Message& message)
 {
   emit log(message);
+}
+
+void AnalysisThread::setNumVolProcessed(const float& num)
+{
+  numVolProcessed = num;
 }

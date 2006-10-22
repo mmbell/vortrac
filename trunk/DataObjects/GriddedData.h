@@ -48,6 +48,9 @@ class GriddedData
 		     float *relLat, float* relLon);
   static float getCartesianDistance(float *Lat, float *Lon,
 				    float *relLat, float* relLon);
+  static float* getAdjustedLatLon(const float& startLat, const float& startLon,
+				  const float& changeInX, 
+				  const float& changeInY);
   float getRefPointI();
   float getRefPointJ();
   float getRefPointK();

@@ -316,3 +316,14 @@ void RadarFactory::updateDataQueue(const VortexList* list)
       }
     }
 }
+
+int RadarFactory::getNumProcessed() const
+{
+  // Returns the number of volumes that RadarFactory has sent to be processed
+  // This was added for determining when volumes have been sent but have 
+  // not produced vortexData - which would indicated that either the 
+  // vortex was not within radar range or that the standard deviation 
+  // was simply too high to incorporate the analysis.
+
+  return fileAnalyzed.keys(true).count();
+}

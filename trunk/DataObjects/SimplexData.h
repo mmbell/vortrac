@@ -20,6 +20,7 @@ class SimplexData
  public:
   SimplexData();
   SimplexData(int availLevels, int availRadii, int availWaveNum);
+  SimplexData(const SimplexData& other);
   ~SimplexData();
   
   float getX(const int& lev, const int& rad) const;

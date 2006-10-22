@@ -38,6 +38,7 @@ class AnalysisThread : public QThread
      void setSimplexList(SimplexList *archivePtr);
      void setPressureList(PressureList *archivePtr);
      void setDropSondeList(PressureList *archivePtr);
+     void setNumVolProcessed(const float& num);
 	 
  public slots:
      void catchLog(const Message& message);
@@ -71,6 +72,7 @@ class AnalysisThread : public QThread
      PressureList *dropSondeList;
      void archiveAnalysis();
      float vortexLat, vortexLon;
+     int numVolProcessed;
 
 };
 

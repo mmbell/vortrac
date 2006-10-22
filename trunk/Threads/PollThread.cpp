@@ -294,6 +294,7 @@ void PollThread::run()
 		// Check for new data
 		if (dataSource->hasUnprocessedData()) {
 		  dataSource->updateDataQueue(vortexList);
+		  analysisThread->setNumVolProcessed(dataSource->getNumProcessed());
 
 			// Fire up the analysis thread to process it
 		        RadarData *newVolume = dataSource->getUnprocessedData();

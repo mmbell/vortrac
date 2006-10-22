@@ -44,7 +44,7 @@ SimplexData::SimplexData(int availLevels, int availRadii, int availCenters)
   numLevels = availLevels;
   numRadii = availRadii;
   numCenters = availCenters;
-  float velNull = -999.;
+  velNull = -999.;
   
   for(int i = 0; i < numLevels; i++)
     {
@@ -64,10 +64,36 @@ SimplexData::SimplexData(int availLevels, int availRadii, int availCenters)
 	}
     }
   
-  time = QDateTime();
-   
+  time = QDateTime();   
 }
 
+SimplexData::SimplexData(const SimplexData& other)
+{
+  this->numLevels = other.numLevels;
+  this->numRadii = other.numRadii;
+  this->numCenters = other.numCenters;
+  velNull = -999.;
+  
+  for(int i = 0; i < this->numLevels; i++)
+    {
+      this->height[i] = other.height[i];
+      for(int j = 0; j < this->numRadii; j++) 
+	{
+	  this->meanX[i][j] = other.meanX[i][j];
+	  this->meanY[i][j] = other.meanY[i][j];
+	  this->centerStdDeviation[i][j] = other.centerStdDeviation[i][j];
+	  this->meanVT[i][j] = other.meanVT[i][j];
+	  this->meanVTUncertainty[i][j] = other.meanVTUncertainty[i][j];
+	  this->numConvergingCenters[i][j]= other.numConvergingCenters[i][j];
+	  this->radius[j] = other.radius[j];
+	  for(int k = 0; k < this->numCenters; k++) {
+	    this->centers[i][j][k] = other.centers[i][j][k];
+	  }
+	}
+    }
+  
+  this->time = other.time;   
+}
 
 SimplexData::~SimplexData()
 {

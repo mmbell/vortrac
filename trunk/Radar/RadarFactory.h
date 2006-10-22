@@ -36,6 +36,7 @@ class RadarFactory : public QObject
   ~RadarFactory();
   RadarData* getUnprocessedData();
   bool hasUnprocessedData();
+  int getNumProcessed() const;
 
  public slots:
    void catchLog(const Message& message);

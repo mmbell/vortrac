@@ -50,8 +50,11 @@ Hvvp::Hvvp()
   xls = new float*[xlsDimension];
   wgt = new float[maxpoints];
   yls = new float[maxpoints];
-  for(int k = 0; k < xlsDimension; k++)
-	  xls[k] = new float[maxpoints];
+  for(int k = 0; k < xlsDimension; k++) {
+    xls[k] = new float[maxpoints];
+    for(int kk = 0; kk < maxpoints; kk++)
+      xls[k][kk] = velNull;
+  }
 	  
   printOutput = true;
   
@@ -473,6 +476,9 @@ int Hvvp::hvvpPrep(int m) {
     }
     currentSweep = NULL;
   }
+  delete currentSweep;
+  delete currentRay;
+  delete vel;
   return count;
 }
 

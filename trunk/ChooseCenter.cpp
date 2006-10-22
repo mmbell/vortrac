@@ -42,11 +42,11 @@ ChooseCenter::~ChooseCenter()
   
   for(int i = 0; i < simplexResults.count(); i++) {
     for(int j = 0; j < simplexResults[i].getNumRadii(); j++) {
-      delete[] score[i][j];
+      delete [] score[i][j];
     }
-    delete[] score[i];
+    delete [] score[i];
   }
-  delete score;
+  delete [] score;
   
   // We might not be able to delete these depending on weither they 
   // are passed out for further use or not after the ChooseCenter object is
@@ -57,6 +57,10 @@ ChooseCenter::~ChooseCenter()
     delete[] newBestRadius[i];
     delete[] newBestCenter[i];    
   }
+  delete[] bestRadius;
+  delete[] newBestRadius;
+  delete[] newBestCenter;
+
   for(int m = 0; m < 4; m++) {
     for(int p = 0; p < numLevels; p++) {
       delete[] bestFitCoeff[m][p];
@@ -67,8 +71,9 @@ ChooseCenter::~ChooseCenter()
   }
   delete[] centerDev;
   delete[] radiusDev;
-  delete[] bestRadius;
   delete[] bestFitCoeff;
+  delete[] bestFitVariance;
+  delete[] bestFitDegree;
   
 }
 
@@ -261,11 +266,11 @@ bool ChooseCenter::chooseMeanCenters()
     for(int rad = 0; rad < simplexResults[i].getNumRadii(); rad++) {
       score[i][rad] = new float[simplexResults[i].getNumLevels()];
       for(int level = 0; level < simplexResults[i].getNumLevels(); level++){
-	score[i][rad][level] = 0;
+	score[i][rad][level] = 0.0;
 	bestRadius[i][level] = 0;
       }
-    }
-
+    }}for(int i = 0; i < simplexResults.count(); i++) {
+ 
     // Now we zero out the variables used for finding the mean of each volume
 
     float radiusSum = 0;
@@ -281,10 +286,10 @@ bool ChooseCenter::chooseMeanCenters()
       float bestPts = 0.;
       float ptRatio = (float)simplexResults[i].getNumPointsUsed()/2.718281828;
       for(int j = 0; j < simplexResults[i].getNumRadii(); j++) {
-
+	
 	// Examine each radius based on index j, for the one containing the 
 	//   highest tangential winds
-
+	
 	winds[j] = velNull;
 	stds[j] = velNull;
 	pts[j] = velNull;
@@ -304,7 +309,7 @@ bool ChooseCenter::chooseMeanCenters()
 	    bestPts = pts[j];
 	}
       }
-
+      
       // Formerlly know as fix winds
       //   which was a sub routine in the perl version of this algorithm
       //   zeros all wind entrys that are not a local maxima, or adjacent 
@@ -313,6 +318,10 @@ bool ChooseCenter::chooseMeanCenters()
       int count = 0;
       float *peakWinds = new float[simplexResults[i].getNumRadii()];
       float *peaks = new float[simplexResults[i].getNumRadii()];
+      for(int z = 0; z < simplexResults[i].getNumRadii(); z++) {
+	peakWinds[z] = 0;
+	peaks[z] = 0;
+      }
       float meanPeak,meanStd;
       peaks[0] = 0;
       peaks[simplexResults[i].getNumRadii()-1] = 0;
@@ -339,8 +348,11 @@ bool ChooseCenter::chooseMeanCenters()
       }
       else {
 	meanStd = 0;
-	peakWinds = winds;
+	//peakWinds = NULL;
+	//peakWinds = winds;
       }
+      
+      delete [] peakWinds;
       
       // End of function formally known as fix winds
       // returned meanpeak, meanstd, peaks[array]
@@ -379,6 +391,7 @@ bool ChooseCenter::chooseMeanCenters()
 	
 	// How do we get log without log(const Message)??
 	
+	
 	if(winds[j]!=velNull) {
 	  // We don't want any score if the wind didn't hit near peak
 	  score[i][j][k] = windScore+stdScore+ptsScore;
@@ -404,7 +417,7 @@ bool ChooseCenter::chooseMeanCenters()
 	      // gives the actual distance of the radius not just index
 	      xSum+= simplexResults[i].getX(j,k);
 	      ySum+= simplexResults[i].getY(j,k);
-	      }
+	    }
 	    else {
 	      // if we have found a higher scoring radius on the same level
 	      // remove the old one and add the new
@@ -421,58 +434,61 @@ bool ChooseCenter::chooseMeanCenters()
 	  }
 	}
       }
-
-      //Message::toScreen("Made it to means");
-
-      // calculate the mean radius and center scores over all levels
-      float numLevels = simplexResults[i].getNumLevels(); 
-      // what is the current level index verses height issue
-      float meanRadius = radiusSum/numLevels;
-      float meanXChoose = xSum/numLevels;
-      float meanYChoose = ySum/numLevels;
-      
-      //if(opt_i){
-      //   calc_radscore();   we don't need this it is only related to crazy
-      //}                     weight scheme stuff
-      
-      
-      for(int k = 0; k <= simplexResults[i].getNumLevels(); k++) {
-	int bestIndex = 0;
-	for(int j = 0; j < simplexResults[i].getNumRadii(); j++) {
-	  // Talked with mike the division below should be by 1
-	  //score[i][j][k] /=(numWeightSchemes+1);
-	  // totalscore[i][j][k] /=(numWeightSchemes+1);
-	  // This was 2 in the code at least cause we added the max VTC0 default
-	  // to whatever was in the file, I think this is one here
-	}
-	float bestScore = 0;
-	for(int j = 0; j < simplexResults[i].getNumRadii(); j++) {
-	  //if(totalScore[i][j][k] > bestScore) {
-	  //  bestScore = totalScore[i][j][k];
-	  //  bestIndex = j;
-	  //}
-	  if(score[i][j][k] > bestScore) {
-	    bestScore = score[i][j][k];
-	    bestIndex = j;
-	  }
-	}
-	bestRadius[i][k] = bestIndex;
+      delete [] winds;
+      delete [] stds;
+      delete [] pts;
+      delete [] peaks;
+    }
+    //Message::toScreen("Made it to means");
+    
+    // calculate the mean radius and center scores over all levels
+    float currentNumLevels = simplexResults[i].getNumLevels(); 
+    // what is the current level index verses height issue
+    float meanRadius = radiusSum/currentNumLevels;
+    float meanXChoose = xSum/currentNumLevels;
+    float meanYChoose = ySum/currentNumLevels;
+    
+    //if(opt_i){
+    //   calc_radscore();   we don't need this it is only related to crazy
+    //}                     weight scheme stuff
+    
+    
+    for(int k = 0; k <= simplexResults[i].getNumLevels(); k++) {
+      int bestIndex = 0;
+      for(int j = 0; j < simplexResults[i].getNumRadii(); j++) {
+	// Talked with mike the division below should be by 1
+	//score[i][j][k] /=(numWeightSchemes+1);
+	// totalscore[i][j][k] /=(numWeightSchemes+1);
+	// This was 2 in the code at least cause we added the max VTC0 default
+	// to whatever was in the file, I think this is one here
       }
-      // Calculate initial standard deviations of radius and center
-      centerDev[i] = 0;
-      radiusDev[i] = 0;
-      
-      for(int k = 0; k <= simplexResults[i].getNumLevels(); k++) {
-	int j = bestRadius[i][k];
-	//Message::toScreen("simplexResults["+QString().setNum(i)+"].getNumRadii() = "+QString().setNum(simplexResults[i].getNumRadii()));
-	//Message::toScreen("Best Radius (j = "+QString().setNum(j)+")");
-	//Message::toScreen(" has value ("+QString().setNum(simplexResults[i].getRadius(j))+")");
-	
-	float radLength = simplexResults[i].getRadius(j);
-	radiusDev[i] +=(meanRadius-radLength)*(meanRadius-radLength);
-	centerDev[i] +=sqrt(centerDev[i]/numLevels);
-	// Do these get put in the simplexData???
+      float bestScore = 0.0;
+      for(int j = 0; j < simplexResults[i].getNumRadii(); j++) {
+	//if(totalScore[i][j][k] > bestScore) {
+	//  bestScore = totalScore[i][j][k];
+	//  bestIndex = j;
+	//}
+	if(score[i][j][k] > bestScore) {
+	  bestScore = score[i][j][k];
+	  bestIndex = j;
+	}
       }
+      bestRadius[i][k] = bestIndex;
+    }
+    // Calculate initial standard deviations of radius and center
+    centerDev[i] = 0.0;
+    radiusDev[i] = 0.0;
+    
+    for(int k = 0; k <= simplexResults[i].getNumLevels(); k++) {
+      int j = bestRadius[i][k];
+      //Message::toScreen("simplexResults["+QString().setNum(i)+"].getNumRadii() = "+QString().setNum(simplexResults[i].getNumRadii()));
+      //Message::toScreen("Best Radius (j = "+QString().setNum(j)+")");
+      //Message::toScreen(" has value ("+QString().setNum(simplexResults[i].getRadius(j))+")");
+      
+      float radLength = simplexResults[i].getRadius(j);
+      radiusDev[i] +=(meanRadius-radLength)*(meanRadius-radLength);
+      centerDev[i] +=sqrt(centerDev[i]/currentNumLevels);
+      // Do these get put in the simplexData???
     }
   } 
   //Message::toScreen("Made it out of chooseMeanCenters");

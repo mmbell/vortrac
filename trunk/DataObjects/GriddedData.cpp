@@ -186,7 +186,7 @@ float* GriddedData::getCartesianPoint(float *Lat, float *Lon,
 }
 
 float GriddedData::getCartesianDistance(float *Lat, float *Lon,
-										float *relLat, float *relLon)
+					float *relLat, float *relLon)
 {
 	
 	// Thanks to Peter Dodge for some code used here
@@ -203,6 +203,28 @@ float GriddedData::getCartesianDistance(float *Lat, float *Lon,
 	
 	// This value is returned in KM ???? -LM
 	
+}
+
+float* GriddedData::getAdjustedLatLon(const float& startLat, 
+				      const float& startLon,
+				      const float& changeInX, 
+				      const float& changeInY)
+{
+  // This function acts like the inverse of the one above.
+  // If it is given an initial latitude and longitude
+  // and the cartesian distance change in each direction
+  // it will return a new pair of points {newLat, newLon}
+
+  float LatRadians = startLat * acos(-1.0)/180.0;
+  float fac_lat = 111.13209 - 0.56605 * cos(2.0 * LatRadians)
+    + 0.00012 * cos(4.0 * LatRadians) - 0.000002 * cos(6.0 * LatRadians);
+  float fac_lon = 111.41513 * cos(LatRadians)
+    - 0.09455 * cos(3.0 * LatRadians) + 0.00012 * cos(5.0 * LatRadians);
+
+  float* newLatLon = new float[2];
+  newLatLon[0] = changeInY/fac_lat +startLat;
+  newLatLon[1] = changeInX/fac_lon +startLon;
+  return newLatLon;
 }
 
 
