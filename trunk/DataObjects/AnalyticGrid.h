@@ -57,11 +57,7 @@ class AnalyticGrid : public GriddedData
   QList<float> vR;
   QList<float> vTAngle;
   QList<float> vRAngle;
-
-  float xmin, xmax;
-  float ymin, ymax;
-  float zmin, zmax;
-  
+ 
   float vorDisturbance;
   float lambAmplitude;
   float lambAngle;

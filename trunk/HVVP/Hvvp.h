@@ -139,6 +139,8 @@ private:
      
    void smoothHvvp(float* data);
    void smoothHvvpVmSin(float* data1, float* data2);
+   void writeToFile(QString& nameOfFile, int aRows, int aCols,
+		    int bRows, int bCols, float** a, float* b);
 
 signals:
    void log(const Message& message);

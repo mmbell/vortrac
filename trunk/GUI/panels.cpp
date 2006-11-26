@@ -72,9 +72,9 @@ VortexPanel::VortexPanel()
   speed->addWidget(speedBox);
 
   QLabel *workingDirLabel = new QLabel(tr("Working Directory"));
-  dir = new QLineEdit();
-  defaultDirectory = new QDir(QDir::currentPath());
-  browse = new QPushButton("Browse..");
+  // dir = new QLineEdit();
+  //defaultDirectory = new QDir(QDir::currentPath());
+  //browse = new QPushButton("Browse..");
   dir->setText(defaultDirectory->path());
   connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
   QGridLayout *dirLayout = new QGridLayout();
@@ -213,7 +213,7 @@ RadarPanel::RadarPanel()
   name->addWidget(radarName);
 
   QLabel *latLabel = new QLabel(tr("Radar Latitude:"));
-  radarLatBox = new QDoubleSpinBox;
+  //radarLatBox = new QDoubleSpinBox;
   radarLatBox->setRange(-999,999);
   radarLatBox->setDecimals(3);
   QHBoxLayout *lat = new QHBoxLayout;
@@ -221,7 +221,7 @@ RadarPanel::RadarPanel()
   lat->addWidget(radarLatBox);
 
   QLabel *longLabel = new QLabel(tr("Radar Longitude:"));
-  radarLongBox = new QDoubleSpinBox();
+  //radarLongBox = new QDoubleSpinBox();
   radarLongBox->setDecimals(3);
   radarLongBox->setRange(-999, 999);
   QHBoxLayout *longitude = new QHBoxLayout;
@@ -229,7 +229,7 @@ RadarPanel::RadarPanel()
   longitude->addWidget(radarLongBox);
 
   QLabel *altLabel = new QLabel(tr("Radar Altitude (meters):"));
-  radarAltBox = new QDoubleSpinBox();
+  // radarAltBox = new QDoubleSpinBox();
   radarAltBox->setDecimals(3);
   radarAltBox->setRange(-999, 999);
   QHBoxLayout *altitude = new QHBoxLayout;
@@ -237,9 +237,9 @@ RadarPanel::RadarPanel()
   altitude->addWidget(radarAltBox);
 
   QLabel *radarDirLabel = new QLabel(tr("Radar Data Directory"));
-  dir = new QLineEdit();
-  defaultDirectory = new QDir(QDir::currentPath());
-  browse = new QPushButton("Browse..");
+  // dir = new QLineEdit();
+  //defaultDirectory = new QDir(QDir::currentPath());
+  //browse = new QPushButton("Browse..");
   dir->setText(defaultDirectory->path());
   connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
   QGridLayout *radarDirLayout = new QGridLayout();
@@ -448,15 +448,15 @@ bool RadarPanel::updateConfig()
 CappiPanel::CappiPanel()
 {
   QLabel *cappiDirLabel = new QLabel(tr("CAPPI Output Directory"));
-  dir = new QLineEdit;
-  defaultDirectory = new QDir(QDir::currentPath());
+  //dir = new QLineEdit;
+  //defaultDirectory = new QDir(QDir::currentPath());
   if(!defaultDirectory->exists(defaultDirectory->filePath("cappi"))) {
     defaultDirectory->mkdir("cappi") ;
   }
   defaultDirectory->cd("cappi");
  
   dir->setText(defaultDirectory->path());
-  browse = new QPushButton(tr("Browse.."));
+  //browse = new QPushButton(tr("Browse.."));
   connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
   QGridLayout *cappiDir = new QGridLayout;
   cappiDir->addWidget(cappiDirLabel, 0, 0);
@@ -692,27 +692,61 @@ bool CappiPanel::updateConfig()
   return true;
 }
 
-void CappiPanel::setDefaultDirectory(QDir* newDir)
+bool CappiPanel::setDefaultDirectory(QDir* newDir)
 {
-  QString subDirectory("cappi");
-  if(!newDir->cd(subDirectory))
-    if(newDir->mkdir(subDirectory)) 
-      newDir->cd(subDirectory);
   if(!newDir->isAbsolute())
     newDir->makeAbsolute();
-  defaultDirectory = newDir;
+  QString subDirectory("cappi");
+  if(newDir->exists(subDirectory))
+    if(newDir->cd(subDirectory)){
+      if(newDir->isReadable()){
+	defaultDirectory = newDir;
+	return true;
+      }
+      else {
+	newDir->cdUp();
+	defaultDirectory = newDir;
+	return false;
+      }
+    }
+    else {
+      defaultDirectory = newDir;
+      return false;
+    }
+  if(newDir->mkdir(subDirectory)) {
+    if(newDir->cd(subDirectory)){
+      if(newDir->isReadable()){
+	defaultDirectory = newDir;
+	return true;
+      }
+      else {
+	newDir->cdUp();
+	defaultDirectory = newDir;
+	return false;
+      }
+    }
+    else {
+      defaultDirectory = newDir;
+      return false;
+    }
+  }
+  else {
+    defaultDirectory = newDir;
+    return false;
+  }
+  
 }
 
 CenterPanel::CenterPanel()
 {
   QLabel *dirLabel = new QLabel(tr("Center Output Directory"));
-  dir = new QLineEdit();
-  defaultDirectory = new QDir(QDir::currentPath());
+  // dir = new QLineEdit();
+  //defaultDirectory = new QDir(QDir::currentPath());
   if(!defaultDirectory->exists(defaultDirectory->filePath("center"))) {
     defaultDirectory->mkdir("center") ;
   }
   defaultDirectory->cd("center");
-  browse = new QPushButton(tr("Browse.."));
+  //browse = new QPushButton(tr("Browse.."));
   dir->setText(defaultDirectory->path());
   connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
   QGridLayout *dirLayout = new QGridLayout;
@@ -811,7 +845,7 @@ CenterPanel::CenterPanel()
 
   dataGapBoxes = QList<QDoubleSpinBox*>();
   QLabel *maxWaveNum = new QLabel(tr("Maximum Wave Number"));
-  maxWaveNumBox = new QSpinBox;
+  // maxWaveNumBox = new QSpinBox;
   maxWaveNumBox->setRange(0, 10);
   maxWaveNumBox->setValue(0);
   QHBoxLayout *maxWaveLayout = new QHBoxLayout;
@@ -1152,27 +1186,61 @@ bool CenterPanel::updateConfig()
   return true;
 }
 
-void CenterPanel::setDefaultDirectory(QDir* newDir)
+bool CenterPanel::setDefaultDirectory(QDir* newDir)
 {
   QString subDirectory("center");
- if(!newDir->cd(subDirectory))
-    if(newDir->mkdir(subDirectory)) 
-      newDir->cd(subDirectory);
   if(!newDir->isAbsolute())
     newDir->makeAbsolute();
-  defaultDirectory = newDir;
+  if(newDir->exists(subDirectory))
+    if(newDir->cd(subDirectory)){
+      if(newDir->isReadable()){
+	defaultDirectory = newDir;
+	return true;
+      }
+      else {
+	newDir->cdUp();
+	defaultDirectory = newDir;
+	return false;
+      }
+    }
+    else {
+      defaultDirectory = newDir;
+      return false;
+    }
+  if(newDir->mkdir(subDirectory)) {
+    if(newDir->cd(subDirectory)){
+      if(newDir->isReadable()){
+	defaultDirectory = newDir;
+	return true;
+      }
+      else {
+	newDir->cdUp();
+	defaultDirectory = newDir;
+	return false;
+      }
+    }
+    else {
+      defaultDirectory = newDir;
+      return false;
+    }
+  }
+  else {
+    defaultDirectory = newDir;
+    return false;
+  }
+  
 }
 
 ChooseCenterPanel::ChooseCenterPanel()
 {
   QLabel *dirLabel = new QLabel(tr("VTD Output Directory"));
-  dir = new QLineEdit();
-  defaultDirectory = new QDir(QDir::currentPath());
+  // dir = new QLineEdit();
+  //defaultDirectory = new QDir(QDir::currentPath());
   if(!defaultDirectory->exists(defaultDirectory->filePath("chooseCenter"))) {
     defaultDirectory->mkdir("chooseCenter") ;
   }
   defaultDirectory->cd("chooseCenter");
-  browse = new QPushButton(tr("Browse.."));
+  //browse = new QPushButton(tr("Browse.."));
   dir->setText(defaultDirectory->path());
   connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
   QGridLayout *dirLayout = new QGridLayout;
@@ -1435,27 +1503,61 @@ bool ChooseCenterPanel::updateConfig()
   return true;
 }
 
-void ChooseCenterPanel::setDefaultDirectory(QDir* newDir)
+bool ChooseCenterPanel::setDefaultDirectory(QDir* newDir)
 {
   QString subDirectory("choosecenter");
-  if(!newDir->cd(subDirectory))
-    if(newDir->mkdir(subDirectory)) 
-      newDir->cd(subDirectory);
   if(!newDir->isAbsolute())
     newDir->makeAbsolute();
-  defaultDirectory = newDir;
+  if(newDir->exists(subDirectory))
+    if(newDir->cd(subDirectory)){
+      if(newDir->isReadable()){
+	defaultDirectory = newDir;
+	return true;
+      }
+      else {
+	newDir->cdUp();
+	defaultDirectory = newDir;
+	return false;
+      }
+    }
+    else {
+      defaultDirectory = newDir;
+      return false;
+    }
+  if(newDir->mkdir(subDirectory)) {
+    if(newDir->cd(subDirectory)){
+      if(newDir->isReadable()){
+	defaultDirectory = newDir;
+	return true;
+      }
+      else {
+	newDir->cdUp();
+	defaultDirectory = newDir;
+	return false;
+      }
+    }
+    else {
+      defaultDirectory = newDir;
+      return false;
+    }
+  }
+  else {
+    defaultDirectory = newDir;
+    return false;
+  }
+  
 }
 
 VTDPanel::VTDPanel()
 {
   QLabel *dirLabel = new QLabel(tr("VTD Output Directory"));
-  dir = new QLineEdit();
-  defaultDirectory = new QDir(QDir::currentPath());
+  // dir = new QLineEdit();
+  //defaultDirectory = new QDir(QDir::currentPath());
   if(!defaultDirectory->exists(defaultDirectory->filePath("vtd"))) {
     defaultDirectory->mkdir("vtd") ;
   }
   defaultDirectory->cd("vtd");
-  browse = new QPushButton(tr("Browse.."));
+  //browse = new QPushButton(tr("Browse.."));
   dir->setText(defaultDirectory->path());
   connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
   QGridLayout *dirLayout = new QGridLayout;
@@ -1554,7 +1656,7 @@ VTDPanel::VTDPanel()
 
   dataGapBoxes = QList<QDoubleSpinBox*>();
   QLabel *maxWaveNum = new QLabel(tr("Maximum Wave Number"));
-  maxWaveNumBox = new QSpinBox;
+  // maxWaveNumBox = new QSpinBox;
   maxWaveNumBox->setRange(0, 10);
   maxWaveNumBox->setValue(0);
   QHBoxLayout *maxWaveLayout = new QHBoxLayout;
@@ -1782,15 +1884,49 @@ bool VTDPanel::updateConfig()
   return true;
 }
 
-void VTDPanel::setDefaultDirectory(QDir* newDir)
+bool VTDPanel::setDefaultDirectory(QDir* newDir)
 {
   QString subDirectory("vtd");
-  if(!newDir->cd(subDirectory))
-    if(newDir->mkdir(subDirectory)) 
-      newDir->cd(subDirectory);
   if(!newDir->isAbsolute())
     newDir->makeAbsolute();
-  defaultDirectory = newDir;
+  if(newDir->exists(subDirectory))
+    if(newDir->cd(subDirectory)){
+      if(newDir->isReadable()){
+	defaultDirectory = newDir;
+	return true;
+      }
+      else {
+	newDir->cdUp();
+	defaultDirectory = newDir;
+	return false;
+      }
+    }
+    else {
+      defaultDirectory = newDir;
+      return false;
+    }
+  if(newDir->mkdir(subDirectory)) {
+    if(newDir->cd(subDirectory)){
+      if(newDir->isReadable()){
+	defaultDirectory = newDir;
+	return true;
+      }
+      else {
+	newDir->cdUp();
+	defaultDirectory = newDir;
+	return false;
+      }
+    }
+    else {
+      defaultDirectory = newDir;
+      return false;
+    }
+  }
+  else {
+    defaultDirectory = newDir;
+    return false;
+  }
+  
 }
 
 HVVPPanel::HVVPPanel()
@@ -1827,13 +1963,13 @@ bool HVVPPanel::updateConfig()
 PressurePanel::PressurePanel()
 {
   QLabel *dirLabel = new QLabel(tr("Directory Containing Pressure Data"));
-  dir = new QLineEdit();
-  defaultDirectory = new QDir(QDir::currentPath());
+  // dir = new QLineEdit();
+  //defaultDirectory = new QDir(QDir::currentPath());
   if(!defaultDirectory->exists(defaultDirectory->filePath("pressure"))) {
 	  defaultDirectory->mkdir("pressure") ;
   }
   defaultDirectory->cd("pressure");  
-  browse = new QPushButton(tr("Browse.."));
+  //browse = new QPushButton(tr("Browse.."));
   dir->setText(defaultDirectory->path());
   connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
   QGridLayout *dirLayout = new QGridLayout;
@@ -2000,15 +2136,48 @@ bool PressurePanel::updateConfig()
   return true;
 }
 
-void PressurePanel::setDefaultDirectory(QDir* newDir)
+bool PressurePanel::setDefaultDirectory(QDir* newDir)
 {
-	QString subDirectory("pressure");
-	if(!newDir->cd(subDirectory))
-		if(newDir->mkdir(subDirectory)) 
-			newDir->cd(subDirectory);
-	if(!newDir->isAbsolute())
-		newDir->makeAbsolute();
+  QString subDirectory("pressure");
+  if(!newDir->isAbsolute())
+    newDir->makeAbsolute();
+  if(newDir->exists(subDirectory))
+    if(newDir->cd(subDirectory)){
+      if(newDir->isReadable()){
 	defaultDirectory = newDir;
+	return true;
+      }
+      else {
+	newDir->cdUp();
+	defaultDirectory = newDir;
+	return false;
+      }
+    }
+    else {
+      defaultDirectory = newDir;
+      return false;
+    }
+  if(newDir->mkdir(subDirectory)) {
+    if(newDir->cd(subDirectory)){
+      if(newDir->isReadable()){
+	defaultDirectory = newDir;
+	return true;
+      }
+      else {
+	newDir->cdUp();
+	defaultDirectory = newDir;
+	return false;
+      }
+    }
+    else {
+      defaultDirectory = newDir;
+      return false;
+    }
+  }
+  else {
+    defaultDirectory = newDir;
+    return false;
+  }
 }
 
 
@@ -2250,9 +2419,29 @@ QCPanel::QCPanel()
   numCoLayout->addWidget(numCoLabel,1);
   numCoLayout->addWidget(numCoefficients);
 
+  QLabel *vadthrLabel = new QLabel(tr("Minimum number of points for VAD processing"));
+  vadthr = new QSpinBox;
+  vadthr->setRange(0,360);
+  vadthr->setValue(30);
+  QHBoxLayout *vadthrLayout = new QHBoxLayout;
+  vadthrLayout->addSpacing(20);
+  vadthrLayout->addWidget(vadthrLabel);
+  vadthrLayout->addWidget(vadthr);
+
+QLabel *gvadthrLabel = new QLabel(tr("Minimum number of points for GVAD processing"));
+  gvadthr = new QSpinBox;
+  gvadthr->setRange(0,360);
+  gvadthr->setValue(30);
+  QHBoxLayout *gvadthrLayout = new QHBoxLayout;
+  gvadthrLayout->addSpacing(20);
+  gvadthrLayout->addWidget(gvadthrLabel);
+  gvadthrLayout->addWidget(gvadthr);
+
   QVBoxLayout *vadLayout = new QVBoxLayout;
   vadLayout->addLayout(vadLevelsLayout);
   vadLayout->addLayout(numCoLayout);
+  vadLayout->addLayout(vadthrLayout);
+  vadLayout->addLayout(gvadthrLayout);
   vadParameters->setLayout(vadLayout);
   vadParameters->hide();
 
@@ -2284,9 +2473,9 @@ QCPanel::QCPanel()
 
   QFrame *knownParameters = new QFrame;
   QLabel *knownDirLabel = new QLabel(tr("AWIPS Data Directory"));
-  dir = new QLineEdit();
-  defaultDirectory = new QDir(QDir::currentPath());
-  browse = new QPushButton("Browse..");
+  // dir = new QLineEdit();
+  //defaultDirectory = new QDir(QDir::currentPath());
+  //browse = new QPushButton("Browse..");
   dir->setText(defaultDirectory->path());
   connect(browse, SIGNAL(clicked()), this, SLOT(getDirectory()));
   QGridLayout *knownDirLayout = new QGridLayout();
@@ -2337,6 +2526,10 @@ QCPanel::QCPanel()
 	  this, SLOT(valueChanged(const QString&)));
   connect(numCoefficients, SIGNAL(valueChanged(const QString&)),
 	  this, SLOT(valueChanged(const QString&)));
+  connect(vadthr, SIGNAL(valueChanged(const QString&)),
+	  this, SLOT(valueChanged(const QString&)));
+  connect(gvadthr, SIGNAL(valueChanged(const QString&)),
+	  this, SLOT(valueChanged(const QString&)));
 
   connect(user, SIGNAL(toggled(const bool)), 
 	  this, SLOT(valueChanged(const bool)));
@@ -2367,6 +2560,8 @@ QCPanel::~QCPanel()
   delete maxFoldCount;
   delete vadLevels;
   delete numCoefficients;
+  delete vadthr;
+  delete gvadthr;
   delete velocityMinimum;
   delete velocityMaximum;
   delete spectralThreshold;
@@ -2415,6 +2610,10 @@ void QCPanel::updatePanel(const QDomElement panelElement)
       vadLevels->setValue(parameter.toInt()); }
     if(name == "numcoeff") {
       numCoefficients->setValue(parameter.toInt()); }
+    if(name == "vadthr") {
+      vadthr->setValue(parameter.toInt()); }
+    if(name == "gvadthr") {
+      gvadthr->setValue(parameter.toInt()); }
     child = child.nextSiblingElement();
   }
   setPanelChanged(false);
@@ -2463,6 +2662,14 @@ bool QCPanel::updateConfig()
 	if(getFromElement("numcoeff").toInt()!= numCoefficients->value()) {
 	  emit changeDom(element, QString("numcoeff"),
 			 QString().setNum(numCoefficients->value()));
+	}
+	if(getFromElement("vadthr").toInt()!=vadthr->value()) {
+	  emit changeDom(element, QString("vadthr"),
+			 QString().setNum(vadthr->value()));
+	}
+	if(getFromElement("gvadthr").toInt()!=gvadthr->value()) {
+	  emit changeDom(element, QString("gvadthr"),
+			 QString().setNum(gvadthr->value()));
 	}
       }
       if(user->isChecked()) {

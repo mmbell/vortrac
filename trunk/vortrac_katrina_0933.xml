@@ -117,5 +117,7 @@
         <awips_dir>/path/to/awips/data</awips_dir>
         <vadlevels>25</vadlevels>
         <numcoeff>3</numcoeff>
+        <vadthr>30</vadthr>
+        <gvadthr>180</gvadthr>
     </qc>
 </vortrac>

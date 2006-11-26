@@ -57,10 +57,16 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 
   // Get the relative center and expand the grid around it
   // relDist = new float[2];
+  
+  //Message::toScreen("vortexLat = "+QString().setNum(*vortexLat)+" vortexLon = "+QString().setNum(*vortexLon));
+
+  //Message::toScreen("radarLat = "+QString().setNum(*radarData->getRadarLat())+" radarLon = "+QString().setNum(*radarData->getRadarLon()));
 
   relDist = getCartesianPoint(radarData->getRadarLat(), 
 			     radarData->getRadarLon(),
 			     vortexLat, vortexLon);
+  //Message::toScreen("Difference in x = "+QString().setNum(relDist[0])+" Difference in y = "+QString().setNum(relDist[1]));
+ 
   /*
     The old way of doing things....
 
@@ -86,6 +92,8 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   xmax = nearbyintf(relDist[0] + (iDim/2)*iGridsp);
   ymin = nearbyintf(relDist[1] - (jDim/2)*jGridsp);
   ymax = nearbyintf(relDist[1] + (jDim/2)*jGridsp);
+  
+  //Message::toScreen("Xmin = "+QString().setNum(xmin)+" Xmax = "+QString().setNum(xmax)+" Ymin = "+QString().setNum(ymin)+" Ymax = "+QString().setNum(ymax));
 
   // Adjust the cappi so that it doesn't waste space on areas without velocity data
   if (xmin < -180) {
@@ -109,6 +117,8 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   
   latReference = *radarData->getRadarLat();
   lonReference = *radarData->getRadarLon();
+
+  // Message::toScreen("Xmin = "+QString().setNum(xmin)+" Xmax = "+QString().setNum(xmax)+" Ymin = "+QString().setNum(ymin)+" Ymax = "+QString().setNum(ymax));
   
   /* Changed to be hardcoded absolute minimum zmin at 1 km for array purposes M. Bell
   float distance = sqrt(relDist[0] * relDist[0] + relDist[1] * relDist[1]);

@@ -68,7 +68,7 @@ void AnalysisThread::setVortexList(VortexList *archivePtr)
 void AnalysisThread::setSimplexList(SimplexList *archivePtr)
 {
 	
-	simplexList = archivePtr;
+  simplexList = archivePtr;
 	
 }
 
@@ -143,6 +143,9 @@ void AnalysisThread::run()
 		
 		// Read in the radar data
 		radarVolume->readVolume();
+
+		//delete radarVolume;
+		//Message::toScreen("Sucessfully Deleted Radar Volume");
 
 		mutex.unlock();
 		if(abort)
@@ -258,19 +261,26 @@ void AnalysisThread::run()
 		
 		// Check to see if the center is beyond 174 km
 		// If so, tell the user to wait!
-		float relDist = GriddedData::getCartesianDistance(radarVolume->getRadarLat(), 
-											  radarVolume->getRadarLon(),
-											  &vortexLat, &vortexLon);
+		float relDist = GriddedData::getCartesianDistance(
+				             radarVolume->getRadarLat(), 
+					     radarVolume->getRadarLon(),
+					     &vortexLat, &vortexLon);
 		bool beyondRadar = true;
+		bool closeToEdge = false;
 		for(int i = 0; i < radarVolume->getNumSweeps(); i++) {
 		  if(relDist < radarVolume->getSweep(i)->getUnambig_range())
 		    beyondRadar = false;
+		  if((relDist > radarVolume->getSweep(i)->getUnambig_range()-10)&&(relDist < radarVolume->getSweep(i)->getUnambig_range()+5))
+		    closeToEdge = true;
 		}
 		if (beyondRadar) {
 		  // Too far away for Doppler, need to send a signal
 		  emit log(Message("Estimated center is out of Doppler range!"));
 		}
-		
+		if (closeToEdge) {
+		  //Message::toScreen("This volume is close to the edge");
+		}
+
 		// Create data instance to hold the analysis results
 		VortexData *vortexData = new VortexData(); 
 		vortexData->setTime(radarVolume->getDateTime());
@@ -305,13 +315,64 @@ void AnalysisThread::run()
 		}
 		else
 		  emit log(Message("RadarVolume is Dealiased"));
+		/*
+		
+		// Using this for running FORTRAN version
+		QString name("fchar0007.dat");
+		Message::toScreen("Writing Vortrac Input "+name);
+		radarVolume->writeToFile(name);
+		Message::toScreen("Wrote Vortrac Input "+name);
+		*/
 
 		/*
-		  // Using this for running FORTRAN version
-		  QString name("fkat1044.dat");
-		  Message::toScreen("Writing Vortrac Input "+name);
-		  radarVolume->writeToFile(name);
-		  Message::toScreen("Wrote Vortrac Input "+name);
+		// Testing HVVP before Cappi to save time 
+		// only good for Charley 1824
+		
+		float rt1 = 167.928;
+		float cca1 = 177.204;
+		float rmw1 = 11;
+	       
+		// Testing HVVP before Cappi to save time 
+		// only good for Charley 140007
+		
+		float rt1 = 87.7712;
+		float cca1 = 60.1703;
+		float rmw1 = 16.667;
+		
+		
+		// Testing HVVP before Cappi to save time 
+		// only good for Katrina 0933
+		
+		float rt1 = 164.892;
+		float cca1 = 172.037;
+		float rmw1 = 31;
+		
+
+		// Testing HVVP before Cappi to save time 
+		// only good for Katrina 1044
+		
+		float rt1 = 131.505;
+		float cca1 = 168.458;
+		float rmw1 = 25;
+		
+
+		// Testing HVVP before Cappi to save time 
+		// only good for Analytic Charley
+		
+		float rt1 = 70.60;
+		float cca1 = 45.19;
+		float rmw1 = 7;
+		
+		Message::toScreen("Hvvp Parameters: Distance to Radar "+QString().setNum(rt1)+" angel to vortex center in degrees ccw from north "+QString().setNum(cca1)+" rmw "+QString().setNum(rmw1));
+
+		Hvvp *envWindFinder1 = new Hvvp;
+		envWindFinder1->setRadarData(radarVolume,rt1, cca1, rmw1);
+		envWindFinder1->findHVVPWinds();
+		float missingLink1 = envWindFinder1->getAvAcrossBeamWinds();
+		Message::toScreen("Hvvp gives "+QString().setNum(missingLink1));
+		delete envWindFinder1;
+		
+		//return;
 		*/
  
 		mutex.unlock();
@@ -362,7 +423,7 @@ void AnalysisThread::run()
 		cappiTime.setNum((float)analysisTime.elapsed() / 60000);
 		cappiTime.append(" minutes elapsed");
 		emit log(Message(cappiTime));
-				 
+			 
 		
 		// Set the initial guess in the data object as a temporary center
 		vortexData->setLat(0,vortexLat);
@@ -386,9 +447,8 @@ void AnalysisThread::run()
 		simplexTime.setNum((float)analysisTime.elapsed() / 60000);
 		simplexTime.append(" minutes elapsed");
 		emit log(Message(simplexTime));
-		//Message::toScreen("Where....");
+		//Message::toScreen("Where....");		
 
-		
 		// Get environmental wind
 		/*
 		* rt: Range from radar to circulation center (km).
@@ -450,7 +510,33 @@ void AnalysisThread::run()
 				 
 		// Should have all relevant variables now
 		// Update timeline and output
-		vortexList->append(*vortexData);		
+
+
+		// Check to see if the vortex data is valid
+		// Threshold on std deviation of parameters in
+		// conjuction with distance or something
+
+		/*
+		  bool dataIsCrap = false;
+		  Message::toScreen("Check to See if beyond Radar!!!!!!!");
+		  if(beyondRadar){
+		  dataIsCrap = true;
+		  Message::toScreen("Data is crap ... not using it");
+		  }
+		  
+		  if(closeToEdge) {
+		  // Collect data about close to edge volumes for
+		  // Micheal to look at
+		  Message::toScreen("Collecting data for Micheal");
+		  
+	     
+		  }
+		
+		if(!dataIsCrap){
+		  vortexList->append(*vortexData);		
+		}
+		*/
+		vortexList->append(*vortexData);	
 		vortexList->save();
 		
 		// Delete CAPPI, RadarData and HVVP objects
@@ -460,7 +546,8 @@ void AnalysisThread::run()
 		
 		mutex.lock(); // Added this one....
 
-		// delete vortexData;
+		vortexData = NULL;
+		delete vortexData;
 		
 		//Message::toScreen("Deleted vortex data.... ???");
 		

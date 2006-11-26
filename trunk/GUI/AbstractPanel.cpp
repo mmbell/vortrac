@@ -238,16 +238,21 @@ void AbstractPanel::radarChanged(const QString& text)
   }
 }
 
-void AbstractPanel::setDefaultDirectory(QDir* newDir)
+bool AbstractPanel::setDefaultDirectory(QDir* newDir)
 {
-  if(!newDir->exists()) {
-    newDir->mkpath(newDir->path());
-  }
-  if(!newDir->isAbsolute())
-    newDir->makeAbsolute();
-  
-  defaultDirectory = newDir;
-   
+ if(!newDir->isAbsolute())
+   newDir->makeAbsolute();
+ if(newDir->isReadable()){
+   defaultDirectory = NULL;
+   defaultDirectory = newDir;
+   return true;
+ }
+ else {
+   newDir->cdUp();
+   defaultDirectory = NULL;
+   defaultDirectory = newDir;
+   return false;
+ }
 }
 
 QString AbstractPanel::getFromElement(const QString& childElemName){

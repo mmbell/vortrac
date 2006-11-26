@@ -104,7 +104,7 @@ class CappiPanel:public AbstractPanel
   ~CappiPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
-  void setDefaultDirectory(QDir* newDir);
+  bool setDefaultDirectory(QDir* newDir);
 
  private:
   /*
@@ -140,7 +140,7 @@ class CenterPanel:public AbstractPanel
   ~CenterPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
-  void setDefaultDirectory(QDir* newDir);
+  bool setDefaultDirectory(QDir* newDir);
 
  private:
   /*
@@ -184,7 +184,7 @@ class ChooseCenterPanel:public AbstractPanel
   ~ChooseCenterPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
-  void setDefaultDirectory(QDir* newDir);
+  bool setDefaultDirectory(QDir* newDir);
 
  private:
   /*
@@ -259,7 +259,7 @@ class VTDPanel:public AbstractPanel
   ~VTDPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
-  void setDefaultDirectory(QDir* newDir);
+  bool setDefaultDirectory(QDir* newDir);
  
  private:
   /*
@@ -305,7 +305,7 @@ class PressurePanel:public AbstractPanel
   ~PressurePanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
-  void setDefaultDirectory(QDir* newDir);
+  bool setDefaultDirectory(QDir* newDir);
   
  private:
   /*
@@ -385,6 +385,7 @@ class QCPanel:public AbstractPanel
    */
 
   QSpinBox *bbSegmentSize, *maxFoldCount, *vadLevels, *numCoefficients;
+  QSpinBox *vadthr, *gvadthr;
  
   /*
    * bbSegmentSize handles the number of gates that should be used for 

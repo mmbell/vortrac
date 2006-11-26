@@ -2,16 +2,16 @@
 <vortrac xmnls="http://www.eol.ucar.edu/ns/vortrac" >
     <vortex>
         <name>Analytic Storm</name>
-        <lat>.65</lat>
-        <lon>.65</lon>
+        <lat>.9</lat>
+        <lon>.9</lon>
         <direction>35</direction>
         <speed>10</speed>
         <dir>workingDirs/</dir>
     </vortex>
     <radar>
         <name>Plea</name>
-        <lat>0.45</lat>
-        <lon>0.45</lon>
+        <lat>0.6</lat>
+        <lon>0.6</lon>
         <alt>0.00</alt>
         <dir>/scr/science40/mauger/Working/trunk/vortrac_defaultAnalyticTC.xml</dir>
         <format>MODEL</format>
@@ -85,7 +85,8 @@
         <maxdatagap wavenum="0" >180</maxdatagap>
         <maxdatagap wavenum="1" >120</maxdatagap>
     </vtd>
-    <hvvp/>
+    <hvvp>
+    </hvvp>
     <pressure>
         <dir>/scr/science40/mauger/Working/trunk/workingDirs/pressure</dir>
         <format>AWIPS</format>
@@ -119,5 +120,7 @@
         <gvad>true</gvad>
         <vadlevels>6</vadlevels>
         <numcoeff>3</numcoeff>
+        <vadthr>30</vadthr>
+        <gvadthr>180</gvadthr>
     </qc>
 </vortrac>

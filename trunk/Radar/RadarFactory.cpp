@@ -60,7 +60,9 @@ RadarFactory::RadarFactory(Configuration* radarConfig, QObject *parent)
 
 RadarFactory::~RadarFactory()
 {
-
+  mainConfig = NULL;
+  delete mainConfig;
+  delete radarQueue;
 }
 
 RadarData* RadarFactory::getUnprocessedData()

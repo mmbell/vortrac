@@ -39,6 +39,18 @@ VortexThread::VortexThread(QObject *parent)
 	  rhoBar[15] = 1.8;
 	  	  
 	  abort = false;
+
+	  // Claim and empty all the memory set aside
+	  gridData = NULL;
+	  vortexData = NULL;
+	  pressureList = NULL;
+	  configData = NULL;
+	  refLat = NULL;
+	  refLon = NULL;
+	  dataGaps = NULL;
+	  //vtd = NULL;       // Don't need these two completely handled 
+	  //vtdCoeffs = NULL; // in loop
+	  pressureDeficit = NULL;
 }
 
 VortexThread::~VortexThread()
@@ -47,7 +59,23 @@ VortexThread::~VortexThread()
   abort = true;
   waitForData.wakeOne();
   mutex.unlock();
+
+  gridData = NULL;
+  vortexData = NULL;
+  pressureList = NULL;
+  configData = NULL;
+  refLat = NULL;
+  refLon = NULL;
+  dataGaps = NULL;
+  // vtd = NULL;      // Don't need these two completely handled in 
+  // vtdCoeffs = NULL;// loop
+  pressureDeficit = NULL;
   
+  delete gridData;
+  delete vortexData;
+  delete pressureList;
+  delete configData;
+
   delete [] dataGaps;
   delete [] refLat;
   delete [] refLon;

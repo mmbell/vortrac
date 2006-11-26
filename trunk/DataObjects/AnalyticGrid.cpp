@@ -44,9 +44,13 @@ AnalyticGrid::AnalyticGrid()
 AnalyticGrid::~AnalyticGrid()
 {
   delete [] relDist;
+  vLat = NULL;
   delete vLat;
+  vLon = NULL;
   delete vLon;
+  rLat = NULL;
   delete rLat;
+  rLon = NULL;
   delete rLon;
 }
 
@@ -60,10 +64,10 @@ bool AnalyticGrid::getConfigInfo(Configuration* mainConfig,
   outFileName = filePath + "/" + fileName;
 
   // Get the dimensions from the configuration
-  iDim = mainConfig->getParam(cappi, "xdim").toFloat()*2;
+  iDim = mainConfig->getParam(cappi, "xdim").toFloat();
   // iDim: Number of data points running on the i-axis
 
-  jDim = mainConfig->getParam(cappi, "ydim").toFloat()*2;
+  jDim = mainConfig->getParam(cappi, "ydim").toFloat();
   // jDim: Number of data points running on the j-axis
 
   kDim = mainConfig->getParam(cappi, "zdim").toFloat();
@@ -75,12 +79,20 @@ bool AnalyticGrid::getConfigInfo(Configuration* mainConfig,
   jGridsp = mainConfig->getParam(cappi, "ygridsp").toFloat();
   kGridsp = mainConfig->getParam(cappi, "zgridsp").toFloat();
 
+  // Reset Size of Data Grid
+
   // Determine what type of analytic storm is desired
   QString sourceString = analyticConfig->getRoot().firstChildElement("source").text();
   
   QDomElement radar = analyticConfig->getConfig("analytic_radar");
   
   float* radLocation = getCartesianPoint(rLat,rLon,vLat,vLon);
+
+  //Message::toScreen("vortexLat = "+QString().setNum(*vLat)+" vortexLon = "+QString().setNum(*vLon));
+  
+  //Message::toScreen("radarLat = "+QString().setNum(*rLat)+" radarLon = "+QString().setNum(*rLon));
+  
+  //Message::toScreen("Difference in x = "+QString().setNum(radLocation[0])+" Difference in y = "+QString().setNum(radLocation[1]));
 
   float rXDistance =  0;
   float rYDistance =  0;
@@ -97,8 +109,10 @@ bool AnalyticGrid::getConfigInfo(Configuration* mainConfig,
   ymin = nearbyintf(radLocation[1] - (jDim/2)*jGridsp);
   ymax = nearbyintf(radLocation[1] + (jDim/2)*jGridsp);
 
-  setCartesianReferencePoint(-1*xmin,-1*ymin,0);
-  
+  //Message::toScreen("Xmin = "+QString().setNum(xmin)+" Xmax = "+QString().setNum(xmax)+" Ymin = "+QString().setNum(ymin)+" Ymax = "+QString().setNum(ymax));
+ 
+  setCartesianReferencePoint(0,0,0);
+    
   centX = iDim/2*iGridsp+xmin;  // x coordinate of storm center on grid
   centY = jDim/2*jGridsp+ymin;  // y coordinate of storm center on grid
   
@@ -268,8 +282,11 @@ void AnalyticGrid::gridWindFieldData()
 
   //QTextStream out(stdout);
   for(int k = 0; k < int(kDim); k++) {
+    //Message::toScreen("K = "+QString().setNum(k));
     for(int j = int(jDim)-1; j >= 0; j--) {
+      //Message::toScreen("J = "+QString().setNum(j));
       for(int i = int(iDim)-1; i >= 0; i--) {
+	//Message::toScreen("I = "+QString().setNum(i));
 	for(int a = 0; a < 3; a++) {
 	  // zero out all the points
 	  dataGrid[a][i][j][k] = 0;

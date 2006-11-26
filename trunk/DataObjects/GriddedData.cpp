@@ -1066,3 +1066,128 @@ bool GriddedData::test()
   Message::toScreen("Finished Checking"); 
   return true;
 }
+
+
+
+int GriddedData::getSphericalRangeLengthTest(float azimuth, float elevation)
+{
+   float te1;
+   float te2;
+   float ta1;
+   float ta2;
+   if((elevation-sphericalElevationSpacing/2)<=0)
+     te1 = 0;
+   else 
+     te1 = tan((elevation-sphericalElevationSpacing/2)*deg2rad);
+   te2 = tan((elevation+sphericalElevationSpacing/2)*deg2rad);
+   if((azimuth - sphericalAzimuthSpacing/2)<0)
+     ta1 = tan((azimuth-sphericalAzimuthSpacing/2+360)*deg2rad);
+   else 
+     ta1 = tan((azimuth-sphericalAzimuthSpacing/2)*deg2rad);
+   if((azimuth + sphericalAzimuthSpacing/2)>=360)
+     ta2 = tan((azimuth+sphericalAzimuthSpacing/2-360)*deg2rad);
+   else 
+     ta2 = tan((azimuth+sphericalAzimuthSpacing/2)*deg2rad);
+   
+   int count = 0;
+  
+   for (int k = 0; k < kDim; k++) { 
+     float jDistMax = fabs(k/te1);
+     float jMin = refPointJ-jDistMax;
+     float jMax = jDistMax+refPointJ;
+     if(jMin < 0)
+       jMin = 0;
+     //if(jMin >= jMax)
+     Message::toScreen("Terrible JLimits for k = "+QString().setNum(k)+" jMin = "+QString().setNum(jMin)+" jMax = "+QString().setNum(jMax));
+     for(int j = int(jMin)+1; (j < jMax)&&(j < jDim) ; j ++) {
+       float iDistMax = sqrt((k*k)/(te1*te1)-j*j);
+       float iPosMax = iDistMax+refPointI;
+       float iNegMax = refPointI-iDistMax;
+       float iDistMin =  sqrt((k*k)/(te2*te2)-j*j);
+       float iPosMin = iDistMin+refPointI;
+       float iNegMin = refPointI-iDistMin;
+       if(j == 0)
+	 Message::toScreen("In j loop jMin = "+QString().setNum(jMin));
+       if(iNegMin <= iNegMax)
+	 Message::toScreen("Terrible Errors in INeg");
+       if(iPosMin >= iPosMax)
+	 Message::toScreen("Terrible Errors in IPos");
+       /*
+       for(int i = int(; i < iDim; i ++) {
+	
+	float rp = sqrt(iGridsp*iGridsp*(i-refPointI)*(i-refPointI)+jGridsp*jGridsp*(j-refPointJ)*(j-refPointJ));
+	float pAzimuth = fixAngle(atan2((j-refPointJ),(i-refPointI)))*rad2deg;
+	float pElevation = fixAngle(atan2((k-refPointK),rp))*rad2deg;
+	if((pAzimuth <= (azimuth+sphericalAzimuthSpacing/2.)) 
+	   && (pAzimuth > (azimuth-sphericalAzimuthSpacing/2.))) {
+	  
+	  // QString test("pElevation " +QString().setNum( pElevation )+ " elevation " +QString().setNum( elevation )+ "sphericalElevationSpacing " +QString().setNum( sphericalElevationSpacing )+ "\n");
+	  //Message::toScreen(test);
+	  if((pElevation <=(elevation+sphericalElevationSpacing/2.))
+	     && (pElevation > (elevation-sphericalElevationSpacing/2.))) {
+	    count++;
+	  }
+	}
+      }
+       */    
+    }
+  }
+  return 0;
+}
+
+float* GriddedData::getSphericalRangeDataTest(QString& fieldName, 
+					      float azimuth, 
+					      float elevation)
+{    
+  int numPoints = getSphericalRangeLengthTest(azimuth, elevation);
+  int field = getFieldIndex(fieldName);
+  float *values = new float[numPoints];
+
+  int count = 0;
+  for(int i = 0; i < iDim; i ++) {
+    for(int j = 0; j < jDim; j++) {
+      for (int k = 0; k < kDim; k++) {
+	float rp = sqrt(iGridsp*iGridsp*(i-refPointI)*(i-refPointI)+jGridsp*jGridsp*(j-refPointJ)*(j-refPointJ));
+	float pAzimuth = fixAngle(atan2((j-refPointJ),(i-refPointI)))*rad2deg;
+	float pElevation = fixAngle(atan2((k-refPointK),rp))*rad2deg;
+	if((pAzimuth <= (azimuth+sphericalAzimuthSpacing/2.)) 
+	   && (pAzimuth > (azimuth-sphericalAzimuthSpacing/2.))) {
+	  if((pElevation <=(elevation+sphericalElevationSpacing/2.)) 
+	     && (pElevation > (elevation-sphericalElevationSpacing/2.))) {
+	    values[count] = dataGrid[field][i][j][k];
+	    count++;
+	  }
+	}
+      }							    
+    }
+  }
+  return values;
+}
+
+float* GriddedData::getSphericalRangePositionTest(float azimuth, 
+						  float elevation)
+{
+  int numPoints = getSphericalRangeLengthTest(azimuth, elevation);
+  
+  float *positions = new float[numPoints];
+
+  int count = 0;
+  for(int i = 0; i < iDim; i ++) {
+    for(int j = 0; j < jDim; j++) {
+      for (int k = 0; k < kDim; k++) {
+	float rp = sqrt(iGridsp*iGridsp*(i-refPointI)*(i-refPointI)+jGridsp*jGridsp*(j-refPointJ)*(j-refPointJ));
+	float pAzimuth = fixAngle(atan2((j-refPointJ),(i-refPointI)))*rad2deg;
+	float pElevation = fixAngle(atan2((k-refPointK),rp))*rad2deg;
+	if((pAzimuth <= (azimuth+sphericalAzimuthSpacing/2.)) 
+	   && (pAzimuth > (azimuth-sphericalAzimuthSpacing/2.))) {
+	  if((pElevation <=(elevation+sphericalElevationSpacing/2.)) 
+	     && (pElevation > (elevation-sphericalElevationSpacing/2.))) {
+	    positions[count] = sqrt(iGridsp*iGridsp*(i-refPointI)*(i-refPointI)+jGridsp*jGridsp*(j-refPointJ)*(j-refPointJ)+kGridsp*kGridsp*(k-refPointK)*(k-refPointK));
+	    count++;
+	  }
+	}
+      }							    
+    }
+  }
+  return positions;
+}

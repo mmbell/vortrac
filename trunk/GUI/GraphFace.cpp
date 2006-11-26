@@ -53,12 +53,13 @@ GraphFace::GraphFace(QWidget *parent, const QString& title)
   z2 = 0.95;
   
   // Initialize empty lists since PollThread has not been created yet
-  VortexDataList = new VortexList;
-  dropList = new VortexList;
+  VortexDataList = NULL;
+  dropList = NULL;
   setColors();
   QDateTime first();
 
   imageAltered = true;
+  image = new QImage(graph_width+LEFT_MARGIN_WIDTH+RIGHT_MARGIN_WIDTH,graph_height+TOP_MARGIN_HEIGHT+BOTTOM_MARGIN_HEIGHT,QImage::Format_ARGB32_Premultiplied);
 
   workingDirectory = QDir(QDir::currentPath());
 
@@ -71,6 +72,7 @@ GraphFace::GraphFace(QWidget *parent, const QString& title)
     {
       i++;
       newName = autoImageName+QString().setNum(i);
+      imageFile = NULL;
       imageFile = new QFile(workingDirectory.filePath(newName+".png"));
     }
 
@@ -102,19 +104,50 @@ void GraphFace::paintEvent(QPaintEvent *event)
   // and any time update is called
 
 {
-
-  if (imageAltered) {
-    imageAltered = false;
-    updateImage();
-  }
-  
-  QImage displayImage(*image);
   
   QPainter *painter = new QPainter(this);
-  painter->drawImage(QRect(QPoint(0,0),size()), displayImage);
 
-  if (painter->isActive())
+  //if (imageAltered) {
+    imageAltered = false;
+    updateImage(painter);
+
+    if (painter->isActive())
+      painter->end();
+    
+    delete painter;
+
+    // Now update the image too...
+    
+    QPainter* imagePainter = new QPainter(image);
+    imagePainter->setBackgroundMode(Qt::TransparentMode);
+    imagePainter->fillRect(QRectF(QPointF(0,0),image->size()),
+			   imagePainter->background());
+    updateImage(imagePainter);
+
+    if (imagePainter->isActive())
+      imagePainter->end();
+       
+    delete imagePainter;
+    /*
+    // This should go back in once is stops turning things white...
+    }
+    else {
+    painter->setBackgroundMode(Qt::TransparentMode);
+    //painter->setRenderHint(QPainter::Antialiasing);
+    painter->drawImage(QPoint(0,0), *image);
+    resize(this->size())
+    
+    Message::toScreen("Repaint Event");
+    
+    if (painter->isActive())
     painter->end();
+    
+    delete painter;
+    }
+    */
+
+  // QPainter *painter = new QPainter(this);
+  //  painter->drawImage(QRect(QPoint(0,0),size()), displayImage);
   
   event->accept();
 
@@ -161,7 +194,7 @@ bool GraphFace::event(QEvent *event)
       }
     }
   }  
-  return QWidget::event(event);
+  return QWidget::event(event); // Something wrong with this guy...
 }
 
 
@@ -268,7 +301,7 @@ void GraphFace::newInfo(VortexList* gList)
     if (timeRange == 0)
       timeRange = 60;
   }
-    
+  VortexDataList = NULL;
   VortexDataList = gList;
   imageAltered = true;
   emit update(); 
@@ -290,6 +323,7 @@ void GraphFace::newDropSonde(VortexList* dropPointer)
   if (first.secsTo(new_drop.getTime())> timeRange)
     timeRange = first.secsTo(new_drop.getTime());
   
+  dropList = NULL;
   dropList = dropPointer;  
   //connects member list pointer with global location of list
   
@@ -466,7 +500,7 @@ void GraphFace::makeKey()
  void GraphFace::updateTitle(const QString& new_Label)
 {
   graphTitle = new_Label;
-  updateImage();
+  imageAltered = true;
   update();
 }
 
@@ -511,6 +545,7 @@ void GraphFace::setWorkingDirectory(QDir &newDir)
 
   //workingDirectory = newDir;
   autoImageName = newImageName;
+  delete newImageFile;
   
   Message::toScreen("Made it");
 }
@@ -688,6 +723,9 @@ float GraphFace::getSTDMultiplier(VortexData p, float z)
 
 int GraphFace::pointAt(const QPointF & position, bool& ONDropSonde)
 {
+  if((dropList == NULL)||(VortexDataList == NULL))
+    return -1;
+  
   ONDropSonde = false;
   QDateTime tmin = unScaleTime(position.x()-5);
   QDateTime tmax = unScaleTime(position.x()+5);
@@ -756,7 +794,7 @@ void GraphFace::setColors()
 
 
 //--------------------------------UPDATEIMAGE--------------------------------
-void GraphFace::updateImage()
+QPainter* GraphFace::updateImage(QPainter* painter)
 
   // QPainter object does the painting, 
   // all painting is done relative to the position of QPainter
@@ -764,11 +802,10 @@ void GraphFace::updateImage()
   // to the origin of the graphable area
 
 {
-  QImage *imageTemp = new QImage(graph_width+LEFT_MARGIN_WIDTH+RIGHT_MARGIN_WIDTH, 
-	      graph_height+TOP_MARGIN_HEIGHT+BOTTOM_MARGIN_HEIGHT,
-	      QImage::Format_ARGB32_Premultiplied);
+  //  QImage *imageTemp = new QImage(graph_width+LEFT_MARGIN_WIDTH+RIGHT_MARGIN_WIDTH,graph_height+TOP_MARGIN_HEIGHT+BOTTOM_MARGIN_HEIGHT,QImage::Format_ARGB32_Premultiplied);
 
-  QPainter* painter = new QPainter(imageTemp);
+  //QPainter* painter = new QPainter(imageTemp);
+  //QPainter* painter = new QPainter(imageTemp);
   painter->setRenderHint(QPainter::Antialiasing);
   painter->setBackgroundMode(Qt::TransparentMode);
   //this option makes lines appear smoother;
@@ -793,7 +830,7 @@ void GraphFace::updateImage()
 
   //Draw in all Titles and Axis Lables - Main Titles/Lables - 
 
-  painter->save();
+  //painter->save();
   QFont titleFont("Times", 12, QFont::Bold);
   painter->setFont(titleFont);
   painter->drawText(QRectF(0,(-1*(TOP_MARGIN_HEIGHT+graph_height)),
@@ -824,7 +861,10 @@ void GraphFace::updateImage()
 		    tr("Time (Day-Hours:Minutes)"),
 		    QTextOption(Qt::AlignCenter));
   painter->restore();
-  painter->restore();
+  //  painter->restore();
+
+  QFont tickFont("Times", 10);
+  painter->setFont(tickFont);
 
   //--------Pressure Axis-----------------------------------------------------
       
@@ -968,8 +1008,9 @@ void GraphFace::updateImage()
 
   //-------------------------------Draw Pressure Points--------------
 
-  if(!VortexDataList->isEmpty()) {           // Process is used provided data 
-                                             // points are already available
+  if(!(VortexDataList == NULL) 
+     &&!VortexDataList->isEmpty()) {       // Process is used provided data 
+                                           // points are already available
     painter->setPen(pressurePen);
     painter->setBrush(pressureBrush);
     for (int i=0;i<VortexDataList->size();i++) {
@@ -1218,7 +1259,8 @@ void GraphFace::updateImage()
     }
   //-----------------------------------Draw Drops-------------------------------
   
-  if(!dropList->isEmpty())                // Goes through the same process 
+  if(!(dropList == NULL)
+     &&!dropList->isEmpty())              // Goes through the same process 
                                           // of drawing drops but with
     {                                     // a different member box to draw 
                                           // an ellipse in 
@@ -1233,15 +1275,19 @@ void GraphFace::updateImage()
 	}
       }
     }
-  if (painter->isActive())
-    painter->end();
-  //QImage* holder = image;
-  image = imageTemp;
+  //if (painter->isActive())
+  //  painter->end();
   //delete painter;
-  //delete holder;
+  //image = NULL;
+  
+  //image = imageTemp;
+
   // Memory leak here?
+  //imageTemp = NULL;
   //delete imageTemp;
   //autoSave();
+
+  return painter;
 }
 
 
@@ -1743,8 +1789,11 @@ void GraphFace::altUpdateImage()
     }
   if (painter->isActive())
     painter->end();
+  image = NULL;
   image = temp;
   //autoSave();
+  delete painter;
+  
 }
 
 void GraphFace::setImageFileName(QString newName)

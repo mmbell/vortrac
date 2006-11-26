@@ -171,6 +171,159 @@ bool Matrix::lls(const int &numCoeff,const int &numData,
   return true;
 } 
 
+bool Matrix::oldlls(const int &numCoeff,const int &numData, 
+		  float** &x, float* &y, 
+		  float &stDeviation, float* &coeff, float* &stError)
+{
+  /*
+   * x is a matrix with numCoeff rows, and numData columns,
+   * y is a matrix with numData rows,
+   * coeff is the product containing the coefficient values (numCoeff rows)
+   * stError is a product containing the estimated error for each
+   *  coefficent in coeff, (numCoeff rows)
+   * stDeviation is the estimated standard deviation of the regression
+   *
+   */
+
+  if(numData < numCoeff) {
+    //emit log(Message("Least Squares: Not Enough Data"));
+    return false;
+  }
+  // We need at least one more data point than coefficient in order to
+  // estimate the standard deviation of the fit.
+  
+  float** A = new float*[numCoeff];
+  float** AA = new float*[numCoeff];
+  float* B = new float[numCoeff];
+  float** BB = new float*[numCoeff];
+  for(int row = 0; row < numCoeff; row++) {
+    A[row] = new float[numCoeff];
+    AA[row] = new float[numCoeff];
+    BB[row] = new float[1];
+    for(int col = 0; col < numCoeff; col++) {
+      A[row][col] = 0;
+      AA[row][col] = 0;
+      BB[row][0] = 0;
+    }
+    B[row] = 0;
+    coeff[row] = 0;
+  }
+
+  // accumulate the covariances of all the data into the regression
+  // matrices
+
+  for(int i = 0; i < numData; i++) {
+    for(int row = 0; row < numCoeff; row++) {
+      for(int col = 0; col < numCoeff; col++) {
+	A[row][col]+=(x[row][i]*x[col][i]);
+	AA[row][col]+=(x[row][i]*x[col][i]);
+      }
+      B[row] +=(x[row][i]*y[i]);
+      BB[row][0] +=(x[row][i]*y[i]);
+    }
+  }
+
+  
+  float** Ainv = new float*[numCoeff];
+  for(int p = 0; p < numCoeff; p++) {
+    Ainv[p] = new float[numCoeff];
+    for(int pp = 0; pp < numCoeff; pp++)
+      Ainv[p][pp] = 0;
+  }
+
+  //The C++ Recipes Code Works so All this can be done away with
+
+  
+  // find the inverse of A
+  if(!matrixInverse(A, numCoeff, numCoeff, Ainv)) {
+    Message::toScreen("lls: matrix inverse failed");
+    return false;
+  }
+  
+  // use the inverse of A to find coeff
+  if(!matrixMultiply(Ainv, numCoeff, numCoeff, B, numCoeff, coeff, numCoeff)) {
+    Message::toScreen("lls: Matrix Multiply Failed");
+    return false;
+  }
+  
+
+
+  //Message::toScreen("Printing AA");
+  //printMatrix(AA, numCoeff, numCoeff);
+
+  //Message::toScreen("Printing BB");
+  //printMatrix(BB, numCoeff, 1);
+
+  /*
+  if(!gaussJordan(AA,BB, numCoeff, 1)) {
+    // emit log(Message("Least Squares Fit Failed"));
+    return false;
+  }
+  */
+
+  //printMatrix(BB, numCoeff, 1);
+  
+  /* 
+  Message::toScreen("CHECK: coeff[0] = "+QString().setNum(coeff[0])+" coeff[1] = "
+		 +QString().setNum(coeff[1])+" coeff[2] = "
+		 +QString().setNum(coeff[2]));
+  Message::toScreen("     : BB[0][0] = "+QString().setNum(BB[0][0])+" BB[1][0] = "
+		 +QString().setNum(BB[1][0])+" BB[2][0] = "
+		 +QString().setNum(BB[2][0]));
+  */
+
+  /*
+
+  for(int i = 0; i < numCoeff; i++) {
+    coeff[i] = BB[i][0];
+    for(int j = 0; j < numCoeff; j++) {
+      Ainv[i][j] = AA[i][j];
+    }
+  }
+  */
+  // calculate the stDeviation and stError
+  float sum = 0;
+  for(int i = 0; i < numData; i++) {
+    float regValue = 0;
+    for(int j = 0; j < numCoeff; j++) {
+      regValue += coeff[j]*x[j][i]; 
+    }
+    sum +=((y[i]-regValue)*(y[i]-regValue));
+  }
+
+  
+  if(numData!=numCoeff)
+    stDeviation = sqrt(sum/float(numData-numCoeff));
+  else
+    stDeviation = sqrt(sum);
+
+  // Added this to avoid getting bad numbers, don't know if it is statistically
+  // correct, made note of it and will check later - LM (Aug 13)
+  
+  // calculate the standard error for the coefficients
+
+  for(int i = 0; i < numCoeff; i++) {
+    stError[i] = stDeviation*sqrt(fabs(Ainv[i][i]));
+  }
+
+  // Clean up
+   for(int row = 0; row < numCoeff; row++) {
+	   delete[] A[row];
+	   delete[] AA[row];
+	   delete[] BB[row];
+   }
+  delete[] A;
+  delete[] AA;
+  delete[] B;
+  delete[] BB;
+
+  for(int p = 0; p < numCoeff; p++) 
+	  delete[] Ainv[p];
+  delete[] Ainv;
+  
+  return true;
+} 
+
 bool Matrix::matrixInverse(float **A, int M, int N, float** &Ainv)
 {
   if(M!=N) {

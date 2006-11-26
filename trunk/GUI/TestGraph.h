@@ -18,9 +18,10 @@
 
 class TestGraph:public QWidget
 {
-Q_OBJECT
-public:
+  Q_OBJECT
+    public:
   TestGraph(QWidget *parent = 0);
+  ~TestGraph(); 
   void examplePlotNumbers(VortexList *VortexPointer,
 			  VortexList *dropPointer, 
 			  int number_of_VortexData);

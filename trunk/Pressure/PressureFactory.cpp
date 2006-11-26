@@ -59,7 +59,7 @@ PressureFactory::PressureFactory(Configuration *wholeConfig, QObject *parent)
 
 PressureFactory::~PressureFactory()
 {
-
+  delete pressureQueue;
 }
 
 PressureList* PressureFactory::getUnprocessedData()

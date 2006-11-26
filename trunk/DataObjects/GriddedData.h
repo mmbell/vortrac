@@ -112,6 +112,13 @@ class GriddedData
 				   float azimuth);
   float* getSphericalElevationPosition(float range,float azimuth);
 
+   // Spherical Coordinates  !!!!Testing ONLY!!!!!
+
+  int getSphericalRangeLengthTest(float azimuth, float elevation);
+  float* getSphericalRangeDataTest(QString& fieldName, float azimuth, 
+			       float elevation);
+  float* getSphericalRangePositionTest(float azimuth, float elevation);
+
   // Cylindrical Coordinates
 
   int getCylindricalRadiusLength(float azimuth, float height);

@@ -23,6 +23,8 @@
   numRays = 0;
   vcp = 0;
   velNull = -999.;
+  data = NULL;
+  elevations = NULL;
 
   // Loads the configuration containing analytic radar parameters
   config = new Configuration();
@@ -35,8 +37,7 @@
   QString sampling = config->getParam(radar, "sample");
   
   if (sampling == QString("false") || sampling == QString("no")) {
-    isDealiased(true
-);
+    isDealiased(true);
   }
   else { 
     //Message::toScreen("Analytic Radar Not Dealaised");
@@ -51,7 +52,7 @@
 AnalyticRadar::~AnalyticRadar()
 {
   delete data;
-  delete elevations;
+  delete [] elevations;
 }
 
 void AnalyticRadar::setConfigElement(Configuration* newConfig)
@@ -82,7 +83,7 @@ bool AnalyticRadar::readVolume()
 return false;
 }
 
-Sweep AnalyticRadar::addSweep()
+Sweep* AnalyticRadar::addSweep()
 {
   
   // add Sweeps from theoretical radar volume
@@ -93,17 +94,16 @@ Sweep AnalyticRadar::addSweep()
   newSweep->setSweepIndex(numSweeps);
   newSweep->setFirstRay(numRays);
   newSweep->setNyquist_vel( nyqVel );
-  // newSweep->setFirst_ref_gate( );
-  // newSweep->setFirst_vel_gate( );
+  newSweep->setFirst_ref_gate(0); // is this right? -LM
+  newSweep->setFirst_vel_gate(0); // is this right? -LM
   newSweep->setRef_gatesp( refGateSp );
   newSweep->setVel_gatesp( velGateSp );
   newSweep->setVcp( vcp );
-  numSweeps++;
-  return *newSweep;
+  return newSweep;
   
 }
 
-Ray AnalyticRadar::addRay()
+Ray* AnalyticRadar::addRay()
 {
   
   // Add a new ray to the sweep
@@ -126,10 +126,14 @@ Ray AnalyticRadar::addRay()
   newRay->setNyquist_vel( nyqVel );
 
   int numPoints = data->getSphericalRangeLength(azimAngle, elevAngle);
-  if((numPoints==0)||(numRays%45==0))
+ 
+  if((numPoints==0)||(numRays%45==0)) {
     Message::toScreen("ray = "+QString().setNum(numRays)+" = "+QString().setNum(numPoints));
-  float *raw_ref_data = new float[numPoints];
-  float *raw_ref_positions = new float[numPoints];
+    int testNumPoints = data->getSphericalRangeLengthTest(azimAngle,elevAngle);
+    Message::toScreen("Regular "+QString().setNum(numPoints)+" Test "+QString().setNum(testNumPoints));
+  }
+  float *raw_ref_data;
+  float *raw_ref_positions;
 
   QString dataType("DZ");
   raw_ref_data = data->getSphericalRangeData(dataType,
@@ -165,8 +169,8 @@ Ray AnalyticRadar::addRay()
       }
       if(count!=0){
 	ref_data[gateNum] = refSum/(float)count;
-	if((gateNum%10==0)&&(numRays%45==0))
-	  Message::toScreen("gate "+QString().setNum(gateNum)+" ref "+QString().setNum(refSum/(float)count));
+	//if((gateNum%10==0)&&(numRays%45==0))
+	//  Message::toScreen("gate "+QString().setNum(gateNum)+" ref "+QString().setNum(refSum/(float)count));
       }
       else
 	ref_data[gateNum] = velNull;
@@ -184,8 +188,8 @@ Ray AnalyticRadar::addRay()
   // Selects all points in the theoretical radar beam that may contain valid 
   // velocity data
   
-  float *raw_vel_data = new float[numPoints];
-  float *raw_vel_positions = new float[numPoints];
+  float *raw_vel_data;
+  float *raw_vel_positions;
   dataType = QString("VE");
   raw_vel_data = data->getSphericalRangeData(dataType,azimAngle, elevAngle);
   raw_vel_positions = data->getSphericalRangePosition(azimAngle, elevAngle);
@@ -216,8 +220,8 @@ Ray AnalyticRadar::addRay()
       else {
 	// Good velocity data in this gate
 	vel_data[gateNum] = velSum*cos(elevAngle*deg2rad)/(float)count;
-	if((gateNum%10==0)&&(numRays%45==0))
-	  Message::toScreen("gate "+QString().setNum(gateNum)+" vel "+QString().setNum(vel_data[gateNum]));
+	//if((gateNum%10==0)&&(numRays%45==0))
+	//  Message::toScreen("gate "+QString().setNum(gateNum)+" vel "+QString().setNum(vel_data[gateNum]));
 	
 	// Add in noise factor, method borrowed from analyticTC
 	// the variable noiseScale changes the relative magnetude of the noise
@@ -282,10 +286,22 @@ Ray AnalyticRadar::addRay()
   newRay->setVel_numgates( numVelGates ); 
   newRay->setRef_gatesp( 1000*refGateSp );
   newRay->setVel_gatesp( 1000*velGateSp );  
- 
-  //newRay->setTi<me( );
-  //newRay->setDate( );
- 
+
+  ref_data = NULL;
+  vel_data = NULL;
+  sw_data = NULL;
+  delete ref_data;
+  delete vel_data;
+  delete sw_data;
+  /*
+  QDateTime* temp = QDateTime::currentDateTime();
+  temp = temp.toUTC();
+  newRay->setTime(temp->date());
+  newRay->setDate(temp->time());
+  temp = NULL;
+  delete temp;
+  */ 
+
   // Need more info about how these values are used before filling
   // With Useful info
 
@@ -297,8 +313,7 @@ Ray AnalyticRadar::addRay()
   newRay->setFirst_vel_gate(0);
 
   newRay->setVcp( vcp );
-  numRays++;
-  return *newRay;
+  return newRay;
 }
 
 
@@ -400,10 +415,18 @@ bool AnalyticRadar::readVolumeAnalytic()
   for(int n = 0; n < totNumSweeps; n++) {
     //testing Message::toScreen("Trying to Make Sweep Number "+QString().setNum(n));
     Message::toScreen("Made Sweep "+QString().setNum(n)+" of "+QString().setNum(totNumSweeps-1));
-    Sweeps[numSweeps] = addSweep();
+    Sweep* testSweep = addSweep();
+    Sweeps[numSweeps] = *testSweep;
+    testSweep = NULL;
+    delete testSweep;
+    numSweeps++;
     for( int r = 0; r < numRaysPerSweep; r++) {
       // Message::toScreen("Trying to Make Ray Number "+QString().setNum(r));
-      Rays[numRays] = addRay();
+      Ray* testRay = addRay();
+      Rays[numRays] = *testRay;
+      numRays++;
+      testRay = NULL;
+      delete testRay;
     }  
     Sweeps[n].setLastRay(numRays-1);
   }

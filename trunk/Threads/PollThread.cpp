@@ -75,7 +75,7 @@ void PollThread::run()
   //analysisThread = new AnalysisThread();
   abort = false;
   emit log(Message("Polling for data..."));
-  RadarFactory *dataSource = new RadarFactory(configData);
+  dataSource = new RadarFactory(configData);
   connect(dataSource, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
 
@@ -332,17 +332,23 @@ void PollThread::run()
 		// Check to see if we should quit
 		if (abort) {
 		  //Message::toScreen("Abort is true, before return in pollthread");
+		  delete dataSource;
+		  delete pressureSource;
 		  return;
 		}
 		if (runOnce) {
 		  emit log(Message(tr("Analysis Completed Exiting PollThread"),
 				   -1));
+		  delete dataSource;
+		  delete pressureSource;
 		  runOnce = false;
 		  return;
 		}
 	}
 
 	emit log(Message("PollThread Finished"));	
+	delete dataSource;
+	delete pressureSource;
 }
 
 // This slot is used for log message relaying

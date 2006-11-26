@@ -14,11 +14,10 @@
 
 #include<QWidget>
 #include<QList>
-#include<QPainter>
 #include<QEvent>
 #include<QImage>
-#include<QMatrix>
 #include<QDir>
+#include<QPainter>
 
 #include "DataObjects/VortexList.h"
 #include "DataObjects/VortexData.h"
@@ -173,7 +172,7 @@ private:
    static const float Z1 = .67;
    static const float Z2 = .95;
 
-   void updateImage();
+   QPainter* updateImage(QPainter* painter);
    void altUpdateImage();
 
 private slots:

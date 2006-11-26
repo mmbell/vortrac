@@ -42,10 +42,12 @@ Ray::~Ray()
 }
 
 void Ray::setTime(const int &value) {
+  //  Message::toScreen("Does This Function Get Used? - setTime");
   time = value;
 }
 
 void Ray::setDate(const int &value) {
+  //Message::toScreen("Does This Function Get Used? - set Date");
   date = value;
 }
 
@@ -120,10 +122,12 @@ void Ray::setVcp(const int &value) {
 // Get values
 
 int Ray::getTime() {
+  Message::toScreen("Does this function get used? - getTime");
   return time;
 }
 
 int Ray::getDate() {
+  Message::toScreen("Does this function get used? - getDate");
   return date;
 }
 

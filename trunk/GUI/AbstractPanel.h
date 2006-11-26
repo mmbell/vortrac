@@ -52,7 +52,7 @@ class AbstractPanel:public QWidget
    QDir *defaultDirectory;
    virtual QDir* getDefaultDirectory() { return defaultDirectory; }
    QString getCurrentDirectoryPath() { return dir->text(); }
-   virtual void setDefaultDirectory(QDir* newDir);
+   virtual bool setDefaultDirectory(QDir* newDir);
    // The dir and browse memebers create a generic setup that can be added to
    // any panel for finding and returning an existing folder location.
 

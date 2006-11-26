@@ -14,15 +14,15 @@
 NcdcLevelII::NcdcLevelII(const QString &radarname, const float &lat, const float &lon, const QString &filename) 
 	: LevelII(radarname, lat, lon, filename)
 {
-
-  numSweeps = 0;
-  numRays = 0;
-  volHeader = new nexrad_vol_scan_title;
-  radarHeader = new digital_radar_data_header;
-  msgHeader = new nexrad_message_header;
-  Sweeps = new Sweep[20];
-  Rays = new Ray[7500];
-  swap_bytes = false;
+  // All of these happen in LevelII constructor
+  //numSweeps = 0;
+  //numRays = 0;
+  //volHeader = new nexrad_vol_scan_title;
+  //radarHeader = new digital_radar_data_header;
+  //msgHeader = new nexrad_message_header;
+  //Sweeps = new Sweep[20];
+  //Rays = new Ray[7500];
+  //swap_bytes = false;
   
 }
 

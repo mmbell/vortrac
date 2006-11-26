@@ -13,6 +13,8 @@
 #include "Sweep.h"
 #include <math.h>
 #include "Math/Matrix.h"
+#include <QFile>
+#include <QTextStream>
 
 /*
  * The HVVP subroutine used here was created and written by Paul Harasti for 
@@ -96,278 +98,6 @@ float Hvvp::rotateAzimuth(const float &angle)
   return newAngle;
 }
 
-
-//Using functions in Matrix Class
-
-bool Hvvp::lls(int numCoeff, int numData, int effective_nData, float** x, 
-	       float* y, float* weight, float &stDeviation, float* &stError, 
-	       float* &coEff)
-{
-
-  /*
-   * x: a matrix with numCoeff rows, and numData columns
-   * y: a matrix with numData rows
-   * coEff: the product containing the coefficient values (numCoeff rows)
-   * stError: a product containing the estimated error for each
-   *  coefficent in coEff, (numCoeff rows)
-   * stDeviation: is the estimated standard deviation of the regression
-   * 
-   * effective_nData and weight are not currently implemented since 
-   *  they are not used.
-   *
-   * This algorithm is identical to the one used in RadarQC
-   *
-   * Some parts of the algorithm were borrowed from numerical recipes in C++
-   *
-   */
-
-  if(numData < numCoeff) {
-    //emit log(Message("Least Squares: Not Enough Data"));
-    Message::toScreen("Least Squares Fail Initial");
-    return false;
-  }
-
-  //Matrix::printMatrix(x, numCoeff, numData);
-  //Matrix::printMatrix(y, numData);
-  
-  // We need at least one more data point than coefficient in order to
-  // estimate the standard deviation of the fit.
-  
-  float** A = new float*[numCoeff];
-  float** AA = new float*[numCoeff];
-  float* B = new float[numCoeff];
-  float** BB = new float*[numCoeff];
-  coEff = new float[numCoeff];
-  for(int row = 0; row < numCoeff; row++) {
-    A[row] = new float[numCoeff];
-    AA[row] = new float[numCoeff];
-    BB[row] = new float[1];
-    for(int col = 0; col < numCoeff; col++) {
-      A[row][col] = 0;
-      AA[row][col] = 0;
-      BB[row][0] = 0;
-    }
-    B[row] = 0;
-    coEff[row] = 0;
-  }
-
-  // accumulate the covariances of all the data into the regression
-  // matrices
-
-  for(int i = 0; i < numData; i++) {
-    for(int row = 0; row < numCoeff; row++) {
-      for(int col = 0; col < numCoeff; col++) {
-	A[row][col]+=(x[row][i]*x[col][i]);
-	AA[row][col]+=(x[row][i]*x[col][i]);
-      }
-      B[row] +=(x[row][i]*y[i]);
-      BB[row][0] +=(x[row][i]*y[i]);
-    }
-  }
-
-  
-  float** Ainv = new float*[numCoeff];
-  for(int p = 0; p < numCoeff; p++) 
-    Ainv[p] = new float[numCoeff];
-
-  float** Ainv2 = new float*[numCoeff];
-  for(int p = 0; p < numCoeff; p++) 
-    Ainv2[p] = new float[numCoeff];
-
-  float** AAA = new float*[numCoeff];
-  for(int p = 0; p < numCoeff; p++) {
-    AAA[p] = new float[numCoeff];
-    for(int q = 0; q < numCoeff; q++) {
-      AAA[p][q] = AA[p][q];
-    }
-  }
-
-  //Message::toScreen("Printing AA Before");
-  //Matrix::printMatrix(AA,numCoeff,numCoeff);
-  //Message::toScreen("Printing BB Before");
-  //Matrix::printMatrix(BB,numCoeff, 1);
-  
-  if(!gaussJordan(AA,BB, numCoeff, 1)) {
-    emit log(Message("Least Squares Fit Failed"));
-    Message::toScreen("Least Squares Fail In Gauss Jordan");
-    return false;
-  }
-
-  for(int p = 0; p < numCoeff; p++) {
-    for(int q = 0; q < numCoeff; q++) {
-      if(AAA[p][q] == AA[p][q])
-	Message::toScreen("Issues with addresses");
-    }
-  }
-
-  Matrix::matrixInverse(AAA,numCoeff,numCoeff, Ainv2);
-
-  //Message::toScreen("Printing AA After");
-  //Matrix::printMatrix(AA,numCoeff,numCoeff);
-  //Message::toScreen("Printing BB After");
-  //Matrix::printMatrix(BB,numCoeff, 1);
-  
-
-  for(int i = 0; i < numCoeff; i++) {
-    coEff[i] = BB[i][0];
-    for(int j = 0; j < numCoeff; j++) {
-      Ainv[i][j] = AA[i][j];
-    }
-  }
-  /*
-  for(int p = 0; p < numCoeff; p++) {
-    for(int q = 0; q < numCoeff; q++) {
-      if(Ainv[p][q] != Ainv2[p][q])
-	Message::toScreen("Issues with inverting matrixes Ainv["+QString().setNum(p)+"]["+QString().setNum(q)+"] = "+QString().setNum(Ainv[p][q])+" !! Ainv2["+QString().setNum(p)+"]["+QString().setNum(q)+"] = "+QString().setNum(Ainv2[p][q]));
-    }
-  }
-  */
-  //Message::toScreen("Printing coEff");
-  //Matrix::printMatrix(coEff,numCoeff);
-  
-  // calculate the stDeviation and stError
-  float sum = 0;
-  for(int i = 0; i < numData; i++) {
-    float regValue = 0;
-    for(int j = 0; j < numCoeff; j++) {
-      regValue += coEff[j]*x[j][i]; 
-    }
-    sum +=((y[i]-regValue)*(y[i]-regValue));
-    if(sum < 0)
-      Message::toScreen(" Sum is less than zero sum = "+QString().setNum(sum));
-  }
-  
-  if(numData!=numCoeff)
-    stDeviation = sqrt(sum/float(numData-numCoeff));
-  else
-    stDeviation = sqrt(sum);
-
-  //Message::toScreen("sum = "+QString().setNum(sum));
-
-  //Message::toScreen("Standard Dev = "+QString().setNum(stDeviation));
-  
-  // calculate the standard error for the coefficients
-
-  for(int i = 0; i < numCoeff; i++) {
-    stError[i] = stDeviation*sqrt(fabs(Ainv2[i][i]));
-  }
-
-  //Message::toScreen("Printing StError");
-  //Matrix::printMatrix(stError, numCoeff);
-
-  for(int i = 0; i < numCoeff; i++) {
-    delete [] A[i];
-    delete [] AA[i];
-    delete [] BB[i];
-    delete [] Ainv[i];
-    delete [] AAA[i];
-    delete [] Ainv2[i];
-  }
-  delete [] A;
-  delete [] B;
-  delete [] AA;
-  delete [] BB;
-  delete [] Ainv;
-  delete [] AAA;
-  delete [] Ainv2;
-
-  //Message::toScreen("Printing coEff Again!!");
-  //Matrix::printMatrix(coEff,numCoeff);
-   
-  return true;
-}
-
-bool Hvvp::gaussJordan(float **a, float **b, int n, int m)
-{
-
-  // get this to do what lls does using cpp recipes
-  // Gauss-Jordan Elemination
-  // a = nxn coefficient matrix
-  // b = nxm matrix
-
-  // identical to leastSquaresRegression in RadarQC
-
-  // returns the inverse of a in a and the solutions to the linear system in b
-  
-  int i, icol, irow, j, k, l, ll;
-  float big, temp, pivinv;
-  
-  int indxc[n], indxr[n], ipiv[n];
-
-  for(j = 0; j < n; j++) {
-    ipiv[j] = 0;
-  }
-  
-  for (i = 0; i < n; i++) {
-    big = 0.0;
-    for (j = 0;j < n; j++) {
-      if(ipiv[j]!=1) {
-	for (k = 0; k < n; k++) {
-	  if (ipiv[k] ==0) {
-	    if(fabs(a[j][k]) >= big) {
-	      big = fabs(a[j][k]);
-	      irow = j;
-	      icol = k;
-	    }
-	  }
-	}
-      }
-    }
-    ++(ipiv[icol]);
-    if(irow != icol) {
-      for(l = 0; l < n; l++) {
-	float dummy = a[irow][l];
-	a[irow][l] = a[icol][l];
-	a[icol][l] = dummy;
-      }
-      for(l = 0; l < m; l++) { 
-	float dummy = b[irow][l];
-	b[irow][l] = b[icol][l];
-	b[icol][l] = dummy;
-      }
-    }
-    indxr[i] = irow;
-    indxc[i] = icol;
-    if (a[icol][icol]==0.0) {
-      return false; 
-    }
-    pivinv = 1/a[icol][icol];
-    a[icol][icol] = 1.0;
-    for(l = 0; l < n; l++) {
-      a[icol][l] *=pivinv;
-    }
-    for(l = 0; l < m; l++) {
-      b[icol][l] *= pivinv; 
-    }
-    for(ll = 0; ll < n; ll++) {
-      if(ll != icol) {
-	temp = a[ll][icol];
-	a[ll][icol] = 0.0;
-	for(l = 0; l < n; l++) {
-	  a[ll][l] -= a[icol][l]*temp;
-	}
-	for(l = 0; l < m; l++) {
-	  b[ll][l] -= b[icol][l]*temp;
-	}
-      }
-    } 
-  }
-  for( l = n-1; l >= 0; l--) {
-    if(indxr[l] != indxc[l]) {
-      for(k = 0; k < n; k++) {
-	float dummy = a[k][indxr[l]];
-	a[k][indxr[l]] = a[k][indxc[l]];
-	a[k][indxc[l]] = dummy;
-      }
-    }
-  }
-  
-
-  return true;
-}
-
-
-
 int Hvvp::hvvpPrep(int m) {
 
   //Message::toScreen("HVVP Prep");
@@ -413,19 +143,18 @@ int Hvvp::hvvpPrep(int m) {
     if(elevation <= 5) {
       int startRay = currentSweep->getFirstRay();
       int stopRay = currentSweep->getLastRay();
-      //Message::toScreen("Sweep # "+QString().setNum(s)+" elevation = "+QString().setNum(elevation)+" startRay = "+QString().setNum(startRay)+" stopRay = "+QString().setNum(stopRay));
-      for(int r = startRay; r <= stopRay; r++) {
+       for(int r = startRay; r <= stopRay; r++) {
 	currentRay = volume->getRay(r);
 	vel = currentRay->getVelData();          // still in km/s
 	float vGateSpace = currentRay->getVel_gatesp(); // in m
 	vGateSpace /= 1000;
 	float numGates = currentRay->getVel_numgates();
-	//int first = currentRay->getFirst_vel_gate();   
 	int first = 0;
+	// int first = currentRay->getFirst_vel_gate();   
 	// What does getFirst_vel_gate actually return?
 	// Index or distance?
 	// Are the limits on this ray right or should i go
-	// to first+numGates is 
+	// to first+numGates is ? -LM
 	float aa = currentRay->getAzimuth();
 	aa = rotateAzimuth(aa)*deg2rad;
 	float sinaa = sin(aa);
@@ -435,11 +164,6 @@ int Hvvp::hvvpPrep(int m) {
 	    float srange = (rangeStart+float(v)*vGateSpace);
 	    float cu = srange/rt * cos(elevation*deg2rad);    // unitless
 	    float alt = volume->radarBeamHeight(srange, elevation);  // km
-	    /*
-	    if((s==6)&&(r == startRay)&&(v==48)&&(m==0)) {
-	      Message::toScreen("startRay = "+QString().setNum(startRay)+" srange = "+QString().setNum(srange)+" cu = "+QString().setNum(cu)+" alt = "+QString().setNum(alt)+" aa = "+QString().setNum(aa)+ " original az = "+QString().setNum(currentRay->getAzimuth())+" vel = "+QString().setNum(vel[v])+" "+QString().setNum(vel[v+1])+" "+QString().setNum(vel[v+2])+" "+QString().setNum(vel[v+3])+" "+QString().setNum(vel[v+4])+" "+QString().setNum(vel[v+5]));
-	    }
-	    */
 	    if((cu > cumin)&&(cu < cuthr)&&(alt >= hLow)&&(alt < hHigh)) {
 	      float ee = elevation*deg2rad;
 	      ee+=asin(srange*cos(elevation)/(ae+alt));
@@ -449,7 +173,8 @@ int Hvvp::hvvpPrep(int m) {
 	      float rr = srange*srange*cosee*cosee*cosee;
 	      float zz = alt-h0;
 	      yls[count] = vel[v];
-	      wgt[count] = 1; // why are we weighting it?
+              wgt[count] = 1; 
+             // why are we weighting it if they are all the same? -LM
 	      xls[0][count] = sinaa*cosee;
 	      xls[1][count] = cosee*sinaa*xx;
 	      xls[2][count] = cosee*sinaa*zz;
@@ -500,33 +225,33 @@ bool Hvvp::findHVVPWinds()
     float h0 = hgtStart+.1*m;
     
     count = hvvpPrep(m);
-    //Message::toScreen("Returned From hvvpPrep level = "+QString().setNum(m)+" with count = "+QString().setNum(count));
-    
+   
     /* 
      * Empirically determined limit to the minimum number of points
      *   needed for a low variance HVVP result.
      *
      */
     
-    //Message::toScreen("Level "+QString().setNum(m)+" count "+QString().setNum(count));
+    //Message::toScreen("HVVP count requires 6500, level "+QString().setNum(m)+" has "+QString().setNum(count));
 
     if(count >= 6500) {
       
-      //Message::toScreen("Enough Info On Level "+QString().setNum(m)+" to located HVVP - GO.....");
-
       float sse;
       float *stand_err = new float[xlsDimension];
       float *cc = new float[xlsDimension];
       bool flag, outlier;
+      
+      //      QString fileName("/scr/science40/mauger/Working/trunk/hvvp0007Char"+QString().setNum(m)+".dat");
+      //writeToFile(fileName,xlsDimension,count,count,1,xls,yls);
 
-      //flag = lls(16, count, count, xls, yls, wgt, sse, stand_err, cc);
-
-      flag = Matrix::lls(xlsDimension, count, xls, yls, sse, cc, stand_err);
-      //if(flag)
-	//Message::toScreen("First Least Squares Attempt = True");
-      //else
-	//Message::toScreen("First Least Squares Attempt = False");
-
+      flag = Matrix::oldlls(xlsDimension, count, xls, yls, sse, cc, stand_err);
+      /*
+      Message::toScreen("stand_dev @ "+QString().setNum(m)+" = "+QString().setNum(sse));
+      for(int zz = 0; zz < xlsDimension; zz++) {
+      	Message::toScreen(QString().setNum(cc[zz])+", "+QString().setNum(stand_err[zz]));
+      }
+      */
+      
       /*
        * Check for outliers that deviate more than two standard 
        *   deviations from the least squares fit.
@@ -583,16 +308,7 @@ bool Hvvp::findHVVPWinds()
 					  qc_count++;
 				  }
 			  }
-			  //flag = lls(16, qc_count, qc_count, qcxls, qcyls, qcwgt, sse, stand_err,cc);
-			  
-			  //Message::toScreen("qc_count = "+QString().setNum(qc_count));
 			  flag=Matrix::lls(xlsDimension,qc_count,qcxls,qcyls,sse,cc,stand_err);
-			  /*
-				  if(flag)
-			   Message::toScreen("Second Least Squares Attempt = True");
-			   else
-			   Message::toScreen("Second Least Squares Attempt = False");
-			   */
 			  
 			  for(int ii = 0; ii < xlsDimension; ii++) {
 				  delete [] qcxls[ii];
@@ -603,46 +319,30 @@ bool Hvvp::findHVVPWinds()
 			  delete [] qcwgt;
 			  
 		  }
-		  QString ccmessage;
-		  for(int ii = 0; ii < xlsDimension; ii++) {
-			  ccmessage += "cc["+QString().setNum(ii)+"] = "+QString().setNum(cc[ii])+" ";
-		  }
-		  //Message::toScreen(ccmessage);
-		  //Message::toScreen("--------------------------------");
-		  
-		  ccmessage = QString();
-		  for(int ii = 0; ii < xlsDimension; ii++) {
-			  ccmessage += "stand_err["+QString().setNum(ii)+"] = "+QString().setNum(stand_err[ii])+" ";
-		  }
-		  //Message::toScreen(ccmessage);
-		  //Message::toScreen("--------------------------------");
 		  
 		  // Calculate the HVVP wind parameters:
 		  
 		  // Radial wind above the radar.
 		  float vr = rt*cc[1];
-		  //Message::toScreen(" vr = "+QString().setNum(vr));
-		  
+		  		  
 		  // Along beam component of the environmental wind above the radar.
 		  float vm_c = cc[3]+vr;
-		  //Message::toScreen(" vm_c = "+QString().setNum(vm_c));
-		  
+		  		  
 		  // Rankine exponent of the radial wind.
 		  float xr = -1*cc[4]/cc[1];
-		  //Message::toScreen(" xr = "+QString().setNum(xr));
-		  
+		  		  
 		  /* 
-			  * Variance of xr.  This is used in the
-			  *  weigthed average of the across beam component of the environmental wind,
-			  *  c and is calculated along the way as follows:
-			  */
+		   * Variance of xr.  This is used in the
+		   *  weigthed average of the across beam component of the environmental wind,
+		   *  c and is calculated along the way as follows:
+		   */
 		  
 		  float temp = ((stand_err[4]/cc[4])*(stand_err[4]/cc[4]));
 		  temp += ((stand_err[1]/cc[1])*(stand_err[1]/cc[1]));
 		  var[m] = fabs(xr)*sqrt(temp);
 		  
 		  /*
-			  * Relations between the Rankine exponent of the tangential wind, xt,
+		   * Relations between the Rankine exponent of the tangential wind, xt,
 		   *   and xr, determined by theoretical (boundary layer) arguments of 
 		   *   Willoughby (1995) for the case of inflow, and by extension
 		   *   (constinuity equation considerations) by Harasti for the case
@@ -652,21 +352,17 @@ bool Hvvp::findHVVPWinds()
 		  float xt = 0;
 		  
 		  if(vr > 0) {
-			  if(xr > 0)
-				  xt = 1-xr;
-			  //if(xr < 0)
-			  else
-				  xt = -1.0*xr/2.0;
+		    if(xr > 0)
+		      xt = 1-xr;
+		    else
+		      xt = -1.0*xr/2.0;
 		  }
 		  else {
-			  if(xr >= 0)
-				  xt = xr/2.0;
-			  //if(xr < 0) 
-			  else
-				  xt = 1+xr;
+		    if(xr >= 0)
+		      xt = xr/2.0;
+		    else
+		      xt = 1+xr;
 		  }
-		  
-		  //Message::toScreen(" xt = "+QString().setNum(xt));
 		  
 		  mod_Rankine_xt[m] = xt;
 		  
@@ -678,10 +374,9 @@ bool Hvvp::findHVVPWinds()
 		  
 		  float vt = rt*cc[6]/(xt+1.0);
 		  
-		  //Message::toScreen(" vt = "+QString().setNum(vt));
-		  
+		  	  
 		  if(xt == 0)
-			  Message::toScreen("Going to have issues in xt");
+		    Message::toScreen("Going to have issues in xt");
 		  
 		  temp = (2./rt)*(2./rt)+(stand_err[6]/cc[6])*(stand_err[6]/cc[6]);
 		  temp += (var[m]/xt)*(var[m]/xt);
@@ -694,7 +389,7 @@ bool Hvvp::findHVVPWinds()
 		  var[m] = sqrt(stand_err[0]*stand_err[0]+var[m]*var[m]);
 		  
 		  // rotate vm_c and vm_s to standard cartesian U and V components,
-		  // ue and ve, csing cca.
+		  // ue and ve, using cca.
 		  // cca  = cca *deg2rad;
 		  // float ue = vm_s*cos(cca)+vm_c*sin(cca);
 		  // float ve = vm_c*cos(cca)-vm_s*sin(cca);
@@ -721,7 +416,6 @@ bool Hvvp::findHVVPWinds()
 			  vm_sin[m] = vm_s;
 		  }
       } else {
-		  //Message::toScreen("Second Crappy Fail Option");
 		  //z[m] = h0;
 		  u[m] = velNull;
 		  v[m] = velNull;
@@ -730,11 +424,10 @@ bool Hvvp::findHVVPWinds()
       delete [] stand_err;
       delete [] cc;
     } else {
-		//Message::toScreen("Third Crappy Fail Option");
-		//z[m] = h0;
-		u[m] = velNull;
-		v[m] = velNull;
-		vm_sin[m] = velNull;
+      //z[m] = h0;
+      u[m] = velNull;
+      v[m] = velNull;
+      vm_sin[m] = velNull;
     }
     //Message::toScreen("HVVP Output From Level "+QString().setNum(m)+" z = "+QString().setNum(z[m])+" vm_sin = "+QString().setNum(vm_sin[m]));
 	
@@ -744,7 +437,7 @@ bool Hvvp::findHVVPWinds()
    *  Reject results whose Xt is greater than one SD from average Xt
    */
 
-  /*  Comment this section out until further testing is complete
+  //  Comment this section out until further testing is complete
 
   float xtav=0;
   float xtsd=0;
@@ -765,7 +458,7 @@ bool Hvvp::findHVVPWinds()
       }
     }
     // (count-1) added by PH - previously incorrect
-    xtsd = sqrt(xtsd/(count-1);
+    xtsd = sqrt(xtsd/(count-1));
     for(int i = 0; i < levels; i++) {
       //if(mod_Rankine_xt[i] > xtsd) { // ----- Pauls code I don't agree -LM
       // I agree LM, this is what I intended to write, but you forgot the additional correction noted above - PH
@@ -774,8 +467,8 @@ bool Hvvp::findHVVPWinds()
       }
     }
   }
-   */  
-
+  // commented section ended here 
+  
   /*
    *   Calculate the layer, variance-weighted average of vm_sin. 
    */
@@ -1014,3 +707,44 @@ void Hvvp::smoothHvvpVmSin(float* data1, float* data2) {
   delete [] temp2;
 }
 
+void Hvvp::writeToFile(QString& fileName, int aRows, int aCols,
+		       int bRows, int bCols, float** a, float* b)
+{
+  QFile* outputFile = new QFile(fileName);
+  outputFile->open(QIODevice::WriteOnly);
+  QTextStream out(outputFile);
+  out << "Writing Matrices To File" << endl;
+  out << aRows << endl;
+  out << aCols << endl;
+  out << bRows << endl;
+  out << bCols << endl;
+
+  int line = 0;
+  for(int i = 0; i < aRows; i++) {
+    for(int j = 0; j < aCols; j++) {
+      out << reset << qSetRealNumberPrecision(5) << scientific << qSetFieldWidth(13) << a[i][j];
+      line++;
+      if(line == 8) {
+	out << endl;
+	line = 0;
+      }
+    }
+    line = 0;
+    out << endl;
+  }
+  out << endl;
+
+  Message::toScreen("Writing B");
+
+  for(int i = 0; i < bRows; i++) {
+    out << reset << qSetRealNumberPrecision(5) << scientific << qSetFieldWidth(13) << b[i] << endl;
+    
+  }
+  out << endl;
+  
+  
+  outputFile->close();
+
+}
+ 
+  

@@ -5,8 +5,8 @@
      <dir>/location/of/MM5/Data</dir>
   </mm5>
   <wind_field>
-     <rmw>5</rmw>
-     <vt0>10</vt0>
+     <rmw>8</rmw>
+     <vt0>15</vt0>
      <vr0>0</vr0>        
      <vt1>0</vt1>
      <vt1angle>0</vt1angle>
@@ -37,11 +37,12 @@
      <dealiasdata>false</dealiasdata>
      <noiseScale>10</noiseScale>
      <percent_noisy_gates>0</percent_noisy_gates>
-     <numgates>400</numgates>
-     <numsweeps>3</numsweeps>
+     <numgates>300</numgates>
+     <numsweeps>2</numsweeps>
      <sweep0>0.5</sweep0>
-     <sweep1>1.5</sweep1>
-     <sweep2>2.5</sweep2>
-     <sweep3>3.5</sweep3>
+     <sweep1>2.5</sweep1>
+     <sweep2>3.5</sweep2>
+     <sweep3>4.5</sweep3>
+     <sweep4>5.5</sweep4>
   </analytic_radar>
 </vortrac>

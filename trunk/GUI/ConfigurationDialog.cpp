@@ -329,7 +329,8 @@ void ConfigurationDialog::setPanelDirectories()
 	currPanel->setDefaultDirectory(tempWorkingDir);
 	configData->setParam(configData->getConfig(panelForString.key(currPanel)), QString("dir"), currPanel->getDefaultDirectory()->path());
 	currPanel->updatePanel(currPanel->getPanelElement());
-	//delete tempWorkingDir;
+	tempWorkingDir = NULL;
+	delete tempWorkingDir;
       }
     }
   }

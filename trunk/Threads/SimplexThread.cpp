@@ -395,15 +395,19 @@ void SimplexThread::run()
 		mutex.lock();
 
 		// Simplex run complete! Save the results to a file
+	       
 		simplexResults->append(*simplexData);
 		simplexResults->save();
 		
 		//Now pick the best center
-		centerFinder = new ChooseCenter(configData,*simplexResults,vortexData);
+		simplexResults->timeSort();
+		centerFinder = new ChooseCenter(configData,simplexResults,vortexData);
 		foundCenter = centerFinder->findCenter();
 	
 		// Clean up
 		delete[] dataGaps;
+		for(int i = 2; i >=0; i--)
+		  delete [] vertex[i];
 		delete[] vertex;
 		delete[] VT;
 		delete[] vertexSum;

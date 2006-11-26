@@ -31,10 +31,10 @@ class AnalyticRadar : public RadarData
 
  private:
 
-  Sweep addSweep();
+  Sweep* addSweep();
   // Adds a sweep of sampled data to the analytic radar volume
 
-  Ray addRay();
+  Ray* addRay();
   // Adds a ray of sampled data to the analytic radar volume
   
   bool skipReadVolume();

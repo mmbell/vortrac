@@ -17,6 +17,7 @@ SimplexData::SimplexData()
   numLevels = maxLevels;
   numRadii = maxRadii;
   numCenters = maxCenters;
+  numPointsUsed = 0;
   velNull = -999.; 
   for(int i = 0; i < numLevels; i++)
     {
@@ -44,6 +45,7 @@ SimplexData::SimplexData(int availLevels, int availRadii, int availCenters)
   numLevels = availLevels;
   numRadii = availRadii;
   numCenters = availCenters;
+  numPointsUsed = 0;
   velNull = -999.;
   
   for(int i = 0; i < numLevels; i++)
@@ -72,6 +74,7 @@ SimplexData::SimplexData(const SimplexData& other)
   this->numLevels = other.numLevels;
   this->numRadii = other.numRadii;
   this->numCenters = other.numCenters;
+  this->numPointsUsed = other.numPointsUsed;
   velNull = -999.;
   
   for(int i = 0; i < this->numLevels; i++)
@@ -264,8 +267,14 @@ int SimplexData::getNumConvergingCenters(const int& lev, const int& rad) const
 void SimplexData::setNumConvergingCenters(const int& lev, const int& rad, 
 					  const int& num)
 {
- if((lev < numLevels)&&(rad < numRadii))
+  if((lev < numLevels)&&(rad < numRadii)&&(num < numPointsUsed)) {
    numConvergingCenters[lev][rad] = num;
+   return;
+  }
+ 
+  Message::toScreen("SimplexData: setNumConvergingCenters: Failed to set - outside of ranges");
+  return;
+   
 }
 
 void SimplexData::setNumConvergingCenters(const int** a, const int& numLev, 

@@ -23,12 +23,12 @@ class ChooseCenter
 
  public:
      ChooseCenter(Configuration* newConfig = new Configuration(), 
-				  const SimplexList &newList = SimplexList(),
-				  VortexData* vortexPtr = new VortexData());
+		  const SimplexList* newList = new SimplexList(),
+		  VortexData* vortexPtr = new VortexData());
     ~ChooseCenter();
   
     void setConfig(Configuration* newConfig);
-    void setSimplexList(const SimplexList &newList);
+    void setSimplexList(const SimplexList* newList);
     bool findCenter();
     void initialize();
     bool chooseMeanCenters();
@@ -42,7 +42,7 @@ class ChooseCenter
   
  private:
     Configuration* config;       // Should this be a constant parameter
-    SimplexList simplexResults;
+    const SimplexList* simplexResults;
     VortexData* vortexData;
     float velNull;
     int numLevels;

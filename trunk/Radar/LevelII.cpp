@@ -18,8 +18,10 @@ LevelII::LevelII(const QString &radarname, const float &lat, const float &lon, c
   numSweeps = 0;
   numRays = 0;
   volHeader = new nexrad_vol_scan_title;
-  radarHeader = new digital_radar_data_header;
-  msgHeader = new nexrad_message_header;
+  //  radarHeader = new digital_radar_data_header;
+  radarHeader = NULL;
+  //  msgHeader = new nexrad_message_header;
+  msgHeader = NULL;
   Sweeps = new Sweep[20];
   Rays = new Ray[7500];
   swap_bytes = false;

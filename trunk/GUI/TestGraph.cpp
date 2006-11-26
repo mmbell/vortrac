@@ -14,10 +14,14 @@
 #include <QDomNodeList>
 
 TestGraph::TestGraph(QWidget *parent)
-  :QWidget(parent)
 {
+
 }
 
+TestGraph::~TestGraph()
+{
+
+}
 
 void TestGraph::examplePlot()
 {
@@ -27,6 +31,8 @@ void TestGraph::examplePlot()
   VortexList *globalVortexDataList = new VortexList();
   VortexList *globalDropList = new VortexList();
   examplePlotNumbers(globalVortexDataList, globalDropList,45);
+  delete globalVortexDataList;
+  delete globalDropList;
 }
 
 void TestGraph::examplePlotNumbers(VortexList* VortexPointer,
@@ -76,6 +82,8 @@ void TestGraph::listPlot()
   VortexList *globalDropList = new VortexList();
   QString file(QString("vortrac_testVortexData.xml"));
   listPlotNumbers(file, globalVortexDataList, globalDropList);
+  delete globalVortexDataList;
+  delete globalDropList;
 }
 
 void TestGraph::listPlotNumbers(QString fileName,
@@ -109,7 +117,7 @@ void TestGraph::listPlotNumbers(QString fileName,
       temp->setPressureUncertainty(pressureUn);
       temp->setRMWUncertainty( 0, rmwUn);
       VortexPointer->append(*temp);
-		
+
       emit listChanged(VortexPointer);
       delete temp;
       
@@ -125,6 +133,8 @@ void TestGraph::listPlotNumbers(QString fileName,
 
   dropPointer->append(*drop);
   emit dropListChanged(dropPointer);
+
+  delete drop;
   
   drop = new VortexData();
   drop->setPressure(918);
@@ -147,5 +157,5 @@ void TestGraph::listPlotNumbers(QString fileName,
   emit dropListChanged(dropPointer);
   
 
-  delete (drop);
+  delete drop;
 }
