@@ -20,6 +20,18 @@ PollThread::PollThread(QObject *parent)
   abort = false;
   runOnce = false;
   analysisThread = NULL;
+
+  dataSource= NULL;
+  pressureSource= NULL;
+  configData= NULL;
+  vortexList= NULL;
+  simplexList= NULL;
+  pressureList= NULL;
+  dropSondeList= NULL;
+  vortexConfig= NULL;
+  simplexConfig= NULL;
+  pressureConfig= NULL;
+  dropSondeConfig= NULL;
 }
 
 PollThread::~PollThread()
@@ -29,10 +41,22 @@ PollThread::~PollThread()
   abort = true;
   waitForAnalysis.wakeOne();
   mutex.unlock();
-  if(analysisThread!=NULL && analysisThread->isRunning())
-    analysisThread->exit();
   delete analysisThread;
   wait();
+  // Deleting Members
+  //delete dataSource;
+  //delete pressureSource;
+  configData = NULL;
+  delete configData;
+  delete vortexList;
+  delete simplexList;
+  delete pressureList;
+  delete dropSondeList;
+  //delete vortexConfig;
+  //delete simplexConfig;
+  //delete pressureConfig;
+  //delete dropSondeConfig;
+  
   Message::toScreen("PollThread Destructor OUT");
 }
 
@@ -46,17 +70,9 @@ void PollThread::setConfig(Configuration *configPtr)
 void PollThread::abortThread()
 {
   Message::toScreen("In PollThread Abort");
-  if (analysisThread->isRunning()) {
-    mutex.lock();
-    Message::toScreen("in PollThread Exit");
+  if(analysisThread->isRunning()){
     analysisThread->abortThread();
-    //analysisThread = new AnalysisThread;
-    //analysisThread->quit();
-    
-    //Message::toScreen("PollThread has mutex locked!");
-    mutex.unlock();
-    
- }
+  }
   mutex.lock();
   abort = true;
   mutex.unlock();

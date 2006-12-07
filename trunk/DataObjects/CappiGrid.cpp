@@ -24,6 +24,7 @@ CappiGrid::CappiGrid() : GriddedData()
   // To make the cappi bigger but still compute it in a reasonable amount of time,
   // skip the reflectivity grid, otherwise set this to true
   gridReflectivity = false;
+  exitNow = false;
 }
 
 CappiGrid::~CappiGrid()
@@ -232,6 +233,8 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
     }
     currentRay = NULL;
     delete currentRay;
+    if(exitNow)
+      return;
   }
   Message::toScreen("# of Reflectivity gates used in CAPPI = "+QString().setNum(r));
   Message::toScreen("# of Velocity gates used in CAPPI = "+QString().setNum(v));
@@ -272,6 +275,8 @@ void CappiGrid::CressmanInterpolation()
 
   for (int k = 0; k < int(kDim); k++) { 
     for (int j = 0; j < int(jDim); j++) {
+      if(exitNow)
+	return;
       for (int i = 0; i < int(iDim); i++) {
 
 	dataGrid[0][i][j][k] = -999.;
@@ -665,4 +670,4 @@ void CappiGrid::writeAsi()
 		}
 	}	
 
-}	
+}     

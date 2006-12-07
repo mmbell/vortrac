@@ -131,7 +131,7 @@ int Hvvp::hvvpPrep(int m) {
       yls[l] = 0;
     }
   }
-  
+
   int count = 0;
   float h0 = hgtStart+hInc*m;
   z[m] = h0;
@@ -172,6 +172,12 @@ int Hvvp::hvvpPrep(int m) {
 	      float yy = srange*cosee*cosaa;
 	      float rr = srange*srange*cosee*cosee*cosee;
 	      float zz = alt-h0;
+	      /*
+		if(count <=10){
+		Message::toScreen(QString().setNum(count)+"= v: "+QString().setNum(vel[v])+" gate "+QString().setNum(v)+" ray "+QString().setNum(r-startRay)+" elev# "+QString().setNum(s));
+		Message::toScreen(QString().setNum(count)+"= srange: "+QString().setNum(srange)+" cu "+QString().setNum(cu)+" alt "+QString().setNum(alt)+" zz "+QString().setNum(zz));
+	      }
+	      */
 	      yls[count] = vel[v];
               wgt[count] = 1; 
              // why are we weighting it if they are all the same? -LM
@@ -207,7 +213,7 @@ int Hvvp::hvvpPrep(int m) {
   return count;
 }
 
-bool Hvvp::findHVVPWinds()
+bool Hvvp::findHVVPWinds(bool both)
 {
   /*
    * Calculates HVVP dependent and independent variables within 14, 200 m
@@ -215,6 +221,11 @@ bool Hvvp::findHVVPWinds()
    *   used to those less than or equal to 5 degrees.
    *
    */
+  
+  if(both)
+    Message::toScreen("Running with both 1st and 2nd lls fits");
+  else
+    Message::toScreen("Running with 1st fit only");    
 
   int count = 0; 
   float mod_Rankine_xt[levels];
@@ -244,7 +255,9 @@ bool Hvvp::findHVVPWinds()
       //      QString fileName("/scr/science40/mauger/Working/trunk/hvvp0007Char"+QString().setNum(m)+".dat");
       //writeToFile(fileName,xlsDimension,count,count,1,xls,yls);
 
-      flag = Matrix::oldlls(xlsDimension, count, xls, yls, sse, cc, stand_err);
+      flag = Matrix::lls(xlsDimension, count, xls, yls, sse, cc, stand_err);
+
+      //Message::toScreen("SSE = "+QString().setNum(sse));
       /*
       Message::toScreen("stand_dev @ "+QString().setNum(m)+" = "+QString().setNum(sse));
       for(int zz = 0; zz < xlsDimension; zz++) {
@@ -257,7 +270,7 @@ bool Hvvp::findHVVPWinds()
        *   deviations from the least squares fit.
        *
        */
-      
+     
       if(flag) {
 		  outlier = false;
 		  int cgood = 0;
@@ -286,38 +299,39 @@ bool Hvvp::findHVVPWinds()
 		  for(int d = 0; d < xlsDimension; d++) {
 			  qcxls[d] = new float[count];
 		  }
-		  
-		  if(outlier && (cgood >=6500)) {
-			  
-			  qc_count = 0;
-			  
-			  for (int n = 0; n < count; n++) {
-				  
-				  qcwgt[n] = 0;
-				  qcyls[n] = 0;
-				  for(int p = 0; p < xlsDimension; p++) {
-					  qcxls[p][n] = 0;
-				  }
-				  
-				  if(yls[n] != velNull) {
-					  qcyls[qc_count] = yls[n];
-					  qcwgt[qc_count] = 1;
-					  for(int p = 0; p < xlsDimension; p++) {
-						  qcxls[p][qc_count] = xls[p][n];
-					  }
-					  qc_count++;
-				  }
+		  if(both) {
+		    if(outlier && (cgood >=6500)) {
+		      
+		      qc_count = 0;
+		      
+		      for (int n = 0; n < count; n++) {
+			
+			qcwgt[n] = 0;
+			qcyls[n] = 0;
+			for(int p = 0; p < xlsDimension; p++) {
+			  qcxls[p][n] = 0;
+			}
+			
+			if(yls[n] != velNull) {
+			  qcyls[qc_count] = yls[n];
+			  qcwgt[qc_count] = 1;
+			  for(int p = 0; p < xlsDimension; p++) {
+			    qcxls[p][qc_count] = xls[p][n];
 			  }
-			  flag=Matrix::lls(xlsDimension,qc_count,qcxls,qcyls,sse,cc,stand_err);
-			  
-			  for(int ii = 0; ii < xlsDimension; ii++) {
-				  delete [] qcxls[ii];
-			  }
-			  
-			  delete [] qcxls;
-			  delete [] qcyls;
-			  delete [] qcwgt;
-			  
+			  qc_count++;
+			}
+		      }
+		      flag=Matrix::lls(xlsDimension,qc_count,qcxls,qcyls,sse,cc,stand_err);
+		      
+		      for(int ii = 0; ii < xlsDimension; ii++) {
+			delete [] qcxls[ii];
+		      }
+		      
+		      delete [] qcxls;
+		      delete [] qcyls;
+		      delete [] qcwgt;
+		      
+		    }
 		  }
 		  
 		  // Calculate the HVVP wind parameters:

@@ -31,6 +31,7 @@ public:
 public slots:
   void clearImage();
   void constructImage(const GriddedData* cappi);
+  void exit();
 	
 signals:
     void hasImage(bool imageAvailable); 
@@ -46,6 +47,7 @@ private:
     QImage image;
     QPoint lastPoint;
     int PaintEngineMode;
+    bool exitNow;
 
 };
 

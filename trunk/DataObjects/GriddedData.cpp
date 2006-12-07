@@ -1095,44 +1095,62 @@ int GriddedData::getSphericalRangeLengthTest(float azimuth, float elevation)
      float jDistMax = fabs(k/te1);
      float jMin = refPointJ-jDistMax;
      float jMax = jDistMax+refPointJ;
-     if(jMin < 0)
+     if((jMin < 0)||(isnan(jMin)))
        jMin = 0;
-     //if(jMin >= jMax)
+     if((isnan(jMax))||(jMax > jDim))
+       jMax = jDim;
+     // if(jMin >= jMax)
      Message::toScreen("Terrible JLimits for k = "+QString().setNum(k)+" jMin = "+QString().setNum(jMin)+" jMax = "+QString().setNum(jMax));
-     for(int j = int(jMin)+1; (j < jMax)&&(j < jDim) ; j ++) {
+     for(int j = int(jMin); j < jMax; j ++) {
+       /*
        float iDistMax = sqrt((k*k)/(te1*te1)-j*j);
        float iPosMax = iDistMax+refPointI;
        float iNegMax = refPointI-iDistMax;
        float iDistMin =  sqrt((k*k)/(te2*te2)-j*j);
        float iPosMin = iDistMin+refPointI;
+       if(iPosMin < 0)
+	 iPosMin = 0;
+       if(iPosMax > iDim)
+	 iPosMax = iDim;
+       if(iNegMax < 0)
+	 iNegMax = 0;
+ 
        float iNegMin = refPointI-iDistMin;
+       Message::toScreen("iDistMax = "+QString().setNum(iDistMax));
+       Message::toScreen("iPosMax = "+QString().setNum(iPosMax));
+       Message::toScreen("iPosMin = "+QString().setNum(iPosMin));
+       Message::toScreen("iNegMax = "+QString().setNum(iNegMax));
+       Message::toScreen("iNegMin = "+QString().setNum(iNegMin));
+       */
        if(j == 0)
 	 Message::toScreen("In j loop jMin = "+QString().setNum(jMin));
-       if(iNegMin <= iNegMax)
-	 Message::toScreen("Terrible Errors in INeg");
-       if(iPosMin >= iPosMax)
-	 Message::toScreen("Terrible Errors in IPos");
-       /*
-       for(int i = int(; i < iDim; i ++) {
+       //if(iNegMin <= iNegMax)
+       // Message::toScreen("Terrible Errors in INeg");
+       //if(iPosMin >= iPosMax)
+       // Message::toScreen("Terrible Errors in IPos");
+       float iMin = (j-refPointJ)*ta1+refPointI;
+       float iMax = (j-refPointJ)*ta2+refPointI;
+       Message::toScreen("iMin = "+QString().setNum(iMin));
+       Message::toScreen("iMax = "+QString().setNum(iMax));
+       for(int i = int(iMin); (i < iDim)&&(i < iMax); i ++) {
 	
-	float rp = sqrt(iGridsp*iGridsp*(i-refPointI)*(i-refPointI)+jGridsp*jGridsp*(j-refPointJ)*(j-refPointJ));
-	float pAzimuth = fixAngle(atan2((j-refPointJ),(i-refPointI)))*rad2deg;
-	float pElevation = fixAngle(atan2((k-refPointK),rp))*rad2deg;
-	if((pAzimuth <= (azimuth+sphericalAzimuthSpacing/2.)) 
+	 float rp = sqrt(iGridsp*iGridsp*(i-refPointI)*(i-refPointI)+jGridsp*jGridsp*(j-refPointJ)*(j-refPointJ));
+	 float pAzimuth = fixAngle(atan2((j-refPointJ),(i-refPointI)))*rad2deg;
+	 float pElevation = fixAngle(atan2((k-refPointK),rp))*rad2deg;
+	 if((pAzimuth <= (azimuth+sphericalAzimuthSpacing/2.)) 
 	   && (pAzimuth > (azimuth-sphericalAzimuthSpacing/2.))) {
-	  
-	  // QString test("pElevation " +QString().setNum( pElevation )+ " elevation " +QString().setNum( elevation )+ "sphericalElevationSpacing " +QString().setNum( sphericalElevationSpacing )+ "\n");
-	  //Message::toScreen(test);
-	  if((pElevation <=(elevation+sphericalElevationSpacing/2.))
-	     && (pElevation > (elevation-sphericalElevationSpacing/2.))) {
-	    count++;
-	  }
-	}
-      }
-       */    
-    }
-  }
-  return 0;
+	   
+	   //QString test("pElevation " +QString().setNum( pElevation )+ " elevation " +QString().setNum( elevation )+ "sphericalElevationSpacing " +QString().setNum( sphericalElevationSpacing )+ "\n");
+	   //Message::toScreen(test);
+	   if((pElevation <=(elevation+sphericalElevationSpacing/2.))
+	      && (pElevation > (elevation-sphericalElevationSpacing/2.))) {
+	     count++;
+	   }
+	 }
+       }
+     }    
+   }
+   return count;
 }
 
 float* GriddedData::getSphericalRangeDataTest(QString& fieldName, 
@@ -1191,3 +1209,10 @@ float* GriddedData::getSphericalRangePositionTest(float azimuth,
   }
   return positions;
 }
+
+/*
+void GriddedData::exit()
+{
+  exitNow = true;
+}
+*/

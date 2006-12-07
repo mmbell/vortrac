@@ -34,20 +34,46 @@ AnalysisThread::AnalysisThread(QObject *parent)
   connect(vortexThread, SIGNAL(windsFound()), 
 		  this, SLOT(foundWinds()), Qt::DirectConnection);
   numVolProcessed = 0;
+  activeData = NULL;
+  configData = NULL;
+  radarVolume = NULL;
+  vortexList = NULL;
+  simplexList = NULL;
+  pressureList = NULL;
+  dropSondeList = NULL;
 }
 
 AnalysisThread::~AnalysisThread()
 {
   Message::toScreen("AnalysisThread Destructor IN");
-  mutex.lock();
+  //mutex.lock();
   abort = true;
-  waitForData.wakeOne();
-  mutex.unlock();
+  if(this->isRunning())
+    this->abortThread();
+  //waitForData.wakeOne();
+  //mutex.unlock();
   
   // Wait for the thread to finish running if it is still processing
-  wait();
-  simplexThread->terminate();
+  //wait();
+
+  //simplexThread->terminate();
+  this->exit();
+
+  // Delete Members
   delete simplexThread;
+  configData = NULL;
+  delete configData;
+  radarVolume = NULL;
+  delete radarVolume;
+  vortexList = NULL;
+  delete vortexList;
+  simplexList = NULL;
+  delete simplexList;
+  pressureList = NULL;
+  delete pressureList;
+  dropSondeList = NULL;
+  delete dropSondeList;
+
   Message::toScreen("AnalysisThread Destructor OUT");
 }
 
@@ -89,20 +115,17 @@ void AnalysisThread::setDropSondeList(PressureList *archivePtr)
 void AnalysisThread::abortThread()
 {
   Message::toScreen("In AnalysisThread Abort");
+  //  activeData->exit();
+  Message::toScreen("Sent Return Now");
   if(simplexThread->isRunning()) {
-    Message::toScreen("in AnalysisThread Exit");
     mutex.lock();
     simplexThread->exit();
     //simplexThread = new SimplexThread;
     //delete simplexThread;
     //Message::toScreen("AnalysisThread has mutex locked");
     mutex.unlock();
-    //}
-    // exit();
   }
-  Message::toScreen("Before AnalysisThread Exit");
-  this->terminate();
-  //  this->exit();
+  //this->terminate();
   Message::toScreen("Leaving AnalysisThread Abort");
 }
 
@@ -386,6 +409,8 @@ void AnalysisThread::run()
 		/* If Analytic Model is running we need to make an analytic
 		   gridded data rather than a cappi*/
 		GriddedData *gridData;
+		activeData = gridData;
+		Message::toScreen("Set Active Data");
 		
 		if(radarVolume->getNumSweeps() < 0) {
 		  Configuration *analyticConfig = new Configuration();
@@ -438,6 +463,7 @@ void AnalysisThread::run()
 		  //Find Center 
 		  simplexThread->findCenter(configData, gridData, simplexList, vortexData);
 		  waitForCenter.wait(&mutex); 
+		  vortexData->printString();
 		}
 		else
 		  return;
@@ -490,7 +516,8 @@ void AnalysisThread::run()
 
 		Hvvp *envWindFinder = new Hvvp;
 		envWindFinder->setRadarData(radarVolume,rt, cca, rmw);
-		envWindFinder->findHVVPWinds();
+		envWindFinder->findHVVPWinds(false);
+		//		envWindFinder->findHVVPWinds(true);
 		float missingLink = envWindFinder->getAvAcrossBeamWinds();
 		Message::toScreen("Hvvp gives "+QString().setNum(missingLink));
 
@@ -542,6 +569,7 @@ void AnalysisThread::run()
 		// Delete CAPPI, RadarData and HVVP objects
 		delete envWindFinder;
 		delete radarVolume;
+		activeData = NULL;
 		delete gridData;
 		
 		mutex.lock(); // Added this one....

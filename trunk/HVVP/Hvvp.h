@@ -28,7 +28,7 @@ public:
    void setRadarData(RadarData *newVolume, float range, float angle, 
 		     float vortexRmw);
 
-   bool findHVVPWinds();
+   bool findHVVPWinds(bool both);
 
    float* getHeights() { return z; }
    float* getUWinds() { return u; }

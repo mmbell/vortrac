@@ -21,6 +21,7 @@ CappiDisplay::CappiDisplay(QWidget *parent)
     connect(this, SIGNAL(hasImage(bool)),
 	    this, SLOT(setVisible(bool)));
     emit hasImage(false);
+    exitNow = false;
 	
 	//Set the palette
 	image = QImage(50,50,QImage::Format_Indexed8);
@@ -214,55 +215,63 @@ void CappiDisplay::resizeImage(QImage *image, const QSize &newSize)
 void CappiDisplay::constructImage(const GriddedData* cappi)
 {
 	
-	// Fill the pixmap with data from the cappi
-	image.fill(qRgb(255, 255, 255));	
-	float iDim = cappi->getIdim();
-	float jDim = cappi->getJdim();
-	QSize cappiSize((int)iDim,(int)jDim);
-	image = image.scaled(cappiSize);
-		
-	//this->resizeImage(&image, cappiSize);
-	
-	// Get the minimum and maximum Doppler velocities
-	float maxVel = -9999;
-	float minVel = 9999;
-	float k = 0;
-	QString field("ve");
-	for (float i = 0; i < iDim; i++) {
-		for (float j = 0; j < jDim; j++) {
-			float vel = cappi->getIndexValue(field,i,j,k);
-			if (vel != -999) {
-				if (vel > maxVel) 
-					maxVel = vel;
-				if (vel < minVel)
-					minVel = vel;
-			}
-		}
-	}
-	float velRange = maxVel - minVel;
-	float velIncr = velRange/41;
-	// Set each pixel color scaled to the max and min ranges
-	for (float i = 0; i < iDim; i++) {
-		for (float j = 0; j < jDim; j++) {
-			float vel = cappi->getIndexValue(field,i,j,k);
-			int color = 1;
-			if (vel == -999) {
-				color = 0;
-			} else {
-				color = (int)((vel - minVel)/velIncr) + 2;
-			}
-			int x = (int)i;
-			int y = (int)(jDim-j-1);
-			image.setPixel(x,y,color);
-		}
-	}
-	image = image.scaled((int)500,(int)500);
-	cappiLabel = "Velocities = " +QString().setNum(maxVel) + " to " 
-		+ QString().setNum(minVel) + " in " + QString().setNum(velIncr) + " m/s incr.";
-	QSize textSize(0, (int)(image.height() * 0.05));
-	this->setMinimumSize(image.size() + textSize);
-	this->resize(image.size() + textSize);
-	emit hasImage(true);
-	
+  // Fill the pixmap with data from the cappi
+  image.fill(qRgb(255, 255, 255));	
+  float iDim = cappi->getIdim();
+  float jDim = cappi->getJdim();
+  QSize cappiSize((int)iDim,(int)jDim);
+  image = image.scaled(cappiSize);
+  
+  //this->resizeImage(&image, cappiSize);
+  
+  // Get the minimum and maximum Doppler velocities
+  float maxVel = -9999;
+  float minVel = 9999;
+  float k = 0;
+  QString field("ve");
+  for (float i = 0; i < iDim; i++) {
+    if(exitNow)
+      return;
+    for (float j = 0; j < jDim; j++) {
+      float vel = cappi->getIndexValue(field,i,j,k);
+      if (vel != -999) {
+	if (vel > maxVel) 
+	  maxVel = vel;
+	if (vel < minVel)
+	  minVel = vel;
+      }
+    }
+  }
+  float velRange = maxVel - minVel;
+  float velIncr = velRange/41;
+  // Set each pixel color scaled to the max and min ranges
+  for (float i = 0; i < iDim; i++) {
+    if(exitNow)
+      return;
+    for (float j = 0; j < jDim; j++) {
+      float vel = cappi->getIndexValue(field,i,j,k);
+      int color = 1;
+      if (vel == -999) {
+	color = 0;
+      } else {
+	color = (int)((vel - minVel)/velIncr) + 2;
+      }
+      int x = (int)i;
+      int y = (int)(jDim-j-1);
+      image.setPixel(x,y,color);
+    }
+  }
+  image = image.scaled((int)500,(int)500);
+  cappiLabel = "Velocities = " +QString().setNum(maxVel) + " to " 
+    + QString().setNum(minVel) + " in " + QString().setNum(velIncr) + " m/s incr.";
+  QSize textSize(0, (int)(image.height() * 0.05));
+  this->setMinimumSize(image.size() + textSize);
+  this->resize(image.size() + textSize);
+  emit hasImage(true);
+  
 }
 
+void CappiDisplay::exit()
+{
+  exitNow = true;
+}

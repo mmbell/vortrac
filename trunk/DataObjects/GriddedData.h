@@ -20,6 +20,9 @@ class GriddedData
 {
 
  public:
+
+  //Q_OBJECT
+    
   GriddedData();
   virtual ~GriddedData();
 
@@ -96,7 +99,8 @@ class GriddedData
 			    const float& y);
   float getCartesianValue(const QString& fieldName, const float& x, 
 			  const float& y, const float& z);
-  
+
+ 
   // Spherical Coordinates
 
   int getSphericalRangeLength(float azimuth, float elevation);
@@ -137,7 +141,9 @@ class GriddedData
   /* All of these functions go through all points in the grid to check for
      points within the requested radius. Somewhat inefficient. -LM
   */
-  
+
+  // public slots:
+  //  void exit();
   
  protected:
   float iDim;
@@ -186,6 +192,8 @@ class GriddedData
   float zmin, zmax;
 
   bool test();
+
+  bool exitNow;
   
 };
 

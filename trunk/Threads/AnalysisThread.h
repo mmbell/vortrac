@@ -73,6 +73,8 @@ class AnalysisThread : public QThread
      void archiveAnalysis();
      float vortexLat, vortexLon;
      int numVolProcessed;
+     
+     GriddedData *activeData;
 
 };
 

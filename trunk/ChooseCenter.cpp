@@ -540,7 +540,7 @@ bool ChooseCenter::constructPolynomial()
 
   
   // What should the highest order basis polynomial;
-  if(simplexResults->count() > 20)
+  if(simplexResults->count() > 20)  
     maxPoly = 20;
   else 
     maxPoly = simplexResults->count()-1;
@@ -553,13 +553,15 @@ bool ChooseCenter::constructPolynomial()
   // This goes from 0 to less than maxPoly, because this is the number
   // of fits that we will examine the variance of.
 
-  float* BB = new float[maxPoly+1];
+  //float* BB = new float[maxPoly+1];
+  float* BB = new float[simplexResults->count()]; 
   float** MM = new float*[maxPoly+1];
   for(int rr = 0; rr <=maxPoly; rr++) {
     MM[rr] = new float[simplexResults->count()];
-    BB[rr] = 0;
-    for(int ii = 0; ii < simplexResults->count(); ii++) 
+    for(int ii = 0; ii < simplexResults->count(); ii++) {
       MM[rr][ii] = 0;
+      BB[ii] = 0;
+    }
   }
   
   if(maxPoly < 3){
@@ -600,6 +602,8 @@ bool ChooseCenter::constructPolynomial()
     //Message::toScreen("Level = "+QString().setNum(k));
 
     for(int criteria = 0; criteria < 4; criteria++) {
+
+      //Message::toScreen("Criteria is "+QString().setNum(criteria));
       // Iterates through the procedure for the four different
       // curve fitting criteria
 
@@ -615,20 +619,17 @@ bool ChooseCenter::constructPolynomial()
 	}
 	currentCoeff[n] = 0;
 	// degree = n; what - no one uses this and it is the same as best degree
-	for(int rr = 0; rr <=maxPoly; rr++) {
-	  BB[rr] = 0;
-	  for(int ii = 0; ii < simplexResults->count(); ii++)
+	for(int ii = 0; ii < simplexResults->count(); ii++) {
+	  BB[ii] = 0;
+	  for(int rr = 0; rr <= maxPoly; rr++)
 	    MM[rr][ii]= 0;
 	}
 	
-	for(int r = 0; r <= n; r++) {
-	  for(int i = 0; i < simplexResults->count(); i++) {
+	for(int i = 0; i < simplexResults->count(); i++) {
+	  for(int r = 0; r <= n; r++) {
 	    float min = ((float)firstTime.secsTo(simplexResults->value(i).getTime())/60.0);
 	    MM[r][i] = pow(min,(double)(r));
 	  }
-	}
-	
-	for(int i = 0; i < simplexResults->count(); i++) {
 	  int jBest = bestRadius[i][k];
 	  float y = 0;
 	  switch(criteria) {
@@ -639,19 +640,20 @@ bool ChooseCenter::constructPolynomial()
 	  case 2:
 	    y = simplexResults->value(i).getRadius(jBest); break;
 	  case 3:
-	    y = simplexResults->value(i).getMaxVT(k, jBest); break;
+	    y = simplexResults->value(i).getMaxVT(k, jBest); break; 
 	  }
-	  //if(criteria == 2)
-	    //Message::toScreen("Y for i = "+QString().setNum(i)+" is "+QString().setNum(y));
 	  BB[i] = y;
 	}
 	float stDev;
 	float *stError = new float[n+1];
 	for(int ii = 0; ii <= n; ii++)
 	  stError[ii] = 0;
+	//Message::toScreen("MM");
 	//Matrix::printMatrix(MM,n+1,simplexResults->count());
+	
+	//Message::toScreen("BB");
 	//Matrix::printMatrix(BB,simplexResults->count());
-	if(!Matrix::lls(n+1, simplexResults->count(), MM, BB, stDev, currentCoeff, stError)) {
+	if(!Matrix::lls(n+1,simplexResults->count(),MM, BB, stDev, currentCoeff, stError)) {
 	  Message::toScreen("least square fit failed in find center");
 	}
        
@@ -663,6 +665,8 @@ bool ChooseCenter::constructPolynomial()
 	  for(int m = 0; m <=n; m++) {
 	    func_y += currentCoeff[m]*pow(min,m);
 	  }
+	  //if(criteria == 2)
+	  //Message::toScreen(" Fitted Radius = "+QString().setNum(func_y));
 	  int jBest = bestRadius[i][k];
 	  switch(criteria) {
 	  case 0:
@@ -786,7 +790,7 @@ bool ChooseCenter::fixCenters()
     if(getMinutesTo(simplexResults->value(i).getTime()) > longestTime) {
       lastTimeIndex = i;
       longestTime = getMinutesTo(simplexResults->value(i).getTime());
-      }
+    }
   }
   
   //Message::toScreen("Lat Lon Conversions and Time Resolved");
@@ -926,7 +930,7 @@ bool ChooseCenter::fixCenters()
       windErrorSum += windError;
       
       if(i == lastTimeIndex) {
-	//Message::toScreen("Vortex Data level "+QString().setNum(k)+" time "+vortexData->getTime().toString()+" radius = "+QString().setNum(rad)+" radError "+QString().setNum(radError));
+	Message::toScreen("Vortex Data level "+QString().setNum(k)+" time "+vortexData->getTime().toString()+" radius = "+QString().setNum(rad)+" radError "+QString().setNum(radError));
 	// if the volume we are looking at is the last one we will want to keep
 	// all the info in vortexData
 	
@@ -996,7 +1000,7 @@ bool ChooseCenter::fixCenters()
   for(int i = 0; i < 4; i++)
     delete [] newVariance[i];
   delete [] newVariance;
-  //Message::toScreen("Made it out of fixCenters");
+  Message::toScreen("Made it out of fixCenters");
   // I need to go through and figure out which variables are of some importance
   // after the program has run to completion
   return true;
