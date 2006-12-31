@@ -21,7 +21,7 @@
 AnalysisThread::AnalysisThread(QObject *parent)
   : QThread(parent)
 {
-  Message::toScreen("AnalysisThread Constructor");
+  //Message::toScreen("AnalysisThread Constructor");
   abort = false;
   simplexThread = new SimplexThread;
   connect(simplexThread, SIGNAL(log(const Message&)), this, 
@@ -33,34 +33,30 @@ AnalysisThread::AnalysisThread(QObject *parent)
 		  SLOT(catchLog(const Message&)), Qt::DirectConnection);
   connect(vortexThread, SIGNAL(windsFound()), 
 		  this, SLOT(foundWinds()), Qt::DirectConnection);
+
   numVolProcessed = 0;
-  activeData = NULL;
   configData = NULL;
   radarVolume = NULL;
   vortexList = NULL;
   simplexList = NULL;
   pressureList = NULL;
   dropSondeList = NULL;
+
+  gridFactory.setAbort(&abort);
 }
 
 AnalysisThread::~AnalysisThread()
 {
   Message::toScreen("AnalysisThread Destructor IN");
-  //mutex.lock();
   abort = true;
+
   if(this->isRunning())
     this->abortThread();
-  //waitForData.wakeOne();
-  //mutex.unlock();
-  
-  // Wait for the thread to finish running if it is still processing
-  //wait();
 
-  //simplexThread->terminate();
   this->exit();
 
   // Delete Members
-  delete simplexThread;
+  //delete simplexThread;
   configData = NULL;
   delete configData;
   radarVolume = NULL;
@@ -115,17 +111,25 @@ void AnalysisThread::setDropSondeList(PressureList *archivePtr)
 void AnalysisThread::abortThread()
 {
   Message::toScreen("In AnalysisThread Abort");
-  //  activeData->exit();
-  Message::toScreen("Sent Return Now");
-  if(simplexThread->isRunning()) {
-    mutex.lock();
-    simplexThread->exit();
-    //simplexThread = new SimplexThread;
-    //delete simplexThread;
-    //Message::toScreen("AnalysisThread has mutex locked");
-    mutex.unlock();
+
+  delete simplexThread; // This goes first so it can break the cycle which will
+  // allow us a change to lock if we are in simplexThread
+  // Otherwise we could wait a while for a lock  
+  delete vortexThread;    
+
+  mutex.lock();
+  abort = true;
+  mutex.unlock();
+  
+  // Wait for the thread to finish running if it is still processing
+  if(this->isRunning()) {
+    Message::toScreen("This is running - analysisThread");
+    waitForData.wakeOne();
+    // Message::toScreen("WaitForData.wakeAll() - passed");
+    wait();
+    Message::toScreen("Got past wait - AnalysisThread");
+    // Got rid of wait because it was getting stuck when aborted in simplex cycle
   }
-  //this->terminate();
   Message::toScreen("Leaving AnalysisThread Abort");
 }
 
@@ -141,7 +145,7 @@ void AnalysisThread::analyze(RadarData *dataVolume, Configuration *configPtr)
 
 	// Start or wake the thread
 	if(!isRunning()) {
-		start();
+	  start();
 	} else {
 	  //Message::toScreen("found running copy of analysis... waiting....");
 		waitForData.wakeOne();
@@ -150,6 +154,7 @@ void AnalysisThread::analyze(RadarData *dataVolume, Configuration *configPtr)
 
 void AnalysisThread::run()
 {
+  //  Message::toScreen("Entering AnalysisThread - Run");
   abort = false;
 
        forever {
@@ -166,9 +171,6 @@ void AnalysisThread::run()
 		
 		// Read in the radar data
 		radarVolume->readVolume();
-
-		//delete radarVolume;
-		//Message::toScreen("Sucessfully Deleted Radar Volume");
 
 		mutex.unlock();
 		if(abort)
@@ -272,37 +274,54 @@ void AnalysisThread::run()
 		    QDateTime volDateTime = radarVolume->getDateTime();
 		    
 		    int elapsedSeconds =radarStartDateTime.secsTo(volDateTime);
-		    float distanceMoved = elapsedSeconds*stormSpeed;
+		    //Message::toScreen("Seconds since start "+QString().setNum(elapsedSeconds)+" in AnalysisThread");
+		    float distanceMoved = elapsedSeconds*stormSpeed/1000.0;
 		    float changeInX = distanceMoved*cos(stormDirection);
 		    float changeInY = distanceMoved*sin(stormDirection);
 		    float *newLatLon = GriddedData::getAdjustedLatLon(vortexLat,vortexLon, changeInX, changeInY);
 		    vortexLat = newLatLon[0];
 		    vortexLon = newLatLon[1];
-		    
+		    //Message::toScreen("New vortexLat = "+QString().setNum(vortexLat)+" New vortexLon = "+QString().setNum(vortexLon));
+
 		  }
 		}
-		
+       
 		// Check to see if the center is beyond 174 km
 		// If so, tell the user to wait!
+		//Message::toScreen("RLat = "+QString().setNum(*radarVolume->getRadarLat())+" RLon = "+QString().setNum(*radarVolume->getRadarLon())+" VLat = "+QString().setNum(vortexLat)+" VLon = "+QString().setNum(vortexLon));
 		float relDist = GriddedData::getCartesianDistance(
 				             radarVolume->getRadarLat(), 
 					     radarVolume->getRadarLon(),
 					     &vortexLat, &vortexLon);
+		//Message::toScreen("Distance Between Radar and Storm "+QString().setNum(relDist));
 		bool beyondRadar = true;
 		bool closeToEdge = false;
-		for(int i = 0; i < radarVolume->getNumSweeps(); i++) {
-		  if(relDist < radarVolume->getSweep(i)->getUnambig_range())
-		    beyondRadar = false;
-		  if((relDist > radarVolume->getSweep(i)->getUnambig_range()-10)&&(relDist < radarVolume->getSweep(i)->getUnambig_range()+5))
-		    closeToEdge = true;
+		//for(int i = 0; i < radarVolume->getNumSweeps(); i++) {
+		//if(relDist < radarVolume->getSweep(i)->getUnambig_range()){
+		//    beyondRadar = false;
+		if(relDist < 174) {
+		  beyondRadar = false;
+		  //Message::toScreen("Level "+QString().setNum(i)+" screws it up with range "+QString().setNum(radarVolume->getSweep(i)->getUnambig_range()));
 		}
+		// }
+		//  if((relDist > radarVolume->getSweep(i)->getUnambig_range()-10)&&(relDist < radarVolume->getSweep(i)->getUnambig_range()+5))
+		//    closeToEdge = true;
+		//}
 		if (beyondRadar) {
 		  // Too far away for Doppler, need to send a signal
 		  emit log(Message("Estimated center is out of Doppler range!"));
+		  Message::toScreen("Estimated center is out of Doppler range!");
+		  delete radarVolume;
+		  emit doneProcessing();
+		  waitForData.wait(&mutex);
+		  mutex.unlock();
+		  continue;
 		}
 		if (closeToEdge) {
 		  //Message::toScreen("This volume is close to the edge");
 		}
+
+		//Message::toScreen("gets to create vortexData analysisThread");
 
 		// Create data instance to hold the analysis results
 		VortexData *vortexData = new VortexData(); 
@@ -338,80 +357,86 @@ void AnalysisThread::run()
 		}
 		else
 		  emit log(Message("RadarVolume is Dealiased"));
-		/*
+		         /*
 		
-		// Using this for running FORTRAN version
-		QString name("fchar0007.dat");
-		Message::toScreen("Writing Vortrac Input "+name);
-		radarVolume->writeToFile(name);
-		Message::toScreen("Wrote Vortrac Input "+name);
-		*/
-
-		/*
-		// Testing HVVP before Cappi to save time 
-		// only good for Charley 1824
+			 // Using this for running FORTRAN version
+			 QString name("fchar0007.dat");
+			 Message::toScreen("Writing Vortrac Input "+name);
+			 radarVolume->writeToFile(name);
+			 Message::toScreen("Wrote Vortrac Input "+name);
+			 */
 		
-		float rt1 = 167.928;
-		float cca1 = 177.204;
-		float rmw1 = 11;
-	       
-		// Testing HVVP before Cappi to save time 
-		// only good for Charley 140007
+		         /*
+			 // Testing HVVP before Cappi to save time 
+			 // only good for Charley 1824
+			 
+			 float rt1 = 167.928;
+			 float cca1 = 177.204;
+			 float rmw1 = 11;
+			 
+			 // Testing HVVP before Cappi to save time 
+			 // only good for Charley 140007
+			 
+			 float rt1 = 87.7712;
+			 float cca1 = 60.1703;
+			 float rmw1 = 16.667;
+			 
+			 
+			 // Testing HVVP before Cappi to save time 
+			 // only good for Katrina 0933
+			 
+			 float rt1 = 164.892;
+			 float cca1 = 172.037;
+			 float rmw1 = 31;
+			 
+			 
+			 // Testing HVVP before Cappi to save time 
+			 // only good for Katrina 1044
+			 
+			 float rt1 = 131.505;
+			 float cca1 = 168.458;
+			 float rmw1 = 25;
 		
-		float rt1 = 87.7712;
-		float cca1 = 60.1703;
-		float rmw1 = 16.667;
-		
-		
-		// Testing HVVP before Cappi to save time 
-		// only good for Katrina 0933
-		
-		float rt1 = 164.892;
-		float cca1 = 172.037;
-		float rmw1 = 31;
-		
-
-		// Testing HVVP before Cappi to save time 
-		// only good for Katrina 1044
-		
-		float rt1 = 131.505;
-		float cca1 = 168.458;
-		float rmw1 = 25;
-		
-
-		// Testing HVVP before Cappi to save time 
-		// only good for Analytic Charley
-		
-		float rt1 = 70.60;
-		float cca1 = 45.19;
-		float rmw1 = 7;
-		
-		Message::toScreen("Hvvp Parameters: Distance to Radar "+QString().setNum(rt1)+" angel to vortex center in degrees ccw from north "+QString().setNum(cca1)+" rmw "+QString().setNum(rmw1));
-
-		Hvvp *envWindFinder1 = new Hvvp;
-		envWindFinder1->setRadarData(radarVolume,rt1, cca1, rmw1);
-		envWindFinder1->findHVVPWinds();
-		float missingLink1 = envWindFinder1->getAvAcrossBeamWinds();
-		Message::toScreen("Hvvp gives "+QString().setNum(missingLink1));
-		delete envWindFinder1;
-		
-		//return;
-		*/
+			 
+			 // Testing HVVP before Cappi to save time 
+			 // only good for Analytic Charley
+			 
+			 float rt1 = 70.60;
+			 float cca1 = 45.19;
+			 float rmw1 = 7;
+			 
+			 Message::toScreen("Hvvp Parameters: Distance to Radar "+QString().setNum(rt1)+" angel to vortex center in degrees ccw from north "+QString().setNum(cca1)+" rmw "+QString().setNum(rmw1));
+			 
+			 Hvvp *envWindFinder1 = new Hvvp;
+			 envWindFinder1->setRadarData(radarVolume,rt1, cca1, rmw1);
+			 envWindFinder1->findHVVPWinds();
+			 float missingLink1 = envWindFinder1->getAvAcrossBeamWinds();
+			 Message::toScreen("Hvvp gives "+QString().setNum(missingLink1));
+			 delete envWindFinder1;
+			 
+			 //return;
+			 */
  
 		mutex.unlock();
 		if(abort)
 		  return;
-		mutex.lock();
 
+		/* mutex.lock(); 
+		 *
+		 * We have to leave this section unlocked so that a change 
+		 * in abort can occur and be sent through the chain to 
+		 * cappi routines, otherwise the thread cannot exit until 
+		 * they return -LM
+		 */
+		
 		// Create CAPPI
 		emit log(Message("Creating CAPPI..."));
-
-		/* If Analytic Model is running we need to make an analytic
-		   gridded data rather than a cappi*/
-		GriddedData *gridData;
-		activeData = gridData;
-		Message::toScreen("Set Active Data");
 		
+		/*  If Analytic Model is running we need to make an analytic
+		 *  gridded data rather than a cappi
+		 */
+		GriddedData *gridData;
+			
 		if(radarVolume->getNumSweeps() < 0) {
 		  Configuration *analyticConfig = new Configuration();
 		  QDomElement radar = configData->getConfig("radar");
@@ -425,14 +450,18 @@ void AnalysisThread::run()
 		}
 		else {
 		  gridData = gridFactory.makeCappi(radarVolume, configData,
-			 			&vortexLat, &vortexLon);
+						   &vortexLat, &vortexLon);
 		  //Message::toScreen("AnalysisThread: outside makeCappi");
-
+		  
 		}
+		
+		if(abort)
+		  return;
+		
 		// Pass Cappi to display
 		emit newCappi(gridData);
 		
-		mutex.unlock();
+		//mutex.unlock();
 		if(abort)
 		  return;
 		mutex.lock();
@@ -454,27 +483,24 @@ void AnalysisThread::run()
 		vortexData->setLat(0,vortexLat);
 		vortexData->setLon(0,vortexLon);
 		
-		mutex.unlock();  // Added this one ... I think...
-
-		// Mutex Investigation.....
 		
-		mutex.lock();
-		if (!abort) {
-		  //Find Center 
-		  simplexThread->findCenter(configData, gridData, simplexList, vortexData);
-		  waitForCenter.wait(&mutex); 
-		  vortexData->printString();
-		}
-		else
-		  return;
-		mutex.unlock();
-				 
+	      
+		//Find Center 
+		simplexThread->findCenter(configData, gridData, simplexList, vortexData);
+		waitForCenter.wait(&mutex); 
+					 
 		QString simplexTime;
 		simplexTime.setNum((float)analysisTime.elapsed() / 60000);
 		simplexTime.append(" minutes elapsed");
 		emit log(Message(simplexTime));
-		//Message::toScreen("Where....");		
 
+		mutex.unlock();
+		if(abort)
+		  return;
+		mutex.lock();
+
+		//vortexData->printString(); //Prints new vortexData
+	
 		// Get environmental wind
 		/*
 		* rt: Range from radar to circulation center (km).
@@ -516,24 +542,25 @@ void AnalysisThread::run()
 
 		Hvvp *envWindFinder = new Hvvp;
 		envWindFinder->setRadarData(radarVolume,rt, cca, rmw);
-		envWindFinder->findHVVPWinds(false);
-		//		envWindFinder->findHVVPWinds(true);
+		//envWindFinder->findHVVPWinds(false); for first fit only
+		envWindFinder->findHVVPWinds(true);
 		float missingLink = envWindFinder->getAvAcrossBeamWinds();
 		Message::toScreen("Hvvp gives "+QString().setNum(missingLink));
 
-		//mutex.unlock();  // Added this one ... I think...
+		mutex.unlock();  	
 		
-		// Mutex Investigation.....
-		
-		mutex.lock();
 		if (!abort) {
-			// Get the GBVTD winds
-			vortexThread->getWinds(configData, gridData, vortexData, pressureList);
-			waitForWinds.wait(&mutex); 
+		  
+		  mutex.lock();
+		  // Get the GBVTD winds
+		  vortexThread->getWinds(configData, gridData, 
+					 vortexData, pressureList);
+		  waitForWinds.wait(&mutex); 
+		  mutex.unlock();
 		}
-		else
-			return;
-		mutex.unlock();  
+		
+		if(abort)
+		  return;  
 				 
 		// Should have all relevant variables now
 		// Update timeline and output
@@ -542,6 +569,8 @@ void AnalysisThread::run()
 		// Check to see if the vortex data is valid
 		// Threshold on std deviation of parameters in
 		// conjuction with distance or something
+
+		mutex.lock();
 
 		/*
 		  bool dataIsCrap = false;
@@ -569,11 +598,7 @@ void AnalysisThread::run()
 		// Delete CAPPI, RadarData and HVVP objects
 		delete envWindFinder;
 		delete radarVolume;
-		activeData = NULL;
 		delete gridData;
-		
-		mutex.lock(); // Added this one....
-
 		vortexData = NULL;
 		delete vortexData;
 		
@@ -598,11 +623,15 @@ void AnalysisThread::run()
 		mutex.unlock();
 		
 		// Go to sleep, wait for more data
-		mutex.lock();
-		if (!abort)
-			// Wait until new data is available
-			waitForData.wait(&mutex);
-		mutex.unlock();
+		if (!abort) {
+		  mutex.lock();
+		  // Wait until new data is available
+		  waitForData.wait(&mutex);
+		  mutex.unlock();
+		}
+		
+		if(abort)
+		  return;
 		
        }
 	emit log(Message("End of Analysis Thread Run"));

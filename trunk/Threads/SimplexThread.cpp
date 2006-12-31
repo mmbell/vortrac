@@ -25,13 +25,20 @@ SimplexThread::SimplexThread(QObject *parent)
 
 SimplexThread::~SimplexThread()
 {
-  mutex.lock();
-  abort = true;
-  waitForData.wakeOne();
-  mutex.unlock();
+  Message::toScreen("Entered SimplexThread Destructor");
+  
+  waitForData.wakeOne(); // if we are not currently running the simplex thread this allows us
+  // to wake it up and unlock and abort it.
+  
+  mutex.lock();  // Allows us to change abort waiting for control of member variables
+  abort = true;  // Sets boolean member to stop work in thread at next opportunity
+  emit centerFound();  // Allows analysisThread to stop waiting for the center to come back
+  mutex.unlock(); // Allows the run loop to continue
   
   // Wait for the thread to finish running if it is still processing
-  wait();
+  if(this->isRunning())
+    wait(); 
+  Message::toScreen("Leaving the SimplexThread Destructor");
 
 }
 
@@ -40,8 +47,8 @@ void SimplexThread::findCenter(Configuration *wholeConfig, GriddedData *dataPtr,
 {
 
 	// Lock the thread
-	QMutexLocker locker(&mutex);
-
+  	QMutexLocker locker(&mutex);
+        
 	// Set the grid object
 	gridData = dataPtr;
 
@@ -75,6 +82,7 @@ void SimplexThread::run()
 
 		// OK, Let's find a center
 		mutex.lock();
+	      
 		bool foundCenter = true;
 		emit log(Message("Simplex search started"));
 	
@@ -130,9 +138,11 @@ void SimplexThread::run()
 		vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
 		vtdCoeffs = new Coefficient[20];
 		
+		mutex.unlock();
 		if(abort)
 		  return;
-		
+		mutex.lock();
+				
 		// Create a simplexData object to hold the results;
 		simplexData = new SimplexData(int(lastLevel - firstLevel + 1), int(lastRing - firstRing + 1), (int)numPoints);
 		simplexData->setTime(vortexData->getTime());
@@ -146,8 +156,10 @@ void SimplexThread::run()
 		VT = new float[3];
 		vertexSum = new float[2];
 		mutex.unlock();
+	      
 		// Loop through the levels and rings
 		for (float height = firstLevel; height <= lastLevel; height++) {
+		  
 			mutex.lock();
 			
 			// Set the reference point
@@ -168,7 +180,7 @@ void SimplexThread::run()
 					// Out of bounds problem
 					emit log(Message("Initial simplex guess is outside CAPPI"));
 					archiveNull(radius, height, numPoints);
-					//mutex.unlock();
+					mutex.unlock();
 					continue;
 				}
 				// Initialize mean values
@@ -209,7 +221,7 @@ void SimplexThread::run()
 						float* ringAzimuths = new float[numData];
 						gridData->getCylindricalAzimuthData(velField, numData, radius, height, ringData);
 						gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);
-						
+
 						// Call gbvtd
 						if (vtd->analyzeRing(vertex[v][0], vertex[v][1], radius, height, numData, ringData,
 											 ringAzimuths, vtdCoeffs, vtdStdDev)) {
@@ -237,7 +249,13 @@ void SimplexThread::run()
 					int mid = 0;
 					int high = 0;
 						
+					mutex.unlock();
+
 					for(;;) {
+					  if(abort)
+					    return;
+					  
+					  mutex.lock();
 						low = 0;
 						// Sort the initial guesses
 						high = VT[0] > VT[1] ? (mid = 1,0) : (mid = 0,1);
@@ -255,12 +273,14 @@ void SimplexThread::run()
 							VTsolution = VT[high];
 							Xsolution = vertex[high][0];
 							Ysolution = vertex[high][1];
+							mutex.unlock();
 							break;
 						}
 						
 						// Check iterations
 						if (numIterations > maxIterations) {
 							emit log(Message("Maximum iterations exceeded in Simplex!"));
+							mutex.unlock();
 							break;
 						}
 						
@@ -277,7 +297,7 @@ void SimplexThread::run()
 							if (VTtest <= VTsave) {
 								for (int v=0; v<=2; v++) {
 									if (v != high) {
-										for (int i=0; i<=1; i++) 
+									  for (int i=0; i<=1; i++)
 											vertex[v][i] = vertexSum[i] = 0.5*(vertex[v][i] + vertex[high][i]);
 										gridData->setCartesianReferencePoint(int(vertex[v][0]),int(vertex[v][1]),int(RefK));
 										int numData = gridData->getCylindricalAzimuthLength(radius, height);
@@ -285,10 +305,9 @@ void SimplexThread::run()
 										float* ringAzimuths = new float[numData];
 										gridData->getCylindricalAzimuthData(velField, numData, radius, height, ringData);
 										gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);
-									
+										
 										// Call gbvtd
-										if(abort)
-										  return;
+
 										if (vtd->analyzeRing(vertex[v][0], vertex[v][1], radius, height, numData, ringData,
 															 ringAzimuths, vtdCoeffs, vtdStdDev)) {
 											if (vtdCoeffs[0].getParameter() == "VTC0") {
@@ -310,8 +329,10 @@ void SimplexThread::run()
 								getVertexSum(vertex,vertexSum);
 							}
 						} else --numIterations;
+						mutex.unlock();
 					}
 					
+					mutex.lock();
 					// Done with simplex loop, should have values for the current point
 					if ((VTsolution < 100.) and (VTsolution > 0.)) {
 						// Add to sum
@@ -388,12 +409,16 @@ void SimplexThread::run()
 				}
 			}
 			}
+			mutex.unlock();
+
 			if(abort)
 			  return;
-			mutex.unlock();
+		
 		}
 		mutex.lock();
 
+		//Message::toScreen("SimplexRun Complete");
+		
 		// Simplex run complete! Save the results to a file
 	       
 		simplexResults->append(*simplexData);
@@ -403,6 +428,9 @@ void SimplexThread::run()
 		simplexResults->timeSort();
 		centerFinder = new ChooseCenter(configData,simplexResults,vortexData);
 		foundCenter = centerFinder->findCenter();
+
+		// Save again to keep mean values found in chooseCenter
+		simplexResults->save();
 	
 		// Clean up
 		delete[] dataGaps;
@@ -431,15 +459,15 @@ void SimplexThread::run()
 		}
 		mutex.unlock();
 		
-		// Go to sleep, wait for more data
-		mutex.lock();
-		if (!abort)
-		{
-			// Wait until new data is available
-			waitForData.wait(&mutex);
-			mutex.unlock();		
-		}
-		
+		// Go to sleep, wait for more data   
+		if (!abort) {
+		    mutex.lock();
+		    // Wait until new data is available
+		    waitForData.wait(&mutex);	
+		    mutex.unlock();    
+		  }
+		if(abort)
+		  return;
 	}
 }
 

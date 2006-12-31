@@ -53,7 +53,7 @@ VortexPanel::VortexPanel()
   longitude->addStretch();
   longitude->addWidget(longBox);
 
-  QLabel *directionLabel = new QLabel(tr("Direction of vortex movement (degrees ccw from north)"));
+  QLabel *directionLabel = new QLabel(tr("Direction of vortex movement (degrees cw from north)"));
   directionBox = new QDoubleSpinBox();
   directionBox->setRange(0, 360);
   directionBox->setDecimals(2);

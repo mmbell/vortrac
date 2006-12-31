@@ -77,6 +77,7 @@ RadarData* RadarFactory::getUnprocessedData()
 
   // Get the files off the queue
   QString fileName = dataPath.filePath(radarQueue->dequeue());
+
   Message::toScreen("Using "+fileName);
   // Mark it as processed
   fileAnalyzed[fileName] = true;
@@ -282,6 +283,13 @@ void RadarFactory::updateDataQueue(const VortexList* list)
 		  fileAnalyzed[dataPath.filePath(file)] = true; 
 		}
 	      }
+	      else {
+		if(list->last().getTime() >  fileDateTime)
+		  if(!fileAnalyzed[dataPath.filePath(file)]) {
+		    radarQueue->removeAt(radarQueue->indexOf(file));
+		    fileAnalyzed[dataPath.filePath(file)] = true; 
+		  }
+	      } 
 	    }
 	  }
 	  break;
@@ -308,8 +316,15 @@ void RadarFactory::updateDataQueue(const VortexList* list)
 		  // File has been analyzed, remove it from the queue
 		  radarQueue->removeAt(radarQueue->indexOf(file));
 		  fileAnalyzed[dataPath.filePath(file)] = true; 
-		  Message::toScreen("Plucked file "+file+" from the list");
+		  //  Message::toScreen("Plucked file "+file+" from the list");
 		}
+	      }
+	      else {
+		if(list->last().getTime() >  fileDateTime)
+		  if(!fileAnalyzed[dataPath.filePath(file)]) {
+		    radarQueue->removeAt(radarQueue->indexOf(file));
+		    fileAnalyzed[dataPath.filePath(file)] = true; 
+		  }
 	      }
 	    }
 	  }

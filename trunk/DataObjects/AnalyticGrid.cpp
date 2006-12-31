@@ -17,8 +17,10 @@
 AnalyticGrid::AnalyticGrid() 
   : GriddedData()
 {
+  /* outdated - LM 12/06
   coordSystem = cartesian;
   // Original coordinate system for gridded data points
+  */
 
   iDim = jDim = kDim = 0;
   // Dimensions of the gridded data set (number of points) 

@@ -205,7 +205,20 @@ bool RadarData::writeToFile(const QString fileName)
   return true;
 }
  
+bool RadarData::fileIsReadable()
+{
+  if(radarFile.fileName()==QString())
+    return false;
+  if(!radarFile.exists())
+    return false;
+  if(!radarFile.open(QIODevice::ReadOnly))
+    return false;
   
+  radarFile.close();
+  return true;  
+}
   
-
-
+QString RadarData::getFileName()
+{
+  return radarFile.fileName();
+}

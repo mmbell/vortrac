@@ -14,17 +14,18 @@
 #include <QTextStream>
 #include <QFile>
 
-CappiGrid::CappiGrid() : GriddedData()
+CappiGrid::CappiGrid() 
+  : GriddedData()
 {
 
-  coordSystem = cartesian;
+  //  coordSystem = cartesian; outdated -LM
   iDim = jDim = kDim = 0;
   iGridsp = jGridsp = kGridsp = 0.0;
   
   // To make the cappi bigger but still compute it in a reasonable amount of time,
   // skip the reflectivity grid, otherwise set this to true
   gridReflectivity = false;
-  exitNow = false;
+  exitNow = NULL;
 }
 
 CappiGrid::~CappiGrid()
@@ -36,6 +37,9 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 					float *vortexLat, float *vortexLon)
 {
   // Message::toScreen("IN CAPPI GRID DATA");
+
+  // Create local exit file
+  bool abort = returnExitNow();
 
   // Set the output file
   QString cappiPath = cappiConfig.firstChildElement("dir").text();
@@ -233,8 +237,11 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
     }
     currentRay = NULL;
     delete currentRay;
-    if(exitNow)
+    abort = returnExitNow();
+    if(abort){
+      //Message::toScreen("exitNow in GridRadarData in CappiGrid");
       return;
+    }
   }
   Message::toScreen("# of Reflectivity gates used in CAPPI = "+QString().setNum(r));
   Message::toScreen("# of Velocity gates used in CAPPI = "+QString().setNum(v));
@@ -266,6 +273,9 @@ void CappiGrid::CressmanInterpolation()
 {
 
   // Cressman Interpolation
+
+  // Create local abort variable
+  bool abort = returnExitNow();
   
   // Calculate radius of influence 
   float xRadius = (iGridsp * iGridsp) * 2.25;
@@ -275,8 +285,11 @@ void CappiGrid::CressmanInterpolation()
 
   for (int k = 0; k < int(kDim); k++) { 
     for (int j = 0; j < int(jDim); j++) {
-      if(exitNow)
+      abort = returnExitNow();
+      if(abort){
+	//Message::toScreen("ExitNow in Cressmand Interpolation in CappiGrid");
 	return;
+      }
       for (int i = 0; i < int(iDim); i++) {
 
 	dataGrid[0][i][j][k] = -999.;

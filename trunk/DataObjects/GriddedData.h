@@ -16,17 +16,17 @@
 #include <QDomElement>
 #include <QStringList>
 
-class GriddedData
+class GriddedData 
 {
 
  public:
-
-  //Q_OBJECT
     
   GriddedData();
   virtual ~GriddedData();
 
   virtual void writeAsi() = 0;
+  void setExit(volatile bool *exit);
+  bool returnExitNow() const { return *exitNow; }
   
   float getIdim() const { return iDim; }
   float getJdim() const { return jDim; }
@@ -40,7 +40,7 @@ class GriddedData
   void setIGridsp(const float& iSpacing);
   void setJGridsp(const float& jSpacing);
   void setKGridsp(const float& kSpacing);
-  int getCoordSystem() { return coordSystem; }
+  // int getCoordSystem() { return coordSystem; }
   float fixAngle(float angle);
   void setLatLonOrigin(float *knownLat, float *knownLon, float *relX, 
 		       float *relY);
@@ -141,9 +141,6 @@ class GriddedData
   /* All of these functions go through all points in the grid to check for
      points within the requested radius. Somewhat inefficient. -LM
   */
-
-  // public slots:
-  //  void exit();
   
  protected:
   float iDim;
@@ -178,7 +175,7 @@ class GriddedData
   float originLat;
   float originLon;
   
-  /* I don't think we still need these enumeration values -LM */
+  /* I don't think we still need these enumeration values -LM 
 
   enum coordSystems {
     cartesian,
@@ -186,6 +183,7 @@ class GriddedData
     spherical
   };
   coordSystems coordSystem;
+  */
 
   float xmin, xmax;
   float ymin, ymax;
@@ -193,7 +191,7 @@ class GriddedData
 
   bool test();
 
-  bool exitNow;
+  volatile bool *exitNow;
   
 };
 

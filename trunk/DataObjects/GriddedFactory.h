@@ -29,15 +29,19 @@ class GriddedFactory
 					  Configuration* analyticConfig,
 					  float *vortexLat, float *vortexLon,
 					  float *radarLat, float *radarLon);
+		void setAbort(volatile bool* newAbort);
 							   
 	private:
-		enum coordSystems {
+		/*	enum coordSystems {
 			cartesian,
 			cylindrical,
 			spherical
 		};
 		
 		coordSystems coordSystem;
+		*/
+		
+		volatile bool* abort;
 };
 
 #endif

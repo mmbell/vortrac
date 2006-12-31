@@ -88,7 +88,9 @@ GraphFace::~GraphFace()
 
   delete image;
   delete imageFile;
+  VortexDataList = NULL;
   delete VortexDataList;
+  dropList = NULL;
   delete dropList;
   // delete key;
   
@@ -280,6 +282,27 @@ void GraphFace::newInfo(VortexList* gList)
     first = QDateTime(initialTime);
   }
   */
+  
+  if(gList==NULL){
+    VortexDataList = NULL;
+    
+    // Reset all member variables
+    rmwMax = 0; autoRmwMax = 0;
+    rGMax = 0; autoRGMax = 0;
+    pressureMax = 0; autoPressureMax = 0;
+    pGMax = 0; autoPGMax = 0;
+    rmwMin = 1000000; autoRmwMin = 100000;
+    rGMin = 1000000; autoRGMin = 1000000;
+    pressureMin = 1000000; autoPressureMin = 1000000;
+    pGMin = 1000000; autoPGMin = 1000000;
+    rmwRange = 0;
+    pressureRange = 0;
+    timeRange = -1;
+    imageAltered = true;
+    emit update();
+    return;
+  }
+  
   gList->timeSort();
   if(first.isNull())
     first = gList->at(0).getTime();;
@@ -307,6 +330,7 @@ void GraphFace::newInfo(VortexList* gList)
   emit update(); 
   //  Message::toScreen("Should have loaded everything");
   // puts out signal that starts paintEvent to repaint;
+  return;
 }
 
 

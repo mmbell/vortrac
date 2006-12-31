@@ -270,7 +270,9 @@ void VortexThread::run()
 			waitForData.wait(&mutex);
 			mutex.unlock();		
 		}
-		
+		if(abort)
+		  return;
+
 		emit log(Message("End of Vortex Run"));
 	}
 }

@@ -268,6 +268,7 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
   this->setMinimumSize(image.size() + textSize);
   this->resize(image.size() + textSize);
   emit hasImage(true);
+  //setVisible(true);
   
 }
 

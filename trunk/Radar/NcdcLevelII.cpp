@@ -40,6 +40,7 @@ bool NcdcLevelII::readVolume()
   // Open the QFile object from the header
   if(!radarFile.open(QIODevice::ReadOnly)) {
     Message::report("Can't open radar volume");
+    return false;
   }
 
   QDataStream dataIn(&radarFile);

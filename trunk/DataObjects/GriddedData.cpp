@@ -14,6 +14,7 @@
 // Coordinate systems
 
 #include "GriddedData.h"
+#include "Message.h"
 #include <math.h>
 
 GriddedData::GriddedData()
@@ -42,14 +43,17 @@ GriddedData::GriddedData()
   kGridsp = 0;
 
   //test();
+  exitNow = NULL;
 }
 
 GriddedData::~GriddedData()
 {
+  
 }
 
 void GriddedData::writeAsi()
 {
+
 }
 
 void GriddedData::setIdim(const int& dim)
@@ -1210,9 +1214,10 @@ float* GriddedData::getSphericalRangePositionTest(float azimuth,
   return positions;
 }
 
-/*
-void GriddedData::exit()
+
+void GriddedData::setExit(volatile bool *exit)
 {
-  exitNow = true;
+  //  Message::toScreen("setting up exit stratedgy - griddedData");
+  exitNow = exit;
 }
-*/
+

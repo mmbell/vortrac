@@ -14,7 +14,7 @@
 
 GriddedFactory::GriddedFactory()
 {
-
+  abort = NULL;
 }
 
 GriddedFactory::~GriddedFactory()
@@ -26,14 +26,14 @@ GriddedData* GriddedFactory::makeEmptyGrid(const char *coordinates)
 
         // Create a new gridded data object with the named coordinate system as the default
         if (coordinates == "cartesian") {
-                coordSystem = cartesian;
+	  //coordSystem = cartesian;
 				/* GriddedData *empty = new GriddedData; */
                 return 0;
         } else if (coordinates == "cylindrical") {
-                coordSystem = cylindrical;
+	  // coordSystem = cylindrical;
                 /* CylindricalData* cylinData = new CylindricalData; */
         } else if (coordinates == "spherical") {
-                coordSystem = spherical;
+	  //    coordSystem = spherical;
                 /* SphericalData* sphereData = new SphericalData; */
         } else {
                 // Not supported
@@ -48,8 +48,9 @@ GriddedData* GriddedFactory::makeCappi(RadarData *radarData,
 				       float *vortexLat, float *vortexLon)
 {
 
-		coordSystem = cartesian;
+  //coordSystem = cartesian;
 		CappiGrid* cappi = new CappiGrid;
+		cappi->setExit(abort);
 		cappi->gridRadarData(radarData,mainConfig->getConfig("cappi"),
 				     vortexLat,vortexLon);
 		return cappi;
@@ -64,8 +65,9 @@ GriddedData* GriddedFactory::makeAnalytic(RadarData *radarData,
 {
                 
                 if(radarData->getNumRays() <= 0) {
-		     coordSystem = cartesian;
+		  //coordSystem = cartesian;
 		     AnalyticGrid *data = new AnalyticGrid();
+		     data->setExit(abort);
 		     data->gridAnalyticData(mainConfig, analyticConfig, 
 					    vortexLat, vortexLon,radarLat,
 					    radarLon);
@@ -79,4 +81,9 @@ GriddedData* GriddedFactory::makeAnalytic(RadarData *radarData,
 		Message::toScreen("Error in make Analytic GriddedFactory");
 		return new CappiGrid();
 	      
+}
+
+void GriddedFactory::setAbort(volatile bool* newAbort)
+{
+  abort = newAbort;
 }

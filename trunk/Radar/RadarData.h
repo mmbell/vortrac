@@ -43,6 +43,8 @@ class RadarData
   int getVCP() {return vcp;} 
   void setAltitude(const float newAltitude);
   bool writeToFile(const QString fileName);
+  bool fileIsReadable();
+  QString getFileName();
 
 
  protected:

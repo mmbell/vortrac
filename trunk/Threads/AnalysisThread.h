@@ -43,7 +43,7 @@ class AnalysisThread : public QThread
  public slots:
      void catchLog(const Message& message);
      void foundCenter();
-	 void foundWinds();
+     void foundWinds();
      void abortThread();
  
  protected:
@@ -53,14 +53,15 @@ class AnalysisThread : public QThread
      void doneProcessing();
      void log(const Message& message);
      void newVCP(const int);
-	 void newCappi(const GriddedData*);
+     void newCappi(const GriddedData*);
+     void abortChanged(volatile bool *abortStatus);
 	 
  private:
      QMutex mutex;
      QWaitCondition waitForData;
      QWaitCondition waitForCenter;
-	 QWaitCondition waitForWinds;
-     bool abort;
+     QWaitCondition waitForWinds;
+     volatile bool abort;
      Configuration *configData;
      RadarData *radarVolume;
      GriddedFactory gridFactory;
@@ -69,12 +70,11 @@ class AnalysisThread : public QThread
      VortexList *vortexList;
      SimplexList *simplexList;
      PressureList *pressureList;
-     PressureList *dropSondeList;
+     PressureList *dropSondeList;  
+     // is this supposed to be type vortexList -LM
      void archiveAnalysis();
      float vortexLat, vortexLon;
      int numVolProcessed;
-     
-     GriddedData *activeData;
 
 };
 

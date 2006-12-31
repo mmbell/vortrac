@@ -50,6 +50,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 	  this, SLOT(catchLog(const Message&)));
 
   cappiDisplay = new CappiDisplay();
+  //cappiDisplay->setVisible(false);
 
   imageFileName = graph->getImageFileName();
 
@@ -196,7 +197,8 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 			    + " UTC"));
 
   // Do I need this?
-  pollThread = new PollThread;
+  //pollThread = new PollThread;
+  pollThread = NULL;
 
   //connect(this, SIGNAL(saveGraphImage(const QString&)),
   //   graph, SLOT(saveImage(const QString&)));
@@ -387,6 +389,8 @@ void AnalysisPage::updatePage()
 void AnalysisPage::runThread()
 {
   // Start a processing thread using the current configuration
+
+  pollThread = new PollThread();
  
   connect(pollThread, SIGNAL(log(const Message&)),
 	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
@@ -446,12 +450,15 @@ void AnalysisPage::runThread()
 void AnalysisPage::abortThread()
 {
   Message::toScreen("In AnalysisPage Abort");
-  // Try to kill the thread
-  if(pollThread->isRunning()) {
-    pollThread->abortThread();
-    Message::toScreen("Before PollThread New");
-    //pollThread->terminate();
-    pollThread = new PollThread;
+ 
+  // Try to kill the threads
+  if((pollThread!=NULL)&&(pollThread->isRunning())) {
+    disconnect(pollThread, SIGNAL(vortexListUpdate(VortexList*)), 
+	       this, SLOT(pollVortexUpdate(VortexList*)));
+    pollThread->abortThread();//Deletes everything but doesn't realocate memory
+    pollThread = NULL;
+    //pollThread = new PollThread;
+    pollVortexUpdate(NULL);
     emit log(Message("Analysis Aborted!", -1));
   }
   Message::toScreen("Leaving AnalysisPage Abort");
@@ -460,7 +467,7 @@ void AnalysisPage::abortThread()
 
 bool AnalysisPage::isRunning()
 {
-  if (pollThread->isRunning())
+  if ((pollThread!=NULL) && (pollThread->isRunning()))
     return true;
   return false;
 }
@@ -491,7 +498,8 @@ void AnalysisPage::updateCappi(const GriddedData* cappi)
   // Got a cappi now, create a new image
   cappiDisplay->constructImage(cappi);
   //cappiDisplay->show();
-  //cappiDisplay->setVisible(true);
+  //cappiDisplay->setVisible(true);  cannot let other threads change the
+  // visibility of objects created in this one - fatal errors
  
   // Add the tab to the tab widget if it is not already available
   //visuals->setTabEnabled(visuals->indexOf(cappiDisplay), true);
@@ -579,7 +587,7 @@ bool AnalysisPage::analyticModel()
 
 void AnalysisPage::pollVortexUpdate(VortexList* list)
 {
-  if(list->count() > 0) {
+  if((list!=NULL)&&(list->count() > 0)) {
     
     // Find the outermost vtd mean wind coefficient that is not equal to -999
     float maxRadius = 0;
@@ -603,6 +611,7 @@ void AnalysisPage::pollVortexUpdate(VortexList* list)
     currRMW->display(0);
     currDeficit->display(0);
     deficitLabel->setText(tr("Pressure Deficit From 0 km (mb):"));
+    emit vortexListChanged(NULL);
   }
 }
 
