@@ -1,16 +1,16 @@
 /*
- * StopLight.h
+ * StormSignal.h
  * VORTRAC
  *
- * Created by Lisa Mauger on 4/20/06
+ * Created by Lisa Mauger on 12/30/06
  *  Copyright 2006 University Corporation for Atmospheric Research.
  *  All rights reserved.
  *
  *
  */
 
-#ifndef STOPLIGHT_H
-#define STOPLIGHT_H
+#ifndef STORMSIGNAL_H
+#define STORMSIGNAL_H
 
 #include <QString>
 #include <QPainter>
@@ -18,36 +18,33 @@
 #include <QPen>
 #include <QBrush>
 #include <QSize>
-#include <QRadialGradient>
 #include <QTimer>
 #include "Message.h"
 
-class StopLight:public QWidget
+class StormSignal:public QWidget
 {
 
   Q_OBJECT
     
  public:
-        StopLight(QSize hint = QSize(225,80), QWidget *parent = 0);
-        ~StopLight();
+        StormSignal(QSize hint = QSize(225,80), QWidget *parent = 0);
+        ~StormSignal();
+
 
 	QSize sizeHint() const;
-	int getCurrentColor() {return currentColor; }
 
  protected:
 	void paintEvent(QPaintEvent *event);
  
  private:
-        QRadialGradient *brightRed, *brightYellow, *brightGreen;
 	bool red, yellow, green, flashing, on;
 	QTimer *timer;
 	QPen pen;
 	QSize hint;
-	int currentColor;
  
  public slots:
         void catchLog(const Message& message);
-        void changeColor(int light);
+        void changeStatus(int light);
  
  signals:
         void log(const Message& message);

@@ -62,7 +62,19 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   //QPushButton *lightButton = new QPushButton("Next Signal Pattern");
   //connect(lightButton, SIGNAL(pressed()), this, SLOT(testLight()));
   
-  // Stoplight used to show operational status of the vortrac algorithm
+  // StormSignal is used to alert user to 
+  // noticable changes in vortex properties
+
+  stormSignal = new StormSignal(QSize(225,125), this);
+  connect(stormSignal, SIGNAL(log(const Message&)),
+	  this, SLOT(catchLog(const Message&)));
+  
+  QHBoxLayout *stormLayout = new QHBoxLayout;
+  stormLayout->addStretch();
+  stormLayout->addWidget(stormSignal);
+  stormLayout->addStretch();
+
+  // Stoplight used to show operational status of the vortrac GUI
 
   lights = new StopLight(QSize(225,80), this);
   connect(lights, SIGNAL(log(const Message&)),
@@ -78,41 +90,37 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   QLabel *vcpLabel = new QLabel(tr("Current Radar VCP"));
   vcpString = new QString(tr("N/A"));
   vcp = new QLineEdit(*vcpString); 
-  //vcp = new QLineEdit(QString("121"));
   vcp->setReadOnly(true);
-  //vcpLayout->addStretch();
   vcpLayout->addWidget(vcpLabel);
   vcpLayout->addWidget(vcp);
-  //vcpLayout->addStretch();
   
   // Displays warning message that may accompany the change in stoplight
   // signal
 
-  warning = new QLineEdit;
-  warning->setReadOnly(true);
-  /*
-  // Button and widget to display current Cappi
-  cappiLaunch = new QPushButton("View Current CAPPI", this);
-  cappiLaunch->setEnabled(false);
-  connect(cappiLaunch, SIGNAL(pressed()), this, SLOT(launchCappi()));
-  cappiDisplay = new CappiDisplay();
-  hasNewCappi = false;
-  */
+  stopLightWarning = new QLineEdit;
+  stopLightWarning->setReadOnly(true);
+
+  // Displays meassage that may accompany the change in stormSignal
+
+  stormSignalWarning = new QLineEdit;
+  stormSignalWarning->setReadOnly(true);
+
   QVBoxLayout *main = new QVBoxLayout();
   // main->addStretch();
   main->addWidget(clockBox);
-
-  main->addLayout(vcpLayout);
-  
-  //main->addWidget(cappiLaunch);
-  
   main->addStretch();
-
+  main->addLayout(vcpLayout);
+  main->addStretch();
+  main->addLayout(stormLayout);
+  main->addWidget(stormSignalWarning);
+  main->addStretch();
   main->addLayout(lightsLayout);
-  main->addWidget(warning);
+  main->addWidget(stopLightWarning);
 
-  //main->addWidget(color);
+  //main->addWidget(color); // I use this when I need to select colors
+                            // for coding throw away in finished product -LM
   //main->addWidget(lightButton);
+
   setLayout(main);
   
   // Used to set the initial color of the stoplight
@@ -192,3 +200,15 @@ void DiagnosticPanel::launchCappi()
 	
 }
 */
+
+void DiagnosticPanel::changeStopLight(int newColor, const QString newMessage)
+{
+  lights->changeColor(newColor);
+  stopLightWarning->setText(newMessage);
+}
+
+void DiagnosticPanel::changeStormSignal(int status, const QString newMessage)
+{
+  stormSignal->changeStatus(status);
+  stormSignalWarning->setText(newMessage); 
+}

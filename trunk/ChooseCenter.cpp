@@ -470,7 +470,7 @@ bool ChooseCenter::chooseMeanCenters()
       float bestScore = 0.0;
       for(int j = 0; j < simplexResults->value(i).getNumRadii(); j++) {
 	if(isnan(score[i][j][k])||isinf(score[i][j][k]))
-	  Message::toScreen("Score no good here... i = "+QString().setNum(i)+" j = "+QString().setNum(j)+" k = "+QString().setNum(k)+" score = "+QString().setNum(score[i][j][k]));
+	  Message::toScreen("ChooseCenter: ChooseMeanCenters: Score no good here... i = "+QString().setNum(i)+" j = "+QString().setNum(j)+" k = "+QString().setNum(k)+" score = "+QString().setNum(score[i][j][k]));
 	if(score[i][j][k] > bestScore) {
 	  bestScore = score[i][j][k];
 	  bestIndex = j;

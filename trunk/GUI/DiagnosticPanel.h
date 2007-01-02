@@ -20,6 +20,7 @@
 
 #include "Message.h"
 #include "StopLight.h"
+#include "StormSignal.h"
 #include "CappiDisplay.h"
 #include "DataObjects/GriddedData.h"
 
@@ -37,19 +38,30 @@ Q_OBJECT
       void pickColor();
       void testLight();
       void updateVCP(const int newVCP);
+      void changeStopLight(int newColor, const QString newMessage);
+      void changeStormSignal(int status, const QString newMessage);
       //	  void updateCappi(const GriddedData* newCappi);
       //	  void launchCappi();
 	  
  private:
       QTimer *timer;
       QLCDNumber *clock;
-      QLineEdit *vcp, *warning;
+
+      QLineEdit *vcp;
+      QString* vcpString;
+
       StopLight *lights;
-      QPushButton *cappiLaunch;
+      QLineEdit *stopLightWarning;
+      int dummy;
+      QList<int> colorsReceived;
+      QList<QString> colorMessagesReceived;
+
+      StormSignal *stormSignal;
+      QLineEdit *stormSignalWarning;
+
+      //QPushButton *cappiLaunch;
       //CappiDisplay *cappiDisplay;
       //const GriddedData *cappi;
-      QString* vcpString;
-      int dummy;
       //bool hasNewCappi;
 
  private slots:

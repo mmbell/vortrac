@@ -40,6 +40,10 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   diagPanel->setFixedWidth(250);
   connect(diagPanel, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)));
+  connect(statusLog, SIGNAL(newStopLightColor(int, const QString)),
+	  diagPanel, SLOT(changeStopLight(int, const QString)));
+  connect(statusLog, SIGNAL(newStormSignalStatus(int, const QString)),
+	  diagPanel, SLOT(changeStormSignal(int, const QString)));
 
   QTabWidget *visuals = new QTabWidget;
   visuals->setTabPosition(QTabWidget::West);

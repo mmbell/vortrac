@@ -13,21 +13,34 @@
 #include <QTextStream>
 
 Message::Message(const char *errormsg, int newProgress, 
-	     const char *newLocation, bool newSeverity)
+		 const char *newLocation, 
+		 StopLightColor newColor, const char *newStopLightMessage, 
+		 StormSignalStatus newStatus, 
+		 const char *newStormSignalMessage)
 {
   logMessage = QString(errormsg);
   progress = newProgress;
   location = newLocation;
-  severe = newSeverity;
+  color = newColor;
+  stopLightMessage = QString(newStopLightMessage);
+  status = newStatus;
+  stormSignalMessage = QString(newStormSignalMessage);
 }
 
 Message::Message(const QString errormsg, int newProgress,
-	     const QString newLocation, bool newSeverity)
+		 const QString newLocation, 
+		 StopLightColor newColor, 
+		 const QString newStopLightMessage, 
+		 StormSignalStatus newStatus, 
+		 const QString newStormSignalMessage)
 {
   logMessage = errormsg;
   progress = newProgress;
   location = newLocation;
-  severe = newSeverity;
+  color = newColor;
+  stopLightMessage = newStopLightMessage;
+  status = newStatus;
+  stormSignalMessage = newStormSignalMessage;
 }
   
 Message::~Message()
@@ -37,6 +50,11 @@ Message::~Message()
 void Message::setLogMessage(const QString newLogMessage) 
 {
   logMessage = newLogMessage;
+}
+
+void Message::setLogMessage(const char *newLogMessage)
+{
+  logMessage = QString(newLogMessage);
 }
 
 void Message::setProgress(int progressPercentage)
@@ -49,12 +67,40 @@ void Message::setLocation(const QString newLocation)
   location = newLocation;
 }
 
-void Message::setSevere(bool newSeverity)
+void Message::setLocation(const char *newLocation)
 {
-  severe = newSeverity;
+  location = QString(newLocation);
 }
 
+void Message::setColor(StopLightColor newColor)
+{
+  color = newColor;
+}
 
+void Message::setStopLightMessage(const QString newStopLightMessage)
+{
+  stopLightMessage = newStopLightMessage;
+}
+
+void Message::setStopLightMessage(const char *newStopLightMessage)
+{
+  stopLightMessage = QString(newStopLightMessage);
+}
+
+void Message::setStatus(StormSignalStatus newStatus)
+{
+  status = newStatus;
+}
+
+void Message::setStormSignalMessage(const QString newMessage)
+{
+  stormSignalMessage = newMessage;
+}
+
+void Message::setStormSignalMessage(const char* newMessage)
+{
+  stormSignalMessage = QString(newMessage);
+}
 
 void Message::report(const char *errormsg)
 {

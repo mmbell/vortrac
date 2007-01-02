@@ -265,3 +265,18 @@ QString AbstractPanel::getFromElement(const QString& childElemName){
   }
   return child.text();
 }
+
+bool AbstractPanel::checkDirectory()
+{
+  QString location = getCurrentDirectoryPath();
+  if((location == QString())||(!QDir(location).exists())
+     ||(QDir(location).isReadable()))
+    return false;
+  return true;
+}
+
+bool AbstractPanel::checkValues()
+{
+  Message::toScreen("In bad function Abstract Panels Check Values");
+  return false;
+}

@@ -39,6 +39,8 @@ class Log : public QWidget
  signals:
   void newLogEntry(const QString & logEntry);
   void newProgressEntry(int progress);
+  void newStopLightColor(int newColor, const QString newMessage);
+  void newStormSignalStatus(int newStatus, const QString newMessage);
   void log(const Message& message);
 
  private:

@@ -173,7 +173,10 @@ void Log::catchLog(const Message& logEntry)
   QString message = log->getLogMessage();
   int progress = log->getProgress();
   QString location = log->getLocation();
-  bool severe = log->isSevere();
+  int stopLightColor = log->getColor();
+  QString stopLightMessage = log->getStopLightMessage();
+  int stormSignalStatus = log->getStatus();
+  QString stormSignalMessage = log->getStormSignalMessage();
   
   if(message!=QString()) {
     if(displayLocation) {
@@ -192,6 +195,14 @@ void Log::catchLog(const Message& logEntry)
     absoluteProgress = 0;
     emit newProgressEntry(absoluteProgress);
   }
+
+  if((stopLightColor!=0) || (stopLightMessage!=QString())) {
+    emit newStopLightColor(stopLightColor, stopLightMessage);
+  }
+  if((stormSignalStatus!=0) || (stormSignalMessage!=QString())) {
+    emit newStormSignalStatus( stormSignalStatus, stormSignalMessage);
+  }
+  
   delete log;
 }
 

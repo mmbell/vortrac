@@ -84,6 +84,9 @@ class AbstractPanel:public QWidget
     * view fields with information on radar latitude, longitude and altitude
     */
 
+   virtual bool checkValues();
+   bool checkDirectory();
+
  public slots:
    void createDataGaps(const QString& value);
    void catchLog(const Message& message);
@@ -127,6 +130,8 @@ class AbstractPanel:public QWidget
      // checks to see if analytic model is the selected format
    void radarChanged(const QString& text);
      // allows for automatic updating of stored radar specs
+
+   
  
 
  signals:
