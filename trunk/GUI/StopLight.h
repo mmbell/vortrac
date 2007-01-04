@@ -47,7 +47,7 @@ class StopLight:public QWidget
  
  public slots:
         void catchLog(const Message& message);
-        void changeColor(int light);
+        void changeColor(StopLightColor light);
  
  signals:
         void log(const Message& message);

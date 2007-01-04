@@ -431,6 +431,7 @@ void SimplexThread::run()
 
 		// Save again to keep mean values found in chooseCenter
 		simplexResults->save();
+   
 	
 		// Clean up
 		delete[] dataGaps;

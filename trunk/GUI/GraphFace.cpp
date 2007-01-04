@@ -218,7 +218,15 @@ void GraphFace::resizeEvent(QResizeEvent * /* event */)
 void GraphFace::saveImage()
   // Saves the image of the plot to file
 {
-  QImage *visibleImage = image;
+  Message::toScreen("GraphFace:Made it into save image");
+  
+  QImage *visibleImage = new QImage(graph_width+LEFT_MARGIN_WIDTH+RIGHT_MARGIN_WIDTH,graph_height+TOP_MARGIN_HEIGHT+BOTTOM_MARGIN_HEIGHT,QImage::Format_ARGB32_Premultiplied);
+  QPainter *painter = new QPainter(visibleImage);
+  painter = updateImage(painter);
+  if (painter->isActive())
+    painter->end();
+  delete painter;
+  
   QList<QByteArray> byteList = QImageWriter::supportedImageFormats();
   int index = byteList.indexOf("png");
   byteList.move(index,0);
@@ -250,6 +258,7 @@ void GraphFace::saveImage()
       emit log(Message("GraphFace was unable to save"));
     } 
   }
+  Message::toScreen("Made it out of GraphFace:SaveImage()");
 }
 /*
 void GraphFace::saveImage(QString fileName)

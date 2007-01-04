@@ -17,40 +17,40 @@
 #include <iostream>
 #include <QString>
 
+enum StormSignalStatus {
+  Nothing,
+  RapidIncrease,
+  RapidDecrease,
+  Ok
+};
+
+enum StopLightColor{
+  AllOff,
+  BlinkRed,
+  Red,
+  BlinkYellow,
+  Yellow,
+  BlinkGreen,
+  Green,
+  AllOn
+};
+
 class Message
 {
 
  public:
 
-
-  enum StopLightColor{
-    AllOff,
-    BlinkRed,
-    Red,
-    BlinkYellow,
-    Yellow,
-    BlinkGreen,
-    Green,
-    AllOn
-  };
-
-  enum StormSignalStatus {
-    rapidIncrease,
-    rapidDecrease,
-    ok
-  };
-
   Message(const char *errormsg = 0, int newProgress = 0, 
 	  const char *newLocation = 0, 
 	  StopLightColor newColor = Green, const char *newStopLightMessage = 0,
-	  StormSignalStatus newStatus = ok, 
+	  StormSignalStatus newStatus = Nothing, 
 	  const char *newStormSignalMessage = 0);
 
   Message(const QString errormsg = QString(), int newProgress = 0,
 	  const QString newLocation = QString(), 
 	  StopLightColor newColor = Green, 
 	  const QString newStopLightMessage = QString(), 
-	  StormSignalStatus newStatus = ok, 
+	  StormSignalStatus newStatus = Nothing, 
 	  const QString newStormSignalMessage = QString());
 
   ~Message();

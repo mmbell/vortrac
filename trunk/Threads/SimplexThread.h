@@ -35,8 +35,8 @@ class SimplexThread : public QThread
  public:
      SimplexThread(QObject *parent = 0);
      ~SimplexThread();
-	 void findCenter(Configuration *wholeConfig, GriddedData *dataPtr, 
-					 SimplexList *simplexPtr, VortexData *vortexPtr);
+     void findCenter(Configuration *wholeConfig, GriddedData *dataPtr, 
+		     SimplexList *simplexPtr, VortexData *vortexPtr);
 
  public slots:
      void catchLog(const Message& message);

@@ -28,9 +28,8 @@ ConfigurationDialog::ConfigurationDialog(QWidget* parent,
   populatePanels();
   makePanelForString();
   workingDirectory = vortex->getDefaultDirectory();
-  connect(vortex, SIGNAL(workingDirectoryChanged()),
-  	  this, SLOT(setPanelDirectories()));
-
+ 
+  //vortex->setDefaultDirectory(workingDirectory);
   selection = new QListWidget(this);
   selection->setViewMode(QListView::IconMode);
   selection->setMovement(QListView::Static);
@@ -103,6 +102,16 @@ bool ConfigurationDialog::readConfig()
       QDomElement child = currNode.toElement();
       panelForString[child.tagName()]->updatePanel(child);
     }
+
+  //Message::toScreen("ConfigurationDialog: ReadConfig: Got through the important part");
+  //emit log(Message("ConfigurationDialog: ReadConfig: Got through the important part"));
+
+  connect(vortex, SIGNAL(workingDirectoryChanged()),
+	  this, SLOT(setPanelDirectories()));
+  vortex->setDefaultDirectory(workingDirectory);
+  vortex->setPanelChanged(true);
+  vortex->updateConfig();
+  setPanelDirectories();
   return true;
   //find way to check fail!!
 }
@@ -116,8 +125,13 @@ void ConfigurationDialog::applyChanges()
   for(int i = 0; i < panels.count();i++)
     {
       QString nodeName = panelForString.key(panels.at(i));
-      if(!panels.at(i)->updateConfig())
+      if(!panels.at(i)->updateConfig()) {
+	emit log(Message(QString("Could not update config"),
+			 0,panels.at(i)->objectName()));
 	return;
+      }
+      //if(!panels.at(i)->checkDirectory())
+      //return;
     }
   emit configChanged();
   close();
@@ -139,6 +153,10 @@ void ConfigurationDialog::makePanelForString()
   panelForString.insert("pressure", pressure);
   panelForString.insert("graphics", graphics);
   panelForString.insert("qc", qc);
+  QList<QString> strings = panelForString.keys();
+  for(int p = 0; p < strings.count(); p++) {
+    panelForString.value(strings[p])->setObjectName(strings[p]);
+  }
 }
 
 void ConfigurationDialog::populateSelection()
@@ -317,21 +335,54 @@ void ConfigurationDialog::catchLog(const Message& message)
 void ConfigurationDialog::setPanelDirectories()
 {
   workingDirectory = vortex->getDefaultDirectory();
+  //vortex->setWorkingDirectory(workingDirectory);
+  vortex->setPanelChanged(true);
+  vortex->updateConfig();
   QList<AbstractPanel*> panelList = panelForString.values();
   for(int i = 0; i < panelList.count(); i++) {
     AbstractPanel* currPanel = panelList[i];
     if((currPanel!=vortex) && (currPanel!=qc) && (currPanel!=hvvp) 
-       && (currPanel!=graphics) && (currPanel!=radar) && (currPanel!=pressure)) {
-      if(currPanel->getDefaultDirectory()->path() 
-	 == currPanel->getCurrentDirectoryPath() ) {
-	// If the directory has not been changed from the default
-	QDir* tempWorkingDir = new QDir(vortex->getCurrentDirectoryPath());
-	currPanel->setDefaultDirectory(tempWorkingDir);
-	configData->setParam(configData->getConfig(panelForString.key(currPanel)), QString("dir"), currPanel->getDefaultDirectory()->path());
-	currPanel->updatePanel(currPanel->getPanelElement());
+       && (currPanel!=graphics) && (currPanel!=radar) && (currPanel!=pressure))
+      {
+	if(currPanel->getDefaultDirectory()->path() 
+	   == currPanel->getCurrentDirectoryPath() ) {
+	  // If the directory has not been changed from the default
+
+	  QDir* tempWorkingDir = new QDir(vortex->getCurrentDirectoryPath());
+	  if(currPanel->setDefaultDirectory(tempWorkingDir)){
+	    configData->setParam(configData->getConfig(panelForString.key(currPanel)), QString("dir"), currPanel->getDefaultDirectory()->path());
+	    currPanel->updatePanel(currPanel->getPanelElement());
+	    currPanel->setPanelChanged(true);
+	    currPanel->updateConfig();
+	    emit log(Message(QString(),0,currPanel->objectName(),Green));
+	    
+	  }
+	  else {
+	    emit log(Message(QString(),0,currPanel->objectName(),Red,
+			     QString("Failed to set default directory")));
+	}
 	tempWorkingDir = NULL;
 	delete tempWorkingDir;
       }
     }
   }
+}
+
+bool ConfigurationDialog::checkPanels()
+{
+  bool noErrors = true;
+  QList<AbstractPanel*> panels = panelForString.values();
+  for(int p = 0; p < panels.count(); p++) {
+    if(!panels[p]->checkDirectory())
+      noErrors = false;
+  }
+  
+  if(!radar->checkDates()){
+    noErrors = false;
+  }
+  if(!chooseCenter->checkDates()) {
+    noErrors = false;
+  }
+
+  return noErrors;
 }

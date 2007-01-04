@@ -103,7 +103,7 @@ void StopLight::catchLog(const Message& message)
   emit log(message);
 }
 
-void StopLight::changeColor(int light)
+void StopLight::changeColor(StopLightColor light)
 {
   red = false;
   yellow = false;
@@ -114,24 +114,24 @@ void StopLight::changeColor(int light)
   
   switch(light)
     {
-    case 0:             // No lights
+    case AllOff:             // No lights
       break;
-    case 1:             // Flashing Red
+    case BlinkRed:           // Flashing Red
       flashing = true;
-    case 2:             // Red 
+    case Red:                // Red 
       red = true;
       break;
-    case 3:             // Flashing Yellow
+    case BlinkYellow:        // Flashing Yellow
       flashing = true;
-    case 4:             // Yellow
+    case Yellow:             // Yellow
       yellow = true;
       break;
-    case 5:             // Flashing Green
+    case BlinkGreen:         // Flashing Green
       flashing = true;
-    case 6:             // Green
+    case Green:              // Green
       green = true;
       break;
-    default:
+    case AllOn:
       red = true;
       yellow = true;
       green = true;

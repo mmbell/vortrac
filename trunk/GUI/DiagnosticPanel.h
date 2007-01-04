@@ -36,10 +36,11 @@ Q_OBJECT
  public slots:
       void catchLog(const Message& message);
       void pickColor();
-      void testLight();
+      //      void testLight();
       void updateVCP(const int newVCP);
-      void changeStopLight(int newColor, const QString newMessage);
-      void changeStormSignal(int status, const QString newMessage);
+      void changeStopLight(StopLightColor newColor, const QString newMessage);
+      void changeStormSignal(StormSignalStatus status, 
+			     const QString newMessage);
       //	  void updateCappi(const GriddedData* newCappi);
       //	  void launchCappi();
 	  

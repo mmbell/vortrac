@@ -296,14 +296,15 @@ void AnalysisThread::run()
 		//Message::toScreen("Distance Between Radar and Storm "+QString().setNum(relDist));
 		bool beyondRadar = true;
 		bool closeToEdge = false;
-		//for(int i = 0; i < radarVolume->getNumSweeps(); i++) {
-		//if(relDist < radarVolume->getSweep(i)->getUnambig_range()){
-		//    beyondRadar = false;
-		if(relDist < 174) {
-		  beyondRadar = false;
-		  //Message::toScreen("Level "+QString().setNum(i)+" screws it up with range "+QString().setNum(radarVolume->getSweep(i)->getUnambig_range()));
+		for(int i = 0; i < radarVolume->getNumSweeps(); i++) {
+		  if((relDist < radarVolume->getSweep(i)->getUnambig_range())
+		     &&(radarVolume->getSweep(i)->getVel_numgates()> 0)){
+		    beyondRadar = false;
+		    //if(relDist < 174) {
+		    //beyondRadar = false;
+		    //Message::toScreen("Level "+QString().setNum(i)+" screws it up with range "+QString().setNum(radarVolume->getSweep(i)->getUnambig_range()));
+		  }
 		}
-		// }
 		//  if((relDist > radarVolume->getSweep(i)->getUnambig_range()-10)&&(relDist < radarVolume->getSweep(i)->getUnambig_range()+5))
 		//    closeToEdge = true;
 		//}

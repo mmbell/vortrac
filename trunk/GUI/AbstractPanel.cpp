@@ -20,12 +20,13 @@
 #include <QLineEdit>
 #include <QRadioButton>
 #include <QFrame>
-
+#include <QFileInfo>
 #include <QFileDialog>
 
 AbstractPanel::AbstractPanel(QWidget *parent)
   :QWidget(parent)
 {
+  //Message::toScreen("Using Abstract Panel Constructor");
   defaultDirectory = new QDir(QDir::currentPath());
   dir = new QLineEdit;
   dir->setText(defaultDirectory->currentPath());
@@ -240,19 +241,20 @@ void AbstractPanel::radarChanged(const QString& text)
 
 bool AbstractPanel::setDefaultDirectory(QDir* newDir)
 {
- if(!newDir->isAbsolute())
-   newDir->makeAbsolute();
- if(newDir->isReadable()){
-   defaultDirectory = NULL;
-   defaultDirectory = newDir;
-   return true;
- }
- else {
-   newDir->cdUp();
-   defaultDirectory = NULL;
-   defaultDirectory = newDir;
-   return false;
- }
+  //Message::toScreen("AbstractPanel - SetDefaultDirectory");
+  //emit log(Message("AbstractPanel - Set Default Directory"));
+  if(!newDir->isAbsolute())
+    newDir->makeAbsolute();
+  if(!newDir->exists())
+    newDir->mkpath(newDir->path());
+  if(newDir->isReadable()){
+    defaultDirectory->cd(newDir->path());
+    return true;
+  }
+  else {
+    emit log(Message(QString(),0,this->objectName(),Red,QString("Default Directory Does Not Exist")));
+    return false;
+  }
 }
 
 QString AbstractPanel::getFromElement(const QString& childElemName){
@@ -268,10 +270,52 @@ QString AbstractPanel::getFromElement(const QString& childElemName){
 
 bool AbstractPanel::checkDirectory()
 {
+  //Message::toScreen("Check Directory for "+this->objectName()+" in checkDirectory with "+getCurrentDirectoryPath());
   QString location = getCurrentDirectoryPath();
-  if((location == QString())||(!QDir(location).exists())
-     ||(QDir(location).isReadable()))
+  if(location == QString()) {
+    emit log(Message(QString("No directory entered, Please Enter a directory"),
+		     0, this->objectName(), Red, 
+		     QString(" No directory designated ")));
     return false;
+  }
+  QFileInfo directory(location);
+  directory.makeAbsolute();
+  if((!directory.exists())||(!directory.isDir())) {
+    QString message("Cannot read from "+directory.path()+" please check the directory");
+    
+    emit log(Message(message, 0, this->objectName(), Red, QString(" Cannot Read From Directory ")));
+    return false;
+  }
+  
+  if((!directory.isReadable())&&!((this->objectName()=="graphics")||
+				  (this->objectName()=="hvvp"))) 
+    {
+      // Check to insure that all directories which will be used are readable
+      QString message("Cannot read from "+directory.path()+" please verify that you have read permissions in this directory");
+
+      emit log(Message(message, 0, this->objectName(), 
+		       Red, QString("Cannot Read From Directory")));
+      return false;
+    }
+  
+
+  if((!directory.isWritable())&&((this->objectName()=="vortex")||
+				 (this->objectName()=="cappi")||
+				 (this->objectName()=="center")||
+				 (this->objectName()=="vtd")||
+				 (this->objectName()=="choosecenter")))
+    {
+      QString message("Cannot write to "+directory.path()+" please verify that you have write permissions in this directory");
+      emit log(Message(message, 0, this->objectName(), 
+		       Red, QString("Cannot Write to Directory")));
+      return false;
+    }
+  
+  // If directory is correct emit signal to set light to go
+  
+  emit log(Message(QString(),0,this->objectName(),Green,QString()));
+ 
+  
   return true;
 }
 

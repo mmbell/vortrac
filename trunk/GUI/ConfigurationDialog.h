@@ -39,6 +39,7 @@ public slots:
        void graphicsParameter(const QDomElement& element, const QString& name,
 			      const QString& parameter);
        void catchLog(const Message& message);
+       bool checkPanels();
          
 private:
        QListWidget *selection;

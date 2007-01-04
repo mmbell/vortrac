@@ -36,7 +36,8 @@ Log::Log(QWidget *parent)
   logFile->setFileName(workingDirectory.filePath(logFileName));
   
   absoluteProgress = 0;
-  displayLocation = false;
+  //displayLocation = false;
+  displayLocation = true;
 
   //Message::toScreen("log:constructor: "+workingDirectory.path());
 }
@@ -173,13 +174,13 @@ void Log::catchLog(const Message& logEntry)
   QString message = log->getLogMessage();
   int progress = log->getProgress();
   QString location = log->getLocation();
-  int stopLightColor = log->getColor();
+  StopLightColor stopLightColor = log->getColor();
   QString stopLightMessage = log->getStopLightMessage();
-  int stormSignalStatus = log->getStatus();
+  StormSignalStatus stormSignalStatus = log->getStatus();
   QString stormSignalMessage = log->getStormSignalMessage();
   
   if(message!=QString()) {
-    if(displayLocation) {
+    if(displayLocation && (location!=QString())) {
       message = location+": "+message;
     }
     message+="\n";
@@ -196,13 +197,15 @@ void Log::catchLog(const Message& logEntry)
     emit newProgressEntry(absoluteProgress);
   }
 
-  if((stopLightColor!=0) || (stopLightMessage!=QString())) {
-    emit newStopLightColor(stopLightColor, stopLightMessage);
+  if((stopLightColor!=AllOff) || (stopLightMessage!=QString())) {
+    if(!handleStopLightUpdate(stopLightColor,stopLightMessage,location))
+      Message::toScreen("Log:Trouble Logging StopLight Change! "+location+" : "+stopLightMessage);
   }
-  if((stormSignalStatus!=0) || (stormSignalMessage!=QString())) {
-    emit newStormSignalStatus( stormSignalStatus, stormSignalMessage);
+  if((stormSignalStatus!=Nothing) || (stormSignalMessage!=QString())) {
+    if(!handleStormSignalUpdate(stormSignalStatus,stormSignalMessage,location))
+      Message::toScreen("Log:Trouble Logging StormStatus Change! "+location+" : "+stormSignalMessage);
   }
-  
+
   delete log;
 }
 
@@ -227,4 +230,55 @@ bool Log::writeToFile(const QString& message)
   // Message::toScreen("Failed to write Log message to file");
   return false;
   
+}
+
+bool Log::handleStopLightUpdate(StopLightColor newColor, QString message, 
+				QString location)
+{
+  // Check to see if update is an error or a corrected error
+  int originalCount = StopLightQueue.count();
+
+  if((newColor == Green)||(newColor == BlinkGreen)) {
+    // Message::toScreen("The Good");
+    if(StopLightQueue.count()==0)
+      return true;
+    for(int i = StopLightQueue.count()-1; i >= 0; i--) {
+      if((StopLightQueue[i]->location == location) ||
+	 (StopLightQueue[i]->location == QString()))
+	StopLightQueue.removeAt(i);
+    }
+  }
+  else {
+    // Add bad signals to the stack based on color....
+    SLChange *mostRecent = new SLChange;
+    mostRecent->color = newColor;
+    mostRecent->message = message;
+    mostRecent->location = location;
+    if(StopLightQueue.count()==0)
+      StopLightQueue.append(mostRecent);
+    else {
+      for(int i = 0; i < StopLightQueue.count(); i++) {
+	if(mostRecent->color < StopLightQueue[i]->color)
+	  StopLightQueue.insert(i+1, mostRecent);
+      }
+    }
+    //Message::toScreen("The Bad");
+  }
+  
+  if((originalCount!=StopLightQueue.count())||(originalCount==0)) {
+    emit newStopLightColor(StopLightQueue[0]->color,
+			   StopLightQueue[0]->message);
+    return true;
+  }
+  else {
+    // A color came in and was not handled .... issue
+    return true;
+  }
+
+}
+
+bool Log::handleStormSignalUpdate(StormSignalStatus newStatus, QString message,
+				  QString location)
+{
+  emit newStormSignalStatus(newStatus, message);
 }

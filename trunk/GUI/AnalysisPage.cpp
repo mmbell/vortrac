@@ -40,10 +40,14 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   diagPanel->setFixedWidth(250);
   connect(diagPanel, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)));
-  connect(statusLog, SIGNAL(newStopLightColor(int, const QString)),
-	  diagPanel, SLOT(changeStopLight(int, const QString)));
-  connect(statusLog, SIGNAL(newStormSignalStatus(int, const QString)),
-	  diagPanel, SLOT(changeStormSignal(int, const QString)));
+  connect(statusLog, SIGNAL(newStopLightColor(StopLightColor, const QString)),
+	  diagPanel, SLOT(changeStopLight(StopLightColor, const QString)), 
+	  Qt::DirectConnection);
+  connect(statusLog, SIGNAL(newStormSignalStatus(StormSignalStatus, 
+						 const QString)),
+	  diagPanel, SLOT(changeStormSignal(StormSignalStatus, 
+					    const QString)),
+	  Qt::DirectConnection);
 
   QTabWidget *visuals = new QTabWidget;
   visuals->setTabPosition(QTabWidget::West);
@@ -229,11 +233,14 @@ AnalysisPage::~AnalysisPage()
 
 void AnalysisPage::newFile()
 {
-
   // Load the default configuration
-  if (!loadFile(QDir::current().filePath("vortrac_default.xml")))
-    emit log(Message("Couldn't load default configuration"));
-  
+  if(QDir::current().exists("vortrac_default.xml")) {
+    if (!loadFile(QDir::current().filePath("vortrac_default.xml")))
+      emit log(Message(QString("Couldn't load default configuration - Please check the default file vortrac_default.xml and insure that it is accesible"),0,this->objectName(),Red));
+  }
+  else {
+    emit log(Message(QString("Couldn't locate default configuration - Please locate vortrac_default.xml and use the open button"),0,this->objectName(),Red));
+  }
   // Set the current filename to untitled
   isUntitled = true;
   configFileName = QDir::current().filePath("vortrac_newconfig.xml");
@@ -393,6 +400,13 @@ void AnalysisPage::updatePage()
 void AnalysisPage::runThread()
 {
   // Start a processing thread using the current configuration
+
+  if(!configDialog->checkPanels())
+    Message::toScreen("Didn't clear all diagnostic hoops");
+    // return;
+
+  //Message::toScreen("Intentionally cut short - AnalysisPage: RunThread");
+  //return;
 
   pollThread = new PollThread();
  

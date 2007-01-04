@@ -180,7 +180,7 @@ void PollThread::run()
     QString outFileName = workingDirectory.path()+"/";
     outFileName += vortexName+"_"+radarName+"_"+year+"_vortexList.xml";
     vortexList->setFileName(outFileName);
-    vortexList->setNewWorkingDirectory(vortexWorkingDirectory.path());
+    vortexList->setNewWorkingDirectory(vortexWorkingDirectory.path()+"/");
   
     file = allPossibleFiles.filter("simplexList").value(0);
     emit log(Message(file));
@@ -196,7 +196,7 @@ void PollThread::run()
     outFileName = workingDirectory.path() + "/";
     outFileName += vortexName+"_"+radarName+"_"+year+"_simplexList.xml";
     simplexList->setFileName(outFileName);
-    simplexList->setNewWorkingDirectory(simplexWorkingDirectory.path());
+    simplexList->setNewWorkingDirectory(simplexWorkingDirectory.path()+"/");
     
     if(allPossibleFiles.filter("pressureList").count() > 0) {
       file = allPossibleFiles.filter("pressureList").value(0);

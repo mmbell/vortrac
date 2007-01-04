@@ -14,6 +14,7 @@
 
 #include <QString>
 #include <QPainter>
+#include <QPainterPath>
 #include <QWidget>
 #include <QPen>
 #include <QBrush>
@@ -41,10 +42,11 @@ class StormSignal:public QWidget
 	QTimer *timer;
 	QPen pen;
 	QSize hint;
+	QPainterPath *hurrSymbol;
  
  public slots:
         void catchLog(const Message& message);
-        void changeStatus(int light);
+        void changeStatus(StormSignalStatus status);
  
  signals:
         void log(const Message& message);

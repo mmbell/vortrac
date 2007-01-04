@@ -114,7 +114,7 @@
       <maxfold>4</maxfold>
       <windspeed>30</windspeed>
       <winddirection>180</winddirection>
-      <awips_dir>/path/to/awips/data</awips_dir>
+      <awips_dir>default</awips_dir>
       <vadlevels>25</vadlevels>
       <numcoeff>3</numcoeff>
       <vadthr>30</vadthr>

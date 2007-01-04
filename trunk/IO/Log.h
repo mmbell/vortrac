@@ -39,8 +39,9 @@ class Log : public QWidget
  signals:
   void newLogEntry(const QString & logEntry);
   void newProgressEntry(int progress);
-  void newStopLightColor(int newColor, const QString newMessage);
-  void newStormSignalStatus(int newStatus, const QString newMessage);
+  void newStopLightColor(StopLightColor newColor, const QString newMessage);
+  void newStormSignalStatus(StormSignalStatus newStatus, 
+			    const QString newMessage);
   void log(const Message& message);
 
  private:
@@ -51,6 +52,26 @@ class Log : public QWidget
   bool displayLocation;
 
   bool writeToFile(const QString& message);
+
+  struct SLChange {
+    StopLightColor color;
+    QString message;
+    QString location;
+  };
+
+  struct SSChange {
+    StormSignalStatus status;
+    QString message;
+    QString location;
+  };
+  
+  bool handleStopLightUpdate(StopLightColor newColor, QString message, 
+			      QString location);
+  QList<SLChange*> StopLightQueue;
+
+  bool handleStormSignalUpdate(StormSignalStatus newStatus, QString message,
+			       QString location);
+  QList<SSChange*> StormStatusQueue;
 
 };
 

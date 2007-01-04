@@ -65,7 +65,7 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   // StormSignal is used to alert user to 
   // noticable changes in vortex properties
 
-  stormSignal = new StormSignal(QSize(225,125), this);
+  stormSignal = new StormSignal(QSize(225,225), this);
   connect(stormSignal, SIGNAL(log(const Message&)),
 	  this, SLOT(catchLog(const Message&)));
   
@@ -125,7 +125,7 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   
   // Used to set the initial color of the stoplight
   
-  lights->changeColor(6);
+  lights->changeColor(Green);
 
   dummy = 0;
   
@@ -180,7 +180,7 @@ void DiagnosticPanel::updateCappi(const GriddedData* newCappi)
 	cappiDisplay->constructImage(cappi);
 	hasNewCappi = true;
 }
-*/
+
 void DiagnosticPanel::testLight()
 {
   lights->changeColor(dummy);
@@ -189,7 +189,7 @@ void DiagnosticPanel::testLight()
   else 
     dummy = 0;
 }
-/*
+
 void DiagnosticPanel::launchCappi()
 {
 	// Fill the pixmap with the current cappi dat
@@ -201,13 +201,15 @@ void DiagnosticPanel::launchCappi()
 }
 */
 
-void DiagnosticPanel::changeStopLight(int newColor, const QString newMessage)
+void DiagnosticPanel::changeStopLight(StopLightColor newColor,
+				      const QString newMessage)
 {
   lights->changeColor(newColor);
   stopLightWarning->setText(newMessage);
 }
 
-void DiagnosticPanel::changeStormSignal(int status, const QString newMessage)
+void DiagnosticPanel::changeStormSignal(StormSignalStatus status, 
+					const QString newMessage)
 {
   stormSignal->changeStatus(status);
   stormSignalWarning->setText(newMessage); 

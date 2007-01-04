@@ -28,6 +28,18 @@ StormSignal::StormSignal(QSize hint, QWidget *parent)
   green = false;
   on = true;
 
+  pen.setWidth(1);
+
+  hurrSymbol = new QPainterPath;
+
+  hurrSymbol->moveTo(75,50);
+  hurrSymbol->arcTo(25,25,50,50,0,112);
+  hurrSymbol->arcTo(33.75,0,100,100,153,-47);
+  hurrSymbol->arcTo(25,0,100,100,95,85);
+  hurrSymbol->arcTo(25,25,50,50,180,110);
+  hurrSymbol->arcTo(-33.75,0,100,100,333,-47);
+  hurrSymbol->arcTo(-25,0,100,100,-85,85);
+
 }
 
 StormSignal::~StormSignal()
@@ -46,7 +58,7 @@ void StormSignal::paintEvent(QPaintEvent *event)
 
   QPainter *painter = new QPainter(this);
   painter->setRenderHint(QPainter::Antialiasing);
-  painter->scale(width()/31, height()/11);
+  painter->scale(width()/100, height()/100);
   painter->setPen(pen);
   painter->setBrush(QColor(255,255,255));
   
@@ -59,7 +71,7 @@ void StormSignal::paintEvent(QPaintEvent *event)
   if(green && on)
     painter->setBrush(QBrush(QColor(0,100,0)));
 
-  painter->drawRect(QRectF(QPointF(0,0),QSize(31,11)));
+  painter->drawPath(*hurrSymbol);
 
   if(flashing)
     on = !on;
@@ -74,23 +86,23 @@ void StormSignal::catchLog(const Message& message)
   emit log(message);
 }
 
-void StormSignal::changeStatus(int light)
+void StormSignal::changeStatus(StormSignalStatus status)
 {
   red = false;
   yellow = false;
   green = false;
   flashing = false;
   
-  switch(light)
+  switch(status)
     {
-    case 0:             // No lights
+    case Nothing:             // No lights
       break;
-    case 1:             // Flashing Red
+    case RapidIncrease:             // Flashing Red
       flashing = true;
-    case 2:             // Red 
+    case RapidDecrease:             // Red 
       red = true;
       break;
-    case 3:             // Flashing Yellow
+    case Ok:             // Flashing Yellow
       flashing = true;
     case 4:             // Yellow
       yellow = true;
