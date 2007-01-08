@@ -16,7 +16,7 @@
 
 MainWindow::MainWindow()
 {
-
+  this->setObjectName("mainWindow");
     tabWidget = new QTabWidget();
     setCentralWidget(tabWidget);
     connect(tabWidget, SIGNAL(currentChanged(int)),

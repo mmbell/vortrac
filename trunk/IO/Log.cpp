@@ -15,7 +15,7 @@
 Log::Log(QWidget *parent) 
   : QWidget(parent)
 {
-
+  this->setObjectName("log");
   connect(this, SIGNAL(log(const Message&)),
 	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
   
@@ -39,20 +39,26 @@ Log::Log(QWidget *parent)
   //displayLocation = false;
   displayLocation = true;
 
-  //Message::toScreen("log:constructor: "+workingDirectory.path());
+  Message::toScreen("log:constructor: "+workingDirectory.path());
 }
 
 Log::~Log()
 {
   delete logFile;
+  for(int i = StopLightQueue.count()-1; i >= 0; i--) {
+    delete StopLightQueue[i];
+  }
+  for(int i = StormStatusQueue.count()-1; i >= 0; i--) {
+    delete StormStatusQueue[i];
+  }
 }
 
 void Log::setWorkingDirectory(QDir& newDir)
 {
-	if (newDir == workingDirectory) {
-		// Don't need to do anything
-		return;
-	}
+  if (newDir == workingDirectory) {
+    // Don't need to do anything
+    return;
+  }
   if(newDir.exists()) {
     //Message::toScreen("Path does exist");
   }
@@ -79,7 +85,7 @@ void Log::setWorkingDirectory(QDir& newDir)
   newFileName = newName+".log";
   
   if(!logFile->copy(newDir.filePath(logFileName))) {
-    //Message::toScreen("Log::setWorkingDirectory: could not copy "+logFile->fileName()+" to "+newDir.filePath(logFileName));
+    Message::toScreen("Log::setWorkingDirectory: could not copy "+logFile->fileName()+" to "+newDir.filePath(logFileName));
   }
   
   logFile->remove();
@@ -87,12 +93,11 @@ void Log::setWorkingDirectory(QDir& newDir)
   workingDirectory = newDir;
   //Message::toScreen("log:afterChange: "+workingDirectory.path());
   logFileName = newFileName;
-  /*
+  
   QFile* oldLogFile = logFile;
   delete oldLogFile;
   logFile = new QFile(workingDirectory.filePath(logFileName));
-  //Message::toScreen(" after working dir changed file = "+logFile->fileName());
-  */
+  Message::toScreen(" after working dir changed file = "+logFile->fileName());
   logFile->setFileName(workingDirectory.filePath(logFileName));
 }
 
@@ -136,9 +141,12 @@ bool Log::saveLogFile()
 
 bool Log::saveLogFile(const QString& fileName)
 {
+  Message::toScreen("Log: SaveLogFile : at location "+fileName);
   QString checkFileName(fileName);
   int lastSlash = checkFileName.lastIndexOf(QString("/"));
-  checkFileName.truncate(lastSlash);
+  if(lastSlash > 0) {
+    checkFileName.truncate(lastSlash);
+  }
   QDir check(checkFileName);
   QFile *newLogFile;
   if(check.isAbsolute())
@@ -184,7 +192,7 @@ void Log::catchLog(const Message& logEntry)
       message = location+": "+message;
     }
     message+="\n";
-    //writeToFile(message);
+    writeToFile(message);
     emit(newLogEntry(message));
   }
   
@@ -221,13 +229,12 @@ bool Log::writeToFile(const QString& message)
     {
       logFile->write(message.toAscii());
       logFile->close();
-      //Message::toScreen("Sucessfully saved to file named "+logFile->fileName());
       if(logFile->isOpen())
 	Message::toScreen("When logging message: "+message+" logFile did not close but did not fail");
       return true;
     }
 
-  // Message::toScreen("Failed to write Log message to file");
+  Message::toScreen("Failed to write Log message to file");
   return false;
   
 }
@@ -237,37 +244,53 @@ bool Log::handleStopLightUpdate(StopLightColor newColor, QString message,
 {
   // Check to see if update is an error or a corrected error
   int originalCount = StopLightQueue.count();
-
+  
   if((newColor == Green)||(newColor == BlinkGreen)) {
-    // Message::toScreen("The Good");
+    // Message::toScreen("The Good "+location+" : "+message);
     if(StopLightQueue.count()==0)
       return true;
     for(int i = StopLightQueue.count()-1; i >= 0; i--) {
-      if((StopLightQueue[i]->location == location) ||
-	 (StopLightQueue[i]->location == QString()))
+      if((StopLightQueue.value(i)->location == location) ||
+	 (StopLightQueue.value(i)->location == QString())) {
+	SLChange *corrected = StopLightQueue.value(i);
 	StopLightQueue.removeAt(i);
+	//Message::toScreen("Inside "+corrected->location+"  "+corrected->message+" @ i = "+QString().setNum(i));
+	delete corrected;
+      }
     }
   }
   else {
+    //    Message::toScreen("The Bad "+location+" : "+message);
     // Add bad signals to the stack based on color....
     SLChange *mostRecent = new SLChange;
     mostRecent->color = newColor;
     mostRecent->message = message;
     mostRecent->location = location;
-    if(StopLightQueue.count()==0)
+    if(StopLightQueue.count()==0) {
       StopLightQueue.append(mostRecent);
-    else {
-      for(int i = 0; i < StopLightQueue.count(); i++) {
-	if(mostRecent->color < StopLightQueue[i]->color)
-	  StopLightQueue.insert(i+1, mostRecent);
-      }
+      //      Message::toScreen("Inside "+mostRecent->location+": "+mostRecent->message+" @ i = zero");
     }
-    //Message::toScreen("The Bad");
+    else {
+      int initialCount = StopLightQueue.count();
+      emit newLogEntry(location+": "+message+"\n");
+      for(int i = 0; i < initialCount; i++) {
+	if(mostRecent->color < StopLightQueue.value(i)->color) {
+	  StopLightQueue.insert(i+1, mostRecent);
+	  //	  Message::toScreen("Inside "+mostRecent->location+"  "+mostRecent->message+" @ i = "+QString().setNum(i));
+	}
+      }
+      StopLightQueue.append(mostRecent);
+      //      Message::toScreen("Inside "+mostRecent->location+"  "+mostRecent->message+" @ i = deadLast"+QString().setNum(StopLightQueue.count()));
+    }
   }
-  
+
+  if(StopLightQueue.count()==0) {
+    emit newStopLightColor(Green, QString());
+    return true;
+  }
   if((originalCount!=StopLightQueue.count())||(originalCount==0)) {
-    emit newStopLightColor(StopLightQueue[0]->color,
-			   StopLightQueue[0]->message);
+    emit newStopLightColor(StopLightQueue.value(0)->color,
+			   StopLightQueue.value(0)->message);
     return true;
   }
   else {

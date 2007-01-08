@@ -16,6 +16,7 @@
 PollThread::PollThread(QObject *parent)
   : QThread(parent)
 {
+  this->setObjectName("pollThread");
   //  Message::toScreen("PollThread Constructor");
   abort = false;
   runOnce = false;

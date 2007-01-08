@@ -21,6 +21,7 @@
 RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
   :QObject(parent)
 {
+  this->setObjectName("radarQC");
   radarData = radarPtr;
   specWidthLimit = 12;
   velNull = -999.;

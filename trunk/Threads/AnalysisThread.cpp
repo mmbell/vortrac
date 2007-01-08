@@ -21,6 +21,7 @@
 AnalysisThread::AnalysisThread(QObject *parent)
   : QThread(parent)
 {
+  this->setObjectName("analysisThread");
   //Message::toScreen("AnalysisThread Constructor");
   abort = false;
   simplexThread = new SimplexThread;

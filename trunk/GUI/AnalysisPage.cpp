@@ -16,7 +16,7 @@
 AnalysisPage::AnalysisPage(QWidget *parent)
   : QWidget(parent)
 {
-
+  this->setObjectName("analysisPage");
   QFont f("Helvetica", 12, QFont::Bold);
   setFont(f);
   lastMax = -999;
@@ -25,16 +25,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   connect(this, SIGNAL(log(const Message&)),
 	  statusLog, SLOT(catchLog(const Message&)), Qt::DirectConnection);
 
-  // Create a new configuration instance
-  configData = new Configuration;
-  connect(configData, SIGNAL(log(const Message&)), 
-	  this, SLOT(catchLog(const Message&)));
-
-  // Define all the widgets
-
-  configDialog = new ConfigurationDialog(this, configData);
-  connect(configDialog, SIGNAL(log(const Message&)),
-	  this, SLOT(catchLog(const Message&)));
+  // Create the widgets needed to interact with the log
   
   diagPanel = new DiagnosticPanel;
   diagPanel->setFixedWidth(250);
@@ -48,6 +39,17 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 	  diagPanel, SLOT(changeStormSignal(StormSignalStatus, 
 					    const QString)),
 	  Qt::DirectConnection);
+  
+  // Create a new configuration instance
+  configData = new Configuration;
+  connect(configData, SIGNAL(log(const Message&)), 
+	  this, SLOT(catchLog(const Message&)));
+
+  // Define all the widgets
+
+  configDialog = new ConfigurationDialog(this, configData);
+  connect(configDialog, SIGNAL(log(const Message&)),
+	  this, SLOT(catchLog(const Message&)));
 
   QTabWidget *visuals = new QTabWidget;
   visuals->setTabPosition(QTabWidget::West);
@@ -58,7 +60,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 	  this, SLOT(catchLog(const Message&)));
 
   cappiDisplay = new CappiDisplay();
-  //cappiDisplay->setVisible(false);
+  cappiDisplay->clearImage();
 
   imageFileName = graph->getImageFileName();
 
@@ -97,7 +99,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 
   QPushButton *example = new QPushButton("Plot Example Points");
 
-  TestGraph *tester = new TestGraph;
+  tester = new TestGraph;
 
   connect(example, SIGNAL(clicked()), 
 	  tester, SLOT(listPlot()));
@@ -208,8 +210,8 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   //pollThread = new PollThread;
   pollThread = NULL;
 
-  //connect(this, SIGNAL(saveGraphImage(const QString&)),
-  //   graph, SLOT(saveImage(const QString&)));
+  connect(this, SIGNAL(saveGraphImage(const QString&)),
+	  graph, SLOT(saveImage(const QString&)));
 
 }
 
@@ -229,6 +231,7 @@ AnalysisPage::~AnalysisPage()
   delete currRMW;
   delete currDeficit;
   delete deficitLabel;
+  delete tester;
 }
 
 void AnalysisPage::newFile()
@@ -317,11 +320,25 @@ bool AnalysisPage::saveFile(const QString &fileName)
     int drop = noExtensionFileName.count()-dotIndex+1;
     noExtensionFileName.remove(dotIndex,drop);
   }
+  if (noExtensionFileName.contains('/')){
+    int slashIndex = noExtensionFileName.lastIndexOf('/');
+    noExtensionFileName.remove(0,slashIndex+1);
+  }
 
-  statusLog->saveLogFile(noExtensionFileName+".log");
-  emit saveGraphImage(noExtensionFileName+".png");
+  Message::toScreen("No extension file name is ... "+noExtensionFileName);
 
-
+  if(workingDirectory.exists()) {
+    Message::toScreen("AnalysisPage: Saving copies of .log and .png in the working directory: "+workingDirectory.filePath(noExtensionFileName));
+    if(!statusLog->saveLogFile(workingDirectory.filePath(noExtensionFileName+".log")))
+      Message::toScreen("AnalysisPage: Failed to save .log file in working directory");
+      
+    emit saveGraphImage(workingDirectory.filePath(noExtensionFileName+".png"));
+  }
+  else {
+    Message::toScreen("AnalysisPage: workingDirectory doesn not exist?");
+    statusLog->saveLogFile(noExtensionFileName+".log");
+    emit saveGraphImage(noExtensionFileName+".png");
+  }
 
   return true;
 
@@ -401,10 +418,12 @@ void AnalysisPage::runThread()
 {
   // Start a processing thread using the current configuration
 
-  if(!configDialog->checkPanels())
+  if(!configDialog->checkPanels()) {
     Message::toScreen("Didn't clear all diagnostic hoops");
-    // return;
-
+    emit log(Message(QString("Please check errors: One or more entries in configuration cannot be used"), -1, this->objectName()));
+    return;
+  }
+  
   //Message::toScreen("Intentionally cut short - AnalysisPage: RunThread");
   //return;
 
@@ -477,6 +496,7 @@ void AnalysisPage::abortThread()
     pollThread = NULL;
     //pollThread = new PollThread;
     pollVortexUpdate(NULL);
+    cappiDisplay->clearImage();
     emit log(Message("Analysis Aborted!", -1));
   }
   Message::toScreen("Leaving AnalysisPage Abort");

@@ -19,6 +19,7 @@
 VortexThread::VortexThread(QObject *parent)
   : QThread(parent)
 {
+    this->setObjectName("vortexThread");
 
 	  // Initialize RhoBar for pressure calculations (units are Pascal/m)
 	  rhoBar[0] = 10.672;
@@ -66,10 +67,10 @@ VortexThread::~VortexThread()
   configData = NULL;
   refLat = NULL;
   refLon = NULL;
-  dataGaps = NULL;
+  // dataGaps = NULL; - This will not release all the memory
   // vtd = NULL;      // Don't need these two completely handled in 
   // vtdCoeffs = NULL;// loop
-  pressureDeficit = NULL;
+  // pressureDeficit = NULL; - This will not release all the memory
   
   delete gridData;
   delete vortexData;

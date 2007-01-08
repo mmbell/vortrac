@@ -16,6 +16,7 @@
 #include <QImage>
 #include <QPoint>
 #include <QWidget>
+#include <QBrush>
 #include "DataObjects/GriddedData.h"
 
 class CappiDisplay : public QWidget
@@ -45,9 +46,11 @@ private:
     void resizeImage(QImage *image, const QSize &newSize);
     QString cappiLabel;
     QImage image;
+    QImage legendImage;
     QPoint lastPoint;
     int PaintEngineMode;
     bool exitNow;
+    QBrush backgroundColor;
 
 };
 

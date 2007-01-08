@@ -51,7 +51,7 @@ public slots:
        // this modifies nessecary ranges
    void updateTitle(const QString& new_Label);
    void saveImage();
-   // void saveImage(QString fileName);
+   void saveImage(QString fileName);
    void manualAxes(const QString& name, const bool change);
    void manualParameter(const QString& name, const float num);
    void catchLog(const Message& message);

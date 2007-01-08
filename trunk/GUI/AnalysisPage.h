@@ -101,6 +101,7 @@ class AnalysisPage : public QWidget
   QTabWidget* visuals;
   CappiDisplay* cappiDisplay;
   QLabel* deficitLabel;
+  TestGraph *tester;
 
   bool analyticModel();
 

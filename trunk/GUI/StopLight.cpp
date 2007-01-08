@@ -17,6 +17,7 @@
 StopLight::StopLight(QSize hint, QWidget *parent)
   :QWidget(parent), hint(hint)
 {  
+  this->setObjectName("stopLight");
   resize(hint);
   setBackgroundRole(QPalette::Base);
   // setAttribute(Qt::WA_StaticContents);

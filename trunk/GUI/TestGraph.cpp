@@ -15,7 +15,7 @@
 
 TestGraph::TestGraph(QWidget *parent)
 {
-
+  this->setObjectName("testGraph");
 }
 
 TestGraph::~TestGraph()

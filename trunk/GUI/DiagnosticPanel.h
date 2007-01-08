@@ -36,7 +36,8 @@ Q_OBJECT
  public slots:
       void catchLog(const Message& message);
       void pickColor();
-      //      void testLight();
+      void testLight();
+      void testStormSignal();
       void updateVCP(const int newVCP);
       void changeStopLight(StopLightColor newColor, const QString newMessage);
       void changeStormSignal(StormSignalStatus status, 
@@ -53,7 +54,7 @@ Q_OBJECT
 
       StopLight *lights;
       QLineEdit *stopLightWarning;
-      int dummy;
+      int dummy, stormDummy;
       QList<int> colorsReceived;
       QList<QString> colorMessagesReceived;
 

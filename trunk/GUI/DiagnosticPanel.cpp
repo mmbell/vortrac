@@ -34,6 +34,7 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
    */
 
 {
+  this->setObjectName("diagnosticPanel");
 
   // timer is used to create updates for the display clock
 
@@ -59,8 +60,11 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   //QPushButton *color = new QPushButton("color", this);
   //connect(color, SIGNAL(pressed()), this, SLOT(pickColor()));
 
-  //QPushButton *lightButton = new QPushButton("Next Signal Pattern");
-  //connect(lightButton, SIGNAL(pressed()), this, SLOT(testLight()));
+  QPushButton *lightButton = new QPushButton("Next Signal Pattern");
+  connect(lightButton, SIGNAL(pressed()), this, SLOT(testLight()));
+
+  QPushButton *stormButton = new QPushButton("Next Storm Signal");
+  connect(stormButton, SIGNAL(pressed()), this, SLOT(testStormSignal()));
   
   // StormSignal is used to alert user to 
   // noticable changes in vortex properties
@@ -119,7 +123,8 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
 
   //main->addWidget(color); // I use this when I need to select colors
                             // for coding throw away in finished product -LM
-  //main->addWidget(lightButton);
+  main->addWidget(lightButton);
+  main->addWidget(stormButton);
 
   setLayout(main);
   
@@ -180,16 +185,72 @@ void DiagnosticPanel::updateCappi(const GriddedData* newCappi)
 	cappiDisplay->constructImage(cappi);
 	hasNewCappi = true;
 }
-
+*/
 void DiagnosticPanel::testLight()
 {
-  lights->changeColor(dummy);
-  if(dummy < 6)
+  StopLightColor testColor;
+  switch(dummy) 
+    {
+    case 1:
+      testColor = BlinkRed;
+      break;
+    case 2:
+      testColor = Red;
+      break;
+    case 3:
+      testColor = BlinkYellow;
+      break;
+    case 4:
+      testColor = Yellow;
+      break;
+    case 5:
+      testColor = BlinkGreen;
+      break;
+    case 6:
+      testColor = Green;
+      break;
+    case 7:
+      testColor = AllOn;
+      break;
+    default:
+      testColor = AllOff;
+      break;
+    }
+  lights->changeColor(testColor);
+  if(dummy < 7)
     dummy++;
   else 
     dummy = 0;
 }
 
+void DiagnosticPanel::testStormSignal()
+{
+  StormSignalStatus testStatus;
+  switch(stormDummy) 
+    {
+    case 1:
+      testStatus = RapidIncrease;
+      break;
+    case 2:
+      testStatus = RapidDecrease;
+      break;
+    case 3:
+      testStatus = LostStorm;
+      break;
+    case 4:
+      testStatus = Ok;
+      break;
+    default:
+      testStatus = Nothing;
+      break;
+    }
+  stormSignal->changeStatus(testStatus);
+  if(stormDummy < 4)
+    stormDummy++;
+  else 
+    stormDummy = 0;
+}
+/*
 void DiagnosticPanel::launchCappi()
 {
 	// Fill the pixmap with the current cappi dat

@@ -10,12 +10,16 @@
  */
 
 #include <QColor>
+#include <QFont>
+#include <QRectF>
+#include <QTextOption>
 
 #include "StormSignal.h"
 
 StormSignal::StormSignal(QSize hint, QWidget *parent)
   :QWidget(parent), hint(hint)
 {  
+  this->setObjectName("stormSignal");
   resize(hint);
   setBackgroundRole(QPalette::Base);
   // setAttribute(Qt::WA_StaticContents);
@@ -23,9 +27,6 @@ StormSignal::StormSignal(QSize hint, QWidget *parent)
   
   timer = new QTimer;
 
-  red = false;
-  yellow = false;
-  green = false;
   on = true;
 
   pen.setWidth(1);
@@ -40,11 +41,14 @@ StormSignal::StormSignal(QSize hint, QWidget *parent)
   hurrSymbol->arcTo(-33.75,0,100,100,333,-47);
   hurrSymbol->arcTo(-25,0,100,100,-85,85);
 
+  flashing = false;
+
 }
 
 StormSignal::~StormSignal()
 {
   delete timer;
+  delete hurrSymbol;
 }
 
 QSize StormSignal::sizeHint() const
@@ -61,7 +65,7 @@ void StormSignal::paintEvent(QPaintEvent *event)
   painter->scale(width()/100, height()/100);
   painter->setPen(pen);
   painter->setBrush(QColor(255,255,255));
-  
+  /*
   if(red && on)
     painter->setBrush(QBrush(QColor(120,0,0)));
 
@@ -70,12 +74,48 @@ void StormSignal::paintEvent(QPaintEvent *event)
 
   if(green && on)
     painter->setBrush(QBrush(QColor(0,100,0)));
-
+  */
   painter->drawPath(*hurrSymbol);
+
+  QTextOption textHint(Qt::AlignCenter);
+  textHint.setWrapMode(QTextOption::WordWrap);
+  QString stormMessage;
+  QFont font("Helvetica", 5, QFont::Bold);
+  QFontMetrics fontMetrics(font);
+  float fontHeight = fontMetrics.height();
+  painter->setFont(font);
+  painter->setBrush(QBrush(QColor(0,100,0)));
+  QRectF wordBox(25,25,50,50);
+  QRectF wordBox1(25,25-fontHeight/3.0,50,50);
+  QRectF wordBox2(25,25+fontHeight/3.0,50,50);
+  //  painter->drawRect(wordBox);
+
+  switch(currentStatus)
+    {
+    case Nothing:
+      break;
+    case RapidIncrease:
+      painter->drawText(wordBox1, QString("Rapid"), textHint);
+      painter->drawText(wordBox2, QString("Intensification"), textHint);
+      break;
+    case RapidDecrease:
+      painter->drawText(wordBox1, QString("Rapid"), textHint);
+      painter->drawText(wordBox2, QString("Decrease"), textHint);
+      break;
+    case Ok:
+      font = QFont("Helvetica", 14, QFont::Bold);
+      painter->setFont(font);
+      painter->drawText(wordBox, QString("OK"), textHint);
+      break;
+    case LostStorm:
+      painter->drawText(wordBox1, QString("Lost"), textHint);
+      painter->drawText(wordBox2, QString("Circulation"), textHint);
+      break;
+    }
 
   if(flashing)
     on = !on;
-
+  
   if (painter->isActive())
     painter->end();
   delete painter;
@@ -88,11 +128,10 @@ void StormSignal::catchLog(const Message& message)
 
 void StormSignal::changeStatus(StormSignalStatus status)
 {
-  red = false;
-  yellow = false;
-  green = false;
-  flashing = false;
   
+  currentStatus = status;
+
+  /* 
   switch(status)
     {
     case Nothing:             // No lights
@@ -104,7 +143,7 @@ void StormSignal::changeStatus(StormSignalStatus status)
       break;
     case Ok:             // Flashing Yellow
       flashing = true;
-    case 4:             // Yellow
+    case LostStorm:             // Yellow
       yellow = true;
       break;
     case 5:             // Flashing Green
@@ -117,7 +156,7 @@ void StormSignal::changeStatus(StormSignalStatus status)
       yellow = true;
       green = true;
     }
-
+  */
   if(flashing)
     {
       connect(timer, SIGNAL(timeout()), this, SLOT(repaint()));

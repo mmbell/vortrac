@@ -92,10 +92,6 @@ class SimplexThread : public QThread
 	 
 	 // Choosecenter variables
 	 float velNull;
-	 ChooseCenter *centerFinder;
- 
-	 
-	 
 
 };
 

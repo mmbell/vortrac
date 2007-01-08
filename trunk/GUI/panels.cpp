@@ -701,18 +701,21 @@ bool CappiPanel::setDefaultDirectory(QDir* newDir)
       if(newDir->isReadable()){
 	// NewDir+/cappi/ is used as working directory
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return true;
       }
       else {
 	// NewDir is used as working directory
 	newDir->cdUp();
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return false;
       }
     }
     else {
       // NewDir is used as working directory
       defaultDirectory->cd(newDir->path());
+      delete newDir;
       return false;
     }
 
@@ -721,21 +724,25 @@ bool CappiPanel::setDefaultDirectory(QDir* newDir)
     if(newDir->cd(subDirectory)){
       if(newDir->isReadable()){
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return true;
       }
       else {
 	newDir->cdUp();
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return false;
       }
     }
     else {
       defaultDirectory->cd(newDir->path());
+      delete newDir;
       return false;
     }
   }
   else {
     defaultDirectory->cd(newDir->path());
+    delete newDir;
     return false;
   }
   
@@ -1194,40 +1201,46 @@ bool CenterPanel::setDefaultDirectory(QDir* newDir)
     if(newDir->cd(subDirectory)){
       if(newDir->isReadable()){
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return true;
       }
       else {
 	newDir->cdUp();
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return false;
       }
     }
     else {
       defaultDirectory->cd(newDir->path());
+      delete newDir;
       return false;
     }
   if(newDir->mkdir(subDirectory)) {
     if(newDir->cd(subDirectory)){
       if(newDir->isReadable()){
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return true;
       }
       else {
 	newDir->cdUp();
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return false;
       }
     }
     else {
       defaultDirectory->cd(newDir->path());
+      delete newDir;
       return false;
     }
   }
   else {
     defaultDirectory->cd(newDir->path());
+    delete newDir;
     return false;
   }
-  
 }
 
 ChooseCenterPanel::ChooseCenterPanel()
@@ -1505,37 +1518,44 @@ bool ChooseCenterPanel::setDefaultDirectory(QDir* newDir)
     if(newDir->cd(subDirectory)){
       if(newDir->isReadable()){
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return true;
       }
       else {
 	newDir->cdUp();
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return false;
       }
     }
     else {
       defaultDirectory->cd(newDir->path());
+      delete newDir;
       return false;
     }
   if(newDir->mkdir(subDirectory)) {
     if(newDir->cd(subDirectory)){
       if(newDir->isReadable()){
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return true;
       }
       else {
 	newDir->cdUp();
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return false;
       }
     }
     else {
       defaultDirectory->cd(newDir->path());
+      delete newDir;
       return false;
     }
   }
   else {
     defaultDirectory->cd(newDir->path());
+    delete newDir;
     return false;
   }
   
@@ -1893,37 +1913,44 @@ bool VTDPanel::setDefaultDirectory(QDir* newDir)
     if(newDir->cd(subDirectory)){
       if(newDir->isReadable()){
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return true;
       }
       else {
 	newDir->cdUp();
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return false;
       }
     }
     else {
       defaultDirectory->cd(newDir->path());
+      delete newDir;
       return false;
     }
   if(newDir->mkdir(subDirectory)) {
     if(newDir->cd(subDirectory)){
       if(newDir->isReadable()){
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return true;
       }
       else {
 	newDir->cdUp();
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return false;
       }
     }
     else {
       defaultDirectory->cd(newDir->path());
+      delete newDir;
       return false;
     }
   }
   else {
     defaultDirectory->cd(newDir->path());
+    delete newDir;
     return false;
   }
   
@@ -2141,37 +2168,44 @@ bool PressurePanel::setDefaultDirectory(QDir* newDir)
     if(newDir->cd(subDirectory)){
       if(newDir->isReadable()){
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return true;
       }
       else {
 	newDir->cdUp();
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return false;
       }
     }
     else {
       defaultDirectory->cd(newDir->path());
+      delete newDir;
       return false;
     }
   if(newDir->mkdir(subDirectory)) {
     if(newDir->cd(subDirectory)){
       if(newDir->isReadable()){
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return true;
       }
       else {
 	newDir->cdUp();
 	defaultDirectory->cd(newDir->path());
+	delete newDir;
 	return false;
       }
     }
     else {
       defaultDirectory->cd(newDir->path());
+      delete newDir;
       return false;
     }
   }
   else {
     defaultDirectory->cd(newDir->path());
+    delete newDir;
     return false;
   }
 }

@@ -19,6 +19,7 @@
 SimplexThread::SimplexThread(QObject *parent)
   : QThread(parent)
 {
+  this->setObjectName("simplexThread");
   velNull = -999.;
   abort = false;
 }
@@ -423,10 +424,15 @@ void SimplexThread::run()
 	       
 		simplexResults->append(*simplexData);
 		simplexResults->save();
+		SimplexData *oldData = simplexData;
+		simplexData = NULL;
+		delete oldData;
 		
 		//Now pick the best center
 		simplexResults->timeSort();
-		centerFinder = new ChooseCenter(configData,simplexResults,vortexData);
+		ChooseCenter *centerFinder = new ChooseCenter(configData,simplexResults,vortexData);
+		//delete centerFinder;
+		//Message::toScreen("Clean entrance and exit");
 		foundCenter = centerFinder->findCenter();
 
 		// Save again to keep mean values found in chooseCenter
@@ -434,6 +440,7 @@ void SimplexThread::run()
    
 	
 		// Clean up
+		//delete centerFinder;
 		delete[] dataGaps;
 		for(int i = 2; i >=0; i--)
 		  delete [] vertex[i];

@@ -15,6 +15,7 @@
 RadarFactory::RadarFactory(Configuration* radarConfig, QObject *parent)
   : QObject(parent)
 {
+  this->setObjectName("radarFactory");
   mainConfig = radarConfig;
 
   // Will poll for data and return radar objects in a queue

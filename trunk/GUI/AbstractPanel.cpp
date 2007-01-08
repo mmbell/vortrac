@@ -26,6 +26,7 @@
 AbstractPanel::AbstractPanel(QWidget *parent)
   :QWidget(parent)
 {
+  this->setObjectName("abstractPanel");
   //Message::toScreen("Using Abstract Panel Constructor");
   defaultDirectory = new QDir(QDir::currentPath());
   dir = new QLineEdit;
@@ -243,16 +244,19 @@ bool AbstractPanel::setDefaultDirectory(QDir* newDir)
 {
   //Message::toScreen("AbstractPanel - SetDefaultDirectory");
   //emit log(Message("AbstractPanel - Set Default Directory"));
+
   if(!newDir->isAbsolute())
     newDir->makeAbsolute();
   if(!newDir->exists())
     newDir->mkpath(newDir->path());
   if(newDir->isReadable()){
     defaultDirectory->cd(newDir->path());
+    delete newDir;
     return true;
   }
   else {
     emit log(Message(QString(),0,this->objectName(),Red,QString("Default Directory Does Not Exist")));
+    delete newDir;
     return false;
   }
 }

@@ -291,22 +291,16 @@ bool Hvvp::findHVVPWinds(bool both)
 		  // Re-calculate the least squares solution if outliers are found.
 		  
 		  
-		  int qc_count;
-		  
-		  float** qcxls = new float*[xlsDimension];
-		  float* qcyls = new float[count];
-		  float* qcwgt = new float[count];
-		  for(int d = 0; d < xlsDimension; d++) {
-			  qcxls[d] = new float[count];
-		  }
+
 		  if(both) {
 		    if(outlier && (cgood >=6500)) {
-		      
-		      qc_count = 0;
-		      
+		      int qc_count = 0;
+		      float** qcxls = new float*[xlsDimension];
+		      float* qcyls = new float[count];
+		      for(int d = 0; d < xlsDimension; d++) {
+			qcxls[d] = new float[count];
+		      } 
 		      for (int n = 0; n < count; n++) {
-			
-			qcwgt[n] = 0;
 			qcyls[n] = 0;
 			for(int p = 0; p < xlsDimension; p++) {
 			  qcxls[p][n] = 0;
@@ -314,7 +308,6 @@ bool Hvvp::findHVVPWinds(bool both)
 			
 			if(yls[n] != velNull) {
 			  qcyls[qc_count] = yls[n];
-			  qcwgt[qc_count] = 1;
 			  for(int p = 0; p < xlsDimension; p++) {
 			    qcxls[p][qc_count] = xls[p][n];
 			  }
@@ -322,15 +315,11 @@ bool Hvvp::findHVVPWinds(bool both)
 			}
 		      }
 		      flag=Matrix::lls(xlsDimension,qc_count,qcxls,qcyls,sse,cc,stand_err);
-		      
 		      for(int ii = 0; ii < xlsDimension; ii++) {
 			delete [] qcxls[ii];
 		      }
-		      
 		      delete [] qcxls;
 		      delete [] qcyls;
-		      delete [] qcwgt;
-		      
 		    }
 		  }
 		  

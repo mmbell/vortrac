@@ -38,7 +38,8 @@ class StormSignal:public QWidget
 	void paintEvent(QPaintEvent *event);
  
  private:
-	bool red, yellow, green, flashing, on;
+	bool flashing, on;
+	StormSignalStatus currentStatus;
 	QTimer *timer;
 	QPen pen;
 	QSize hint;

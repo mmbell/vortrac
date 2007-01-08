@@ -16,6 +16,7 @@
 Configuration::Configuration(QObject *parent, const QString &filename)
   :QObject(parent)
 {
+  this->setObjectName("configuration");
   if(filename.isEmpty()) 
     {
       // Create a new configuration from scratch
@@ -36,9 +37,9 @@ Configuration::Configuration(QObject *parent, const QString &filename)
 
 Configuration::~Configuration()
 {
-
-  // Not yet implemented
-
+  domDoc.clear();
+  // Clears out contents of domDoc including anything that is dynamically
+  // created
 }
 
 QDomElement Configuration::getRoot()

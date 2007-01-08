@@ -35,11 +35,9 @@ SimplexList::SimplexList(Configuration* newConfig)
 
 SimplexList::~SimplexList()
 {
-  config = NULL;
   delete config;
-  if(!simplexDataConfigs->isEmpty())
-    for(int i = simplexDataConfigs->count()-1; i >=0; i--)
-      delete simplexDataConfigs->value(i);
+  for(int i = simplexDataConfigs->count()-1; i >=0; i--)
+    delete simplexDataConfigs->value(i);
   delete simplexDataConfigs;
   configFileNames->clear();
   delete configFileNames;

@@ -16,6 +16,7 @@
 PressureFactory::PressureFactory(Configuration *wholeConfig, QObject *parent)
   : QObject(parent)
 {
+  this->setObjectName("pressureFactory");
   //Set the domNode for the pressure specific stuff
   QDomElement pressureConfig = wholeConfig->getConfig("pressure");
   //Set the domNode for the radar part to get the corresponding date & time

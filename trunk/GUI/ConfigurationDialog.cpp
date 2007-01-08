@@ -22,14 +22,13 @@ ConfigurationDialog::ConfigurationDialog(QWidget* parent,
 					 Configuration *initialConfig)
   :QDialog(parent)
 {
+  this->setObjectName("configurationDialog");
   configData = initialConfig;
   setWindowTitle(tr("VORTRAC CONFIGURATION"));
   panels = new QStackedWidget(this);
   populatePanels();
   makePanelForString();
-  workingDirectory = vortex->getDefaultDirectory();
- 
-  //vortex->setDefaultDirectory(workingDirectory);
+  workingDirectory = new QDir(vortex->getDefaultDirectory()->path()); 
   selection = new QListWidget(this);
   selection->setViewMode(QListView::IconMode);
   selection->setMovement(QListView::Static);
@@ -66,6 +65,7 @@ ConfigurationDialog::~ConfigurationDialog()
 {
   delete selection;
   delete panels;
+  delete workingDirectory;
 
   panelForString.clear();
 }
@@ -108,7 +108,8 @@ bool ConfigurationDialog::readConfig()
 
   connect(vortex, SIGNAL(workingDirectoryChanged()),
 	  this, SLOT(setPanelDirectories()));
-  vortex->setDefaultDirectory(workingDirectory);
+  QDir* newMaster = new QDir(*workingDirectory);
+  vortex->setDefaultDirectory(newMaster);
   vortex->setPanelChanged(true);
   vortex->updateConfig();
   setPanelDirectories();
@@ -334,8 +335,6 @@ void ConfigurationDialog::catchLog(const Message& message)
 
 void ConfigurationDialog::setPanelDirectories()
 {
-  workingDirectory = vortex->getDefaultDirectory();
-  //vortex->setWorkingDirectory(workingDirectory);
   vortex->setPanelChanged(true);
   vortex->updateConfig();
   QList<AbstractPanel*> panelList = panelForString.values();
@@ -347,7 +346,7 @@ void ConfigurationDialog::setPanelDirectories()
 	if(currPanel->getDefaultDirectory()->path() 
 	   == currPanel->getCurrentDirectoryPath() ) {
 	  // If the directory has not been changed from the default
-
+	  
 	  QDir* tempWorkingDir = new QDir(vortex->getCurrentDirectoryPath());
 	  if(currPanel->setDefaultDirectory(tempWorkingDir)){
 	    configData->setParam(configData->getConfig(panelForString.key(currPanel)), QString("dir"), currPanel->getDefaultDirectory()->path());
@@ -360,11 +359,13 @@ void ConfigurationDialog::setPanelDirectories()
 	  else {
 	    emit log(Message(QString(),0,currPanel->objectName(),Red,
 			     QString("Failed to set default directory")));
+	  }
+	  tempWorkingDir = NULL;
+	  delete tempWorkingDir;
 	}
-	tempWorkingDir = NULL;
-	delete tempWorkingDir;
       }
-    }
+    currPanel = NULL;
+    delete currPanel;
   }
 }
 

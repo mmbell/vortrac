@@ -16,6 +16,7 @@
 CappiDisplay::CappiDisplay(QWidget *parent)
     : QWidget(parent)
 {
+    this->setObjectName("cappiDisplay");
     setAttribute(Qt::WA_StaticContents);
     PaintEngineMode = -5;
     connect(this, SIGNAL(hasImage(bool)),
@@ -23,8 +24,11 @@ CappiDisplay::CappiDisplay(QWidget *parent)
     emit hasImage(false);
     exitNow = false;
 	
+    backgroundColor = QBrush(qRgb(255,255,255));
+    legendImage = QImage(10,50,QImage::Format_RGB32);        
+
 	//Set the palette
-	image = QImage(50,50,QImage::Format_Indexed8);
+        image = QImage(50,50,QImage::Format_Indexed8);
 	image.setNumColors(256);
 	image.setColor(0, qRgb(0,0,0));
 	image.setColor(1, qRgb(255, 255, 255));
@@ -145,11 +149,12 @@ bool CappiDisplay::saveImage(const QString &fileName, const char *fileFormat)
 
 void CappiDisplay::clearImage()
 {
-    //image.fill(qRgb(255, 255, 255));
-    QString message;
-    message.setNum(PaintEngineMode);
-    QTextStream out(stdout);
-    out << message << endl;
+    image.fill(qRgb(255, 255, 255));
+    //legendImage.fill(qRgb(255,255,0));
+    //QString message;
+    //message.setNum(PaintEngineMode);
+    //QTextStream out(stdout);
+    //out << message << endl;
     update();
 }
 
@@ -163,30 +168,33 @@ void CappiDisplay::mousePressEvent(QMouseEvent *event)
 void CappiDisplay::paintEvent(QPaintEvent * /* event */)
 {
   QPainter painter(this);
-    painter.drawImage(QPoint(0, 0), image);
-	painter.drawText(QPoint(0, this->height()), cappiLabel);
-    if(painter.paintEngine()->type() == QPaintEngine::X11)
-      PaintEngineMode = -1;
-    if(painter.paintEngine()->type() == QPaintEngine::Windows)
-      PaintEngineMode = 1;
-    if(painter.paintEngine()->type() == QPaintEngine::MacPrinter)
-      PaintEngineMode = 4;
-    if(painter.paintEngine()->type() == QPaintEngine::CoreGraphics)
-      PaintEngineMode = 3;
-    if(painter.paintEngine()->type() == QPaintEngine::QuickDraw)
-      PaintEngineMode = 2;
-    if(painter.paintEngine()->type() == QPaintEngine::QWindowSystem)
-      PaintEngineMode = 5;
-    if(painter.paintEngine()->type() == QPaintEngine::PostScript)
-      PaintEngineMode = 6;
-    if(painter.paintEngine()->type() == QPaintEngine::OpenGL)
-      PaintEngineMode = 7;
-    if(painter.paintEngine()->type() == QPaintEngine::Picture)
-      PaintEngineMode = 8;
-    if(painter.paintEngine()->type() == QPaintEngine::SVG)
-      PaintEngineMode = 9;
-    if(painter.paintEngine()->type() == QPaintEngine::Raster)
-      PaintEngineMode = 10;
+  backgroundColor = painter.background();
+  painter.drawImage(QPoint(0,0), image);
+  painter.drawImage(QPoint(image.size().width()*1.1,0),
+    		    legendImage);
+  //painter.drawText(QPoint(0, this->height()), cappiLabel);
+  if(painter.paintEngine()->type() == QPaintEngine::X11)
+    PaintEngineMode = -1;
+  if(painter.paintEngine()->type() == QPaintEngine::Windows)
+    PaintEngineMode = 1;
+  if(painter.paintEngine()->type() == QPaintEngine::MacPrinter)
+    PaintEngineMode = 4;
+  if(painter.paintEngine()->type() == QPaintEngine::CoreGraphics)
+    PaintEngineMode = 3;
+  if(painter.paintEngine()->type() == QPaintEngine::QuickDraw)
+    PaintEngineMode = 2;
+  if(painter.paintEngine()->type() == QPaintEngine::QWindowSystem)
+    PaintEngineMode = 5;
+  if(painter.paintEngine()->type() == QPaintEngine::PostScript)
+    PaintEngineMode = 6;
+  if(painter.paintEngine()->type() == QPaintEngine::OpenGL)
+    PaintEngineMode = 7;
+  if(painter.paintEngine()->type() == QPaintEngine::Picture)
+    PaintEngineMode = 8;
+  if(painter.paintEngine()->type() == QPaintEngine::SVG)
+    PaintEngineMode = 9;
+  if(painter.paintEngine()->type() == QPaintEngine::Raster)
+    PaintEngineMode = 10;
 }
 
 void CappiDisplay::resizeEvent(QResizeEvent *event)
@@ -202,6 +210,7 @@ void CappiDisplay::resizeEvent(QResizeEvent *event)
 
 void CappiDisplay::resizeImage(QImage *image, const QSize &newSize)
 {
+  Message::toScreen("CappiDisplay: ResizeImage: Someone is using this");
     if (image->size() == newSize)
         return;
 
@@ -221,6 +230,7 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
   float jDim = cappi->getJdim();
   QSize cappiSize((int)iDim,(int)jDim);
   image = image.scaled(cappiSize);
+  
   
   //this->resizeImage(&image, cappiSize);
   
@@ -262,13 +272,37 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
     }
   }
   image = image.scaled((int)500,(int)500);
-  cappiLabel = "Velocities = " +QString().setNum(maxVel) + " to " 
-    + QString().setNum(minVel) + " in " + QString().setNum(velIncr) + " m/s incr.";
-  QSize textSize(0, (int)(image.height() * 0.05));
-  this->setMinimumSize(image.size() + textSize);
-  this->resize(image.size() + textSize);
+  legendImage = legendImage.scaled(50,500);
+
+  // Draw the legend
+  QPainter *painter = new QPainter(&legendImage);
+  painter->setBackgroundMode(Qt::OpaqueMode);
+  painter->setBrush(backgroundColor);
+  painter->drawRect(QRect(QPoint(0,0),legendImage.size()));
+
+  float offset = 15;
+  float boxHeight = (image.height()-2*offset)/(float)42;
+
+  Message::toScreen("We got "+QString().setNum(image.numColors())+" colors to work with");
+  
+  for(int i = 0; i < 42; i++) {
+    // we don't use colors 0 & 1 because they are black and white
+    painter->setBrush(QBrush(image.color(i+2)));
+    painter->drawRect(QRect(0, (int) (offset+(i*boxHeight)),(int)(2*boxHeight),
+			    (int)boxHeight));
+  }
+  
+  if(painter->isActive())
+    painter->end();
+  delete painter;
+  
+  //  cappiLabel = "Velocities = " +QString().setNum(maxVel) + " to " 
+  //  + QString().setNum(minVel) + " in " + QString().setNum(velIncr) + " m/s incr.";);
+  //legendImage.fill(qRgb(255,255,0));
+  //legendImage.fill(image.color(40));
+  this->setMinimumSize(QSize(image.size().width()*1.2, image.size().height()));
+  this->resize(this->minimumSize());
   emit hasImage(true);
-  //setVisible(true);
   
 }
 

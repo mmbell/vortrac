@@ -39,42 +39,75 @@ ChooseCenter::~ChooseCenter()
   vortexData = NULL;
   delete vortexData;
   
-  
-  for(int i = 0; i < simplexResults->count(); i++) {
-    for(int j = 0; j < simplexResults->value(i).getNumRadii(); j++) {
-      delete [] score[i][j];
+  if(score!=NULL) {
+    for(int i = 0; i < simplexResults->count(); i++) {
+      for(int j = 0; j < simplexResults->value(i).getNumRadii(); j++) {
+	delete [] score[i][j];
+      }
+      delete [] score[i];
     }
-    delete [] score[i];
+    delete [] score;
   }
-  delete [] score;
-  
+  else 
+    delete score;
+
   // We might not be able to delete these depending on weither they 
   // are passed out for further use or not after the ChooseCenter object is
   // distroyed
-
-  for(int i = 0; i < simplexResults->count(); i++) {
-    delete[] bestRadius[i];
-    delete[] newBestRadius[i];
-    delete[] newBestCenter[i];    
-  }
-  delete[] bestRadius;
-  delete[] newBestRadius;
-  delete[] newBestCenter;
-
-  for(int m = 0; m < 4; m++) {
-    for(int p = 0; p < numLevels; p++) {
-      delete[] bestFitCoeff[m][p];
-    }
-    delete[] bestFitCoeff[m];
-    delete[] bestFitDegree[m];
-    delete[] bestFitVariance[m];
-  }
-  delete[] centerDev;
-  delete[] radiusDev;
-  delete[] bestFitCoeff;
-  delete[] bestFitVariance;
-  delete[] bestFitDegree;
   
+  if(bestRadius!=NULL) {
+    for(int i = 0; i < simplexResults->count(); i++) 
+      delete[] bestRadius[i];
+    delete[] bestRadius;   }
+  else
+    delete bestRadius;
+  
+  if(newBestRadius!=NULL) {
+    for(int i = 0; i < simplexResults->count(); i++)
+      delete[] newBestRadius[i];
+    delete[] newBestRadius; }
+  else
+      delete newBestRadius;
+
+  if(newBestCenter!=NULL) {
+    for(int i = 0; i < simplexResults->count(); i++)
+      delete[] newBestCenter[i];    
+    delete[] newBestCenter;
+  }
+  else
+    delete newBestCenter;
+  if(bestFitCoeff!=NULL) {
+    for(int m = 0; m < 4; m++) {
+      for(int p = 0; p < numLevels; p++) 
+	delete[] bestFitCoeff[m][p];
+      delete[] bestFitCoeff[m];
+    }
+    delete[] bestFitCoeff;
+  }
+  else
+    delete bestFitCoeff;
+      
+  if(bestFitDegree!=NULL) {
+    for(int m = 0; m < 4; m++) 
+      delete[] bestFitDegree[m];
+    delete[] bestFitDegree;
+  }
+  else 
+    delete bestFitCoeff;
+
+  if(bestFitVariance!=NULL) {
+    for(int m = 0; m < 4; m++) 
+      delete[] bestFitVariance[m];
+    delete[] bestFitVariance;
+  }
+  if(centerDev!=NULL)
+    delete[] centerDev;
+  else 
+    delete centerDev;
+  if(radiusDev!=NULL)
+    delete[] radiusDev;
+  else
+    delete radiusDev;
 }
 
 void ChooseCenter::setConfig(Configuration* newConfig)
@@ -913,7 +946,8 @@ bool ChooseCenter::fixCenters()
       // new variables here but why?
       
       // get best simplex center;
-      Center bestCenter = simplexResults->value(i).getCenter(k,newBestRadius[i][k],
+      Center bestCenter = simplexResults->value(i).getCenter(k,
+						        newBestRadius[i][k],
 							newBestCenter[i][k]);
       float xError, yError, radError, windError;
 

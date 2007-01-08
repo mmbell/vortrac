@@ -109,44 +109,43 @@ void GraphFace::paintEvent(QPaintEvent *event)
   
   QPainter *painter = new QPainter(this);
 
-  //if (imageAltered) {
+  if (imageAltered) {
     imageAltered = false;
     updateImage(painter);
-
+    QBrush myBackground = painter->background();
     if (painter->isActive())
       painter->end();
     
     delete painter;
-
-    // Now update the image too...
+    
+    // Now update the image too...  
     
     QPainter* imagePainter = new QPainter(image);
-    imagePainter->setBackgroundMode(Qt::TransparentMode);
+    imagePainter->setBackground(myBackground);
     imagePainter->fillRect(QRectF(QPointF(0,0),image->size()),
-			   imagePainter->background());
+			 myBackground);
     updateImage(imagePainter);
-
+  
     if (imagePainter->isActive())
       imagePainter->end();
-       
+  
     delete imagePainter;
-    /*
-    // This should go back in once is stops turning things white...
-    }
-    else {
-    painter->setBackgroundMode(Qt::TransparentMode);
+  
+  // This should go back in once is stops turning things white...
+  }
+  else {
+    //painter->setBackgroundMode(Qt::TransparentMode);
     //painter->setRenderHint(QPainter::Antialiasing);
     painter->drawImage(QPoint(0,0), *image);
-    resize(this->size())
-    
-    Message::toScreen("Repaint Event");
-    
+    resize(this->size());
+      
+    //Message::toScreen("Repaint Event");
+  
     if (painter->isActive())
-    painter->end();
+      painter->end();
     
     delete painter;
-    }
-    */
+  }
 
   // QPainter *painter = new QPainter(this);
   //  painter->drawImage(QRect(QPoint(0,0),size()), displayImage);
@@ -162,10 +161,13 @@ void GraphFace::paintEvent(QPaintEvent *event)
 bool GraphFace::event(QEvent *event)
 {
   if (event->type() == QEvent::ToolTip) {
+    //    Message::toScreen("Got ToolTip Event!");
     QHelpEvent *find = static_cast<QHelpEvent *>(event);
     bool ONDropSonde = false;
     QString time, measurement;
+    //Message::toScreen(" x = "+QString().setNum(find->pos().x())+" y = "+QString().setNum(find->pos().y()));
     int index = pointAt(find->pos(),ONDropSonde);
+    //Message::toScreen("Index = "+QString().setNum(index));
     if(index != -1) {
       if(ONDropSonde) {
 	// Drop Sonde Measurement
@@ -208,6 +210,11 @@ void GraphFace::resizeEvent(QResizeEvent * /* event */)
   graph_width = width()-RIGHT_MARGIN_WIDTH - LEFT_MARGIN_WIDTH;
   graph_height = height()-TOP_MARGIN_HEIGHT - BOTTOM_MARGIN_HEIGHT;
   imageAltered = true;
+  QImage* oldImage = image;
+  image = NULL;
+  image =  new QImage(this->width(),this->height(),
+		      QImage::Format_ARGB32_Premultiplied);
+  delete oldImage;
   update();
 }
 
@@ -220,13 +227,21 @@ void GraphFace::saveImage()
 {
   Message::toScreen("GraphFace:Made it into save image");
   
-  QImage *visibleImage = new QImage(graph_width+LEFT_MARGIN_WIDTH+RIGHT_MARGIN_WIDTH,graph_height+TOP_MARGIN_HEIGHT+BOTTOM_MARGIN_HEIGHT,QImage::Format_ARGB32_Premultiplied);
+  // Create new image with white background
+  // We must use the same size as widget because otherwise it messes up the
+  // Scaling properties ? - LM 1/7/07
+
+  QImage *visibleImage = new QImage(this->width(),this->height(),
+				    QImage::Format_ARGB32_Premultiplied);
+  
   QPainter *painter = new QPainter(visibleImage);
   painter = updateImage(painter);
   if (painter->isActive())
     painter->end();
   delete painter;
-  
+
+  // Pick out file name and handle file type logistics
+
   QList<QByteArray> byteList = QImageWriter::supportedImageFormats();
   int index = byteList.indexOf("png");
   byteList.move(index,0);
@@ -260,15 +275,14 @@ void GraphFace::saveImage()
   }
   Message::toScreen("Made it out of GraphFace:SaveImage()");
 }
-/*
+
 void GraphFace::saveImage(QString fileName)
 {
-  // I don't think I need this really
-  QImage visibleImage(*image);
-  QDir check(
-  if(!visibleImage.save(imageFile,"PNG")) {
+  if(!image->save(fileName,"PNG")) {
+    Message::toScreen("Couldn't Save GraphFace Image to "+fileName);
+  }
 }
-*/
+
 //***********************--newInfo (SLOT) --************************************
 
 void GraphFace::newInfo(VortexList* gList)
@@ -756,29 +770,21 @@ float GraphFace::getSTDMultiplier(VortexData p, float z)
 
 int GraphFace::pointAt(const QPointF & position, bool& ONDropSonde)
 {
-  if((dropList == NULL)||(VortexDataList == NULL))
+  
+  
+  if((VortexDataList == NULL))
     return -1;
   
   ONDropSonde = false;
   QDateTime tmin = unScaleTime(position.x()-5);
   QDateTime tmax = unScaleTime(position.x()+5);
+  //Message::toScreen("tmax = "+tmax.toString("dd-hh:mm")+" tmin "+tmin.toString("dd-hh:mm"));
   float pmax = unScalePressure(position.y()-5);
   float pmin = unScalePressure(position.y()+5);
+  //Message::toScreen("Pmax = "+QString().setNum(pmax)+" Pmin = "+QString().setNum(pmin));
   float rmax = unScaleRmw(position.y()-5);
   float rmin = unScaleRmw(position.y()+5);
-  for(int i = 0; i < dropList->size(); i++) {
-    if(dropList->value(i).getTime()<tmax)
-      if(dropList->value(i).getTime()>tmin)
-	if((dropList->value(i).getPressure() < pmax)  
-	   && (dropList->value(i).getPressure() > pmin)) {
-	  ONDropSonde = true;
-	  return i;
-	}
-	else;
-      else;
-      
-    else break;
-  }
+  //Message::toScreen("Rax = "+QString().setNum(rmax)+" Rmin = "+QString().setNum(rmin));
   for (int i = 0; i < VortexDataList->size(); i++) {
     if(VortexDataList->value(i).getTime()<tmax)
       if(VortexDataList->value(i).getTime()>tmin) {
@@ -794,7 +800,25 @@ int GraphFace::pointAt(const QPointF & position, bool& ONDropSonde)
       else;
     else break;
   }
-  return -1;
+
+  if(dropList==NULL)
+    return -1;
+  else {
+    for(int i = 0; i < dropList->size(); i++) {
+      if(dropList->value(i).getTime()<tmax)
+	if(dropList->value(i).getTime()>tmin)
+	  if((dropList->value(i).getPressure() < pmax)  
+	     && (dropList->value(i).getPressure() > pmin)) {
+	    ONDropSonde = true;
+	    return i;
+	  }
+	  else;
+	else;
+	
+      else break;
+    }
+    return -1;
+  }
 }
 
 
@@ -839,8 +863,8 @@ QPainter* GraphFace::updateImage(QPainter* painter)
 
   //QPainter* painter = new QPainter(imageTemp);
   //QPainter* painter = new QPainter(imageTemp);
+  painter->setBackgroundMode(Qt::OpaqueMode);
   painter->setRenderHint(QPainter::Antialiasing);
-  painter->setBackgroundMode(Qt::TransparentMode);
   //this option makes lines appear smoother;
 
   //DRAW IN ALL AXISES
