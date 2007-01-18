@@ -41,11 +41,11 @@ class VortexData
   QDateTime getTime() const;
   void setTime(const QDateTime& radartime);
 
-  float getRMW();
+  float getRMW() const;
   float getRMW(const int& i) const;
   void setRMW(const int& index, const float& new_rmw);
   void setRMW(const float a[], const int& howMany);
-  float getRMWUncertainty();
+  float getRMWUncertainty() const;
   float getRMWUncertainty(const int& i) const;
   void setRMWUncertainty(const int& index, const float& dRMW);
   void setRMWUncertainty(const float a[], const int& howMany);

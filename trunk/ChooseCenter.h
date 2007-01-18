@@ -43,6 +43,7 @@ class ChooseCenter
  private:
     Configuration* config;       // Should this be a constant parameter
     const SimplexList* simplexResults;
+	SimplexData* simplexData;
     VortexData* vortexData;
     float velNull;
     int numLevels;

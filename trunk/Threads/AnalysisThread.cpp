@@ -545,7 +545,7 @@ void AnalysisThread::run()
        // or what the deal is but these numbers look closer to right for 
        // the two volumes I am looking at.
 
-		Message::toScreen("Hvvp Parameters: Distance to Radar "+QString().setNum(rt)+" angel to vortex center in degrees ccw from north "+QString().setNum(cca)+" rmw "+QString().setNum(rmw));
+		Message::toScreen("Hvvp Parameters: Distance to Radar "+QString().setNum(rt)+" angle to vortex center in degrees ccw from north "+QString().setNum(cca)+" rmw "+QString().setNum(rmw));
 
 		emit log(Message(QString(), 1,this->objectName()));
 
@@ -672,5 +672,5 @@ void AnalysisThread::catchLog(const Message& message)
 
 void AnalysisThread::setNumVolProcessed(const float& num)
 {
-  numVolProcessed = num;
+  numVolProcessed = (int)num;
 }

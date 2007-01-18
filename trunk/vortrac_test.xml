@@ -14,7 +14,7 @@
         <lon>-82.402</lon>
         <alt>32.5</alt>
         <dir>/Volumes/artemis1/mbell/charley/levelii</dir>
-        <format>LEVELII</format>
+        <format>NCDCLEVELII</format>
         <startdate>2004-08-13</startdate>
         <enddate>2005-01-01</enddate>
         <starttime>18:00:00</starttime>
@@ -63,12 +63,12 @@
         <min_volumes>6</min_volumes>
         <dist_weight>0.0</dist_weight>
         <wind_weight>0.2</wind_weight>
-        <stddev_weight>0</stddev_weight>
+        <stddev_weight>0.6</stddev_weight>
         <pts_weight>0.2</pts_weight>
         <position_weight>0.4</position_weight>
         <rmw_weight>0.4</rmw_weight>
         <vt_weight>0.2</vt_weight>
-        <stats>99</stats>
+        <stats>95</stats>
     </choosecenter>
     <vtd>
         <dir>/Users/mbell/Development/vortrac/trunk/workingDirs/vtd</dir>
@@ -105,7 +105,7 @@
         <endtime>00:00:00</endtime>
     </graphics>
     <qc>
-        <wind_method>vad</wind_method>
+        <wind_method>known</wind_method>
         <vel_min>1.0</vel_min>
         <vel_max>100.0</vel_max>
         <ref_min>-15.0</ref_min>
@@ -115,7 +115,7 @@
         <maxfold>4</maxfold>
         <windspeed>24</windspeed>
         <winddirection>138</winddirection>
-        <awips_dir>/path/to/awips/data</awips_dir>
+        <awips_dir>/Volumes/artemis1/mbell/ernesto/pressureobs</awips_dir>
         <vadlevels>6</vadlevels>
         <numcoeff>3</numcoeff>
         <vadthr>30</vadthr>

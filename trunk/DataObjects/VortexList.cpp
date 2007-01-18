@@ -360,7 +360,7 @@ void VortexList::timeSort()
 {
   for(int i = 0; i < this->count(); i++) {
     for(int j = i+1; j < this->count(); j++) {
-      if(this->value(i).getTime()>this->value(j).getTime()) {
+      if(this->at(i).getTime()>this->at(j).getTime()) {
 	this->swap(j,i);
 	vortexDataConfigs->swap(j,i);
 	configFileNames->swap(j,i);

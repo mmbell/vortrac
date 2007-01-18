@@ -250,8 +250,8 @@ bool Log::handleStopLightUpdate(StopLightColor newColor, QString message,
     if(StopLightQueue.count()==0)
       return true;
     for(int i = StopLightQueue.count()-1; i >= 0; i--) {
-      if((StopLightQueue.value(i)->location == location) ||
-	 (StopLightQueue.value(i)->location == QString())) {
+      if((StopLightQueue.at(i)->location == location) ||
+	 (StopLightQueue.at(i)->location == QString())) {
 	SLChange *corrected = StopLightQueue.value(i);
 	StopLightQueue.removeAt(i);
 	//Message::toScreen("Inside "+corrected->location+"  "+corrected->message+" @ i = "+QString().setNum(i));
@@ -274,7 +274,7 @@ bool Log::handleStopLightUpdate(StopLightColor newColor, QString message,
       int initialCount = StopLightQueue.count();
       emit newLogEntry(location+": "+message+"\n");
       for(int i = 0; i < initialCount; i++) {
-	if(mostRecent->color < StopLightQueue.value(i)->color) {
+	if(mostRecent->color < StopLightQueue.at(i)->color) {
 	  StopLightQueue.insert(i+1, mostRecent);
 	  //	  Message::toScreen("Inside "+mostRecent->location+"  "+mostRecent->message+" @ i = "+QString().setNum(i));
 	}
@@ -289,8 +289,8 @@ bool Log::handleStopLightUpdate(StopLightColor newColor, QString message,
     return true;
   }
   if((originalCount!=StopLightQueue.count())||(originalCount==0)) {
-    emit newStopLightColor(StopLightQueue.value(0)->color,
-			   StopLightQueue.value(0)->message);
+    emit newStopLightColor(StopLightQueue.at(0)->color,
+			   StopLightQueue.at(0)->message);
     return true;
   }
   else {

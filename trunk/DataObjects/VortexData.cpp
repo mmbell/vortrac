@@ -155,7 +155,7 @@ void VortexData::setTime(const QDateTime& radarTime)
 }
 
 
-float VortexData::getRMW()
+float VortexData::getRMW() const
 {
   return RMW[0];
 }
@@ -179,7 +179,7 @@ void VortexData::setRMW(const float a[], const int& howMany)
     RMW[i] = a[i];
 }
 
-float VortexData::getRMWUncertainty()
+float VortexData::getRMWUncertainty() const
 {
   return RMWUncertainty[0];
 }

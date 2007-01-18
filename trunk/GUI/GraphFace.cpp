@@ -290,7 +290,7 @@ void GraphFace::newInfo(VortexList* gList)
   /*
   if (first.isNull()) {
     // Find the earilier vortexData in the new list
-    QDateTime initialTime = gList->value(0).getTime(); 
+    QDateTime initialTime = gList->at(0).getTime(); 
     int initialTimeIndex = 0;
     for(int i = 1; i < gList->count(); i++) {
       if(gList->value(i).getTime().time() < initialTime.time()) {
@@ -786,14 +786,14 @@ int GraphFace::pointAt(const QPointF & position, bool& ONDropSonde)
   float rmin = unScaleRmw(position.y()+5);
   //Message::toScreen("Rax = "+QString().setNum(rmax)+" Rmin = "+QString().setNum(rmin));
   for (int i = 0; i < VortexDataList->size(); i++) {
-    if(VortexDataList->value(i).getTime()<tmax)
-      if(VortexDataList->value(i).getTime()>tmin) {
-	if((VortexDataList->value(i).getPressure() < pmax)
-	   && (VortexDataList->value(i).getPressure() > pmin)) {
+    if(VortexDataList->at(i).getTime()<tmax)
+      if(VortexDataList->at(i).getTime()>tmin) {
+	if((VortexDataList->at(i).getPressure() < pmax)
+	   && (VortexDataList->at(i).getPressure() > pmin)) {
 	  return i;
 	}
-	if((VortexDataList->value(i).getRMW() < rmax) 
-	   && (VortexDataList->value(i).getRMW() > rmin)) {
+	if((VortexDataList->at(i).getRMW() < rmax) 
+	   && (VortexDataList->at(i).getRMW() > rmin)) {
 	  return i;
 	}
       }
@@ -805,10 +805,10 @@ int GraphFace::pointAt(const QPointF & position, bool& ONDropSonde)
     return -1;
   else {
     for(int i = 0; i < dropList->size(); i++) {
-      if(dropList->value(i).getTime()<tmax)
-	if(dropList->value(i).getTime()>tmin)
-	  if((dropList->value(i).getPressure() < pmax)  
-	     && (dropList->value(i).getPressure() > pmin)) {
+      if(dropList->at(i).getTime()<tmax)
+	if(dropList->at(i).getTime()>tmin)
+	  if((dropList->at(i).getPressure() < pmax)  
+	     && (dropList->at(i).getPressure() > pmin)) {
 	    ONDropSonde = true;
 	    return i;
 	  }
@@ -1078,8 +1078,8 @@ QPainter* GraphFace::updateImage(QPainter* painter)
       QPointF xypoint = makePressurePoint(VortexDataList->value(i));
       
       if(!xypoint.isNull()) {
-	if (VortexDataList->value(i).getPressureUncertainty()>0) {                           // if uncertainty = 0 there are no bars
-	  float errorBarHeight = scaleDPressure(VortexDataList->value(i).getPressureUncertainty());
+	if (VortexDataList->at(i).getPressureUncertainty()>0) {                           // if uncertainty = 0 there are no bars
+	  float errorBarHeight = scaleDPressure(VortexDataList->at(i).getPressureUncertainty());
 	  
 	  float upper2, upper1, lower1, lower2;
 	  bool upperBar2, upperBar1, lowerBar1, lowerBar2;
@@ -1224,8 +1224,8 @@ QPainter* GraphFace::updateImage(QPainter* painter)
 	  QPointF xypoint = makeRmwPoint(VortexDataList->value(i));
 	  
 	  if(!xypoint.isNull()) {
-	    if (VortexDataList->value(i).getRMWUncertainty()>0) {                           // if uncertainty = 0 there are no bars
-	      float errorBarHeight = scaleDRmw(VortexDataList->value(i).getRMWUncertainty());
+	    if (VortexDataList->at(i).getRMWUncertainty()>0) {                           // if uncertainty = 0 there are no bars
+	      float errorBarHeight = scaleDRmw(VortexDataList->at(i).getRMWUncertainty());
 	      
 	      float upper2, upper1, lower1, lower2;
 	      bool upperBar2, upperBar1, lowerBar1, lowerBar2;
@@ -1591,8 +1591,8 @@ void GraphFace::altUpdateImage()
       QPointF xypoint = makePressurePoint(VortexDataList->value(i));
       
       if(!xypoint.isNull()) {
-	if (VortexDataList->value(i).getPressureUncertainty()>0) {                           // if uncertainty = 0 there are no bars
-	  float errorBarHeight = scaleDPressure(VortexDataList->value(i).getPressureUncertainty());
+	if (VortexDataList->at(i).getPressureUncertainty()>0) {                           // if uncertainty = 0 there are no bars
+	  float errorBarHeight = scaleDPressure(VortexDataList->at(i).getPressureUncertainty());
 	  
 	  float upper2, upper1, lower1, lower2;
 	  bool upperBar2, upperBar1, lowerBar1, lowerBar2;
@@ -1737,8 +1737,8 @@ void GraphFace::altUpdateImage()
 	  QPointF xypoint = makeRmwPoint(VortexDataList->value(i));
 	  
 	  if(!xypoint.isNull()) {
-	    if (VortexDataList->value(i).getRMWUncertainty()>0) {                           // if uncertainty = 0 there are no bars
-	      float errorBarHeight = scaleDRmw(VortexDataList->value(i).getRMWUncertainty());
+	    if (VortexDataList->at(i).getRMWUncertainty()>0) {                           // if uncertainty = 0 there are no bars
+	      float errorBarHeight = scaleDRmw(VortexDataList->at(i).getRMWUncertainty());
 	      
 	      float upper2, upper1, lower1, lower2;
 	      bool upperBar2, upperBar1, lowerBar1, lowerBar2;
