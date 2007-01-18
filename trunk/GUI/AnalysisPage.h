@@ -66,8 +66,8 @@ class AnalysisPage : public QWidget
     void log(const Message& message);
     void saveGraphImage(const QString& name);
     void vortexListChanged(VortexList* list);
-	void newVCP(const int vcp);
-	void newCappi(const GriddedData* cappi);
+    void newVCP(const int vcp);
+    void newCappi(const GriddedData* cappi);
 	
  private slots:
     void updatePage();

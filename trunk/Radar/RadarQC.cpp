@@ -29,7 +29,7 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
   numVGatesAveraged = 30;
   useVADWinds = false;
   useUserWinds = false;
-  useAWIPSWinds = false;
+  //  useAWIPSWinds = false;
   numCoEff = 3;
   vadLevels = 20;
   deg2rad = acos(-1)/180;
@@ -298,14 +298,17 @@ void RadarQC::getConfig(QDomElement qcConfig)
 	numCoEff = qcConfig.firstChildElement("numcoeff").text().toInt();
       }
       else {
-	
+	/*
+	  // Temporarily not concerned about this option
 	if(wind_method == QString("known")) {
 	  useAWIPSWinds = true;
 	  AWIPSDir = qcConfig.firstChildElement("awips_dir").text();
 	}
+
 	else {
-	  
-	  /*
+	*/
+  
+	/*
 	   * Enable default settings in case environmental wind 
 	   * method is not specified
 	   */
@@ -323,9 +326,8 @@ void RadarQC::getConfig(QDomElement qcConfig)
 	  numCoEff = 3;
 	  vadthr = 30; 
 	  gvadthr = 180; 
-	}
+	  //} Pull out because else was removed
       }
-      
     }
   }
   // Set default parameters if configuration data is not available
@@ -354,6 +356,7 @@ bool RadarQC::dealias()
    *  on a single radar volume
    *
    */
+  
 
   QString checkPrint("First");
   //Message::toScreen(checkPrint);
@@ -364,6 +367,8 @@ bool RadarQC::dealias()
   if(!terminalVelocity())
     return false;
   
+  emit log(Message(QString(),1,this->objectName()));
+  
   checkPrint = QString("Terminal Vel");
   //Message::toScreen(checkPrint);
   //emit log(Message(checkPrint));
@@ -371,6 +376,7 @@ bool RadarQC::dealias()
   //crazyCheck();
   
   thresholdData();
+  emit log(Message(QString(),1,this->objectName()));
   
   checkPrint = QString("Threshold Data");
   //Message::toScreen(checkPrint);
@@ -383,12 +389,13 @@ bool RadarQC::dealias()
   }
   //Message::toScreen("findEnvironmentalWind");
   //crazyCheck();
+
+  emit log(Message(QString(),1,this->objectName()));
   
   if(!BB()) {
     Message::toScreen("Failed in Bargen-Brown dealising");
     return false;
   }
-  
   
   checkPrint = QString("BB");
   //Message::toScreen(checkPrint);
@@ -426,6 +433,8 @@ void RadarQC::thresholdData()
   int numVGates = 0;
   for(int i = 0; i < numRays; i++)
     {
+      if(i == (int) numRays/2.0)
+	emit log(Message(QString(),1,this->objectName()));
       currentRay = radarData->getRay(i);
       int sweepIndex = currentRay->getSweepIndex();
       numVGates = currentRay->getVel_numgates();
@@ -1348,6 +1357,8 @@ float RadarQC::getStart(Ray *currentRay)
       if(velGates[v] != velNull) {
 	hasDopplerData = true;
 	dataHeight = int(floor((aveVADHeight[currentRay->getSweepIndex()][v]-radarHeight)*3.281+.5));
+	//if(isnan(dataHeight)||isinf(dataHeight))
+	//  Message::toScreen("RadarQC getting funky... sweep = "+QString().setNum(currentRay->getSweepIndex())+" ray# = "+QString().setNum(currentRay->getRayIndex())+" v# = "+QString().setNum(v));
 	if(dataHeight < 0) {
 	  dataHeight = 0;
 	}
@@ -1392,11 +1403,12 @@ float RadarQC::getStart(Ray *currentRay)
     else
       startVelocity = velNull;
   }
-  if(useAWIPSWinds) {
+  /*
+    if(useAWIPSWinds) {
     // Not yet implemented
     return 0;
-  }
-  
+    }
+  */
   return startVelocity;
 }
 

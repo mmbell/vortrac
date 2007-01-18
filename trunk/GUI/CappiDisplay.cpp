@@ -12,6 +12,7 @@
 #include <QtGui>
 
 #include "CappiDisplay.h"
+#include <math.h>
 
 CappiDisplay::CappiDisplay(QWidget *parent)
     : QWidget(parent)
@@ -21,11 +22,12 @@ CappiDisplay::CappiDisplay(QWidget *parent)
     PaintEngineMode = -5;
     connect(this, SIGNAL(hasImage(bool)),
 	    this, SLOT(setVisible(bool)));
-    emit hasImage(false);
-    exitNow = false;
-	
-    backgroundColor = QBrush(qRgb(255,255,255));
+    
+    backColor = qRgb(255,255,255);
     legendImage = QImage(10,50,QImage::Format_RGB32);        
+    maxVel = 1;
+    minVel = 0;
+    velIncr = 1;
 
 	//Set the palette
         image = QImage(50,50,QImage::Format_Indexed8);
@@ -74,6 +76,15 @@ CappiDisplay::CappiDisplay(QWidget *parent)
 	image.setColor(41, qRgb((int)(.879*255), (int)(.211*255), (int)(.355*255)));
 	image.setColor(42, qRgb((int)(.949*255), (int)(.273*255), (int)(.355*255)));
 	image.setColor(43, qRgb((int)(1.000*255), (int)(.012*255), (int)(.000*255)));
+
+	this->clearImage();
+	emit hasImage(true);
+	this->repaint();
+	emit hasImage(false);
+	this->update();
+	
+	exitNow = false;
+	
 	/*
 	image = QImage(50,50,QImage::Format_RGB32);
 	//image.setNumColors(256);
@@ -149,13 +160,14 @@ bool CappiDisplay::saveImage(const QString &fileName, const char *fileFormat)
 
 void CappiDisplay::clearImage()
 {
-    image.fill(qRgb(255, 255, 255));
-    //legendImage.fill(qRgb(255,255,0));
-    //QString message;
-    //message.setNum(PaintEngineMode);
-    //QTextStream out(stdout);
-    //out << message << endl;
-    update();
+  emit hasImage(false);
+  image.fill(qRgb(255, 255, 255));
+  legendImage.fill(qRgb(255,255,255));
+  //QString message;
+  //message.setNum(PaintEngineMode);
+  //QTextStream out(stdout);
+  //out << message << endl;
+  update();
 }
 
 void CappiDisplay::mousePressEvent(QMouseEvent *event)
@@ -167,12 +179,45 @@ void CappiDisplay::mousePressEvent(QMouseEvent *event)
 
 void CappiDisplay::paintEvent(QPaintEvent * /* event */)
 {
+  
+  Message::toScreen("Hit Paint Event in CappiDisplay");
+
+  // Draw the legend image .....
+  QPainter *imagePainter = new QPainter(&legendImage);
+  imagePainter->setBackgroundMode(Qt::OpaqueMode);
+  
+  float offset = 15;
+  float boxHeight = (image.height()-2*offset)/(float)42;
+  
+  for(int i = 0; i < 42; i++) {
+    // we don't use colors 0 & 1 because they are black and white
+    imagePainter->setBrush(QBrush(image.color(i+2)));
+    imagePainter->drawRect(QRect(0, (int) (offset+((41-i)*boxHeight)),
+				 (int)(2*boxHeight),
+				 (int)boxHeight));
+  }
+  QFont legendFont("Times",7);
+  imagePainter->setFont(legendFont);
+  for(int i = 0; i < 42; i+=2) {
+    imagePainter->drawText(QPoint((int)(2.5*boxHeight), (int)(offset+(i*boxHeight)+(.7*boxHeight))), QString().setNum(maxVel-i*velIncr));
+  }
+  
+  if(imagePainter->isActive())
+    imagePainter->end();
+  delete imagePainter;
+
+  // Paint the image and the legend onto this wigit
+
   QPainter painter(this);
-  backgroundColor = painter.background();
+  backColor = painter.background().color();
+  //Message::toScreen("background Color r = "+QString().setNum(backColor.red())+" g = "+QString().setNum(backColor.green())+" b = "+QString().setNum(backColor.blue()));
   painter.drawImage(QPoint(0,0), image);
   painter.drawImage(QPoint(image.size().width()*1.1,0),
     		    legendImage);
   //painter.drawText(QPoint(0, this->height()), cappiLabel);
+
+  // I don't know what this was for -LM 1/18/07
+  /*
   if(painter.paintEngine()->type() == QPaintEngine::X11)
     PaintEngineMode = -1;
   if(painter.paintEngine()->type() == QPaintEngine::Windows)
@@ -195,6 +240,7 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
     PaintEngineMode = 9;
   if(painter.paintEngine()->type() == QPaintEngine::Raster)
     PaintEngineMode = 10;
+  */
 }
 
 void CappiDisplay::resizeEvent(QResizeEvent *event)
@@ -210,7 +256,7 @@ void CappiDisplay::resizeEvent(QResizeEvent *event)
 
 void CappiDisplay::resizeImage(QImage *image, const QSize &newSize)
 {
-  Message::toScreen("CappiDisplay: ResizeImage: Someone is using this");
+  Message::report("CappiDisplay: ResizeImage: Someone is using this");
     if (image->size() == newSize)
         return;
 
@@ -235,8 +281,8 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
   //this->resizeImage(&image, cappiSize);
   
   // Get the minimum and maximum Doppler velocities
-  float maxVel = -9999;
-  float minVel = 9999;
+  maxVel = -9999;
+  minVel = 9999;
   float k = 0;
   QString field("ve");
   for (float i = 0; i < iDim; i++) {
@@ -252,8 +298,18 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
       }
     }
   }
-  float velRange = maxVel - minVel;
-  float velIncr = velRange/41;
+
+  Message::toScreen("maxVel is "+QString().setNum(maxVel)+" minVel is "+QString().setNum(minVel));
+  float velRange;
+  if(maxVel>fabs(minVel)) {
+    velRange = 2*maxVel;
+    minVel = -1*maxVel;
+  }
+  else {
+    velRange = 2*fabs(minVel);
+    maxVel = -1*minVel;
+  }
+  velIncr = velRange/41;
   // Set each pixel color scaled to the max and min ranges
   for (float i = 0; i < iDim; i++) {
     if(exitNow)
@@ -273,28 +329,8 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
   }
   image = image.scaled((int)500,(int)500);
   legendImage = legendImage.scaled(50,500);
-
-  // Draw the legend
-  QPainter *painter = new QPainter(&legendImage);
-  painter->setBackgroundMode(Qt::OpaqueMode);
-  painter->setBrush(backgroundColor);
-  painter->drawRect(QRect(QPoint(0,0),legendImage.size()));
-
-  float offset = 15;
-  float boxHeight = (image.height()-2*offset)/(float)42;
-
-  Message::toScreen("We got "+QString().setNum(image.numColors())+" colors to work with");
+  legendImage.fill(qRgb(backColor.red(),backColor.green(),backColor.blue()));
   
-  for(int i = 0; i < 42; i++) {
-    // we don't use colors 0 & 1 because they are black and white
-    painter->setBrush(QBrush(image.color(i+2)));
-    painter->drawRect(QRect(0, (int) (offset+(i*boxHeight)),(int)(2*boxHeight),
-			    (int)boxHeight));
-  }
-  
-  if(painter->isActive())
-    painter->end();
-  delete painter;
   
   //  cappiLabel = "Velocities = " +QString().setNum(maxVel) + " to " 
   //  + QString().setNum(minVel) + " in " + QString().setNum(velIncr) + " m/s incr.";);

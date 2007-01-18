@@ -101,7 +101,7 @@ class RadarQC : public QObject
    *
    */
   
-  QString AWIPSDir;
+  //QString AWIPSDir;
   /*
    * AWIPSDir: Location of relavent AWIPS data to be used in determining mean
    *   environmental winds.
@@ -118,7 +118,7 @@ class RadarQC : public QObject
 
   bool useVADWinds;
   bool useUserWinds;
-  bool useAWIPSWinds;
+  //bool useAWIPSWinds;
   /* 
    * These are boolean indicators taylor the program flow in accordance with
    *   which environmental retreival method was selected by the user.

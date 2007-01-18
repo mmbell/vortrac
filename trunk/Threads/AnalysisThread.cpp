@@ -168,10 +168,13 @@ void AnalysisThread::run()
 		bool analysisGood = true;
 		QTime analysisTime;
 		analysisTime.start();
-		emit log(Message("Data found, starting analysis...", -1));
+		emit log(Message("Data found, starting analysis...", -1, 
+				 this->objectName()));
 		
 		// Read in the radar data
 		radarVolume->readVolume();
+		
+		emit log(Message(QString(),2,this->objectName()));
 
 		mutex.unlock();
 		if(abort)
@@ -180,9 +183,9 @@ void AnalysisThread::run()
 		
 		// Check the vortex list for a current center		
 		if (!vortexList->isEmpty()) {
-			vortexList->timeSort();
-			vortexLat = vortexList->last().getLat();
-			vortexLon = vortexList->last().getLon();
+		  vortexList->timeSort();
+		  vortexLat = vortexList->last().getLat();
+		  vortexLon = vortexList->last().getLon();
 		} else {
 
 		  if(numVolProcessed == 0) {
@@ -286,6 +289,8 @@ void AnalysisThread::run()
 
 		  }
 		}
+
+		emit log(Message(QString(),2,this->objectName()));
        
 		// Check to see if the center is beyond 174 km
 		// If so, tell the user to wait!
@@ -344,11 +349,11 @@ void AnalysisThread::run()
 
 		  connect(dealiaser, SIGNAL(log(const Message&)), this, 
 			  SLOT(catchLog(const Message&)), Qt::DirectConnection);
-		  
+		  emit log(Message(QString(),1,this->objectName()));  //6%
 		  dealiaser->getConfig(configData->getConfig("qc"));
 		  
 		  if(dealiaser->dealias()) {
-		    emit log(Message("Finished QC and Dealiasing", 10));
+		    emit log(Message("Finished QC and Dealiasing", 2, this->objectName()));
 		    radarVolume->isDealiased(true);
 		  } else {
 		    emit log(Message("Finished Dealias Method with Failures"));
@@ -542,19 +547,26 @@ void AnalysisThread::run()
 
 		Message::toScreen("Hvvp Parameters: Distance to Radar "+QString().setNum(rt)+" angel to vortex center in degrees ccw from north "+QString().setNum(cca)+" rmw "+QString().setNum(rmw));
 
+		emit log(Message(QString(), 1,this->objectName()));
+
 		Hvvp *envWindFinder = new Hvvp;
+		connect(envWindFinder, SIGNAL(log(const Message)), 
+			this, SLOT(catchLog(const Message)), 
+			Qt::DirectConnection);
 		envWindFinder->setRadarData(radarVolume,rt, cca, rmw);
+		emit log(Message(QString(), 1,this->objectName()));
 		//envWindFinder->findHVVPWinds(false); for first fit only
 		envWindFinder->findHVVPWinds(true);
 		float missingLink = envWindFinder->getAvAcrossBeamWinds();
 		Message::toScreen("Hvvp gives "+QString().setNum(missingLink));
-
+		emit log(Message(QString(), 1,this->objectName()));
 		mutex.unlock();  	
 		
 		if (!abort) {
 		  
 		  mutex.lock();
 		  // Get the GBVTD winds
+		  emit log(Message(QString(), 1,this->objectName()));
 		  vortexThread->getWinds(configData, gridData, 
 					 vortexData, pressureList);
 		  waitForWinds.wait(&mutex); 
@@ -601,7 +613,6 @@ void AnalysisThread::run()
 		delete envWindFinder;
 		delete radarVolume;
 		delete gridData;
-		vortexData = NULL;
 		delete vortexData;
 		
 		//Message::toScreen("Deleted vortex data.... ???");
@@ -617,7 +628,7 @@ void AnalysisThread::run()
 			archiveAnalysis();
 			
 			// Complete the progress bar and log that we're done
-			emit log(Message("Analysis complete!",100));
+			emit log(Message("Analysis complete!",1));
 
 			// Let the poller know we're done
 			emit(doneProcessing());

@@ -42,6 +42,8 @@ StormSignal::StormSignal(QSize hint, QWidget *parent)
   hurrSymbol->arcTo(-25,0,100,100,-85,85);
 
   flashing = false;
+  
+  currentStatus = Nothing;
 
 }
 
@@ -80,14 +82,15 @@ void StormSignal::paintEvent(QPaintEvent *event)
   QTextOption textHint(Qt::AlignCenter);
   textHint.setWrapMode(QTextOption::WordWrap);
   QString stormMessage;
-  QFont font("Helvetica", 5, QFont::Bold);
+  QFont font("Helvetica", 8, QFont::Bold);
   QFontMetrics fontMetrics(font);
   float fontHeight = fontMetrics.height();
   painter->setFont(font);
   painter->setBrush(QBrush(QColor(0,100,0)));
   QRectF wordBox(25,25,50,50);
-  QRectF wordBox1(25,25-fontHeight/3.0,50,50);
-  QRectF wordBox2(25,25+fontHeight/3.0,50,50);
+  QRectF wordBox1(25,25-fontHeight*1.5,50,50);
+  QRectF wordBox2(25,25,50,50);
+  QRectF wordBox3(25,25+fontHeight*1.5,50,50);
   //  painter->drawRect(wordBox);
 
   switch(currentStatus)
@@ -96,11 +99,13 @@ void StormSignal::paintEvent(QPaintEvent *event)
       break;
     case RapidIncrease:
       painter->drawText(wordBox1, QString("Rapid"), textHint);
-      painter->drawText(wordBox2, QString("Intensification"), textHint);
+      painter->drawText(wordBox2, QString("Pressure"), textHint);
+      painter->drawText(wordBox3, QString("Rise"), textHint);
       break;
     case RapidDecrease:
       painter->drawText(wordBox1, QString("Rapid"), textHint);
-      painter->drawText(wordBox2, QString("Decrease"), textHint);
+      painter->drawText(wordBox2, QString("Pressure"), textHint);
+      painter->drawText(wordBox3, QString("Fall"),textHint);
       break;
     case Ok:
       font = QFont("Helvetica", 14, QFont::Bold);

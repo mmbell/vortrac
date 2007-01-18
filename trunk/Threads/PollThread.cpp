@@ -111,7 +111,7 @@ void PollThread::run()
   //Message::toScreen("Begining run sequence in PollThread");
   
   abort = false;
-  emit log(Message("Polling for data..."));
+  emit log(Message(QString("Polling for data..."), 0, this->objectName()));
   dataSource = new RadarFactory(configData);
   connect(dataSource, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
@@ -341,13 +341,13 @@ void PollThread::run()
 	    // Fire up the analysis thread to process it
 	    RadarData *newVolume = dataSource->getUnprocessedData();
 	    
+	    //emit log(Message(QString(),2,this->objectName()));
+
 	    // Check to makes sure that the file still exists and is readable
 	    
 	    if(!newVolume->fileIsReadable()) {
-	      emit log(Message("The radar data file "+newVolume->getFileName(),
-			       0,"PollThread"));
-	      //Message::Yellow)
-	    continue;
+	      emit log(Message(QString("The radar data file "+newVolume->getFileName()+" is not readable"), -1,this->objectName()));
+	      continue;
 	    }
 
 	    analysisThread->analyze(newVolume,configData);

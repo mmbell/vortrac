@@ -27,6 +27,7 @@
 
 Hvvp::Hvvp()
 {
+  setObjectName("hvvp");
   // Generic constructor, initializes some variables..
   velNull = -999.0;
   deg2rad = acos(-1)/180;
@@ -229,8 +230,20 @@ bool Hvvp::findHVVPWinds(bool both)
 
   int count = 0; 
   float mod_Rankine_xt[levels];
+  int last = 0;
+
+  // For updating the percentage bar we have 7% to give away in this routine
+  float increment = float(levels)/7.0;
+  //Message::toScreen("HVVP increment is ..."+QString().setNum(increment));
 
   for(int m = 0; m < levels; m++) {
+    
+    if(int((m+1)/increment) > last) {
+      last++;
+      //Message::toScreen("For m = "+QString().setNum(m)+" last upgraded to "+QString().setNum(last));
+      emit log(Message(QString(),1,this->objectName()));
+    }
+
     mod_Rankine_xt[m] = velNull;
     float hgtStart = .600;    
     float h0 = hgtStart+.1*m;
@@ -441,6 +454,7 @@ bool Hvvp::findHVVPWinds(bool both)
    */
 
   //  Comment this section out until further testing is complete
+  emit log(Message(QString(),1,this->objectName()));
 
   float xtav=0;
   float xtsd=0;

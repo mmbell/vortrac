@@ -292,7 +292,8 @@ bool AbstractPanel::checkDirectory()
   }
   
   if((!directory.isReadable())&&!((this->objectName()=="graphics")||
-				  (this->objectName()=="hvvp"))) 
+				  (this->objectName()=="hvvp")||
+				  (this->objectName()=="qc"))) 
     {
       // Check to insure that all directories which will be used are readable
       QString message("Cannot read from "+directory.path()+" please verify that you have read permissions in this directory");
@@ -327,4 +328,16 @@ bool AbstractPanel::checkValues()
 {
   Message::toScreen("In bad function Abstract Panels Check Values");
   return false;
+}
+
+void AbstractPanel::createDirectory() 
+{
+  QDir *temp = new QDir(dir->text());
+  if(!temp->isAbsolute())
+    temp->makeAbsolute();
+  if(!temp->exists())
+    temp->mkpath(temp->path());
+  if(!temp->isReadable())
+    emit log(Message(QString("Unable to create directory: "+temp->path()+" in file system"), 0, this->objectName()));
+  delete temp;	     
 }

@@ -130,6 +130,9 @@ class AbstractPanel:public QWidget
      // checks to see if analytic model is the selected format
    void radarChanged(const QString& text);
      // allows for automatic updating of stored radar specs
+   void createDirectory();
+     // creates a directory in the filesystem based on the current directory
+     // held in member dir
 
    
  

@@ -50,7 +50,10 @@ private:
     QPoint lastPoint;
     int PaintEngineMode;
     bool exitNow;
-    QBrush backgroundColor;
+    QColor backColor;
+    float maxVel;
+    float minVel;
+    float velIncr;
 
 };
 

@@ -101,6 +101,8 @@ VortexPanel::VortexPanel()
 	  this, SLOT(valueChanged(const QString&)));
   connect(dir, SIGNAL(textChanged(const QString&)),
 	  this, SLOT(valueChanged(const QString&)));
+  connect(this, SIGNAL(workingDirectoryChanged()),
+	  this, SLOT(createDirectory()));
 
   setPanelChanged(false);
 }
@@ -566,6 +568,9 @@ CappiPanel::CappiPanel()
 	  this, SLOT(valueChanged(const QString&)));
   connect(intBox, SIGNAL(activated(const QString&)), 
 	  this, SLOT(valueChanged(const QString&)));
+  connect(this, SIGNAL(workingDirectoryChanged()),
+	  this, SLOT(createDirectory()));
+
   // These connections allow individual widgets to notify the panel when 
   // a parameter has changed.
 
@@ -956,6 +961,8 @@ CenterPanel::CenterPanel()
 	  this, SLOT(valueChanged(const QString&))); 
   connect(maxWaveNumBox, SIGNAL(valueChanged(const QString&)), 
 	  this, SLOT(createDataGaps(const QString&)));
+  connect(this, SIGNAL(workingDirectoryChanged()),
+	  this, SLOT(createDirectory()));
 
   setPanelChanged(false);
 }
@@ -1367,6 +1374,8 @@ ChooseCenterPanel::ChooseCenterPanel()
 	  this, SLOT(valueChanged(const bool)));
   connect(minVolumes, SIGNAL(valueChanged(const QString&)),
 	  this, SLOT(valueChanged(const QString&)));
+  connect(this, SIGNAL(workingDirectoryChanged()),
+	  this, SLOT(createDirectory()));
 
   setPanelChanged(false);
 }
@@ -1722,6 +1731,8 @@ VTDPanel::VTDPanel()
 	  this, SLOT(valueChanged(const QString&)));
   connect(maxWaveNumBox, SIGNAL(valueChanged(const QString&)),
 	  this, SLOT(createDataGaps(const QString&)));
+  connect(this, SIGNAL(workingDirectoryChanged()),
+	  this, SLOT(createDirectory()));
 
   setPanelChanged(false);
 }
@@ -2429,7 +2440,7 @@ QCPanel::QCPanel()
   QGroupBox *findWind = new QGroupBox(tr("Method For Finding Reference Wind"));
   vad = new QRadioButton(tr("Use GVAD and VAD Algorithms"), findWind);
   user = new QRadioButton(tr("Enter Environmental Wind Parameters"), findWind);
-  known = new QRadioButton(tr("Use Available AWEPS Data"), findWind);
+  //  known = new QRadioButton(tr("Use Available AWIPS Data"), findWind);
 
   QFrame *vadParameters = new QFrame;
 
@@ -2503,25 +2514,27 @@ QLabel *gvadthrLabel = new QLabel(tr("Minimum number of points for GVAD processi
   userParameters->setLayout(userParametersLayout);
   userParameters->hide();
 
-  QFrame *knownParameters = new QFrame;
-  QLabel *knownDirLabel = new QLabel(tr("AWIPS Data Directory"));
-  QGridLayout *knownDirLayout = new QGridLayout();
-  QHBoxLayout *knownLayout = new QHBoxLayout;
-  knownDirLayout->addWidget(knownDirLabel, 0, 0);
-  knownDirLayout->addWidget(dir, 1, 0, 1, 3);
-  knownDirLayout->addWidget(browse, 1, 3);
-  knownLayout->addSpacing(20);
-  knownLayout->addLayout(knownDirLayout);
-  knownParameters->setLayout(knownLayout);
-  knownParameters->hide();
+  /*
+   * QFrame *knownParameters = new QFrame;
+   * QLabel *knownDirLabel = new QLabel(tr("AWIPS Data Directory"));
+   * QGridLayout *knownDirLayout = new QGridLayout();
+   * QHBoxLayout *knownLayout = new QHBoxLayout;
+   * knownDirLayout->addWidget(knownDirLabel, 0, 0);
+   * knownDirLayout->addWidget(dir, 1, 0, 1, 3);
+   * knownDirLayout->addWidget(browse, 1, 3);
+   * knownLayout->addSpacing(20);
+   * knownLayout->addLayout(knownDirLayout);
+   * knownParameters->setLayout(knownLayout);
+   * knownParameters->hide();
+   */
 
   QVBoxLayout *findWindLayout = new QVBoxLayout;
   findWindLayout->addWidget(vad);
   findWindLayout->addWidget(vadParameters);
   findWindLayout->addWidget(user);
   findWindLayout->addWidget(userParameters);
-  findWindLayout->addWidget(known);
-  findWindLayout->addWidget(knownParameters);
+  //  findWindLayout->addWidget(known);
+  //  findWindLayout->addWidget(knownParameters);
   findWind->setLayout(findWindLayout);
 
   QVBoxLayout *main = new QVBoxLayout;
@@ -2567,12 +2580,14 @@ QLabel *gvadthrLabel = new QLabel(tr("Minimum number of points for GVAD processi
   connect(windDirection, SIGNAL(valueChanged(const QString&)),
 	  this, SLOT(valueChanged(const QString&)));
 
-  connect(known, SIGNAL(toggled(const bool)), 
-	  this, SLOT(valueChanged(const bool)));
-  connect(known, SIGNAL(toggled(bool)),
-	  knownParameters, SLOT(setVisible(bool)));
-  connect(dir, SIGNAL(textChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+  /*
+   * connect(known, SIGNAL(toggled(const bool)), 
+   *	  this, SLOT(valueChanged(const bool)));
+   * connect(known, SIGNAL(toggled(bool)),
+   *	  knownParameters, SLOT(setVisible(bool)));
+   * connect(dir, SIGNAL(textChanged(const QString&)),
+   *  this, SLOT(valueChanged(const QString&)));
+   */
   
   setPanelChanged(false);
 
@@ -2582,7 +2597,7 @@ QCPanel::~QCPanel()
 {
   delete vad;
   delete user;
-  delete known;
+  //delete known;
   delete bbSegmentSize;
   delete maxFoldCount;
   delete vadLevels;
@@ -2610,8 +2625,9 @@ void QCPanel::updatePanel(const QDomElement panelElement)
 	vad->setChecked(true);
       if(parameter == "user")
 	user->setChecked(true);
-      if(parameter == "known")
-	known->setChecked(true); }
+      //      if(parameter == "known")
+      //	known->setChecked(true);
+    }
     if(name == "vel_min") {
       velocityMinimum->setValue(parameter.toDouble()); }
     if(name == "vel_max") {
@@ -2630,9 +2646,11 @@ void QCPanel::updatePanel(const QDomElement panelElement)
       windSpeed->setValue(parameter.toDouble()); }
     if(name == "winddirection") {
       windDirection->setValue(parameter.toDouble()); }
+    /*
     if(name == "awips_dir") {
       dir->clear();
       dir->insert(parameter); }
+    */
     if(name == "vadlevels") {
       vadLevels->setValue(parameter.toInt()); }
     if(name == "numcoeff") {
@@ -2711,13 +2729,15 @@ bool QCPanel::updateConfig()
 			 QString().setNum(windDirection->value()));
 	}
       }
-      if(known->isChecked()) {
+      /*
+	if(known->isChecked()) {
 	emit changeDom(element, QString("wind_method"), QString("known"));
 	
 	if(getFromElement("awips_dir")!= dir->text()) {
-	  emit changeDom(element, QString("awips_dir"),dir->text());
+	emit changeDom(element, QString("awips_dir"),dir->text());
 	}
-      }
+	}
+      */
       setPanelChanged(false);
     }
   return true;

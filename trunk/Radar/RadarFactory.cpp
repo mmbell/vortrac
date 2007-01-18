@@ -147,6 +147,22 @@ bool RadarFactory::hasUnprocessedData()
       dataPath.setFilter(QDir::Files);
       dataPath.setSorting(QDir::Time | QDir::Reversed);
       QStringList filenames = dataPath.entryList();
+
+      // Remove any files with extensions
+      for (int i = filenames.size();i >= 0; --i)
+	if(filenames.value(i).contains('.')) {
+	  QString currentFile = filenames.value(i);
+	  if(currentFile.contains('/')) {
+	    int slashIndex = currentFile.indexOf('/');
+	    currentFile.remove(0,slashIndex+1);
+	    if(currentFile.contains('.'))
+	      filenames.removeAt(i);
+	    else
+	      continue;
+	  }
+	  else 
+	    filenames.removeAt(i);
+	}
       
       // Check to see which are in the time limits
       for (int i = 0; i < filenames.size(); ++i) {

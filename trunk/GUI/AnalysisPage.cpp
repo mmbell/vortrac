@@ -424,8 +424,8 @@ void AnalysisPage::runThread()
     return;
   }
   
-  //Message::toScreen("Intentionally cut short - AnalysisPage: RunThread");
-  //return;
+  emit log(Message(QString(),0,this->objectName(),AllOff,QString(),
+		   Ok, QString()));
 
   pollThread = new PollThread();
  
@@ -437,6 +437,8 @@ void AnalysisPage::runThread()
 	  diagPanel, SLOT(updateVCP(const int)), Qt::DirectConnection);  
   connect(pollThread, SIGNAL(newCappi(const GriddedData*)),
 	  this, SLOT(updateCappi(const GriddedData*)), Qt::DirectConnection);
+  connect(this, SIGNAL(newCappi(const GriddedData*)), 
+	  cappiDisplay, SLOT(constructImage(const GriddedData*)));
 
   // Check to see if there are old list files that we want to start from in
   // the working directory. We have to do this here because we cannot create 
@@ -534,7 +536,11 @@ void AnalysisPage::updateCappi(const GriddedData* cappi)
 {
   Message::toScreen("Creating Cappi Image");
   // Got a cappi now, create a new image
-  cappiDisplay->constructImage(cappi);
+  //  cappiDisplay->constructImage(cappi);
+  // getting a thread error with calling so we will try signals and slot
+
+  emit newCappi(cappi);
+
   //cappiDisplay->show();
   //cappiDisplay->setVisible(true);  cannot let other threads change the
   // visibility of objects created in this one - fatal errors

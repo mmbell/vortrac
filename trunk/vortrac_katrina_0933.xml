@@ -6,7 +6,7 @@
         <lon>-89.68</lon>
         <direction>35</direction>
         <speed>10</speed>
-        <dir>/scr/science40/mauger/Working/trunk/test</dir>
+        <dir>/scr/science40/mauger/Working/trunk/katrina</dir>
     </vortex>
     <radar>
         <name>KLIX</name>
@@ -21,7 +21,7 @@
         <endtime>00:00:00</endtime>
     </radar>
     <cappi>
-        <dir>/scr/science40/mauger/Working/trunk/test/cappi</dir>
+        <dir>default</dir>
         <xdim>100</xdim>
         <ydim>100</ydim>
         <zdim>5.0</zdim>
@@ -33,7 +33,7 @@
         <interpolation>cressman</interpolation>
     </cappi>
     <center>
-        <dir>/scr/science40/mauger/Working/trunk/test/center</dir>
+        <dir>default</dir>
         <geometry>GBVTD</geometry>
         <closure>original</closure>
         <reflectivity>DZ</reflectivity>
@@ -54,7 +54,7 @@
         <maxdatagap wavenum="1" >120</maxdatagap>
     </center>
     <choosecenter>
-        <dir>/scr/science40/mauger/Working/trunk/test/choosecenter</dir>
+        <dir>default</dir>
         <filename>nameOfCenterListFile</filename>
         <startdate>2005-01-01</startdate>
         <enddate>2005-01-02</enddate>
@@ -70,7 +70,7 @@
         <stats>99</stats>
     </choosecenter>
     <vtd>
-        <dir>/scr/science40/mauger/Working/trunk/test/vtd</dir>
+        <dir>default</dir>
         <geometry>GBVTD</geometry>
         <closure>original</closure>
         <reflectivity>DZ</reflectivity>
@@ -86,7 +86,7 @@
     </vtd>
     <hvvp/>
     <pressure>
-        <dir>/scr/science40/mauger/Working/trunk/pressure</dir>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs/pressure</dir>
         <format>AWIPS</format>
         <maxobstime>59</maxobstime>
         <maxobsdist>50</maxobsdist>
@@ -114,7 +114,7 @@
         <maxfold>4</maxfold>
         <windspeed>30</windspeed>
         <winddirection>180</winddirection>
-        <awips_dir>/path/to/awips/data</awips_dir>
+        <awips_dir>/scr/science40/mauger/Working/trunk/workingDirs/</awips_dir>
         <vadlevels>25</vadlevels>
         <numcoeff>3</numcoeff>
         <vadthr>30</vadthr>

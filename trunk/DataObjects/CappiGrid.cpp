@@ -183,10 +183,11 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 		*/
 		r++;
 		if (r > 199999)
-			Message::toScreen("Gone out of array bounds in CappiGrid.ccp refValues");
+		  Message::toScreen("Gone out of array bounds in CappiGrid.ccp refValues");
       }
       
     }
+
     if ((currentRay->getVel_numgates() > 0) and
 	(currentRay->getUnambig_range() > 170)) {
       
