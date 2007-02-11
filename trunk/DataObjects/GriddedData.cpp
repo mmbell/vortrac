@@ -56,6 +56,11 @@ void GriddedData::writeAsi()
 
 }
 
+bool GriddedData::writeAsi(const QString& fileName)
+{
+
+}
+
 void GriddedData::setIdim(const int& dim)
 {
   iDim = dim;

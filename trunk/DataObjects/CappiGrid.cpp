@@ -13,6 +13,7 @@
 #include <math.h>
 #include <QTextStream>
 #include <QFile>
+#include <QDir>
 
 CappiGrid::CappiGrid() 
   : GriddedData()
@@ -641,6 +642,7 @@ void CappiGrid::writeAsi()
 	id[311] = 0;
 	
 	// Write ascii file for grid2ps
+	Message::toScreen("Trying to write cappi to "+outFileName);
 	outFileName += ".asi";
 	QFile asiFile(outFileName);
 	if(!asiFile.open(QIODevice::WriteOnly)) {
@@ -685,3 +687,24 @@ void CappiGrid::writeAsi()
 	}	
 
 }     
+
+bool CappiGrid::writeAsi(const QString& fileName)
+{
+  QString originalOutputFileName = outFileName;
+  if(QDir::isAbsolutePath(fileName)) {
+    outFileName = fileName;
+  }
+  else {
+    outFileName = QDir::current().filePath(fileName);
+  }
+  writeAsi();
+ 
+  if(QFile::exists(outFileName)) {
+    outFileName = originalOutputFileName;
+    return true;
+  }
+  else {
+    outFileName = originalOutputFileName;
+    return false;
+  }
+}

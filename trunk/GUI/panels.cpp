@@ -1253,7 +1253,7 @@ bool CenterPanel::setDefaultDirectory(QDir* newDir)
 ChooseCenterPanel::ChooseCenterPanel()
   :AbstractPanel()
 {
-  QLabel *dirLabel = new QLabel(tr("VTD Output Directory"));
+  QLabel *dirLabel = new QLabel(tr("ChooseCenter Output Directory"));
   QGridLayout *dirLayout = new QGridLayout;
   dirLayout->addWidget(dirLabel, 0, 0);
   dirLayout->addWidget(dir, 1, 0, 1, 3);

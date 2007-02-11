@@ -11,6 +11,7 @@
 
 #include "VortexList.h"
 #include <QDomNodeList>
+#include <QDir>
 
 VortexList::VortexList(const QString &newFileName)
 {
@@ -61,6 +62,22 @@ bool VortexList::save()
 
   Message::toScreen("VORTEXLIST FAIL:Failed to save to file");
   return false;
+}
+
+bool VortexList::saveNodeFile(int index, const QString& newName)
+{
+  if(index >= this->count())
+    return false;
+  if(QDir(newName).isAbsolute()) {
+    if(vortexDataConfigs->at(index)->write(newName))
+      return true;
+    return false;
+  }
+  else {
+    if(vortexDataConfigs->at(index)->write(QDir::current().filePath(newName)))
+      return true;
+    return false;
+  }
 }
 
 bool VortexList::open()
@@ -255,7 +272,7 @@ void VortexList::createDomVortexDataEntry(const VortexData &newData)
   QDomElement root = config->getRoot();
   config->addDom(root, QString("volume_"+timeString), QString(""));
   
-  QDomElement parent = config->getConfig(QString("volume_"+timeString));
+  QDomElement parent = config->getConfig(QString("volume_"+timeString)); 
   
   // Create a filename and configuration for the volume information
   
@@ -354,6 +371,30 @@ void VortexList::append(const VortexData &value)
 {
   createDomVortexDataEntry(value);
   QList<VortexData>::append(value);
+}
+
+void VortexList::removeAt(int i)
+{
+  int initialCount = vortexDataConfigs->count();
+  configFileNames->removeAt(i);
+  vortexDataConfigs->removeAt(i);
+  if(vortexDataConfigs->count() >= initialCount)
+    Message::toScreen("VortexList: Remove At didn't get smaller");
+  QString timeString = this->at(i).getTime().toString(Qt::ISODate);
+  timeString.replace(QString("-"), QString("_"));
+  timeString.replace(QString(":"), QString("_"));
+ 
+  // Remove element and children from main xml identifing specific file
+
+  QDomElement parent = config->getConfig(QString("volume_"+timeString));
+  if(parent.tagName()!=QString("volume_"+timeString))
+    Message::toScreen("The tag names are different parent: "+parent.tagName()+" what we got "+QString("volume_"+timeString));
+  config->removeDom(parent, QString("time")); 
+  config->removeDom(parent, QString("file"));
+  QDomElement root = config->getRoot();
+  config->removeDom(root, QString("volume_"+timeString));
+
+  QList<VortexData>::removeAt(i);
 }
 
 void VortexList::timeSort()

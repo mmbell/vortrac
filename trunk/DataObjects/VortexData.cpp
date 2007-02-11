@@ -10,6 +10,7 @@
 
 #include "VortexData.h"
 #include <QTextStream>
+#include "Message.h"
 
 VortexData::VortexData()
 {

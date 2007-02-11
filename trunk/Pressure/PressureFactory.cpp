@@ -154,6 +154,8 @@ bool PressureFactory::hasUnprocessedData()
 			QString timepart = file;
 			// Parse the timestamps
 			QStringList timestamp = timepart.split("_");
+			if(timestamp.size()<2)
+			  continue;
 			QDate fileDate = QDate::fromString(timestamp.at(0), "yyyyMMdd");
 			QTime fileTime = QTime::fromString(timestamp.at(1), "hhmmss");
 			QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);

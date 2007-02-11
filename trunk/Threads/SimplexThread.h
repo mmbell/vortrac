@@ -81,6 +81,7 @@ class SimplexThread : public QThread
 	 float convergingCenters;
 	 float Xind[25],Yind[25],VTind[25];
 	 float Xconv[25],Yconv[25],VTconv[25];
+	 float initialX[25], initialY[25];
 
 	 
 	 void archiveCenters(float& radius,float& height,float& numPoints);

@@ -180,7 +180,7 @@ void CappiDisplay::mousePressEvent(QMouseEvent *event)
 void CappiDisplay::paintEvent(QPaintEvent * /* event */)
 {
   
-  Message::toScreen("Hit Paint Event in CappiDisplay");
+  //Message::toScreen("Hit Paint Event in CappiDisplay");
 
   // Draw the legend image .....
   QPainter *imagePainter = new QPainter(&legendImage);
@@ -199,7 +199,7 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
   QFont legendFont("Times",7);
   imagePainter->setFont(legendFont);
   for(int i = 0; i < 42; i+=2) {
-    imagePainter->drawText(QPoint((int)(2.5*boxHeight), (int)(offset+(i*boxHeight)+(.7*boxHeight))), QString().setNum(maxVel-i*velIncr));
+    imagePainter->drawText(QPoint((int)(2.5*boxHeight), (int)(offset+(i*boxHeight)+(.7*boxHeight))), QString().setNum(maxVel-i*velIncr, 'f', 2));
   }
   
   if(imagePainter->isActive())
@@ -299,7 +299,7 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
     }
   }
 
-  Message::toScreen("maxVel is "+QString().setNum(maxVel)+" minVel is "+QString().setNum(minVel));
+  //Message::toScreen("maxVel is "+QString().setNum(maxVel)+" minVel is "+QString().setNum(minVel));
   float velRange;
   if(maxVel>fabs(minVel)) {
     velRange = 2*maxVel;
@@ -328,7 +328,7 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
     }
   }
   image = image.scaled((int)500,(int)500);
-  legendImage = legendImage.scaled(50,500);
+  legendImage = legendImage.scaled(70,500);
   legendImage.fill(qRgb(backColor.red(),backColor.green(),backColor.blue()));
   
   

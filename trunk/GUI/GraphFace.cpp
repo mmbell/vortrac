@@ -293,7 +293,7 @@ void GraphFace::newInfo(VortexList* gList)
     QDateTime initialTime = gList->at(0).getTime(); 
     int initialTimeIndex = 0;
     for(int i = 1; i < gList->count(); i++) {
-      if(gList->value(i).getTime().time() < initialTime.time()) {
+      if(gList->value(i).getTime() < initialTime) {
 	initialTime = gList->value(i).getTime();
 	initialTimeIndex = i;
       }	
@@ -341,8 +341,8 @@ void GraphFace::newInfo(VortexList* gList)
     // set time range as the number of seconds between the time of the first 
     // point and the time of this point
     
-    if(first.time().secsTo(new_point.getTime().time())> timeRange){
-      timeRange = first.time().secsTo(new_point.getTime().time());
+    if(first.secsTo(new_point.getTime())> timeRange){
+      timeRange = first.secsTo(new_point.getTime());
     }
     if (timeRange == 0)
       timeRange = 60;
@@ -692,7 +692,7 @@ float GraphFace::scaleTime(QDateTime unscaled_time)
   // scales time and offsets the range so that no points hit the edges
 
   float temp;
-  temp = first.time().secsTo(unscaled_time.time());
+  temp = first.secsTo(unscaled_time);
   temp = temp + 60;
   temp = temp *((graph_width)/(timeRange+120));
   return temp;
@@ -771,14 +771,13 @@ float GraphFace::getSTDMultiplier(VortexData p, float z)
 int GraphFace::pointAt(const QPointF & position, bool& ONDropSonde)
 {
   
-  
   if((VortexDataList == NULL))
     return -1;
-  
+  //Message::toScreen("Didn't fall out of pointAt");
   ONDropSonde = false;
   QDateTime tmin = unScaleTime(position.x()-5);
   QDateTime tmax = unScaleTime(position.x()+5);
-  //Message::toScreen("tmax = "+tmax.toString("dd-hh:mm")+" tmin "+tmin.toString("dd-hh:mm"));
+  //Message::toScreen("tmax = "+tmax.toString("dd-hh:mm:ss")+" tmin "+tmin.toString("dd-hh:mm:ss"));
   float pmax = unScalePressure(position.y()-5);
   float pmin = unScalePressure(position.y()+5);
   //Message::toScreen("Pmax = "+QString().setNum(pmax)+" Pmin = "+QString().setNum(pmin));
@@ -786,14 +785,16 @@ int GraphFace::pointAt(const QPointF & position, bool& ONDropSonde)
   float rmin = unScaleRmw(position.y()+5);
   //Message::toScreen("Rax = "+QString().setNum(rmax)+" Rmin = "+QString().setNum(rmin));
   for (int i = 0; i < VortexDataList->size(); i++) {
-    if(VortexDataList->at(i).getTime()<tmax)
-      if(VortexDataList->at(i).getTime()>tmin) {
-	if((VortexDataList->at(i).getPressure() < pmax)
-	   && (VortexDataList->at(i).getPressure() > pmin)) {
+    //if(i==0)
+    //Message::toScreen("First: T~ "+VortexDataList->at(i).getTime().toString("dd-hh:mm:ss")+" P ~ "+QString().setNum(VortexDataList->at(i).getPressure()));
+    if(VortexDataList->at(i).getTime()<=tmax)
+      if(VortexDataList->at(i).getTime()>=tmin) {
+	if((VortexDataList->at(i).getPressure() <= pmax)
+	   && (VortexDataList->at(i).getPressure() >= pmin)) {
 	  return i;
 	}
-	if((VortexDataList->at(i).getRMW() < rmax) 
-	   && (VortexDataList->at(i).getRMW() > rmin)) {
+	if((VortexDataList->at(i).getRMW() <= rmax) 
+	   && (VortexDataList->at(i).getRMW() >= rmin)) {
 	  return i;
 	}
       }

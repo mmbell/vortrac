@@ -101,12 +101,12 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   // Displays warning message that may accompany the change in stoplight
   // signal
 
-  stopLightWarning = new QLineEdit;
+  stopLightWarning = new QLineEdit();
   stopLightWarning->setReadOnly(true);
 
   // Displays meassage that may accompany the change in stormSignal
 
-  stormSignalWarning = new QLineEdit;
+  stormSignalWarning = new QLineEdit();
   stormSignalWarning->setReadOnly(true);
 
   QVBoxLayout *main = new QVBoxLayout();
@@ -229,15 +229,18 @@ void DiagnosticPanel::testStormSignal()
   switch(stormDummy) 
     {
     case 1:
-      testStatus = RapidIncrease;
-      break;
-    case 2:
       testStatus = RapidDecrease;
       break;
+    case 2:
+      testStatus = RapidIncrease;
+      break;
     case 3:
-      testStatus = LostStorm;
+      testStatus = OutOfRange;
       break;
     case 4:
+      testStatus = SimplexError;
+      break;
+    case 5:
       testStatus = Ok;
       break;
     default:
@@ -245,7 +248,7 @@ void DiagnosticPanel::testStormSignal()
       break;
     }
   stormSignal->changeStatus(testStatus);
-  if(stormDummy < 4)
+  if(stormDummy < 5)
     stormDummy++;
   else 
     stormDummy = 0;
@@ -266,12 +269,39 @@ void DiagnosticPanel::changeStopLight(StopLightColor newColor,
 				      const QString newMessage)
 {
   lights->changeColor(newColor);
-  stopLightWarning->setText(newMessage);
+
+  if(newMessage!=QString()) {
+    /*if(stopLightWarning->toPlainText()==QString())
+      stopLightWarning->insertPlainText(newMessage);
+    else {
+      QString totalMessage = stopLightWarning->toPlainText()+newMessage;
+      stopLightWarning->insertPlainText(totalMessage); 
+    }
+    */
+    stopLightWarning->clear();
+    stopLightWarning->insert(newMessage);
+  }
 }
 
 void DiagnosticPanel::changeStormSignal(StormSignalStatus status, 
 					const QString newMessage)
 {
   stormSignal->changeStatus(status);
-  stormSignalWarning->setText(newMessage); 
+  if(newMessage!=QString()) {
+    /*
+    if(stormSignalWarning->toPlainText()==QString())
+      stormSignalWarning->insertPlainText(newMessage);
+    else {
+      QTextDocument *oldDoc = stormSignalWarning->document();
+      QString totalMessage = oldDoc->toPlainText()+newMessage;
+      oldDoc->setPlainText(totalMessage);
+      //QString totalMessage = stormSignalWarning->toPlainText()+"\n"+newMessage;
+      Message::toScreen("DiagPanel: "+newMessage);
+      //stormSignalWarning->clear();
+      //stormSignalWarning->insertPlainText(totalMessage); 
+    }
+    */
+    stormSignalWarning->clear();
+    stormSignalWarning->insert(newMessage);
+  }
 }

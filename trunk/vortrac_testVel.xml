@@ -4,7 +4,7 @@
         <name>Charley</name>
         <lat>25.2</lat>
         <lon>-82.8</lon>
-        <direction>0</direction>
+        <direction>25</direction>
         <speed>8.23</speed>
         <dir>/scr/science40/mauger/Working/trunk/testVel</dir>
     </vortex>
@@ -85,9 +85,9 @@
         <maxdatagap wavenum="0" >180</maxdatagap>
         <maxdatagap wavenum="1" >120</maxdatagap>
     </vtd>
-    <hvvp></hvvp>
+    <hvvp/>
     <pressure>
-        <dir>/scr/science40/mauger/workingDirs</dir>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs</dir>
         <format>AWIPS</format>
         <maxobstime>59</maxobstime>
         <maxobsdist>50</maxobsdist>

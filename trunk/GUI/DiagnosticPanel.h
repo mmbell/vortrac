@@ -16,6 +16,7 @@
 #include <QLCDNumber>
 #include <QPushButton>
 #include <QColor>
+#include <QTextEdit>
 #include <QLineEdit>
 
 #include "Message.h"

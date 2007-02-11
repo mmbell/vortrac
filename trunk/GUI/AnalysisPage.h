@@ -60,6 +60,9 @@ class AnalysisPage : public QWidget
     void catchLog(const Message& message); 
     void catchVCP(const int vcp); 
     void updateCappi(const GriddedData* cappi);
+
+    // void changeStopLight(StopLightColor color, const QString message);
+    // void changeStormSignal(StormSignalStatus status, const QString message);
 	
  signals:
     void tabLabelChanged(const QString& new_Label);
@@ -68,6 +71,9 @@ class AnalysisPage : public QWidget
     void vortexListChanged(VortexList* list);
     void newVCP(const int vcp);
     void newCappi(const GriddedData* cappi);
+
+    //void newStormSignalStatus(StormSignalStatus status, const QString message);
+    //void newStopLightColor(StopLightColor color, const QString message);
 	
  private slots:
     void updatePage();

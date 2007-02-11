@@ -13,6 +13,7 @@
 #include <math.h>
 #include <QTextStream>
 #include <QFile>
+#include <QDir>
 
 AnalyticGrid::AnalyticGrid() 
   : GriddedData()
@@ -788,6 +789,28 @@ void AnalyticGrid::writeAsi()
 	}	
   
 }	
+
+bool AnalyticGrid::writeAsi(const QString& fileName)
+{
+  QString originalOutputFileName = outFileName;
+  if(QDir::isAbsolutePath(fileName)) {
+    outFileName = fileName;
+  }
+  else {
+    outFileName = QDir::current().filePath(fileName);
+  }
+  writeAsi();
+ 
+  if(QFile::exists(outFileName)) {
+    outFileName = originalOutputFileName;
+    return true;
+  }
+  else {
+    outFileName = originalOutputFileName;
+    return false;
+  }
+}
+
 
 
 void AnalyticGrid::testRange() 

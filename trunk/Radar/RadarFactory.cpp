@@ -79,7 +79,7 @@ RadarData* RadarFactory::getUnprocessedData()
   // Get the files off the queue
   QString fileName = dataPath.filePath(radarQueue->dequeue());
 
-  Message::toScreen("Using "+fileName);
+  emit log(Message(QString("Using file:"+fileName), 0, this->objectName()));
   // Mark it as processed
   fileAnalyzed[fileName] = true;
     

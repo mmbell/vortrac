@@ -29,15 +29,18 @@ public:
      bool save();
      bool open();
      bool openNodeFile(const QDomNode &newNode);
+     bool saveNodeFile(int index, const QString& newName);
      void setFileName(const QString &newFileName);
-	 void setRadarName(const QString &newRadarName);
-	 void setVortexName(const QString &newVortexName);
+     void setRadarName(const QString &newRadarName);
+     void setVortexName(const QString &newVortexName);
+     QString getVortexName() { return vortexName; }
      void setNewWorkingDirectory(const QString &newDirectory);
      QString getFileName() { return fileName; }
      QString getWorkingDirectory() { return workingDir; }
      void timeSort();
      
      void append(const VortexData &value);
+     void removeAt(int i);
 
 private:
      Configuration *config;

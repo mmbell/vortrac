@@ -33,6 +33,7 @@ class AnalyticGrid : public GriddedData
   void gridDefFieldData();
   
   void writeAsi();
+  bool writeAsi(const QString& fileName);
   void testRange();
    
  private:

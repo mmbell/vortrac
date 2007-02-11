@@ -88,9 +88,11 @@ void StormSignal::paintEvent(QPaintEvent *event)
   painter->setFont(font);
   painter->setBrush(QBrush(QColor(0,100,0)));
   QRectF wordBox(25,25,50,50);
-  QRectF wordBox1(25,25-fontHeight*1.5,50,50);
+  QRectF wordBox1(25,25-fontHeight*.5,50,50);
   QRectF wordBox2(25,25,50,50);
-  QRectF wordBox3(25,25+fontHeight*1.5,50,50);
+  QRectF wordBox3(25,25+fontHeight*.5,50,50);
+  QRectF wordBox21(25,25-fontHeight*.3,50,50);
+  QRectF wordBox22(25,25+fontHeight*.3,50,50);
   //  painter->drawRect(wordBox);
 
   switch(currentStatus)
@@ -112,9 +114,14 @@ void StormSignal::paintEvent(QPaintEvent *event)
       painter->setFont(font);
       painter->drawText(wordBox, QString("OK"), textHint);
       break;
-    case LostStorm:
-      painter->drawText(wordBox1, QString("Lost"), textHint);
-      painter->drawText(wordBox2, QString("Circulation"), textHint);
+    case OutOfRange:
+      painter->drawText(wordBox1, QString("Center"), textHint);
+      painter->drawText(wordBox2, QString("out of"), textHint);
+      painter->drawText(wordBox3, QString("Range"), textHint);
+      break;
+    case SimplexError:
+      painter->drawText(wordBox21, QString("Simplex"), textHint);
+      painter->drawText(wordBox22, QString("Error"), textHint);
       break;
     }
 
@@ -136,32 +143,25 @@ void StormSignal::changeStatus(StormSignalStatus status)
   
   currentStatus = status;
 
-  /* 
   switch(status)
     {
-    case Nothing:             // No lights
+    case Nothing:             // Nothing at all
       break;
-    case RapidIncrease:             // Flashing Red
-      flashing = true;
-    case RapidDecrease:             // Red 
-      red = true;
+    case RapidIncrease:       // turn on flashing now
+      //flashing = true;
       break;
-    case Ok:             // Flashing Yellow
-      flashing = true;
-    case LostStorm:             // Yellow
-      yellow = true;
+    case RapidDecrease:       // turn on flashing now
+      //flashing = true;
       break;
-    case 5:             // Flashing Green
-      flashing = true;
-    case 6:             // Green
-      green = true;
+    case Ok:                  // turn off flashing now
+      //flashing = false;
+    case OutOfRange:          // turn off flashing now
+      //flashing = false;
       break;
-    default:
-      red = true;
-      yellow = true;
-      green = true;
+    case SimplexError:        
+      break;
     }
-  */
+  
   if(flashing)
     {
       connect(timer, SIGNAL(timeout()), this, SLOT(repaint()));

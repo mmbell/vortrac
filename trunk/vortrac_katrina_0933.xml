@@ -21,7 +21,7 @@
         <endtime>00:00:00</endtime>
     </radar>
     <cappi>
-        <dir>default</dir>
+        <dir>/scr/science40/mauger/Working/trunk/katrina/cappi</dir>
         <xdim>100</xdim>
         <ydim>100</ydim>
         <zdim>5.0</zdim>
@@ -33,7 +33,7 @@
         <interpolation>cressman</interpolation>
     </cappi>
     <center>
-        <dir>default</dir>
+        <dir>/scr/science40/mauger/Working/trunk/katrina/center</dir>
         <geometry>GBVTD</geometry>
         <closure>original</closure>
         <reflectivity>DZ</reflectivity>
@@ -54,7 +54,7 @@
         <maxdatagap wavenum="1" >120</maxdatagap>
     </center>
     <choosecenter>
-        <dir>default</dir>
+        <dir>/scr/science40/mauger/Working/trunk/katrina/choosecenter</dir>
         <filename>nameOfCenterListFile</filename>
         <startdate>2005-01-01</startdate>
         <enddate>2005-01-02</enddate>
@@ -70,7 +70,7 @@
         <stats>99</stats>
     </choosecenter>
     <vtd>
-        <dir>default</dir>
+        <dir>/scr/science40/mauger/Working/trunk/katrina/vtd</dir>
         <geometry>GBVTD</geometry>
         <closure>original</closure>
         <reflectivity>DZ</reflectivity>
@@ -86,7 +86,7 @@
     </vtd>
     <hvvp/>
     <pressure>
-        <dir>/scr/science40/mauger/Working/trunk/workingDirs/pressure</dir>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs/</dir>
         <format>AWIPS</format>
         <maxobstime>59</maxobstime>
         <maxobsdist>50</maxobsdist>

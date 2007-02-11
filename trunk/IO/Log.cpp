@@ -242,6 +242,10 @@ bool Log::writeToFile(const QString& message)
 bool Log::handleStopLightUpdate(StopLightColor newColor, QString message, 
 				QString location)
 {
+  // This is the dummy signal do nothing
+  if(newColor == AllOff)
+    return true;
+    
   // Check to see if update is an error or a corrected error
   int originalCount = StopLightQueue.count();
   
@@ -258,6 +262,11 @@ bool Log::handleStopLightUpdate(StopLightColor newColor, QString message,
 	delete corrected;
       }
     }
+    if(originalCount == StopLightQueue.count()) {
+      // We got a good signal but couldn't find a bad one to remove
+      // I don't see this as a problem
+      return true;
+    }
   }
   else {
     //    Message::toScreen("The Bad "+location+" : "+message);
@@ -273,14 +282,35 @@ bool Log::handleStopLightUpdate(StopLightColor newColor, QString message,
     else {
       int initialCount = StopLightQueue.count();
       emit newLogEntry(location+": "+message+"\n");
+      
+      // Make sure we don't already have this signal
       for(int i = 0; i < initialCount; i++) {
-	if(mostRecent->color < StopLightQueue.at(i)->color) {
-	  StopLightQueue.insert(i+1, mostRecent);
-	  //	  Message::toScreen("Inside "+mostRecent->location+"  "+mostRecent->message+" @ i = "+QString().setNum(i));
+	if(mostRecent == StopLightQueue.at(i)) {
+	  // If we have an identical one it will do us no good 
+	  // to add another because the corrections 
+	  // process will not clear up multiple
+	  delete mostRecent;
+	  return true;
 	}
       }
-      StopLightQueue.append(mostRecent);
-      //      Message::toScreen("Inside "+mostRecent->location+"  "+mostRecent->message+" @ i = deadLast"+QString().setNum(StopLightQueue.count()));
+	
+       //  If not we should figure out where to put it
+
+      for(int i = 0; (i < initialCount) 
+	    && (initialCount == StopLightQueue.count()); i++) {
+	
+	// Figure out where the signal goes in the lineup
+	if(mostRecent->color < StopLightQueue.at(i)->color) {
+	  
+	  // Append according to color order 
+	  StopLightQueue.insert(i+1, mostRecent);
+	  // Message::toScreen("Inside "+mostRecent->location+"  "+mostRecent->message+" @ i = "+QString().setNum(i));
+	}
+      }
+      if(initialCount==StopLightQueue.count()) {
+	StopLightQueue.append(mostRecent);
+	//Message::toScreen("Inside "+mostRecent->location+"  "+mostRecent->message+" @ i = deadLast"+QString().setNum(StopLightQueue.count()));
+      }
     }
   }
 
@@ -294,14 +324,109 @@ bool Log::handleStopLightUpdate(StopLightColor newColor, QString message,
     return true;
   }
   else {
-    // A color came in and was not handled .... issue
-    return true;
+    emit newLogEntry(QString("StopLightChange Was Not Handled Properly @"+location+"  "+message+"\n"));
+    return false;
   }
-
 }
 
 bool Log::handleStormSignalUpdate(StormSignalStatus newStatus, QString message,
 				  QString location)
 {
+
+  // Priority set up this way
+
+  // if we have an OutOfRange or SimplexError those are turned off by Ok
+  // if we have RapidIncrease or RapidDecrease those are turned off by Ok 
+  //       from the same object, but not Ok in general
+  // Simplex Error has the highest visualization priority
+  // OutOfRange has the second highest visualization priority
+  // RapidIncrease has the third highest visualization priority
+  // RapidDecrease has the forth
+  // Ok has the fifth
+  // Nothing does nothing
+
+  // This is the dummy signal do nothing
+  if(newStatus == Nothing)
+    return true;
+    
+  // Check to see if update is an error or a corrected error
+  int originalCount = StormStatusQueue.count();
+  
+  if(newStatus == Ok) {
+    // Message::toScreen("The Good "+location+" : "+message);
+    if(StormStatusQueue.count()==0)
+      return true;
+    for(int i = StormStatusQueue.count()-1; i >= 0; i--) {
+      if((StormStatusQueue.at(i)->location == location) ||
+	 (StormStatusQueue.at(i)->location == QString())||
+	 (StormStatusQueue.at(i)->status==OutOfRange)||
+	 (StormStatusQueue.at(i)->status==SimplexError)) {
+	SSChange *corrected = StormStatusQueue.value(i);
+	StormStatusQueue.removeAt(i);
+	Message::toScreen("Inside "+corrected->location+"  "+corrected->message+" @ i = "+QString().setNum(i));
+	delete corrected;
+      }
+    }
+  }
+  else {
+    //    Message::toScreen("The Bad "+location+" : "+message);
+    // Add bad signals to the stack based on status....
+    SSChange *mostRecent = new SSChange;
+    mostRecent->status = newStatus;
+    mostRecent->message = message;
+    mostRecent->location = location;
+    if(StormStatusQueue.count()==0) {
+      StormStatusQueue.append(mostRecent);
+      //      Message::toScreen("Inside "+mostRecent->location+": "+mostRecent->message+" @ i = zero");
+    }
+    else {
+      int initialCount = StormStatusQueue.count();
+      emit newLogEntry(location+": "+message+"\n");
+      
+      // Make sure we don't already have this signal
+      for(int i = 0; i < initialCount; i++) {
+	if(mostRecent == StormStatusQueue.at(i)) {
+	  // If we have an identical one it will do us no good 
+	  // to add another because the corrections 
+	  // process will not clear up multiple
+	  delete mostRecent;
+	  return true;
+	}
+      }
+	
+       //  If not we should figure out where to put it
+
+      for(int i = 0; (i < initialCount) 
+	    && (initialCount == StormStatusQueue.count()); i++) {
+	
+	// Figure out where the signal goes in the lineup
+	if(mostRecent->status >= StormStatusQueue.at(i)->status) {
+	  
+	  // Append according to status order 
+	  StormStatusQueue.insert(i, mostRecent);
+	  // Message::toScreen("Inside "+mostRecent->location+"  "+mostRecent->message+" @ i = "+QString().setNum(i));
+	}
+      }
+      if(initialCount==StormStatusQueue.count()) {
+	StormStatusQueue.append(mostRecent);
+	//Message::toScreen("Inside "+mostRecent->location+"  "+mostRecent->message+" @ i = deadLast"+QString().setNum(StormStatusQueue.count()));
+      }
+    }
+  }
+
+  if(StormStatusQueue.count()==0) {
+    emit newStormSignalStatus(Ok, QString());
+    return true;
+  }
+  if((originalCount!=StormStatusQueue.count())||(originalCount==0)) {
+    emit newStormSignalStatus(StormStatusQueue.at(0)->status,
+			      StormStatusQueue.at(0)->message);
+    return true;
+  }
+  else {
+    emit newLogEntry(QString("StormStatusChange Was Not Handled Properly @"+location+"  "+message+"\n"));
+    return false;
+  }
+
   emit newStormSignalStatus(newStatus, message);
 }

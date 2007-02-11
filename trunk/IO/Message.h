@@ -19,9 +19,10 @@
 
 enum StormSignalStatus {
   Nothing,
-  RapidIncrease,
   RapidDecrease,
-  LostStorm,
+  RapidIncrease,
+  OutOfRange,
+  SimplexError,
   Ok
 };
 
@@ -43,13 +44,14 @@ class Message
 
   Message(const char *errormsg = 0, int newProgress = 0, 
 	  const char *newLocation = 0, 
-	  StopLightColor newColor = Green, const char *newStopLightMessage = 0,
+	  StopLightColor newColor = AllOff, 
+	  const char *newStopLightMessage = 0,
 	  StormSignalStatus newStatus = Nothing, 
 	  const char *newStormSignalMessage = 0);
 
   Message(const QString errormsg = QString(), int newProgress = 0,
 	  const QString newLocation = QString(), 
-	  StopLightColor newColor = Green, 
+	  StopLightColor newColor = AllOff, 
 	  const QString newStopLightMessage = QString(), 
 	  StormSignalStatus newStatus = Nothing, 
 	  const QString newStormSignalMessage = QString());

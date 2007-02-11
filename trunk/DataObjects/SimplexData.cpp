@@ -32,6 +32,8 @@ SimplexData::SimplexData()
 	radius[j] = velNull;
 	for(int k = 0; k < numCenters; k++) {
 	  centers[i][j][k] = Center();
+	  initialX[i][j][k] = velNull;
+	  initialY[i][j][k] = velNull;
 	}
       }
     }
@@ -62,6 +64,8 @@ SimplexData::SimplexData(int availLevels, int availRadii, int availCenters)
 	  radius[j] = velNull;
 	  for(int k = 0; k < numCenters; k++) {
 	    centers[i][j][k] = Center();
+	    initialX[i][j][k] = velNull;
+	    initialY[i][j][k] = velNull;
 	  }
 	}
     }
@@ -91,6 +95,8 @@ SimplexData::SimplexData(const SimplexData& other)
 	  this->radius[j] = other.radius[j];
 	  for(int k = 0; k < this->numCenters; k++) {
 	    this->centers[i][j][k] = other.centers[i][j][k];
+	    initialX[i][j][k] = other.initialX[i][j][k];
+	    initialY[i][j][k] = other.initialY[i][j][k];
 	  }
 	}
     }
@@ -397,4 +403,28 @@ void SimplexData::setNumRadii(int newNumRadii)
 void SimplexData::setNumCenters(int newNumCenters) 
 {
   this->numCenters = newNumCenters;
+}
+
+float SimplexData::getInitialX(const int& level, const int& rad, 
+			       const int& center) const
+{
+  return initialX[level][rad][center];
+}
+  
+float SimplexData::getInitialY(const int& level, const int& rad, 
+			       const int& center) const
+{
+  return initialY[level][rad][center];
+}
+
+void SimplexData::setInitialX( int& level,  int& rad, 
+			       int& center,  float& value)
+{
+  initialX[level][rad][center] = value;
+}
+ 
+void SimplexData::setInitialY( int& level,  int& rad, 
+			       int& center,  float& value)
+{
+  initialY[level][rad][center] = value;
 }

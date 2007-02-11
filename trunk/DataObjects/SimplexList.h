@@ -29,6 +29,7 @@ public:
      bool save();
      bool open();
      bool openNodeFile(const QDomNode &newNode);
+     bool saveNodeFile(int index, const QString& newName);
      void setFileName(const QString &newFileName);
 	 void setRadarName(const QString &newRadarName);
 	 void setVortexName(const QString &newVortexName);
@@ -39,6 +40,7 @@ public:
      int getLatestIndex();
      
      void append(const SimplexData &value);
+     void removeAt(int i);
 
 private:
      Configuration *config;

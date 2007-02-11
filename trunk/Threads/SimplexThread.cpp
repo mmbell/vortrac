@@ -167,7 +167,7 @@ void SimplexThread::run()
     int numLevels = lastLevel-firstLevel+1;
     int loopPercent= (int)40/float(numLevels+1);
     int endPercent = 40-(numLevels*loopPercent);
-    Message::toScreen("Percent assigned to each level completed "+QString().setNum(loopPercent)+" numLevels = "+QString().setNum(numLevels));
+    //Message::toScreen("Percent assigned to each level completed "+QString().setNum(loopPercent)+" numLevels = "+QString().setNum(numLevels));
 
     // Loop through the levels and rings
     for (float height = firstLevel; height <= lastLevel; height++) {
@@ -221,6 +221,9 @@ void SimplexThread::run()
 	    }
 	    
 	    RefJ = cornerJ + float(point/int(boxRowLength)) * boxIncr;
+	    
+	    initialX[point] = RefI;
+	    initialY[point] = RefJ;
 	    
 	    // Initialize vertices
 	    float sqr32 = 0.866025;
@@ -546,8 +549,15 @@ void SimplexThread::archiveCenters(float& radius, float& height, float& numPoint
 	simplexData->setVTUncertainty(level, ring, stdDevVT);
 	simplexData->setNumConvergingCenters(level, ring, (int)convergingCenters);
 	for (int point = 0; point < (int)numPoints; point++) {
-	  Center indCenter(Xind[point], Yind[point], VTind[point], level, ring);
+	  // We want to use the real radius and height in the center for use
+	  // later so these should be given in km
+	  // The level and ring integers are the storage positions
+	  // these values are used for the indexing - LM 02/6/07
+	  Center indCenter(Xind[point], Yind[point], VTind[point], 
+			   height, radius);
 	  simplexData->setCenter(level, ring, point, indCenter);
+	  simplexData->setInitialX(level, ring, point, initialX[point]);
+	  simplexData->setInitialY(level, ring, point, initialY[point]);
 	}
 	
 }

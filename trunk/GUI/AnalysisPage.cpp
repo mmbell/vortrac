@@ -36,9 +36,26 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 	  Qt::DirectConnection);
   connect(statusLog, SIGNAL(newStormSignalStatus(StormSignalStatus, 
 						 const QString)),
-	  diagPanel, SLOT(changeStormSignal(StormSignalStatus, 
-					    const QString)),
+  	  diagPanel, SLOT(changeStormSignal(StormSignalStatus, 
+  					    const QString)),
+  	  Qt::DirectConnection);
+  
+  /*
+    Didn't solve the crash related to timer in TextEdit
+  connect(statusLog, SIGNAL(newStopLightColor(StopLightColor, const QString)),
+	  this, SLOT(changeStopLight(StopLightColor, const QString)),
 	  Qt::DirectConnection);
+  connect(statusLog, SIGNAL(newStormSignalStatus(StormSignalStatus, 
+						 const QString)),
+	  this, SLOT(changeStormSignal(StormSignalStatus, const QString)),
+	  Qt::DirectConnection);
+  connect(this, SIGNAL(newStopLightColor(StopLightColor, const QString)),
+	  diagPanel, SLOT(changeStopLight(StopLightColor, const QString)),
+	  Qt::DirectConnection);
+  connect(this, SIGNAL(newStormSignalStatus(StormSignalStatus, const QString)),
+	  diagPanel, SLOT(changeStormSignal(StormSignalStatus, const QString)),
+	  Qt::DirectConnection);
+  */
   
   // Create a new configuration instance
   configData = new Configuration;
@@ -455,11 +472,16 @@ void AnalysisPage::runThread()
   QString openOldMessage = QString(tr("Vortrac has found information about a previously started run. Would you like to continue this run?\nPress 'Yes' to continue a previous run. Press 'No' to start a new run."));
   if(allPossibleFiles.count()> 0){
     if(allPossibleFiles.filter("vortexList").count()>0)
-      if(allPossibleFiles.filter("simplexList").count()>0)
+      if(allPossibleFiles.filter("simplexList").count()>0) {
 	//if(allPossibleFiles.filter("pressureList").count()>0)
 	//if(allPossibleFiles.filter("dropSondeList").count()>0)
-	if(QMessageBox::information(this,tr("VORTRAC"),openOldMessage,3,4,0) == 3)
+	int answer = QMessageBox::information(this,tr("VORTRAC"),
+					      openOldMessage,3,4,0);
+	if(answer== 3)
 	  continuePreviousRun = true;
+	if(answer==0)
+	  return;
+      }
     
   }
   
@@ -659,3 +681,15 @@ void AnalysisPage::pollVortexUpdate(VortexList* list)
   }
 }
 
+/*
+void AnalysisPage::changeStopLight(StopLightColor color, const QString message)
+{
+  emit newStopLightColor(color, message);
+}
+
+void AnalysisPage::changeStormSignal(StormSignalStatus status, 
+				     const QString message)
+{
+  emit newStormSignalStatus(status, message);
+}
+*/

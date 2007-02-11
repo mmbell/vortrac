@@ -76,9 +76,19 @@ class SimplexData
   int getNumRadii() const { return numRadii; }
   int getNumCenters() const { return numCenters; }
 
+  int getMaxLevels() const { return maxLevels; }
+  int getMaxRadii() const { return maxRadii; }
+  int getMaxCenters() const { return maxCenters; }
+
   void setNumLevels(int newNumLevels);
   void setNumRadii(int newNumRadii);
   void setNumCenters(int newNumCenters);
+
+  float getInitialX(const int& level, const int& rad, const int& center) const;
+  float getInitialY(const int& level, const int& rad, const int& center) const;
+
+  void setInitialX(int& level, int& rad, int& center, float& value);
+  void setInitialY(int& level, int& rad, int& center,float& value);
 
   bool isNull();
   bool emptyLevelRadius(const int& l, const int& r) const;
@@ -96,6 +106,9 @@ class SimplexData
   int numCenters;
 
   int numPointsUsed;
+
+  float initialX[maxLevels][maxRadii][maxCenters];
+  float initialY[maxLevels][maxRadii][maxCenters];
 
   float meanX[maxLevels][maxRadii];
   float meanY[maxLevels][maxRadii];

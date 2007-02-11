@@ -140,7 +140,11 @@ QDomElement Configuration::getConfig(const QString &configName)
   if (child.isNull()) {
     emit log(Message("Null Config Node!"));
   }
-
+  if(child.tagName()!=configName){
+    emit log(Message(QString("Could not find the configNode "+configName),0,
+		     this->objectName()));
+    return QDomElement();
+  }
   return child;
 
 }
@@ -504,7 +508,14 @@ void Configuration::setAttribute(const QDomElement &element,
 				 const QString &attribName,
 				 const QString &attribValue)
 {
-  // I don't think this one will be very useful
+  QDomElement elementWithParam = getElement(element, paramName);
+  elementWithParam.setAttribute(attribName, attribValue);
+  if((elementWithParam.hasAttribute(attribName))
+     &&(elementWithParam.attribute(attribName)==attribValue)) 
+    return;
+  
+  QString failMessage = QString("Failed to add the attribute "+attribName+" with value "+attribValue+" onto element "+paramName+" within the config "+getRoot().tagName());
+  emit log(Message(failMessage, 0, this->objectName()));
 }
 
 void Configuration::catchLog(const Message& message)

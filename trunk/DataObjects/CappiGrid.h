@@ -29,6 +29,7 @@ class CappiGrid : public GriddedData
   float trilinear(const float &x, const float &y,
 		 const float &z, const int &param);
   void writeAsi();
+  bool writeAsi(const QString& fileName);
   
  private:
 

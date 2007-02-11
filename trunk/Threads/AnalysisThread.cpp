@@ -188,106 +188,115 @@ void AnalysisThread::run()
 		  vortexLon = vortexList->last().getLon();
 		} else {
 
+    		  QDomElement radar = configData->getConfig("radar");
+		  QDomElement vortex = configData->getConfig("vortex");
+
 		  if(numVolProcessed == 0) {
 		    //Message::toScreen("Initializing the lists....");
-		        // Need to initialize the Lists
-			QDomElement radar = configData->getConfig("radar");
-			QString radarName = configData->getParam(radar,"name");
-			
-			QDomElement vortex = configData->getConfig("vortex");
-			QString vortexName = configData->getParam(vortex,"name");
-			vortexLat = configData->getParam(vortex,"lat").toFloat();
-			vortexLon = configData->getParam(vortex,"lon").toFloat();
-			QString year;
-			year.setNum(QDate::fromString(configData->getParam(radar,"startdate"), "yyyy-MM-dd").year());
-			
-			QString workingPath = configData->getParam(configData->getConfig("vortex"),"dir");
-			QString vortexPath = configData->getParam(configData->getConfig("vtd"), "dir");
-			QString outFileName = workingPath + "/"+vortexName+"_"+radarName+"_"+year+"_vortexList.xml";
-			vortexList->setFileName(outFileName);
-			vortexList->setRadarName(radarName);
-			vortexList->setVortexName(vortexName);
-			vortexList->setNewWorkingDirectory(vortexPath + "/");
-			
-			QString simplexPath = configData->getParam(configData->getConfig("center"),"dir");
-			outFileName = workingPath + "/"+vortexName+"_"+radarName+"_"+year+"_simplexList.xml";
-			simplexList->setFileName(outFileName);
-			simplexList->setRadarName(radarName);
-			simplexList->setVortexName(vortexName);
-			simplexList->setNewWorkingDirectory(simplexPath + "/");
-			
-			// Put the pressure output in the workingDir for now, since the pressure obs
-			// may be somewhere where we can't write
- 
-			outFileName = workingPath + "/"+vortexName+"_"+radarName+"_"+year+"_pressureList.xml";
-			pressureList->setFileName(outFileName);
-			pressureList->setRadarName(radarName);
-			pressureList->setVortexName(vortexName);
-			pressureList->setNewWorkingDirectory(workingPath + "/");
+		    // Need to initialize the Lists
+		    
+		    QString radarName = configData->getParam(radar,"name");
+		    QString vortexName = configData->getParam(vortex,"name");
+		    
+		    QString year;
+		    year.setNum(QDate::fromString(configData->getParam(radar,"startdate"), "yyyy-MM-dd").year());
+		    
+		    QString workingPath = configData->getParam(configData->getConfig("vortex"),"dir");
+		    QString vortexPath = configData->getParam(configData->getConfig("vtd"), "dir");
+		    QString outFileName = workingPath + "/"+vortexName+"_"+radarName+"_"+year+"_vortexList.xml";
+		    vortexList->setFileName(outFileName);
+		    vortexList->setRadarName(radarName);
+		    vortexList->setVortexName(vortexName);
+		    vortexList->setNewWorkingDirectory(vortexPath + "/");
+		    
+		    QString simplexPath = configData->getParam(configData->getConfig("center"),"dir");
+		    outFileName = workingPath + "/"+vortexName+"_"+radarName+"_"+year+"_simplexList.xml";
+		    simplexList->setFileName(outFileName);
+		    simplexList->setRadarName(radarName);
+		    simplexList->setVortexName(vortexName);
+		    simplexList->setNewWorkingDirectory(simplexPath + "/");
+		    
+		    // Put the pressure output in the workingDir for now, since the pressure obs
+		    // may be somewhere where we can't write
+		    
+		    outFileName = workingPath + "/"+vortexName+"_"+radarName+"_"+year+"_pressureList.xml";
+		    pressureList->setFileName(outFileName);
+		    pressureList->setRadarName(radarName);
+		    pressureList->setVortexName(vortexName);
+		    pressureList->setNewWorkingDirectory(workingPath + "/");
+		    
+		    // Put the dropSonde output in the workingDir for now
+		    
+		    outFileName = workingPath + "/"+vortexName+"_"+radarName+"_"+year+"_dropSondeList.xml";
+		    dropSondeList->setFileName(outFileName);
+		    dropSondeList->setRadarName(radarName);
+		    dropSondeList->setVortexName(vortexName);
+		    dropSondeList->setNewWorkingDirectory(workingPath + "/");
+		  }
+		  
+		  // Check to make sure that the radar volume is in range
+		  // get start date and time from radar config
+		  
+		  QString dateString = configData->getParam(radar,
+							    "startdate");
+		  QString timeString = configData->getParam(radar,
+							    "starttime");
+		  QDate radarStartDate = QDate::fromString(dateString,
+							   Qt::ISODate);
+		  QTime radarStartTime = QTime::fromString(timeString,
+							   Qt::ISODate);
 
-			// Put the dropSonde output in the workingDir for now
+		  QDateTime radarStartDateTime = QDateTime(radarStartDate, 
+							   radarStartTime, 
+							   Qt::UTC);
+		  // Get this volume's time
+		  QDateTime volDateTime = radarVolume->getDateTime();
 
-			outFileName = workingPath + "/"+vortexName+"_"+radarName+"_"+year+"_dropSondeList.xml";
-			dropSondeList->setFileName(outFileName);
-			dropSondeList->setRadarName(radarName);
-			dropSondeList->setVortexName(vortexName);
-			dropSondeList->setNewWorkingDirectory(workingPath + "/");
+		  // If the volume time is with 15 minutes of the start time
+		  // for accepting radar observations then we will use the 
+		  // given vortex center for our center
+		  Message::toScreen(" secs between start and this one "+QString().setNum(radarStartDateTime.secsTo(volDateTime)));
+
+		  if(abs(radarStartDateTime.secsTo(volDateTime))<15*60) {
+		    vortexLat = configData->getParam(vortex,"lat").toFloat();
+		    vortexLon = configData->getParam(vortex,"lon").toFloat();
 		  }
 		  else {
-		    // We have already attempted to process volumes which 
-		    // means that the vortex was effectively out of radar
-		    // range.  Get interpolated lat and lon coordinates
-		    // from initial position and velocity guess
+		    // Use the starting position in conjunction with the storm
+		    // velocity to find a current guess for the vortex center
 		    
-		    // get start date and time from radar config
-		    
-		    QDomElement radar = configData->getConfig("radar");
-		    QString dateString = configData->getParam(radar,
-							      "startdate");
-		    QString timeString = configData->getParam(radar,
-							      "starttime");
-		    QDate radarStartDate = QDate::fromString(dateString,
-							     Qt::ISODate);
-		    QTime radarStartTime = QTime::fromString(timeString,
-							     Qt::ISODate);
-		    QDateTime radarStartDateTime = QDateTime(radarStartDate, 
-							     radarStartTime, 
-							     Qt::UTC);
 		    // Get direction (degrees cw from north) and speed (m/s)
 		    // of initial storm position
 		    
-		    QDomElement vortex = configData->getConfig("vortex");
 		    float stormSpeed = configData->getParam(vortex, 
 							    "speed").toFloat();
 		    float stormDirection = configData->getParam(vortex, 
-								"direction").toFloat();
+							"direction").toFloat();
+		    
 		    // Put the storm direction in math coordinates 
 		    // radians ccw from east
-
+		  
 		    stormDirection = 450-stormDirection;
 		    if(stormDirection > 360)
 		      stormDirection -=360;
 		    stormDirection*=acos(-1)/180.;
-
+		    
 		    // Get initial lat and lon
 		    vortexLat = configData->getParam(vortex,"lat").toFloat();
 		    vortexLon = configData->getParam(vortex,"lon").toFloat();
-
-		    // Get this volume's time
-		    
-		    QDateTime volDateTime = radarVolume->getDateTime();
 		    
 		    int elapsedSeconds =radarStartDateTime.secsTo(volDateTime);
-		    //Message::toScreen("Seconds since start "+QString().setNum(elapsedSeconds)+" in AnalysisThread");
+		    Message::toScreen("Seconds since start "+QString().setNum(elapsedSeconds)+" in AnalysisThread");
 		    float distanceMoved = elapsedSeconds*stormSpeed/1000.0;
 		    float changeInX = distanceMoved*cos(stormDirection);
 		    float changeInY = distanceMoved*sin(stormDirection);
 		    float *newLatLon = GriddedData::getAdjustedLatLon(vortexLat,vortexLon, changeInX, changeInY);
+
+
 		    vortexLat = newLatLon[0];
 		    vortexLon = newLatLon[1];
-		    //Message::toScreen("New vortexLat = "+QString().setNum(vortexLat)+" New vortexLon = "+QString().setNum(vortexLon));
-
-		  }
+		    Message::toScreen("New vortexLat = "+QString().setNum(vortexLat)+" New vortexLon = "+QString().setNum(vortexLon));
+		  }   
 		}
 
 		emit log(Message(QString(),2,this->objectName()));
@@ -299,33 +308,54 @@ void AnalysisThread::run()
 				             radarVolume->getRadarLat(), 
 					     radarVolume->getRadarLon(),
 					     &vortexLat, &vortexLon);
-		//Message::toScreen("Distance Between Radar and Storm "+QString().setNum(relDist));
+		Message::toScreen("Distance Between Radar and Storm "+QString().setNum(relDist));
 		bool beyondRadar = true;
 		bool closeToEdge = false;
 		for(int i = 0; i < radarVolume->getNumSweeps(); i++) {
 		  if((relDist < radarVolume->getSweep(i)->getUnambig_range())
-		     &&(radarVolume->getSweep(i)->getVel_numgates()> 0)){
+		      &&(radarVolume->getSweep(i)->getVel_numgates()> 0)){
+		    
 		    beyondRadar = false;
-		    //if(relDist < 174) {
-		    //beyondRadar = false;
-		    //Message::toScreen("Level "+QString().setNum(i)+" screws it up with range "+QString().setNum(radarVolume->getSweep(i)->getUnambig_range()));
+		  }
+		  if((relDist > radarVolume->getSweep(i)->getUnambig_range()-20)&&(relDist < radarVolume->getSweep(i)->getUnambig_range()+20)) {
+		    closeToEdge = true;
 		  }
 		}
-		//  if((relDist > radarVolume->getSweep(i)->getUnambig_range()-10)&&(relDist < radarVolume->getSweep(i)->getUnambig_range()+5))
-		//    closeToEdge = true;
-		//}
 		if (beyondRadar) {
 		  // Too far away for Doppler, need to send a signal
-		  emit log(Message("Estimated center is out of Doppler range!"));
-		  Message::toScreen("Estimated center is out of Doppler range!");
+		  // Calculate the estimated time of arrival
+		  float* distance;
+		  distance = GriddedData::getCartesianPoint(
+		      &vortexLat,&vortexLon,
+		      radarVolume->getRadarLat(), radarVolume->getRadarLon());
+		  float cca = atan2(distance[0], distance[1]);
+
+		  QDomElement vortex = configData->getConfig("vortex");
+		  float stormSpeed = configData->getParam(vortex, 
+					       "speed").toFloat()/1000.0;
+		  float stormDirection = configData->getParam(vortex, 
+				 "direction").toFloat()*acos(-1)/180.;
+		  Message::toScreen("Storm Direction .."+QString().setNum(stormDirection));
+		  Message::toScreen("cca = "+QString().setNum(cca));
+		  float palpha = (relDist*sin(stormDirection-cca)/174.);
+		  Message::toScreen(" palpha = "+QString().setNum(palpha));
+		  Message::toScreen(" relDist = "+QString().setNum(relDist));
+		  float alpha = acos(-1)-asin(palpha);
+		  Message::toScreen(" alpha = "+QString().setNum(alpha));
+		  float dist2go = 174*sin(acos(-1)+cca-stormDirection-alpha)/sin(stormDirection-cca);
+		  Message::toScreen(" dist2go = "+QString().setNum(dist2go));
+		  float eta = (dist2go/stormSpeed)/60;
+		  Message::toScreen("minutes till radar"+QString().setNum(eta));
+		  emit log(Message(
+			 QString(),
+			 -1,this->objectName(),AllOff,QString(),OutOfRange, 
+			 QString("Storm Center will be in Range in "+QString().setNum(eta, 'f', 0)+" minutes")));
+		  //Message::toScreen("Estimated center is out of Doppler range!");
 		  delete radarVolume;
 		  emit doneProcessing();
 		  waitForData.wait(&mutex);
 		  mutex.unlock();
 		  continue;
-		}
-		if (closeToEdge) {
-		  //Message::toScreen("This volume is close to the edge");
 		}
 
 		//Message::toScreen("gets to create vortexData analysisThread");
@@ -437,7 +467,8 @@ void AnalysisThread::run()
 		 */
 		
 		// Create CAPPI
-		emit log(Message("Creating CAPPI..."));
+		emit log(Message(QString("Creating CAPPI..."), 0, 
+				 this->objectName(), Green));
 		
 		/*  If Analytic Model is running we need to make an analytic
 		 *  gridded data rather than a cappi
@@ -586,28 +617,59 @@ void AnalysisThread::run()
 
 		mutex.lock();
 
-		/*
-		  bool dataIsCrap = false;
-		  Message::toScreen("Check to See if beyond Radar!!!!!!!");
-		  if(beyondRadar){
-		  dataIsCrap = true;
-		  Message::toScreen("Data is crap ... not using it");
-		  }
+				// Easiest Thresholding
+
+		bool hasConvergingCenters = false;
+		for(int l = 0; (l < vortexData->getNumLevels())
+		      &&(hasConvergingCenters==false); l++) {
+		  if(vortexData->getNumConvergingCenters(l)>0)
+		    hasConvergingCenters = true;
+		}
+		
+		if(hasConvergingCenters) {
+		  vortexList->append(*vortexData);	
+		  vortexList->save();
+		}
 		  
+		/*
 		  if(closeToEdge) {
 		  // Collect data about close to edge volumes for
-		  // Micheal to look at
-		  Message::toScreen("Collecting data for Micheal");
-		  
-	     
-		  }
-		
-		if(!dataIsCrap){
-		  vortexList->append(*vortexData);		
+		  // Michael to look at
+		  Message::toScreen("Collecting data for Michael");
+		  // Copy simplex files
+		  // Copy vortex files
+		  // Copy asi files
+		  // into micheal/hurrname/
+		  // try to throw together code which makes sense of these
+		  QString newName = QString("/scr/science40/mauger/Working/trunk/workingDirs/michael/"+vortexList->getVortexName()+"/"+radarVolume->getDateTime().toString(QString("yyyy_MM_ddThh_mm"))+"_DISTANCE_"+QString().setNum(int(relDist)));
+		  if(gridData->writeAsi(newName))
+		    Message::toScreen("Wrote ASI TO"+newName);
+		  if(simplexList->saveNodeFile(simplexList->count()-1,
+					       newName+"simplex"))
+		     Message::toScreen("Wrote Simplex!");
+		  //if(hasConvergingCenters) {
+		  if(vortexList->saveNodeFile(vortexList->count()-1,
+					      newName+"vortex"))
+		    Message::toScreen("Wrote Vortex!");
+		  //}
 		}
-		*/
-		vortexList->append(*vortexData);	
-		vortexList->save();
+		*/		
+
+		if(!hasConvergingCenters && (vortexList->count() > 0)){
+		  //vortexList->removeAt(vortexList->count()-1);
+		  //vortexList->save();		
+		  //simplexList->removeAt(simplexList->count()-1);
+		  //simplexList->save();
+		  emit log(Message(QString("Simplex Analysis Found No Converging Centers in this volume"),0,this->objectName(),Green, QString("No Center Found!"),OutOfRange, QString("No Converging Centers")));
+		  analysisGood = false;
+		}
+		
+		//Message::toScreen("The number of vortexData in the List is "+QString().setNum(vortexList->count()));
+
+		  // Moved this to above last if
+
+		//vortexList->append(*vortexData);	
+		//vortexList->save();
 		
 		// Delete CAPPI, RadarData and HVVP objects
 		delete envWindFinder;
@@ -621,14 +683,22 @@ void AnalysisThread::run()
 		{
 			// Some error occurred, notify the user
 			emit log(Message("Radar volume processing error!"));
-			emit log(Message("Radar volume processing error!"));
-			return;
+			emit log(Message(
+			   QString("Radar volume processing error!!"), 0,
+			   this->objectName()));
+			emit(doneProcessing());
+			
+			//return; // I got rid of this
+			// do we need to fail if the 
+			// volume is bad? -LM 1/20/07
 		} else {
 			// Store the resulting analysis in the vortex list
 			archiveAnalysis();
 			
 			// Complete the progress bar and log that we're done
-			emit log(Message("Analysis complete!",1));
+			emit log(Message(QString("Analysis complete!"),100,
+					 this->objectName(), AllOff, 
+					 QString(),Ok, QString()));
 
 			// Let the poller know we're done
 			emit(doneProcessing());

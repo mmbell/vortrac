@@ -11,6 +11,7 @@
 
 #include "SimplexList.h"
 #include <QDomNodeList>
+#include <QDir>
 
 SimplexList::SimplexList(const QString &newFileName)
 {
@@ -64,6 +65,23 @@ bool SimplexList::save()
   Message::toScreen("SIMPLEXLIST FAIL:Failed to save to file");
   return false;
 }
+
+bool SimplexList::saveNodeFile(int index, const QString& newName)
+{
+  if(index >= this->count())
+    return false;
+  if(QDir(newName).isAbsolute()) {
+    if(simplexDataConfigs->at(index)->write(newName))
+      return true;
+    return false;
+  }
+  else {
+    if(simplexDataConfigs->at(index)->write(QDir::current().filePath(newName)))
+      return true;
+    return false;
+  }
+}
+
 
 bool SimplexList::open()
 {
@@ -138,7 +156,7 @@ bool SimplexList::openNodeFile(const QDomNode &newNode)
 	newTime = newConfig->getParam(childElement, "time");
 	QStringList timeParts =  newTime.remove("volume_").split("T");
 	if(timeParts.count()!=2){
-	  Message::toScreen("SimplexList: OpenNodeFile: Error - Failing to read the volume times correctly - 135");
+	  Message::toScreen("SimplexList: OpenNodeFile: Error - Failing to read the volume times correctly");
 	  return false;
 	}
 	//Message::toScreen("Loading Simplex Run "+nodeTimeString);
@@ -151,10 +169,25 @@ bool SimplexList::openNodeFile(const QDomNode &newNode)
 	// Check to make sure these line up........
       }
       else {
+	// This node belongs to a specific search or level average
 	int level = childElement.attribute("level").toInt();
+	if(level >= newData.getMaxLevels()) {
+	  //  emit log(Message(QString("Maximum Number of Levels Available In Memory Overrun When Trying to Load Simplex From File"), 0, this->objectName()));
+	  Message::toScreen(QString("Maximum Number of Levels Available In Memory Overrun When Trying to Load Simplex From File"));
+	  continue;
+	}
+     
 	int radius = childElement.attribute("radius").toInt();
+	if(radius >= newData.getMaxRadii()) {
+	  // emit log(Message(QString("Maximum Number of Radii Available In Memory Overrun When Trying to Load Simplex From File"), 0, this->objectName()));
+	  Message::toScreen(QString("Maximum Number of Radii Available In Memory Overrun When Trying to Load Simplex From File"));
+	  continue;
+	}
+	
 	if(childElement.tagName().startsWith(QString("sum"))) {
+
 	  // Sum Node average parameters
+
 	  newData.setX(level, radius, 
 		       config->getParam(childElement, 
 					QString("meanx")).toFloat());
@@ -175,17 +208,42 @@ bool SimplexList::openNodeFile(const QDomNode &newNode)
 	}
 	else {
 	  
-	  // Has information about a center
+	  // Has information about the specific centers used in search
+
 	  QDomElement centerParam = childElement.firstChildElement();
 	  while(!centerParam.isNull()) {
+	    if(centerParam.tagName()!=QString("x")) {
+	      // Only record each center once 
+	      // we are taking queues from the number of x elements
+	      centerParam = centerParam.nextSiblingElement();
+	      continue;
+	    }
 	    Center newCenter;
-	    int centerIndex = centerParam.attribute("center").toInt();
+	    
+	    QString centerString = centerParam.attribute("center");
+	    int centerIndex = centerString.toInt();
+	    if(centerIndex >= newData.getMaxCenters()) {
+	      // emit log(Message(QString("Maximum Number of Centers Available In Memory Overrun When Trying to Load Simplex From File"), 0, this->objectName()));
+	      Message::toScreen(QString("Maximum Number of Centers Available In Memory Overrun When Trying to Load Simplex From File"));
+	      continue;
+	    }
 	    newCenter.setLevel(level);
 	    newCenter.setRadius(radius);
-	    newCenter.setX(newConfig->getParam(childElement, "x").toFloat());
-	    newCenter.setY(newConfig->getParam(childElement, "y").toFloat());
-	    newCenter.setMaxVT(newConfig->getParam(childElement, 
-						"maxvt").toFloat());
+	    QDomElement xElem = newConfig->getElementWithAttrib(childElement, 
+					 "x","center",centerString);
+	    newCenter.setX(xElem.text().toFloat());
+	    float x0 = xElem.attribute("x0").toFloat();
+	    newData.setInitialX(level, radius, centerIndex, x0);
+	    
+	    QDomElement yElem = newConfig->getElementWithAttrib(childElement, 
+					 "y","center",centerString);
+	    newCenter.setY(yElem.text().toFloat());
+	    float y0 = yElem.attribute("y0").toFloat();
+	    newData.setInitialY(level, radius, centerIndex, y0);
+
+	    QDomElement vElem = newConfig->getElementWithAttrib(childElement, 
+				     "maxvt","center",centerString);
+	    newCenter.setMaxVT(vElem.text().toFloat());
 	    centIndex[level][radius]++;
 	    newData.setCenter(level,radius,centerIndex,newCenter);
 	    centerParam = centerParam.nextSiblingElement();
@@ -214,12 +272,22 @@ bool SimplexList::openNodeFile(const QDomNode &newNode)
     // Set the number centers collected on which levels and radii so the
     // get functions in SimplexData will be able to iterate correctly
 
-    newData.setNumLevels(currentMaxLevel+1);
-    newData.setNumRadii(currentMaxRadius+1);
-    newData.setNumCenters(maxCenters);
-
+    if(currentMaxLevel+1 < newData.getMaxLevels())
+      newData.setNumLevels(currentMaxLevel+1);
+    else
+      newData.setNumLevels(newData.getMaxLevels());
+    
+    if(currentMaxRadius+1 < newData.getMaxRadii())
+      newData.setNumRadii(currentMaxRadius+1);
+    else 
+      newData.setNumRadii(newData.getMaxRadii());
+      
+    if(maxCenters < newData.getMaxCenters())
+      newData.setNumCenters(maxCenters);
+    else
+      newData.setNumCenters(newData.getMaxCenters());
+    
     QList<SimplexData>::append(newData);
-    //this->append(newData);
     simplexDataConfigs->append(newConfig);
     configFileNames->append(nodeFileName);
     //newData.printString();
@@ -294,7 +362,7 @@ void SimplexList::createDomSimplexDataEntry(const SimplexData &newData)
 		 newData.getTime().toString(Qt::ISODate)); 
   config->addDom(parent, QString("file"), workingDir+nodeFile);
 
-  simplexDataConfigs->append( newConfig);
+  simplexDataConfigs->append(newConfig);
   configFileNames->append(workingDir+nodeFile);
 
   // Add this information to the new catelog entry
@@ -344,7 +412,7 @@ void SimplexList::createDomSimplexDataEntry(const SimplexData &newData)
 	  newConfig->addDom(volParent, QString("numcenters"),
 		       QString().setNum(newData.getNumConvergingCenters(i,j)));
 	
-	bool hasCenters = false;
+	bool hasCenters  = false;
 	for(int k = 0; k < newData.getNumCenters(); k++) {
 	  if(!newData.getCenter(i,j,k).isNull())
 	    hasCenters = true;
@@ -358,17 +426,30 @@ void SimplexList::createDomSimplexDataEntry(const SimplexData &newData)
 	  searchParent.setAttribute(QString("level"), levelIndex);
 	  
 	  for(int k = 0; k < newData.getNumCenters(); k++) {
+	    if(newData.getCenter(i,j,k).isNull())
+	      continue;
+
 	    QString centerIndex = QString().setNum(k);
 	    Center currCenter = newData.getCenter(i,j,k);
 	    
-	    if(currCenter.getX()!=-999)
+	    if(currCenter.getX()!=-999) {
 	      newConfig->addDom(searchParent,  QString("x"),  
 				QString().setNum(currCenter.getX()), 
 				QString("center"), centerIndex);
-	    if(currCenter.getY()!=-999)
+	      if(newData.getInitialX(i,j,k)!=-999) {
+		QDomElement xElem = newConfig->getElementWithAttrib(searchParent, QString("x"),QString("center"), centerIndex);
+		xElem.setAttribute(QString("x0"), QString().setNum(newData.getInitialX(i,j,k)));
+	      }
+	    }	    
+	    if(currCenter.getY()!=-999) {
 	      newConfig->addDom(searchParent,  QString("y"), 
 				QString().setNum(currCenter.getY()),
 				QString("center"), centerIndex);
+	      if(newData.getInitialY(i,j,k)!=-999) {
+		QDomElement yElem = newConfig->getElementWithAttrib(searchParent, QString("y"),QString("center"), centerIndex);
+		yElem.setAttribute(QString("y0"), QString().setNum(newData.getInitialX(i,j,k)));
+	      }
+	    }
 	    if(currCenter.getMaxVT()!=-999)
 	      newConfig->addDom(searchParent,  QString("maxvt"), 
 				QString().setNum(currCenter.getMaxVT()),
@@ -385,6 +466,30 @@ void SimplexList::append(const SimplexData &value)
 {
   createDomSimplexDataEntry(value);
   QList<SimplexData>::append(value);
+}
+
+void SimplexList::removeAt(int i)
+{
+  int initialCount = simplexDataConfigs->count();
+    configFileNames->removeAt(i);
+  simplexDataConfigs->removeAt(i);
+  if(simplexDataConfigs->count() >= initialCount)
+    Message::toScreen("SimplexList: Remove At didn't get smaller");
+  QString timeString = this->at(i).getTime().toString(Qt::ISODate);
+  timeString.replace(QString("-"), QString("_"));
+  timeString.replace(QString(":"), QString("_"));
+ 
+  // Remove element and children from main xml identifing specific file
+
+  QDomElement parent = config->getConfig(QString("volume_"+timeString));
+  if(parent.tagName()!=QString("volume_"+timeString))
+    Message::toScreen("The tag names are different parent: "+parent.tagName()+" what we got "+QString("volume_"+timeString));
+  config->removeDom(parent, QString("time")); 
+  config->removeDom(parent, QString("file"));
+  QDomElement root = config->getRoot();
+  config->removeDom(root, QString("volume_"+timeString));
+
+  QList<SimplexData>::removeAt(i);
 }
 
 void SimplexList::timeSort()

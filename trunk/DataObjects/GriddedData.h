@@ -25,6 +25,7 @@ class GriddedData
   virtual ~GriddedData();
 
   virtual void writeAsi() = 0;
+  virtual bool writeAsi(const QString& fileName) = 0;
   void setExit(volatile bool *exit);
   bool returnExitNow() const { return *exitNow; }
   
@@ -47,8 +48,8 @@ class GriddedData
   void setReferencePoint(int ii, int jj, int kk);
   void setCartesianReferencePoint(float ii, float jj, float kk); 
   void setAbsoluteReferencePoint(float Lat, float Lon, float Height);
-  float* getCartesianPoint(float *Lat, float *Lon,
-		     float *relLat, float* relLon);
+  static float* getCartesianPoint(float *Lat, float *Lon,
+				  float *relLat, float* relLon);
   static float getCartesianDistance(float *Lat, float *Lon,
 				    float *relLat, float* relLon);
   static float* getAdjustedLatLon(const float& startLat, const float& startLon,
