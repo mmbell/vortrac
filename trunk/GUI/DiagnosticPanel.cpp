@@ -60,11 +60,11 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   //QPushButton *color = new QPushButton("color", this);
   //connect(color, SIGNAL(pressed()), this, SLOT(pickColor()));
 
-  QPushButton *lightButton = new QPushButton("Next Signal Pattern");
-  connect(lightButton, SIGNAL(pressed()), this, SLOT(testLight()));
+  //QPushButton *lightButton = new QPushButton("Next Signal Pattern");
+  //connect(lightButton, SIGNAL(pressed()), this, SLOT(testLight()));
 
-  QPushButton *stormButton = new QPushButton("Next Storm Signal");
-  connect(stormButton, SIGNAL(pressed()), this, SLOT(testStormSignal()));
+  //QPushButton *stormButton = new QPushButton("Next Storm Signal");
+  //connect(stormButton, SIGNAL(pressed()), this, SLOT(testStormSignal()));
   
   // StormSignal is used to alert user to 
   // noticable changes in vortex properties
@@ -123,8 +123,8 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
 
   //main->addWidget(color); // I use this when I need to select colors
                             // for coding throw away in finished product -LM
-  main->addWidget(lightButton);
-  main->addWidget(stormButton);
+  //  main->addWidget(lightButton);
+  //  main->addWidget(stormButton);
 
   setLayout(main);
   
@@ -270,7 +270,7 @@ void DiagnosticPanel::changeStopLight(StopLightColor newColor,
 {
   lights->changeColor(newColor);
 
-  if(newMessage!=QString()) {
+  //if(newMessage!=QString()) {
     /*if(stopLightWarning->toPlainText()==QString())
       stopLightWarning->insertPlainText(newMessage);
     else {
@@ -280,14 +280,14 @@ void DiagnosticPanel::changeStopLight(StopLightColor newColor,
     */
     stopLightWarning->clear();
     stopLightWarning->insert(newMessage);
-  }
+    //}
 }
 
 void DiagnosticPanel::changeStormSignal(StormSignalStatus status, 
 					const QString newMessage)
 {
   stormSignal->changeStatus(status);
-  if(newMessage!=QString()) {
+  //if(newMessage!=QString()) {
     /*
     if(stormSignalWarning->toPlainText()==QString())
       stormSignalWarning->insertPlainText(newMessage);
@@ -303,5 +303,5 @@ void DiagnosticPanel::changeStormSignal(StormSignalStatus status,
     */
     stormSignalWarning->clear();
     stormSignalWarning->insert(newMessage);
-  }
+    //}
 }

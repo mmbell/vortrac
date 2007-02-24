@@ -4,8 +4,10 @@
         <name>Katrina</name>
         <lat>28.94</lat>
         <lon>-89.68</lon>
-        <direction>35</direction>
-        <speed>10</speed>
+        <direction>0</direction>
+        <speed>0</speed>
+        <obsdate>1900-01-01</obsdate>
+        <obstime>00:00:00</obstime>
         <dir>/scr/science40/mauger/Working/trunk/katrina</dir>
     </vortex>
     <radar>

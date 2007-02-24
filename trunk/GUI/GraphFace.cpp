@@ -678,6 +678,9 @@ QPointF GraphFace::makePressurePoint(VortexData d)
 
 QPointF GraphFace::makeRmwPoint(VortexData d)
 {
+
+  // This constructs a RMW point in the right scale cooresponding to the
+  // Zeroth level rmw
   // takes in information from a VortexData and creates a real point 
   // ready for graphing (meters -> QPointF)
 
@@ -685,6 +688,35 @@ QPointF GraphFace::makeRmwPoint(VortexData d)
   if((d.getRMW()< rGMax)&&(d.getRMW()>rGMin))
     temp = QPointF(scaleTime(d.getTime()),scaleRmw(d.getRMW()));
   return(temp);
+}
+
+QPointF GraphFace::makeRmwPoint(VortexData d, int bestLevel)
+{
+
+  // This constructs a RMW point in the right scale cooresponding to the
+  // level indicated by bestLevel
+
+  // takes in information from a VortexData and creates a real point 
+  // ready for graphing (meters -> QPointF)
+
+  QPointF temp;  
+  if((d.getRMW(bestLevel)< rGMax)&&(d.getRMW(bestLevel)>rGMin))
+    temp = QPointF(scaleTime(d.getTime()),scaleRmw(d.getRMW(bestLevel)));
+  return(temp);
+}
+
+QPointF GraphFace::makeRmwPoint(VortexData d, float rmw)
+{
+  // This constructs a RMW point in the right scale for a given radius of 
+  // maximum wind (rmw) is the case that we are not using a specific level
+  // This will be used to plot the mean rmw of the level available within 
+  // a certain threshold
+
+  QPointF temp;  
+  if((rmw < rGMax)&&(rmw > rGMin))
+    temp = QPointF(scaleTime(d.getTime()),scaleRmw(rmw));
+  return(temp);
+
 }
 
 float GraphFace::scaleTime(QDateTime unscaled_time)
@@ -1173,138 +1205,131 @@ QPainter* GraphFace::updateImage(QPainter* painter)
     
       painter->setPen(rmwPen);
       painter->setBrush(rmwBrush);
-      
+      QPointF lastPoint;
+
       for (int i=0;i<VortexDataList->size();i++) {          
 	
 	// uses the loop to move through all data points
-	
-	QPointF xypoint = makeRmwPoint(VortexDataList->value(i));
+
+	// Get statistics on all the RMW's from all the levels and then take
+	// an average
+
+	float rmwSum = 0;
+	float rmwUnSum = 0;
+	int count = 0;
+	int numLev = VortexDataList->at(i).getNumLevels();
+	for(int ii = 0; ii < numLev; ii++) {
+	  float newRMW = VortexDataList->at(i).getRMW(ii);
+	  if((newRMW!=0)&&(newRMW!=-999)) {
+	    if(VortexDataList->at(i).getRMWUncertainty(ii) > 10)
+	      continue;
+	    rmwSum += newRMW;
+	    rmwUnSum += VortexDataList->at(i).getRMWUncertainty(ii);
+	    count++;
+	  }
+	}
+	if(count == 0)
+	  continue;
+
+	float aveRmw = rmwSum/(float)count;	
+	float aveRmwUn = rmwUnSum/(float)count;
+
+	//float rawErrorBarHeight = VortexDataList->at(i).getRMWUncertainty();
+	float rawErrorBarHeight = aveRmwUn;
+
+	QPointF xypoint = makeRmwPoint(VortexDataList->at(i), aveRmw);
 	if(!xypoint.isNull()) {
 	  
 	  //-------------------------------ErrorBars---------------------------
 	  // Draws errorbars about the radius of max wind points based 
 	  // on their uncertainties
 	  
-	  /*if (VortexDataList->value(i).getRMWUncertainty()>0) {               
-	  // error bars are not drawn if uncertainty is zero
-	  
-	  float errorBarHeight = scaleDRmw(VortexDataList->value(i).getRMWUncertainty());
-	  if(((-1*xypoint.y()+2*errorBarHeight)<graph_height/2)&&
-	  ((-1*xypoint.y()-2*errorBarHeight)>0)) {
-	  
-	  painter->save();
-	  painter->translate(xypoint);
-	  
-	  // Draws the second error bars, two standard deviations 
-	  // (rmwUncertainty)
-	  painter->setPen(rstd2);
-	  painter->drawLine(QPointF(0,0),
-	  QPointF(0,2*errorBarHeight));
-	  painter->drawLine(QPointF(-1.5,2*errorBarHeight),
-	  QPointF(1.5,2*errorBarHeight));
-	  painter->drawLine(QPointF(0,0),
-	  QPointF(0,-1*2*errorBarHeight));
-	  painter->drawLine(QPointF(-1.5,-1*2*errorBarHeight),
-	  QPointF(1.5,-1*2*errorBarHeight));
-	  
-	  // Draws the first error bars at one standard deviation 
-	  // (rmwUncertainty)
-	  painter->setPen(rstd1);
-	  painter->drawLine(QPointF(0,0),
-	  QPointF(0,errorBarHeight));
-	  painter->drawLine(QPointF(-1.5,errorBarHeight),
-	  QPointF(1.5,errorBarHeight));
-	  painter->drawLine(QPointF(0,0),
-	  QPointF(0,-1*errorBarHeight));
-	  painter->drawLine(QPointF(-1.5,-1*errorBarHeight),
-	  QPointF(1.5,-1*errorBarHeight));
-	  
-	  painter->restore();
-	  }
-	  }*/
-	  QPointF xypoint = makeRmwPoint(VortexDataList->value(i));
-	  
-	  if(!xypoint.isNull()) {
-	    if (VortexDataList->at(i).getRMWUncertainty()>0) {                           // if uncertainty = 0 there are no bars
-	      float errorBarHeight = scaleDRmw(VortexDataList->at(i).getRMWUncertainty());
-	      
-	      float upper2, upper1, lower1, lower2;
-	      bool upperBar2, upperBar1, lowerBar1, lowerBar2;
-	      
-	      
-	      if((-1*xypoint.y()+(-2*errorBarHeight))>graph_height/2) { 
-		upper2 = graph_height/2 -(-1*xypoint.y()); 
-		upperBar2 = false; }
-	      else {
-		upper2 = -2*errorBarHeight;
-		upperBar2 = true; }
-	      
-	      if ((-1*xypoint.y()-(-2*errorBarHeight))<0) {
-		lower2 = -1*xypoint.y();
-		lowerBar2 = false; }
-	      else {
-		lower2 = -2*errorBarHeight;
-		lowerBar2 = true; }
-	      
-	      if((-1*xypoint.y()+(-1*errorBarHeight))>graph_height/2) {
-		upper1 = graph_height/2 -(-1*xypoint.y());
-		upperBar1 = false; }
-	      else {
-		upper1 = -1*errorBarHeight;
-		upperBar1 = true; }
-	      
-	      if ((-1*xypoint.y()-(-1*errorBarHeight))<0) {
-		lower1 = -1*xypoint.y();     
-		lowerBar1 = false; }
-	      else {
-		lower1 = -1*errorBarHeight;
-		lowerBar1 = true; }
-	      
-	      painter->save();            // Save painter position at origin
-	      painter->translate(xypoint);
-	      
-	      // Draws the second error bars, two standard deviations 
-	      // (rmwUncertainty)
-	      
-	      painter->setPen(rstd2);
-	      painter->drawLine(QPointF(0,0),
-				QPointF(0,-1*upper2));
-	      if(upperBar2)
-		painter->drawLine(QPointF(-2,-1*upper2),
-				  QPointF(2,-1*upper2));
-	      painter->drawLine(QPointF(0,0),
-				QPointF(0,lower2));
-	      if(lowerBar2)
-		painter->drawLine(QPointF(-2,lower2),
-				  QPointF(2,lower2));
+	  if (rawErrorBarHeight > 0) { 
+	    // if uncertainty = 0 there are no bars
+
+	    float errorBarHeight = scaleDRmw(rawErrorBarHeight);
+	    
+	    float upper2, upper1, lower1, lower2;
+	    bool upperBar2, upperBar1, lowerBar1, lowerBar2;
+	    
+	    
+	    if((-1*xypoint.y()+(-2*errorBarHeight))>graph_height/2) { 
+	      upper2 = graph_height/2 -(-1*xypoint.y()); 
+	      upperBar2 = false; }
+	    else {
+	      upper2 = -2*errorBarHeight;
+	      upperBar2 = true; }
+	    
+	    if ((-1*xypoint.y()-(-2*errorBarHeight))<0) {
+	      lower2 = -1*xypoint.y();
+	      lowerBar2 = false; }
+	    else {
+	      lower2 = -2*errorBarHeight;
+	      lowerBar2 = true; }
+	    
+	    if((-1*xypoint.y()+(-1*errorBarHeight))>graph_height/2) {
+	      upper1 = graph_height/2 -(-1*xypoint.y());
+	      upperBar1 = false; }
+	    else {
+	      upper1 = -1*errorBarHeight;
+	      upperBar1 = true; }
+	    
+	    if ((-1*xypoint.y()-(-1*errorBarHeight))<0) {
+	      lower1 = -1*xypoint.y();     
+	      lowerBar1 = false; }
+	    else {
+	      lower1 = -1*errorBarHeight;
+	      lowerBar1 = true; }
+	    
+	    painter->save();            // Save painter position at origin
+	    painter->translate(xypoint);
+	    
+	    // Draws the second error bars, two standard deviations 
+	    // (rmwUncertainty)
+	    
+	    painter->setPen(rstd2);
+	    painter->drawLine(QPointF(0,0),
+			      QPointF(0,-1*upper2));
+	    if(upperBar2)
+	      painter->drawLine(QPointF(-2,-1*upper2),
+				QPointF(2,-1*upper2));
+	    painter->drawLine(QPointF(0,0),
+			      QPointF(0,lower2));
+	    if(lowerBar2)
+	      painter->drawLine(QPointF(-2,lower2),
+				QPointF(2,lower2));
 	      // Draws the first error bars at one standard deviation 
 	      // (rmwUncertainty)
-	      painter->setPen(rstd1);
-	      painter->drawLine(QPointF(0,0),
-				QPointF(0,-1*upper1));
-	      if(upperBar1)
-		painter->drawLine(QPointF(-1.5,-1*upper1),
-				  QPointF(1.5,-1*upper1));
-	      painter->drawLine(QPointF(0,0),
-				QPointF(0,lower1));
-	      if(lowerBar1)
-		painter->drawLine(QPointF(-1.5,lower1),
-				  QPointF(1.5,lower1));
-	      
-	      painter->restore();    // restores the painters location 
-	      // to saved address
-	      
-	    }
-	  }
+	    painter->setPen(rstd1);
+	    painter->drawLine(QPointF(0,0),
+			      QPointF(0,-1*upper1));
+	    if(upperBar1)
+	      painter->drawLine(QPointF(-1.5,-1*upper1),
+				QPointF(1.5,-1*upper1));
+	    painter->drawLine(QPointF(0,0),
+			      QPointF(0,lower1));
+	    if(lowerBar1)
+	      painter->drawLine(QPointF(-1.5,lower1),
+				QPointF(1.5,lower1));
 	    
-	  // The rmw point is similar to the pressrue point, 
+	    painter->restore();    // restores the painters location 
+	    // to saved address
+	      
+	  }
+       
+       	  // The rmw point is similar to the pressrue point, 
 	  // drawn as an ellipse in a box
 	  
 	  square.moveCenter(xypoint);
 	  painter->drawEllipse(square);
+	  if((!xypoint.isNull())&&(!lastPoint.isNull())) {
+	    painter->drawLine(xypoint, lastPoint);
+	  }
+	  lastPoint = xypoint;
 	}
       }
       
+      /*
       //connects all the rmw points together with lines to the previous point
       int i = 1;
       while(i<VortexDataList->count()) {
@@ -1314,7 +1339,8 @@ QPainter* GraphFace::updateImage(QPainter* painter)
 	  painter->drawLine(point1,point2);
 	i++;
       }
-    }
+      */
+  }
   //-----------------------------------Draw Drops-------------------------------
   
   if(!(dropList == NULL)

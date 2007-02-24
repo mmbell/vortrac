@@ -4,8 +4,10 @@
         <name>Charley</name>
         <lat>26.2</lat>
         <lon>-82.3</lon>
-        <direction>35</direction>
-        <speed>10</speed>
+        <direction>0</direction>
+        <speed>0</speed>
+        <obsdate>1900-01-01</obsdate>
+        <obstime>00:00:00</obstime>
         <dir>/Users/mbell/Development/vortrac/trunk/workingDirs</dir>
     </vortex>
     <radar>

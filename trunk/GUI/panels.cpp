@@ -38,7 +38,7 @@ VortexPanel::VortexPanel()
 
   QLabel *latLabel = new QLabel(tr("Vortex Latitude:"));
   latBox = new QDoubleSpinBox();
-  latBox->setRange(-999,999);
+  latBox->setRange(-90,90);
   latBox->setDecimals(2);
   QHBoxLayout *lat = new QHBoxLayout;
   lat->addWidget(latLabel);
@@ -47,7 +47,7 @@ VortexPanel::VortexPanel()
       
   QLabel *longLabel = new QLabel(tr("Vortex Longitude"));
   longBox = new QDoubleSpinBox();
-  longBox->setRange(-999, 999);
+  longBox->setRange(-180, 180);
   longBox->setDecimals(2);
   QHBoxLayout *longitude = new QHBoxLayout;
   longitude->addWidget(longLabel);
@@ -72,6 +72,18 @@ VortexPanel::VortexPanel()
   speed->addStretch();
   speed->addWidget(speedBox);
 
+  QLabel *obsLabel = new QLabel(tr("Time of Above Observations"));
+  obsDateTime = new QDateTimeEdit();
+  obsDateTime->setDisplayFormat("MMM-dd-yyyy hh:mm:ss");
+  QDate minDate(QDate::fromString(QString("1900-01-01"),"yyyy-MM-dd"));
+  QTime minTime(QTime::fromString(QString("00:00:00"), "hh:mm:ss"));
+  //obsDateTime->setMinimumTime(minTime);
+  //obsDateTime->setMinimumDate(minDate);
+  QHBoxLayout *obs = new QHBoxLayout;
+  obs->addWidget(obsLabel);
+  obs->addStretch();
+  obs->addWidget(obsDateTime);
+
   QLabel *workingDirLabel = new QLabel(tr("Working Directory"));
   QGridLayout *dirLayout = new QGridLayout();
   dirLayout->addWidget(workingDirLabel, 0, 0);
@@ -85,6 +97,7 @@ VortexPanel::VortexPanel()
   layout->addLayout(longitude);
   layout->addLayout(direction);
   layout->addLayout(speed);
+  layout->addLayout(obs);
   layout->addLayout(dirLayout);
   layout->addStretch(1);
   setLayout(layout);
@@ -101,6 +114,8 @@ VortexPanel::VortexPanel()
 	  this, SLOT(valueChanged(const QString&)));
   connect(dir, SIGNAL(textChanged(const QString&)),
 	  this, SLOT(valueChanged(const QString&)));
+  connect(obsDateTime, SIGNAL(dateTimeChanged(const QDateTime&)),
+	  this, SLOT(valueChanged(const QDateTime&)));
   connect(this, SIGNAL(workingDirectoryChanged()),
 	  this, SLOT(createDirectory()));
 
@@ -114,6 +129,7 @@ VortexPanel::~VortexPanel()
   delete longBox;
   delete directionBox;
   delete speedBox;
+  delete obsDateTime;
 }
     
 void VortexPanel::updatePanel(const QDomElement panelElement)
@@ -139,7 +155,11 @@ void VortexPanel::updatePanel(const QDomElement panelElement)
       if(name == "direction"){
 	directionBox->setValue(parameter.toDouble()); }
       if(name == "speed") {
-	speedBox->setValue(parameter.toDouble());}
+	speedBox->setValue(parameter.toDouble()); }
+      if(name == "obsdate") {
+	obsDateTime->setDate(QDate::fromString(parameter, "yyyy-MM-dd")); }
+      if(name == "obstime") {
+	obsDateTime->setTime(QTime::fromString(parameter, "hh:mm:ss")); }
       if(name == "dir")  {
 	if(parameter!=QString("default")) {
 	  dir->clear();
@@ -185,9 +205,27 @@ bool VortexPanel::updateConfig()
 	emit changeDom(element, QString("dir"), dir->text());
 	emit workingDirectoryChanged();
       }
-      
+      if(getFromElement("obsdate")
+	 !=obsDateTime->date().toString("yyyy-MM-dd")) {
+	emit changeDom(element, QString("obsdate"), 
+		       obsDateTime->date().toString("yyyy-MM-dd"));
+      }
+      if(getFromElement("obstime")
+	 !=obsDateTime->time().toString("hh:mm:ss")) {
+	emit changeDom(element, QString("obstime"), 
+		       obsDateTime->time().toString("hh:mm:ss"));
+      }
     }
   setPanelChanged(false);
+  return true;
+}
+
+bool VortexPanel::checkValues()
+{
+  // Returning False means that one of the values has not been set correctly
+  // Returning True means that all the values check out...
+
+  emit log(Message(QString(), 0, this->objectName(), Green));
   return true;
 }
 
@@ -264,6 +302,10 @@ RadarPanel::RadarPanel()
   QLabel *start = new QLabel(tr("Start Date and Time"));
   startDateTime = new QDateTimeEdit();
   startDateTime->setDisplayFormat("MMM-dd-yyyy hh:mm:ss");
+  QDate minDate(QDate::fromString(QString("1900-01-01"),"yyyy-MM-dd"));
+  QTime minTime(QTime::fromString(QString("00:00:00"), "hh:mm:ss"));
+  //startDateTime->setMinimumTime(minTime);
+  //startDateTime->setMinimumDate(minDate);
   QHBoxLayout *startLayout = new QHBoxLayout;
   startLayout->addWidget(start);
   startLayout->addWidget(startDateTime);
@@ -271,6 +313,8 @@ RadarPanel::RadarPanel()
   QLabel *end = new QLabel(tr("End Date and Time"));
   endDateTime = new QDateTimeEdit();
   endDateTime->setDisplayFormat("MMM-dd-yyyy hh:mm:ss");
+  //endDateTime->setMinimumTime(minTime);
+  //endDateTime->setMinimumDate(minDate);
   QHBoxLayout *endLayout = new QHBoxLayout;
   endLayout->addWidget(end);
   endLayout->addWidget(endDateTime);
@@ -450,6 +494,22 @@ bool RadarPanel::checkDates()
   return true;
 }
 
+bool RadarPanel::checkValues()
+{
+  // Returning False means that one of the values has not been set correctly
+  // Returning True means that all the values check out...
+  
+  QString temp(radarFormat->currentText());
+  if(radarFormatOptions->value(temp)==QString("")) {
+    emit log(Message(QString(), 0, this->objectName(), Red, 
+	    QString(tr("Please select a radar type in the configuration"))));
+    return false;
+  }
+  
+  emit log(Message(QString(), 0, this->objectName(), Green));
+  return true;
+}
+
 CappiPanel::CappiPanel()
   :AbstractPanel()
 {
@@ -524,8 +584,8 @@ CappiPanel::CappiPanel()
   interpolationMethod = new QHash<QString, QString>;
   interpolationMethod->insert(QString("Cressman Interpolation"),
 			      QString("cressman"));
-  interpolationMethod->insert(QString("Barnes Interpolation"),
-			      QString("barnes"));
+  //interpolationMethod->insert(QString("Barnes Interpolation"),
+  //			      QString("barnes"));
   interpolationMethod->insert(QString("Select Interpolation Method"), 
 			      QString(""));
   // add some more of these interpolation method options as nessecary
@@ -751,6 +811,46 @@ bool CappiPanel::setDefaultDirectory(QDir* newDir)
     return false;
   }
   
+}
+
+bool CappiPanel::checkValues()
+{
+  // Returning False means that one of the values has not been set correctly
+  // Returning True means that all the values check out...
+  
+
+  // Make sure that an interpolation has been selected
+  QString temp(intBox->currentText());
+  if(interpolationMethod->value(temp)==QString("")) {
+    emit log(Message(QString(), 0, this->objectName(), Red, 
+    QString(tr("Please select a interpolation method in the configuration"))));
+    return false;
+  }
+
+  // Gridded Data has a maximum number of points at
+  // 256 in x
+  // 256 in y
+  // 20 in z
+  // We must make sure that is how many we have selected
+
+  if((xDimBox->value()/(float)xGridBox->value()) > 256) {
+    emit log(Message(QString(),0, this->objectName(), Red, 
+		     QString(tr("Cappi X dimension has exceeded 256 points, Please decrease the dimension of cappi in x or increase the spacing"))));
+    return false;
+  }
+  if((yDimBox->value()/(float)yGridBox->value()) > 256) {
+    emit log(Message(QString(),0, this->objectName(), Red, 
+		     QString(tr("Cappi Y dimension has exceeded 256 points, Please decrease the dimension of cappi in y or increase the spacing"))));
+    return false;
+  }
+  if((zDimBox->value()/(float)zGridBox->value()) > 20) {
+    emit log(Message(QString(),0, this->objectName(), Red, 
+		     QString(tr("Cappi Z dimension has exceeded 256 points, Please decrease the dimension of cappi in z or increase the spacing"))));
+    return false;
+  }
+
+  emit log(Message(QString(), 0, this->objectName(), Green));
+  return true;
 }
 
 CenterPanel::CenterPanel()
@@ -1248,6 +1348,76 @@ bool CenterPanel::setDefaultDirectory(QDir* newDir)
     delete newDir;
     return false;
   }
+}
+
+bool CenterPanel::checkValues()
+{
+  // Returning False means that one of the values has not been set correctly
+  // Returning True means that all the values check out...
+  
+  QString temp(geometryBox->currentText());
+  if(geometryOptions->value(temp)==QString("")) {
+    emit log(Message(QString(), 0, this->objectName(), Red, 
+	    QString(tr("Please select a geometry in the configuration"))));
+    return false;
+  }
+
+  temp = closureBox->currentText();
+  if(closureOptions->value(temp)==QString("")) {
+    emit log(Message(QString(), 0, this->objectName(), Red, 
+	    QString(tr("Please select a closure assumption in the configuration"))));
+    return false;
+  }
+
+  temp = refBox->currentText();
+  if(reflectivityOptions->value(temp)==QString("")) {
+    emit log(Message(QString(), 0, this->objectName(), Red, 
+	   QString(tr("Please select a reflectivity in the configuration"))));
+    return false;
+  }
+
+  temp = velBox->currentText();
+  if(velocityOptions->value(temp)==QString("")) {
+    emit log(Message(QString(), 0, this->objectName(), Red, 
+	    QString(tr("Please select a velocity in the configuration"))));
+    return false;
+  }
+
+  temp = critBox->currentText();
+  if(criteriaOptions->value(temp)==QString("")) {
+    emit log(Message(QString(), 0, this->objectName(), Red, 
+	    QString(tr("Please select a criteria in the configuration"))));
+    return false;
+  }
+
+  // We have set minimums in the SimplexData containers that will
+  // cause problems if we do not limit the number of levels, radii, and 
+  // centers used
+
+  // SimplexData::maxLevels = 15
+  // SimplexData::maxRadii = 30
+  // SimplexData::maxCenters = 25
+
+  if((tLBox->value()-bLBox->value())>15) {
+    emit log(Message(QString(),0, this->objectName(), Red, 
+		     QString(tr("Number of search levels in simplex exceeds the maximum of 15, Please decrease the number of search levels"))));
+    return false;
+  }
+
+  if(((oRBox->value()-iRBox->value())/(float)ringBox->value())>30) {
+    emit log(Message(QString(),0, this->objectName(), Red, 
+		     QString(tr("Number of search rings in simplex exceeds the maximum of 15, Please decrease the number of search rings"))));
+    return false;
+  }
+
+  if(numPointsBox->value()>25) {
+    emit log(Message(QString(),0, this->objectName(), Red, 
+		     QString(tr("Number initial centers in simplex exceeds the maximum of 25, Please decrease the number of initial centers"))));
+    return false;
+  }
+    
+  emit log(Message(QString(), 0, this->objectName(), Green));
+  return true;
 }
 
 ChooseCenterPanel::ChooseCenterPanel()

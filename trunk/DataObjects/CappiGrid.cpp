@@ -642,7 +642,7 @@ void CappiGrid::writeAsi()
 	id[311] = 0;
 	
 	// Write ascii file for grid2ps
-	Message::toScreen("Trying to write cappi to "+outFileName);
+	//Message::toScreen("Trying to write cappi to "+outFileName);
 	outFileName += ".asi";
 	QFile asiFile(outFileName);
 	if(!asiFile.open(QIODevice::WriteOnly)) {

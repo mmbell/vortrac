@@ -64,29 +64,47 @@ bool GriddedData::writeAsi(const QString& fileName)
 void GriddedData::setIdim(const int& dim)
 {
   iDim = dim;
+  if(dim > 256)
+    Message::toScreen("GriddedData: WARNING! Idim is greater than 256 limit");
+  if(float(dim)/getIGridsp() > 256) 
+    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in IDim exceeds 256 point array capacity");
 }
 
 void GriddedData::setJdim(const int& dim)
 {
   jDim = dim;
+  if(dim > 256)
+    Message::toScreen("GriddedData: WARNING! Jdim is greater than 256 limit");
+  if(float(dim)/getJGridsp() > 256) 
+    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in JDim exceeds 256 point array capacity");
 }
 
 void GriddedData::setKdim(const int& dim)
 { 
   kDim = dim;
+  if(dim > 20)
+    Message::toScreen("GriddedData: WARNING! Kdim is greater than 20 limit");
+  if(float(dim)/getKGridsp() > 20) 
+    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in KDim exceeds 20 point array capacity");
 }
 
 void GriddedData::setIGridsp(const float& iSpacing)
 {
   iGridsp = iSpacing;
+  if(getIdim()/iSpacing > 256)
+    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in ISpacing exceeds 256 point array capacity");
 }
 void GriddedData::setJGridsp(const float& jSpacing)
 {
   jGridsp = jSpacing;
+  if(getJdim()/jSpacing > 256)
+    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in JSpacing exceeds 256 point array capacity");
 }
 void GriddedData::setKGridsp(const float& kSpacing)
 {
   kGridsp = kSpacing;
+  if(getKdim()/kSpacing > 20)
+    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in KSpacing exceeds 20 point array capacity");
 }
 
 void GriddedData::setLatLonOrigin(float *knownLat, float *knownLon,
@@ -126,6 +144,11 @@ float GriddedData::fixAngle(float angle) {
 
 void GriddedData::setReferencePoint(int ii, int jj, int kk)
 {
+  // Sets the reference point based on the index rather than the 
+  // assigned position relative to the storm
+
+  Message::toScreen("GriddedData: Using the Index Based Reference Assignment");
+
   if((ii > iDim)||(ii < 0)||(jj > jDim)||(jj < 0)||(kk > kDim)||(kk < 0))
     Message::toScreen("GriddedData: trying to examine point outside cappi");
   refPointI = ii;
@@ -288,7 +311,8 @@ float GriddedData::getCartesianPointFromIndexK (const float& indexK)
 // These functions convert between cartesian points and indices
 float GriddedData::getIndexFromCartesianPointI (const float& cartI)
 {
-	return (cartI/iGridsp) - xmin;
+  return (cartI/iGridsp) - xmin;  // Maybe.... later -LM 02/22/07
+  //	return (cartI - xmin)/iGridsp;
 }
 
 float GriddedData::getIndexFromCartesianPointJ (const float& cartJ)
@@ -316,6 +340,10 @@ int GriddedData::getFieldIndex(const QString& fieldName) const
 
 float GriddedData::getIndexValue(QString& fieldName, float& ii, float& jj, float& kk) const
 {
+
+  // This returns a value from dataGrid based on an index rather than
+  // a point on the defined cartesian grid.
+
 	if((ii > iDim)||(ii < 0)||(jj > jDim)||(jj < 0)||(kk > kDim)||(kk < 0))
 		return -999.;
 	int field = getFieldIndex(fieldName);

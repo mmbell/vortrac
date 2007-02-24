@@ -40,6 +40,7 @@ class VortexPanel:public AbstractPanel
   ~VortexPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
+  bool checkValues();
 
  private:
   QLineEdit *vortexName;   
@@ -60,6 +61,15 @@ class VortexPanel:public AbstractPanel
    *
    */
 
+  QDateTimeEdit *obsDateTime;
+  /* 
+   * obsDateTime holds the date and time of the observation used to generate
+   *    the details used to initiate the algorithm.  So the lat & lon entered
+   *    in this panel should coorespond to the observation time given in this
+   *    widget. If a speed and direction are given then they should also 
+   *    coorespond to this time.
+   */
+
 };
 
 class RadarPanel:public AbstractPanel
@@ -71,6 +81,7 @@ class RadarPanel:public AbstractPanel
    void updatePanel(const QDomElement panelElement);
    bool updateConfig();
    bool checkDates();
+   bool checkValues();
 
  private:
    /* 
@@ -106,6 +117,7 @@ class CappiPanel:public AbstractPanel
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
   bool setDefaultDirectory(QDir* newDir);
+  bool checkValues();
 
  private:
   /*
@@ -142,6 +154,7 @@ class CenterPanel:public AbstractPanel
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
   bool setDefaultDirectory(QDir* newDir);
+  bool checkValues();
 
  private:
   /*
@@ -187,6 +200,7 @@ class ChooseCenterPanel:public AbstractPanel
   bool updateConfig();
   bool setDefaultDirectory(QDir* newDir);
   bool checkDates();
+  //bool checkValues();
 
  private:
   /*

@@ -59,7 +59,7 @@ Hvvp::Hvvp()
       xls[k][kk] = velNull;
   }
 	  
-  printOutput = true;
+  printOutput = false;
   
 }
 

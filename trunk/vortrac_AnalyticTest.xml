@@ -4,8 +4,10 @@
         <name>Analytic Storm</name>
         <lat>.9</lat>
         <lon>.9</lon>
-        <direction>35</direction>
-        <speed>10</speed>
+        <direction>0</direction>
+        <speed>0</speed>
+        <obsdate>1900-01-01</obsdate>
+        <obstime>00:00:00</obstime>
         <dir>workingDirs/</dir>
     </vortex>
     <radar>

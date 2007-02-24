@@ -199,7 +199,7 @@ void AnalysisThread::run()
 		    QString vortexName = configData->getParam(vortex,"name");
 		    
 		    QString year;
-		    year.setNum(QDate::fromString(configData->getParam(radar,"startdate"), "yyyy-MM-dd").year());
+		    year.setNum(QDate::fromString(configData->getParam(vortex,"obsdate"), "yyyy-MM-dd").year());
 		    
 		    QString workingPath = configData->getParam(configData->getConfig("vortex"),"dir");
 		    QString vortexPath = configData->getParam(configData->getConfig("vtd"), "dir");
@@ -237,27 +237,30 @@ void AnalysisThread::run()
 		  // Check to make sure that the radar volume is in range
 		  // get start date and time from radar config
 		  
-		  QString dateString = configData->getParam(radar,
-							    "startdate");
-		  QString timeString = configData->getParam(radar,
-							    "starttime");
-		  QDate radarStartDate = QDate::fromString(dateString,
-							   Qt::ISODate);
-		  QTime radarStartTime = QTime::fromString(timeString,
-							   Qt::ISODate);
-
-		  QDateTime radarStartDateTime = QDateTime(radarStartDate, 
-							   radarStartTime, 
-							   Qt::UTC);
+		  QString dateString = configData->getParam(vortex,"obsdate");
+		  //Message::toScreen(dateString);
+		  QString timeString = configData->getParam(vortex,"obstime");
+		  //Message::toScreen(timeString);
+		  QDate obsDate = QDate::fromString(configData->getParam(vortex,"obsdate"),"yyyy-MM-dd");
+		  //Message::toScreen("obs: "+obsDate.toString("yyyy-MM-dd"));
+		  QTime obsTime = QTime::fromString(timeString,"hh:mm:ss");
+		  //Message::toScreen("obs: "+obsTime.toString("hh:mm:ss"));
+		  QDateTime obsDateTime = QDateTime(obsDate, obsTime, Qt::UTC);
+		  if(!obsDateTime.isValid()){
+		    emit log(Message(QString("Observation Date or Time is not of valid format! Date: yyyy-MM-dd Time: hh:mm:ss please adjust the configuration file"),0,this->objectName(),Red, QString("ObsDate or ObsTime invalid in Config")));
+		  }
 		  // Get this volume's time
+		  //Message::toScreen("obs: "+obsDateTime.toString(Qt::ISODate));
+		
 		  QDateTime volDateTime = radarVolume->getDateTime();
+		  //Message::toScreen("vol: "+volDateTime.toString(Qt::ISODate));
 
 		  // If the volume time is with 15 minutes of the start time
 		  // for accepting radar observations then we will use the 
 		  // given vortex center for our center
-		  Message::toScreen(" secs between start and this one "+QString().setNum(radarStartDateTime.secsTo(volDateTime)));
+		  // Message::toScreen(" secs between start and this one "+QString().setNum(obsDateTime.secsTo(volDateTime)));
 
-		  if(abs(radarStartDateTime.secsTo(volDateTime))<15*60) {
+		  if(abs(obsDateTime.secsTo(volDateTime))<15*60) {
 		    vortexLat = configData->getParam(vortex,"lat").toFloat();
 		    vortexLon = configData->getParam(vortex,"lon").toFloat();
 		  }
@@ -285,8 +288,8 @@ void AnalysisThread::run()
 		    vortexLat = configData->getParam(vortex,"lat").toFloat();
 		    vortexLon = configData->getParam(vortex,"lon").toFloat();
 		    
-		    int elapsedSeconds =radarStartDateTime.secsTo(volDateTime);
-		    Message::toScreen("Seconds since start "+QString().setNum(elapsedSeconds)+" in AnalysisThread");
+		    int elapsedSeconds =obsDateTime.secsTo(volDateTime);
+		    //Message::toScreen("Seconds since start "+QString().setNum(elapsedSeconds)+" in AnalysisThread");
 		    float distanceMoved = elapsedSeconds*stormSpeed/1000.0;
 		    float changeInX = distanceMoved*cos(stormDirection);
 		    float changeInY = distanceMoved*sin(stormDirection);
@@ -295,7 +298,7 @@ void AnalysisThread::run()
 
 		    vortexLat = newLatLon[0];
 		    vortexLon = newLatLon[1];
-		    Message::toScreen("New vortexLat = "+QString().setNum(vortexLat)+" New vortexLon = "+QString().setNum(vortexLon));
+		    //Message::toScreen("New vortexLat = "+QString().setNum(vortexLat)+" New vortexLon = "+QString().setNum(vortexLon));
 		  }   
 		}
 
@@ -308,7 +311,7 @@ void AnalysisThread::run()
 				             radarVolume->getRadarLat(), 
 					     radarVolume->getRadarLon(),
 					     &vortexLat, &vortexLon);
-		Message::toScreen("Distance Between Radar and Storm "+QString().setNum(relDist));
+		//Message::toScreen("Distance Between Radar and Storm "+QString().setNum(relDist));
 		bool beyondRadar = true;
 		bool closeToEdge = false;
 		for(int i = 0; i < radarVolume->getNumSweeps(); i++) {
@@ -335,21 +338,21 @@ void AnalysisThread::run()
 					       "speed").toFloat()/1000.0;
 		  float stormDirection = configData->getParam(vortex, 
 				 "direction").toFloat()*acos(-1)/180.;
-		  Message::toScreen("Storm Direction .."+QString().setNum(stormDirection));
-		  Message::toScreen("cca = "+QString().setNum(cca));
+		  //Message::toScreen("Storm Direction .."+QString().setNum(stormDirection));
+		  //Message::toScreen("cca = "+QString().setNum(cca));
 		  float palpha = (relDist*sin(stormDirection-cca)/174.);
-		  Message::toScreen(" palpha = "+QString().setNum(palpha));
-		  Message::toScreen(" relDist = "+QString().setNum(relDist));
+		  //Message::toScreen(" palpha = "+QString().setNum(palpha));
+		  //Message::toScreen(" relDist = "+QString().setNum(relDist));
 		  float alpha = acos(-1)-asin(palpha);
-		  Message::toScreen(" alpha = "+QString().setNum(alpha));
+		  //Message::toScreen(" alpha = "+QString().setNum(alpha));
 		  float dist2go = 174*sin(acos(-1)+cca-stormDirection-alpha)/sin(stormDirection-cca);
-		  Message::toScreen(" dist2go = "+QString().setNum(dist2go));
+		  //Message::toScreen(" dist2go = "+QString().setNum(dist2go));
 		  float eta = (dist2go/stormSpeed)/60;
-		  Message::toScreen("minutes till radar"+QString().setNum(eta));
+		  //Message::toScreen("minutes till radar"+QString().setNum(eta));
 		  emit log(Message(
 			 QString(),
 			 -1,this->objectName(),AllOff,QString(),OutOfRange, 
-			 QString("Storm Center will be in Range in "+QString().setNum(eta, 'f', 0)+" minutes")));
+			 QString("Storm in range in "+QString().setNum(eta, 'f', 0)+" min")));
 		  //Message::toScreen("Estimated center is out of Doppler range!");
 		  delete radarVolume;
 		  emit doneProcessing();
@@ -696,7 +699,7 @@ void AnalysisThread::run()
 			archiveAnalysis();
 			
 			// Complete the progress bar and log that we're done
-			emit log(Message(QString("Analysis complete!"),100,
+			emit log(Message(QString("Analysis complete!"),8,
 					 this->objectName(), AllOff, 
 					 QString(),Ok, QString()));
 

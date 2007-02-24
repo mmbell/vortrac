@@ -137,6 +137,8 @@ private:
    // when this point is returned it is ready to graph
    QPointF makePressurePoint(VortexData d);
    QPointF makeRmwPoint(VortexData d);
+   QPointF makeRmwPoint(VortexData d, int bestLevel);
+   QPointF makeRmwPoint(VortexData d, float rmw);
    
    // These functions are used to scale each of the variable to their relative position in 
    // the current variable ranges on the graph
