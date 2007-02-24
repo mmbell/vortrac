@@ -1,30 +1,30 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <vortrac xmnls="http://www.eol.ucar.edu/ns/vortrac" >
     <vortex>
-        <name>Charley</name>
-        <lat>25.2</lat>
-        <lon>-82.8</lon>
-        <direction>25</direction>
-        <speed>8.3</speed>
-        <dir>/scr/science40/mauger/Working/trunk/testVel</dir>
+        <name>Irene</name>
+        <lat>24.7</lat>
+        <direction>20</direction>
+        <speed>3.6</speed>
+        <lon>-81.6</lon>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs/Irene</dir>
     </vortex>
     <radar>
-        <name>KTBW</name>
-        <lat>27.706</lat>
-        <lon>-82.402</lon>
-        <alt>32.5</alt>
-        <dir>/scr/science40/mauger/charley/level2forVelTest/</dir>
+        <name>KAMX</name>
+        <lat>25.611</lat>
+        <lon>-80.413</lon>
+        <alt>24.3</alt>
+        <dir>/scr/science40/mauger/irene/</dir>
         <format>NCDCLEVELII</format>
-        <startdate>2004-08-13</startdate>
-        <enddate>2005-01-01</enddate>
+        <startdate>1999-10-15</startdate>
+        <enddate>1999-10-16</enddate>
         <starttime>15:00:00</starttime>
-        <endtime>23:59:59</endtime>
+        <endtime>00:00:00</endtime>
     </radar>
     <cappi>
-        <dir>/scr/science40/mauger/Working/trunk/testVel/cappi</dir>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs/Irene/cappi</dir>
         <xdim>100</xdim>
         <ydim>100</ydim>
-        <zdim>3</zdim>
+        <zdim>4</zdim>
         <xgridsp>1.0</xgridsp>
         <ygridsp>1.0</ygridsp>
         <zgridsp>1.0</zgridsp>
@@ -33,15 +33,15 @@
         <interpolation>cressman</interpolation>
     </cappi>
     <center>
-        <dir>/scr/science40/mauger/Working/trunk/testVel/center</dir>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs/Irene/center</dir>
         <geometry>GBVTD</geometry>
         <closure>original</closure>
         <reflectivity>DZ</reflectivity>
         <velocity>VE</velocity>
         <bottomlevel>1</bottomlevel>
-        <toplevel>3</toplevel>
-        <innerradius>5</innerradius>
-        <outerradius>20</outerradius>
+        <toplevel>4</toplevel>
+        <innerradius>30</innerradius>
+        <outerradius>60</outerradius>
         <ringwidth>1.0</ringwidth>
         <search>MAXVTO</search>
         <influenceradius>4.0</influenceradius>
@@ -54,16 +54,15 @@
         <maxdatagap wavenum="1" >120</maxdatagap>
     </center>
     <choosecenter>
-        <dir>/scr/science40/mauger/Working/trunk/testVel/choosecenter</dir>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs/Irene/choosecenter</dir>
         <filename>nameOfCenterListFile</filename>
-        <startdate>2004-01-01</startdate>
-        <enddate>2005-01-02</enddate>
+        <startdate>1999-10-15</startdate>
+        <enddate>1999-10-16</enddate>
         <starttime>00:00:00</starttime>
         <endtime>00:00:00</endtime>
-        <min_volumes>13</min_volumes>
-        <dist_weight>0.0</dist_weight>
+        <min_volumes>6</min_volumes>
         <wind_weight>0.2</wind_weight>
-        <stddev_weight>0</stddev_weight>
+        <stddev_weight>0.6</stddev_weight>
         <pts_weight>0.2</pts_weight>
         <position_weight>0.4</position_weight>
         <rmw_weight>0.4</rmw_weight>
@@ -71,15 +70,15 @@
         <stats>99</stats>
     </choosecenter>
     <vtd>
-        <dir>/scr/science40/mauger/Working/trunk/testVel/vtd</dir>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs/Irene/vtd</dir>
         <geometry>GBVTD</geometry>
         <closure>original</closure>
         <reflectivity>DZ</reflectivity>
         <velocity>VE</velocity>
         <bottomlevel>1</bottomlevel>
-        <toplevel>3</toplevel>
-        <innerradius>2</innerradius>
-        <outerradius>60</outerradius>
+        <toplevel>5</toplevel>
+        <innerradius>1</innerradius>
+        <outerradius>80</outerradius>
         <ringwidth>1.0</ringwidth>
         <maxwavenumber>1</maxwavenumber>
         <maxdatagap wavenum="0" >180</maxdatagap>
@@ -87,7 +86,7 @@
     </vtd>
     <hvvp/>
     <pressure>
-        <dir>/scr/science40/mauger/Working/trunk/workingDirs</dir>
+        <dir>default</dir>
         <format>AWIPS</format>
         <maxobstime>59</maxobstime>
         <maxobsdist>50</maxobsdist>
@@ -107,16 +106,16 @@
     <qc>
         <wind_method>vad</wind_method>
         <vel_min>1.0</vel_min>
-        <vel_max>100.0</vel_max>
-        <ref_min>-15.0</ref_min>
-        <ref_max>65.0</ref_max>
+        <vel_max>100</vel_max>
+        <ref_max>65</ref_max>
+        <ref_min>-15</ref_min>
         <sw_threshold>10.0</sw_threshold>
-        <bbcount>15</bbcount>
+        <bbcount>30</bbcount>
         <maxfold>4</maxfold>
-        <windspeed>24</windspeed>
-        <winddirection>138</winddirection>
-        <awips_dir>/path/to/awips/data</awips_dir>
-        <vadlevels>6</vadlevels>
+        <windspeed>30</windspeed>
+        <winddirection>180</winddirection>
+        <awips_dir>default</awips_dir>
+        <vadlevels>25</vadlevels>
         <numcoeff>3</numcoeff>
         <vadthr>30</vadthr>
         <gvadthr>180</gvadthr>
