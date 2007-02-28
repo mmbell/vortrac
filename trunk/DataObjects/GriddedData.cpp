@@ -58,9 +58,10 @@ void GriddedData::writeAsi()
 
 bool GriddedData::writeAsi(const QString& fileName)
 {
-
+  Message::toScreen("Using unimplemented functions from GriddedData to try to write to file "+fileName);
+  return false;
 }
-
+/*
 void GriddedData::setIdim(const int& dim)
 {
   iDim = dim;
@@ -106,7 +107,7 @@ void GriddedData::setKGridsp(const float& kSpacing)
   if(getKdim()/kSpacing > 20)
     Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in KSpacing exceeds 20 point array capacity");
 }
-
+*/
 void GriddedData::setLatLonOrigin(float *knownLat, float *knownLon,
 		    float *relX, float *relY)
 {
@@ -159,10 +160,16 @@ void GriddedData::setReferencePoint(int ii, int jj, int kk)
 
 void GriddedData::setCartesianReferencePoint(float ii, float jj, float kk)
 {
-  //Message::toScreen("Setting Cartesian Reference Point");
+  /*
+  //Message::toScreen("Setting Cartesian Reference Point"); removed 2/24/07 -LM
   refPointI = int(floor(ii/iGridsp - xmin+.5));
   refPointJ = int(floor(jj/jGridsp - ymin+.5));
   refPointK = int(floor(kk/kGridsp - zmin+.5));
+  */
+  // The reference point is coming in in meters?  added -LM 2/24/07
+  refPointI = int(floor((ii- xmin)/iGridsp+.5));
+  refPointJ = int(floor((jj - ymin)/jGridsp+.5));
+  refPointK = int(floor((kk - zmin)/kGridsp+.5));
   //  Message::toScreen("idim = "+QString().setNum(iDim)+" jdim "+QString().setNum(jDim)+" kdim "+QString().setNum(kDim));
   //  Message::toScreen("refPointI = "+QString().setNum(refPointI)+" refPointJ = "+QString().setNum(refPointJ)+" refPointK = "+QString().setNum(refPointK));
   //  Message::toScreen("iGridsp = "+QString().setNum(iGridsp)+" jGridsp = "+QString().setNum(jGridsp)+" kGridSp = "+QString().setNum(kGridsp));
@@ -186,9 +193,15 @@ void GriddedData::setAbsoluteReferencePoint(float Lat, float Lon, float Height)
 
   float *locations = getCartesianPoint(&originLat, &originLon, &Lat, &Lon);
   // Floor is used to round to the nearest integer
+  /*
+   * removed 2/24/07 -LM xmin & ymin & zmin have units of meters
   refPointI = int(floor(locations[0]/iGridsp - xmin +.5));
   refPointJ = int(floor(locations[1]/jGridsp - ymin +.5));
   refPointK = int(floor(Height/kGridsp - zmin +.5));
+  */
+  refPointI = int(floor((locations[0]-xmin)/iGridsp +.5));
+  refPointJ = int(floor((locations[1]-ymin)/jGridsp +.5));
+  refPointK = int(floor((Height-zmin)/kGridsp +.5));
   // testing Message::toScreen("I = "+QString().setNum(refPointI)+" J = "+QString().setNum(refPointJ)+" K = "+QString().setNum(refPointK));
   delete[] locations;
   
@@ -198,7 +211,9 @@ float* GriddedData::getCartesianPoint(float *Lat, float *Lon,
 				float *relLat, float *relLon)
 {
 
+  // Returns the distance between the two (Lat,Lon) points in km
   // Thanks to Peter Dodge for some code used here
+  
   float LatRadians = *Lat * acos(-1.0)/180.0;
   float fac_lat = 111.13209 - 0.56605 * cos(2.0 * LatRadians)
     + 0.00012 * cos(4.0 * LatRadians) - 0.000002 * cos(6.0 * LatRadians);
@@ -212,8 +227,6 @@ float* GriddedData::getCartesianPoint(float *Lat, float *Lon,
   relArray[0] = relX;
   relArray[1] = relY;
   return relArray;
-
-  // This value is returned in KM ???? -LM
 
 }
 
@@ -277,52 +290,131 @@ float GriddedData::getRefPointK ()
 }
 
 // These functions return cartesian points
+// mins are all in km .... so I changed these to that -LM 2/24/07
 float GriddedData::getCartesianRefPointI ()
 {
-	return (refPointI + xmin)*iGridsp;
+	return refPointI*iGridsp+xmin;
 }
 
 float GriddedData::getCartesianRefPointJ ()
 {
-	return (refPointJ + ymin)*jGridsp;
+	return refPointJ*jGridsp+ymin;
 }
 
 float GriddedData::getCartesianRefPointK ()
 {
-	return (refPointK + zmin)*kGridsp;
+	return refPointK*kGridsp+zmin;
 }
 
 // These functions convert between indices and cartesian points
+
 float GriddedData::getCartesianPointFromIndexI (const float& indexI)
 {
-	return (indexI + xmin)*iGridsp;
+  //	return (indexI + xmin)*iGridsp;  xmin is in km -LM 2/24/07
+  if((indexI > 0)&&(indexI < iDim)) {
+    float distance =  indexI*iGridsp+xmin;
+    if((distance >= xmin) && (distance <= xmax)) {
+      return distance;
+    }
+    Message::toScreen("GriddedData: getCartesianPointFromIndexI: trying to return a distance that is not within the range contained by dataGrid.... "+QString().setNum(distance)+" is not within "+QString().setNum(xmin)+" - "+QString().setNum(xmax));
+  return -999.;
+  }
+  Message::toScreen("GriddedData: getCartesianPointFromIndexI: trying to access an index that is not within the range contained by dataGrid.... "+QString().setNum(indexI)+" is not within 0 - "+QString().setNum(iDim));
+  return -999.;
 }
 
 float GriddedData::getCartesianPointFromIndexJ (const float& indexJ)
 {
-	return (indexJ + ymin)*jGridsp;
+  //return (indexJ + ymin)*jGridsp;
+  
+  if((indexJ > 0)&&(indexJ < jDim)) {
+    float distance =  indexJ*jGridsp+ymin;
+    if((distance >= ymin) && (distance <= ymax)) {
+      return distance;
+    }
+    Message::toScreen("GriddedData: getCartesianPointFromIndexJ: trying to return a distance that is not within the range contained by dataGrid.... "+QString().setNum(distance)+" is not within "+QString().setNum(ymin)+" - "+QString().setNum(ymax));
+  return -999.;
+  }
+  Message::toScreen("GriddedData: getCartesianPointFromIndexJ: trying to access an index that is not within the range contained by dataGrid.... "+QString().setNum(indexJ)+" is not within 0 - "+QString().setNum(jDim));
+  return -999.;
 }
 
 float GriddedData::getCartesianPointFromIndexK (const float& indexK)
 {
-	return (indexK + zmin)*kGridsp;
+  //	return (indexK + zmin)*kGridsp;
+  if((indexK > 0)&&(indexK < kDim)) {
+    float distance =  indexK*kGridsp+zmin;
+    if((distance >= zmin) && (distance <= zmax)) {
+      return distance;
+    }
+    Message::toScreen("GriddedData: getCartesianPointFromIndexK: trying to return a distance that is not within the range contained by dataGrid.... "+QString().setNum(distance)+" is not within "+QString().setNum(zmin)+" - "+QString().setNum(zmax));
+    return -999.;
+  }
+  Message::toScreen("GriddedData: getCartesianPointFromIndexK: trying to access an index that is not within the range contained by dataGrid.... "+QString().setNum(indexK)+" is not within 0 - "+QString().setNum(kDim));
+  return -999.;
 }
 
 // These functions convert between cartesian points and indices
-float GriddedData::getIndexFromCartesianPointI (const float& cartI)
+
+int GriddedData::getIndexFromCartesianPointI (const float& cartI)
 {
-  return (cartI/iGridsp) - xmin;  // Maybe.... later -LM 02/22/07
-  //	return (cartI - xmin)/iGridsp;
+  
+  // Takes a distance position in km in the grids coordinate system
+  //   (where mins & maxs are in km and the radar is the zero point
+  //    while the grid zero is set to the radar location, the stored
+  //    area is centered about the vortex center guess for visibility)
+  // and returns the index most closely related to that location.
+
+  //  return (cartI/iGridsp) - xmin;  // removed 2/24/07 -LM
+  if((cartI < xmin)||(cartI > xmax)){
+    Message::toScreen("GriddedData: getIndexFromCartesianPointI: Attempting to access non-existant point..... "+QString().setNum(cartI)+" km the available gridded range is "+QString().setNum(xmin)+" - "+QString().setNum(xmax)+" km ");
+    return -999;
+  }
+  int index = int(floor(((cartI - xmin)/iGridsp)+.5));
+  if((index >= iDim)||(index < 0)) {
+    Message::toScreen("GriddedData: getIndexFromCartesianPointI: Attempting to return an index outside of the dimensional range of the grid... "+QString().setNum(index)+" should be within the range 0 - "+QString().setNum(iDim));
+    return -999;
+  }
+  
+  return index;
+      // added 2/24/07 -LM xmin is given units of km in CappiGrid:
+      // member function gridRadarData... so we must unscale it as well
+      // I am going to make the same changes to J & K functions below
+  
 }
 
-float GriddedData::getIndexFromCartesianPointJ (const float& cartJ)
+int GriddedData::getIndexFromCartesianPointJ (const float& cartJ)
 {
-	return (cartJ/jGridsp) - ymin;
+  // return (cartJ/jGridsp) - ymin;  // removed 2/24/07 -LM
+  
+  if((cartJ < ymin)||(cartJ > ymax)){
+    Message::toScreen("GriddedData: getIndexFromCartesianPointJ: Attempting to access non-existant point..... "+QString().setNum(cartJ)+" km the available gridded range is "+QString().setNum(ymin)+" - "+QString().setNum(ymax)+" km ");
+    return -999;
+  }
+  int index = int(floor(((cartJ - ymin)/jGridsp)+.5));
+  if((index >= jDim)||(index < 0)) {
+    Message::toScreen("GriddedData: getIndexFromCartesianPointJ: Attempting to return an index outside of the dimensional range of the grid... "+QString().setNum(index)+" should be within the range 0 - "+QString().setNum(jDim));
+    return -999;
+  }
+  
+  return index;
 }
 
-float GriddedData::getIndexFromCartesianPointK (const float& cartK)
+int GriddedData::getIndexFromCartesianPointK (const float& cartK)
 {
-	return (cartK/kGridsp) - zmin;
+  //return (cartK/kGridsp) - zmin;  // removed 2/24/07 -LM
+  
+  if((cartK < zmin)||(cartK > zmax)){
+    Message::toScreen("GriddedData: getIndexFromCartesianPointK: Attempting to access non-existant point..... "+QString().setNum(cartK)+" km the available gridded range is "+QString().setNum(zmin)+" - "+QString().setNum(zmax)+" km ");
+    return -999;
+  }
+  int index = int(floor(((cartK - zmin)/kGridsp)+.5));
+  if((index >= kDim)||(index < 0)) {
+    Message::toScreen("GriddedData: getIndexFromCartesianPointK: Attempting to return an index outside of the dimensional range of the grid... "+QString().setNum(index)+" should be within the range 0 - "+QString().setNum(kDim));
+    return -999;
+  }
+
+  return index;
 }
 
 int GriddedData::getFieldIndex(const QString& fieldName) const
@@ -342,7 +434,8 @@ float GriddedData::getIndexValue(QString& fieldName, float& ii, float& jj, float
 {
 
   // This returns a value from dataGrid based on an index rather than
-  // a point on the defined cartesian grid.
+  // a point on the defined cartesian grid in km.
+  // It is a simple accessor function.
 
 	if((ii > iDim)||(ii < 0)||(jj > jDim)||(jj < 0)||(kk > kDim)||(kk < 0))
 		return -999.;
@@ -365,23 +458,23 @@ float* GriddedData::getCartesianXslice(const QString& fieldName,
   int field = getFieldIndex(fieldName); 
   float* values = new float[(int)iDim];
 
-  float yIndex = getIndexFromCartesianPointJ(y);
-  float zIndex = getIndexFromCartesianPointK(z);
-  int yMin = int(floor(yIndex));
-  int yMax = int(floor(yIndex)+1);
-  int zMin = int(floor(zIndex));
-  int zMax = int(floor(zIndex)+1);
-  float yMinDiff = yIndex - yMin;
-  float yMaxDiff = yMax - yIndex;
-  float zMinDiff = zIndex - zMin;
-  float zMaxDiff = zMax - zIndex;
+  float jjIndex = getIndexFromCartesianPointJ(y);
+  float kkIndex = getIndexFromCartesianPointK(z);
+  int jjMin = int(floor(jjIndex));
+  int jjMax = int(floor(jjIndex)+1);
+  int kkMin = int(floor(kkIndex));
+  int kkMax = int(floor(kkIndex)+1);
+  float jjMinDiff = jjIndex - jjMin;
+  float jjMaxDiff = jjMax - jjIndex;
+  float kkMinDiff = kkIndex - kkMin;
+  float kkMaxDiff = kkMax - kkIndex;
 
   for(int i = 0; i < iDim; i++) {
     float ave = 0;
-    ave += (1-yMaxDiff)*(1-zMinDiff)*dataGrid[field][i][yMax][zMin];
-    ave += (1-yMinDiff)*(1-zMinDiff)*dataGrid[field][i][yMin][zMin];
-    ave += (1-yMaxDiff)*(1-zMaxDiff)*dataGrid[field][i][yMax][zMax];
-    ave += (1-yMinDiff)*(1-zMaxDiff)*dataGrid[field][i][yMin][zMax];
+    ave += (1-jjMaxDiff)*(1-kkMinDiff)*dataGrid[field][i][jjMax][kkMin];
+    ave += (1-jjMinDiff)*(1-kkMinDiff)*dataGrid[field][i][jjMin][kkMin];
+    ave += (1-jjMaxDiff)*(1-kkMaxDiff)*dataGrid[field][i][jjMax][kkMax];
+    ave += (1-jjMinDiff)*(1-kkMaxDiff)*dataGrid[field][i][jjMin][kkMax];
     values[i] = ave;
   }
   return values;
@@ -401,24 +494,24 @@ float* GriddedData::getCartesianYslice(const QString& fieldName,
   int field = getFieldIndex(fieldName); 
   float* values = new float[(int)jDim];
 
-  float xIndex = getIndexFromCartesianPointI(x);
-  float zIndex = getIndexFromCartesianPointK(z);
-  int xMin = int(floor(xIndex));
-  int xMax = int(floor(xIndex)+1);
-  int zMin = int(floor(zIndex));
-  int zMax = int(floor(zIndex)+1);
+  float iiIndex = getIndexFromCartesianPointI(x);
+  float kkIndex = getIndexFromCartesianPointK(z);
+  int iiMin = int(floor(iiIndex));
+  int iiMax = int(floor(iiIndex)+1);
+  int kkMin = int(floor(kkIndex));
+  int kkMax = int(floor(kkIndex)+1);
 
-  float xMinDiff = xIndex - xMin;
-  float xMaxDiff = xMax - xIndex;
-  float zMinDiff = zIndex - zMin;
-  float zMaxDiff = zMax - zIndex;
+  float iiMinDiff = iiIndex - iiMin;
+  float iiMaxDiff = iiMax - iiIndex;
+  float kkMinDiff = kkIndex - kkMin;
+  float kkMaxDiff = kkMax - kkIndex;
 
   for(int j = 0; j < jDim; j++) {
     float ave = 0;
-    ave += (1-xMinDiff)*(1-zMaxDiff)*dataGrid[field][xMin][j][zMax];
-    ave += (1-xMaxDiff)*(1-zMaxDiff)*dataGrid[field][xMax][j][zMax];
-    ave += (1-xMinDiff)*(1-zMinDiff)*dataGrid[field][xMin][j][zMin];
-    ave += (1-xMaxDiff)*(1-zMinDiff)*dataGrid[field][xMax][j][zMin];
+    ave += (1-iiMinDiff)*(1-kkMaxDiff)*dataGrid[field][iiMin][j][kkMax];
+    ave += (1-iiMaxDiff)*(1-kkMaxDiff)*dataGrid[field][iiMax][j][kkMax];
+    ave += (1-iiMinDiff)*(1-kkMinDiff)*dataGrid[field][iiMin][j][kkMin];
+    ave += (1-iiMaxDiff)*(1-kkMinDiff)*dataGrid[field][iiMax][j][kkMin];
     values[j] = ave;
   }
   return values;
@@ -438,23 +531,23 @@ float* GriddedData::getCartesianZslice(const QString& fieldName,
   int field = getFieldIndex(fieldName); 
   float* values = new float[(int)kDim];
 
-  float yIndex = getIndexFromCartesianPointJ(y);
-  float xIndex = getIndexFromCartesianPointI(x);
-  int yMin = int(floor(yIndex));
-  int yMax = int(floor(yIndex)+1);
-  int xMin = int(floor(xIndex));
-  int xMax = int(floor(xIndex)+1);
-  float yMinDiff = yIndex - yMin;
-  float yMaxDiff = yMax - yIndex;
-  float xMinDiff = xIndex - xMin;
-  float xMaxDiff = xMax - xIndex;
+  float jjIndex = getIndexFromCartesianPointJ(y);
+  float iiIndex = getIndexFromCartesianPointI(x);
+  int jjMin = int(floor(jjIndex));
+  int jjMax = int(floor(jjIndex)+1);
+  int iiMin = int(floor(iiIndex));
+  int iiMax = int(floor(iiIndex)+1);
+  float jjMinDiff = jjIndex - jjMin;
+  float jjMaxDiff = jjMax - jjIndex;
+  float iiMinDiff = iiIndex - iiMin;
+  float iiMaxDiff = iiMax - iiIndex;
 
   for(int k = 0; k < kDim; k++) {
     float ave = 0;
-    ave += (1-yMinDiff)*(1-xMaxDiff)*dataGrid[field][xMax][yMin][k];
-    ave += (1-yMaxDiff)*(1-xMaxDiff)*dataGrid[field][xMax][yMax][k];
-    ave += (1-yMinDiff)*(1-xMinDiff)*dataGrid[field][xMin][yMin][k];
-    ave += (1-yMaxDiff)*(1-xMinDiff)*dataGrid[field][xMin][yMax][k];
+    ave += (1-jjMinDiff)*(1-iiMaxDiff)*dataGrid[field][iiMax][jjMin][k];
+    ave += (1-jjMaxDiff)*(1-iiMaxDiff)*dataGrid[field][iiMax][jjMax][k];
+    ave += (1-jjMinDiff)*(1-iiMinDiff)*dataGrid[field][iiMin][jjMin][k];
+    ave += (1-jjMaxDiff)*(1-iiMinDiff)*dataGrid[field][iiMin][jjMax][k];
     values[k] = ave;
   }
   return values;
@@ -465,39 +558,39 @@ float GriddedData::getCartesianValue(const QString& fieldName, const float& x,
 {
 
   /* 
-   * This returns the field value associated witht the field name that 
-   * matches the x & y & z coordinates most closely, interpolating between
+   * This returns the field value associated with the fieldName that 
+   * matches the x & y & z coordinates (km) most closely, interpolating between
    * data points. 
    *
    */
 
   int field = getFieldIndex(fieldName); 
 
-  float yIndex = getIndexFromCartesianPointJ(y);
-  float xIndex = getIndexFromCartesianPointI(x);
-  float zIndex = getIndexFromCartesianPointK(z);
-  int zMin = int(floor(zIndex));
-  int zMax = int(floor(zIndex)+1);
-  int yMin = int(floor(yIndex));
-  int yMax = int(floor(yIndex)+1);
-  int xMin = int(floor(xIndex));
-  int xMax = int(floor(xIndex)+1);
-  float zMinDiff = zIndex - zMin;
-  float zMaxDiff = zMax -zIndex;
-  float yMinDiff = yIndex - yMin;
-  float yMaxDiff = yMax - yIndex;
-  float xMinDiff = xIndex - xMin;
-  float xMaxDiff = xMax - xIndex;
+  float jjIndex = getIndexFromCartesianPointJ(y);
+  float iiIndex = getIndexFromCartesianPointI(x);
+  float kkIndex = getIndexFromCartesianPointK(z);
+  int kkMin = int(floor(kkIndex));
+  int kkMax = int(floor(kkIndex)+1);
+  int jjMin = int(floor(jjIndex));
+  int jjMax = int(floor(jjIndex)+1);
+  int iiMin = int(floor(iiIndex));
+  int iiMax = int(floor(iiIndex)+1);
+  float kkMinDiff = kkIndex - kkMin;
+  float kkMaxDiff = kkMax -kkIndex;
+  float jjMinDiff = jjIndex - jjMin;
+  float jjMaxDiff = jjMax - jjIndex;
+  float iiMinDiff = iiIndex - iiMin;
+  float iiMaxDiff = iiMax - iiIndex;
 
   float ave = 0;
-  ave += (1-yMinDiff)*(1-xMaxDiff)*(1-zMinDiff)*dataGrid[field][xMax][yMin][zMin];
-  ave += (1-yMaxDiff)*(1-xMaxDiff)*(1-zMinDiff)*dataGrid[field][xMax][yMax][zMin];
-  ave += (1-yMinDiff)*(1-xMinDiff)*(1-zMinDiff)*dataGrid[field][xMin][yMin][zMin];
-  ave += (1-yMaxDiff)*(1-xMinDiff)*(1-zMinDiff)*dataGrid[field][xMin][yMax][zMin];
-  ave += (1-yMinDiff)*(1-xMaxDiff)*(1-zMaxDiff)*dataGrid[field][xMax][yMin][zMax];
-  ave += (1-yMaxDiff)*(1-xMaxDiff)*(1-zMaxDiff)*dataGrid[field][xMax][yMax][zMax];
-  ave += (1-yMinDiff)*(1-xMinDiff)*(1-zMaxDiff)*dataGrid[field][xMin][yMin][zMax];
-  ave += (1-yMaxDiff)*(1-xMinDiff)*(1-zMaxDiff)*dataGrid[field][xMin][yMax][zMax];
+  ave += (1-jjMinDiff)*(1-iiMaxDiff)*(1-kkMinDiff)*dataGrid[field][iiMax][jjMin][kkMin];
+  ave += (1-jjMaxDiff)*(1-iiMaxDiff)*(1-kkMinDiff)*dataGrid[field][iiMax][jjMax][kkMin];
+  ave += (1-jjMinDiff)*(1-iiMinDiff)*(1-kkMinDiff)*dataGrid[field][iiMin][jjMin][kkMin];
+  ave += (1-jjMaxDiff)*(1-iiMinDiff)*(1-kkMinDiff)*dataGrid[field][iiMin][jjMax][kkMin];
+  ave += (1-jjMinDiff)*(1-iiMaxDiff)*(1-kkMaxDiff)*dataGrid[field][iiMax][jjMin][kkMax];
+  ave += (1-jjMaxDiff)*(1-iiMaxDiff)*(1-kkMaxDiff)*dataGrid[field][iiMax][jjMax][kkMax];
+  ave += (1-jjMinDiff)*(1-iiMinDiff)*(1-kkMaxDiff)*dataGrid[field][iiMin][jjMin][kkMax];
+  ave += (1-jjMaxDiff)*(1-iiMinDiff)*(1-kkMaxDiff)*dataGrid[field][iiMin][jjMax][kkMax];
   return ave;
 
 }
@@ -823,8 +916,8 @@ int GriddedData::getCylindricalAzimuthLength(float radius, float height)
 	float r = sqrt(iGridsp*iGridsp*(i-refPointI)*(i-refPointI)+jGridsp*jGridsp*(j-refPointJ)*(j-refPointJ));
 	if((r <= (radius+cylindricalRadiusSpacing/2.)) 
 	   && (r > (radius-cylindricalRadiusSpacing/2.))) {
-	  if((k*kGridsp <= ((height/kGridsp)-zmin+cylindricalHeightSpacing/2))
-	     && (k*kGridsp > ((height/kGridsp)-zmin-cylindricalHeightSpacing/2))) {
+	  if((k <= (((height-zmin)/kGridsp)+cylindricalHeightSpacing/2))
+	     && (k > (((height-zmin)/kGridsp)-cylindricalHeightSpacing/2))) {
 	    count++;
 	  }
 	}
@@ -851,10 +944,14 @@ void GriddedData::getCylindricalAzimuthData(QString& fieldName, int numPoints,
 	r = sqrt(iGridsp*iGridsp*(i-refPointI)*(i-refPointI)+jGridsp*jGridsp*(j-refPointJ)*(j-refPointJ));
 	if((r <= (radius+cylindricalRadiusSpacing/2.)) 
 	   && (r > (radius-cylindricalRadiusSpacing/2.))) {
-	  if((k*kGridsp <= ((height/kGridsp)-zmin+cylindricalHeightSpacing/2))
-	     && (k*kGridsp > ((height/kGridsp)-zmin-cylindricalHeightSpacing/2))) {
+	  if((k <= (((height-zmin)/kGridsp)+cylindricalHeightSpacing/2))
+	     && (k > (((height-zmin)/kGridsp)-cylindricalHeightSpacing/2))) {
 	    values[count] = dataGrid[field][i][j][k];
 	    count++;
+	    if(count > numPoints) {
+	      // Memory overflow ... bail out
+	      Message::toScreen("GriddedData: getCylindricalAzimuthData: HUGE Problems!");
+	    }
 	  }
 	}
       }    
@@ -878,8 +975,8 @@ void GriddedData::getCylindricalAzimuthPosition(int numPoints, float radius, flo
 				   + jGridsp*jGridsp*(j-refPointJ)*(j-refPointJ));
 		  if((r <= (radius+cylindricalRadiusSpacing/2.)) 
 			 && (r > (radius-cylindricalRadiusSpacing/2.))) {
-			  if((k*kGridsp <= ((height/kGridsp)-zmin+cylindricalHeightSpacing/2))
-				 && (k*kGridsp > ((height/kGridsp)-zmin-cylindricalHeightSpacing/2))) {
+			  if((k <= (((height-zmin)/kGridsp)+cylindricalHeightSpacing/2))
+				 && (k > (((height-zmin)/kGridsp)-cylindricalHeightSpacing/2))) {
 				  float azimuth = fixAngle(atan2((j-refPointJ),(i-refPointI)))*rad2deg;
 				  if (count > numPoints) {
 					  // Memory overflow, bail out

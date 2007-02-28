@@ -101,7 +101,7 @@ void AbstractPanel::getFileName()
 
 bool AbstractPanel::updateConfig()
 {
-  return true;
+  return false;
   // This virtual function is reimplemented in inherited classes
   // to update the Configuration to any changes in parameters made
   // in the ConfigurationDialog

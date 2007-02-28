@@ -68,6 +68,8 @@ class VortexData
  
   Coefficient getCoefficient(const int& lev, const int& rad, 
 			     const int& waveNum) const;
+  Coefficient getCoefficient(const int& lev, const int& rad,
+			     const QString& parameter) const;
   void setCoefficient(const int& lev, const int& rad, 
 		      const int& waveNum, const Coefficient &coefficient);
 
@@ -79,6 +81,14 @@ class VortexData
   int getNumLevels() const {return numLevels;}
   int getNumRadii() const {return numRadii;}
   int getNumWaveNum() const {return numWaveNum;}
+
+  void setNumLevels(const int& num);
+  void setNumRadii(const int& num);
+  void setNumWaveNum(const int& num);
+
+  int getMaxLevels() const { return maxLevels; }
+  int getMaxRadii() const { return maxRadii; }
+  int getMaxWaveNum() const {return maxWaveNum; }
 
  private:
   static const int maxLevels = 15;

@@ -20,7 +20,7 @@ class GriddedFactory
 	public:
 		GriddedFactory();
 		~GriddedFactory();
-		GriddedData* makeEmptyGrid(const char *coordinates);
+		GriddedData* makeEmptyGrid();
 		GriddedData* makeCappi(RadarData *radarData, 
 				       Configuration* mainConfig,
 				       float *vortexLat, float *vortexLon);

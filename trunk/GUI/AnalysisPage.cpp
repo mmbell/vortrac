@@ -659,15 +659,33 @@ void AnalysisPage::pollVortexUpdate(VortexList* list)
     float maxRadius = 0;
     for(int level = 0; level < list->last().getNumLevels(); level++) {
       for(int rad = 0; rad < list->last().getNumRadii(); rad++) {
-	Coefficient current = list->last().getCoefficient(level,rad,0);
+	Coefficient current = list->last().getCoefficient(level,rad,QString("VTC0"));
 	if((current.getValue()!=-999)&&(current.getValue()!=0)) {
 	  if(current.getRadius()>maxRadius)
-	    maxRadius = list->last().getCoefficient(level,rad,0).getRadius();
+	    maxRadius = current.getRadius();
 	}
       }
     }
     currPressure->display((int)list->last().getPressure());
-    currRMW->display(list->last().getRMW());
+
+    // Get the average RMW from those levels with low uncertainty in rmw
+    float rmwSum = 0;
+    int count = 0;
+    int numLev = list->last().getNumLevels();
+    for(int ii = 0; ii < numLev; ii++) {
+      float newRMW = list->last().getRMW(ii);
+      if((newRMW!=0)&&(newRMW!=-999)) {
+	if(list->last().getRMWUncertainty(ii) > 10)
+	  continue;
+	rmwSum += newRMW;
+	count++;
+      }
+    }
+    if(count == 0)
+      currRMW->display("0");
+    else
+      currRMW->display(rmwSum/(float)count);	
+  
     currDeficit->display(list->last().getPressureDeficit());
     deficitLabel->setText(tr("Pressure Deficit From ")+QString().setNum(maxRadius)+tr(" km (mb):"));
     emit vortexListChanged(list);

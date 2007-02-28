@@ -247,6 +247,9 @@ void Configuration::setParam(const QDomElement &element,
     emit log(Message(message));
     emit configChanged();
   }
+  else {
+    addDom(element, paramName, paramValue);
+  }
 }
 
 void Configuration::setParam(const QDomElement &element,
@@ -536,6 +539,7 @@ const QDomElement Configuration::getElementWithAttrib(const QDomElement &element
    */
 
   QDomElement elementWithAttribute;
+  elementWithAttribute.clear();
   QDomElement sibling = getElement(element, paramName);
   if(!sibling.isNull()){
     while((!sibling.isNull()) && (sibling.tagName()==paramName)) {
@@ -551,6 +555,7 @@ const QDomElement Configuration::getElementWithAttrib(const QDomElement &element
       errMessage +=(": " + paramName + ": " + attribName + ": " + attribValue);
       emit log(Message(errMessage));
       //Message::toScreen(errMessage);
+      
     }
   }
   return elementWithAttribute;
@@ -577,6 +582,7 @@ const QDomElement Configuration::getElement(const QDomElement &element,
     //Message::toScreen(errMessage);
     
     desiredElement = QDomElement();
+    desiredElement.clear();
   }
   
   return desiredElement;

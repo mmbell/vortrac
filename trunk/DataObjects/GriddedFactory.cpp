@@ -21,26 +21,13 @@ GriddedFactory::~GriddedFactory()
 {
 }
 
-GriddedData* GriddedFactory::makeEmptyGrid(const char *coordinates)
+GriddedData* GriddedFactory::makeEmptyGrid()
 {
 
-        // Create a new gridded data object with the named coordinate system as the default
-        if (coordinates == "cartesian") {
-	  //coordSystem = cartesian;
-				/* GriddedData *empty = new GriddedData; */
-                return 0;
-        } else if (coordinates == "cylindrical") {
-	  // coordSystem = cylindrical;
-                /* CylindricalData* cylinData = new CylindricalData; */
-        } else if (coordinates == "spherical") {
-	  //    coordSystem = spherical;
-                /* SphericalData* sphereData = new SphericalData; */
-        } else {
-                // Not supported
-                return 0;
-        }
-        
-        
+  // Create a new gridded data object with the named coordinate system as the default
+ 
+  return 0;
+
 }
 
 GriddedData* GriddedFactory::makeCappi(RadarData *radarData, 

@@ -99,7 +99,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   ymin = nearbyintf(relDist[1] - (jDim/2)*jGridsp);
   ymax = nearbyintf(relDist[1] + (jDim/2)*jGridsp);
   
-  //Message::toScreen("Xmin = "+QString().setNum(xmin)+" Xmax = "+QString().setNum(xmax)+" Ymin = "+QString().setNum(ymin)+" Ymax = "+QString().setNum(ymax));
+  Message::toScreen("Xmin = "+QString().setNum(xmin)+" Xmax = "+QString().setNum(xmax)+" Ymin = "+QString().setNum(ymin)+" Ymax = "+QString().setNum(ymax));
 
   // Adjust the cappi so that it doesn't waste space on areas without velocity data
   if (xmin < -180) {
@@ -372,33 +372,34 @@ void CappiGrid::BarnesInterpolation()
 	float refWeight = 0;
 	float velWeight = 0;
 
-	for (int n = 0; n <= maxRefIndex; n++) {
-	  float dx = refValues[n].x - (xmin + i*iGridsp);
-	  if (fabs(dx) > sqrt(20 * falloff_x)) { continue; }
-
-	  float dy = refValues[n].y - (ymin + j*iGridsp);
-	  if (fabs(dy) > sqrt(20 * falloff_y)) { continue; }
-
-	  float dz = refValues[n].z - (zmin + k*iGridsp);
-	  if (fabs(dz) > sqrt(20 * falloff_z)) { continue; }
-	  
-	  float weight = exp(-(dx*dx)/falloff_x 
-			     -(dy*dy)/falloff_y
-			     -(dz*dz)/falloff_z);
-
-	  refWeight += weight;
-	  sumRef += weight*refValues[n].refValue;
-
+	if(gridReflectivity) {
+	  for (int n = 0; n <= maxRefIndex; n++) {
+	    float dx = refValues[n].x - (xmin + i*iGridsp);
+	    if (fabs(dx) > sqrt(20 * falloff_x)) { continue; }
+	    
+	    float dy = refValues[n].y - (ymin + j*jGridsp);
+	    if (fabs(dy) > sqrt(20 * falloff_y)) { continue; }
+	    
+	    float dz = refValues[n].z - (zmin + k*kGridsp);
+	    if (fabs(dz) > sqrt(20 * falloff_z)) { continue; }
+	    
+	    float weight = exp(-(dx*dx)/falloff_x 
+			       -(dy*dy)/falloff_y
+			       -(dz*dz)/falloff_z);
+	    
+	    refWeight += weight;
+	    sumRef += weight*refValues[n].refValue;
+	  }
 	}
 
 	for (int n = 0; n <= maxVelIndex; n++) {
 	  float dx = velValues[n].x - (xmin + i*iGridsp);
 	  if (fabs(dx) > sqrt(20 * falloff_x)) { continue; }
 
-	  float dy = velValues[n].y - (ymin + j*iGridsp);
+	  float dy = velValues[n].y - (ymin + j*jGridsp);
 	  if (fabs(dy) > sqrt(20 * falloff_y)) { continue; }
 
-	  float dz = velValues[n].z - (zmin + k*iGridsp);
+	  float dz = velValues[n].z - (zmin + k*kGridsp);
 	  if (fabs(dz) > sqrt(20 * falloff_z)) { continue; }
 	  
 	  float weight = exp(-(dx*dx)/falloff_x 
@@ -432,35 +433,36 @@ void CappiGrid::BarnesInterpolation()
 	float refWeight = 0;
 	float velWeight = 0;
 
-	for (int n = 0; n <= maxRefIndex; n++) {
-
-	  float dx = refValues[n].x - (xmin + i*iGridsp);
-	  if (fabs(dx) > sqrt(20 * falloff_x)) { continue; }
-
-	  float dy = refValues[n].y - (ymin + j*iGridsp);
-	  if (fabs(dy) > sqrt(20 * falloff_y)) { continue; }
-
-	  float dz = refValues[n].z - (zmin + k*iGridsp);
-	  if (fabs(dz) > sqrt(20 * falloff_z)) { continue; }
-	  
-	  float weight = exp(-(dx*dx)/(falloff_x*smoother)
-			     -(dy*dy)/(falloff_y*smoother)
-			     -(dz*dz)/(falloff_z*smoother));
-
-	  
-	  refWeight += weight;
-	  float interpRef = trilinear(dx,dy,dz,0);
-	  sumRef += weight*(refValues[n].refValue - interpRef);
-	  
+	if(gridReflectivity) {
+	  for (int n = 0; n <= maxRefIndex; n++) {
+	    
+	    float dx = refValues[n].x - (xmin + i*iGridsp);
+	    if (fabs(dx) > sqrt(20 * falloff_x)) { continue; }
+	    
+	    float dy = refValues[n].y - (ymin + j*jGridsp);
+	    if (fabs(dy) > sqrt(20 * falloff_y)) { continue; }
+	    
+	    float dz = refValues[n].z - (zmin + k*kGridsp);
+	    if (fabs(dz) > sqrt(20 * falloff_z)) { continue; }
+	    
+	    float weight = exp(-(dx*dx)/(falloff_x*smoother)
+			       -(dy*dy)/(falloff_y*smoother)
+			       -(dz*dz)/(falloff_z*smoother));
+	    
+	    
+	    refWeight += weight;
+	    float interpRef = trilinear(dx,dy,dz,0);
+	    sumRef += weight*(refValues[n].refValue - interpRef);
+	  }
 	}
 	for (int n = 0; n <= maxVelIndex; n++) {
 	  float dx = velValues[n].x - (xmin + i*iGridsp);
 	  if (fabs(dx) > sqrt(20 * falloff_x)) { continue; }
 
-	  float dy = velValues[n].y - (ymin + j*iGridsp);
+	  float dy = velValues[n].y - (ymin + j*jGridsp);
 	  if (fabs(dy) > sqrt(20 * falloff_y)) { continue; }
 
-	  float dz = velValues[n].z - (zmin + k*iGridsp);
+	  float dz = velValues[n].z - (zmin + k*kGridsp);
 	  if (fabs(dz) > sqrt(20 * falloff_z)) { continue; }
 	  
 	  float weight = exp(-(dx*dx)/falloff_x 
@@ -613,22 +615,22 @@ void CappiGrid::writeAsi()
 	id[69] = 64;
 
 	// X Header
-	id[160] = (int)(xmin * iGridsp * 100);
-	id[161] = (int)(xmax * iGridsp * 100);
+	id[160] = (int)(xmin * 100);
+	id[161] = (int)(xmax * 100);
 	id[162] = (int)iDim;
 	id[163] = (int)iGridsp * 1000;
 	id[164] = 1;
   
 	// Y Header
-	id[165] = (int)(ymin * jGridsp * 100);
-	id[166] = (int)(ymax * jGridsp * 100);
+	id[165] = (int)(ymin *  100);
+	id[166] = (int)(ymax * 100);
 	id[167] = (int)jDim;
 	id[168] = (int)jGridsp * 1000;
 	id[169] = 2;
   
 	// Z Header
-	id[170] = (int)(zmin * kGridsp * 1000);
-	id[171] = (int)(zmax * kGridsp * 1000);
+	id[170] = (int)(zmin * 1000);
+	id[171] = (int)(zmax * 1000);
 	id[172] = (int)kDim;
 	id[173] = (int)kGridsp * 1000;
 	id[174] = 3;

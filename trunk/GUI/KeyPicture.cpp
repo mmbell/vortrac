@@ -10,6 +10,7 @@
  */
 
 #include <QImage>
+#include <QPaintEvent>
 
 #include "KeyPicture.h"
 
@@ -232,6 +233,8 @@ void KeyPicture::paintEvent(QPaintEvent *event)
   painter.drawImage(QPoint(0,0), *displayImage);
   if (painter.isActive())
     painter.end();
+
+  event->accept();
 }
 
 void KeyPicture::catchLog(const Message& message)

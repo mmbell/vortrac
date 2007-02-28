@@ -363,7 +363,7 @@ bool Log::handleStormSignalUpdate(StormSignalStatus newStatus, QString message,
 	 (StormStatusQueue.at(i)->status==SimplexError)) {
 	SSChange *corrected = StormStatusQueue.value(i);
 	StormStatusQueue.removeAt(i);
-	Message::toScreen("Inside "+corrected->location+"  "+corrected->message+" @ i = "+QString().setNum(i));
+	//Message::toScreen("Inside "+corrected->location+"  "+corrected->message+" @ i = "+QString().setNum(i));
 	delete corrected;
       }
     }

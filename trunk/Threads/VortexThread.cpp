@@ -175,11 +175,15 @@ void VortexThread::run()
 		
 		mutex.unlock();
 		// Loop through the levels and rings
-		for (float height = firstLevel; height <= lastLevel; height++) {
+		//for (float height = firstLevel; height <= lastLevel; height++) {
+		// We can't iterate through height like this and keep z spacing working -LM
+		for(int h = 0; h < gridData->getKdim(); h++) {
+		  float height = gridData->getCartesianPointFromIndexK(h);
+		  if((height<firstLevel)||(height>lastLevel)) { continue; }
 			mutex.lock();
 			// Set the reference point
-			float refLat = vortexData->getLat(int(height-firstLevel));
-			float refLon = vortexData->getLon(int(height-firstLevel));
+			float refLat = vortexData->getLat(h);
+			float refLon = vortexData->getLon(h);
 			gridData->setAbsoluteReferencePoint(refLat, refLon, height);
 			if ((gridData->getRefPointI() < 0) || 
 				(gridData->getRefPointJ() < 0) ||

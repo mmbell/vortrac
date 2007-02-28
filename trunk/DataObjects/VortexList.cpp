@@ -162,57 +162,95 @@ bool VortexList::openNodeFile(const QDomNode &newNode)
 	float newPressureDeficit = newConfig->getParam(childElement,
 						 "pressure_deficit").toFloat();
 	newData.setPressureDeficit(newPressureDeficit);
-     
-	for(int n = 0; n < newData.getNumLevels(); n++) {
+
+	int highestLevel = 0;
+
+	for(int n = 0; n < newData.getMaxLevels(); n++) {
 	  QString nString = QString().setNum(n);
 	  QString level("level");
 	  
-	  float newLat = newConfig->getParam(childElement, "latitude", level,
-					  nString).toFloat();
-	  newData.setLat(n, newLat);
-	  
-	  float newLon = newConfig->getParam(childElement, "longitude", level,
-					  nString).toFloat();
-	  newData.setLon(n, newLon);
+	  QString newLat = newConfig->getParam(childElement, "latitude", level,
+					  nString);
+	  if(newLat!=QString()) {
+	    newData.setLat(n, newLat.toFloat()); 
+	    highestLevel = n;}
 
-	  float newAlt = newConfig->getParam(childElement, "altitude", level,
-					  nString).toFloat();
-	  newData.setHeight(n, newAlt);
+	  
+	  QString newLon = newConfig->getParam(childElement,"longitude", level,
+					  nString);
+	  if(newLon!=QString()) {
+	    newData.setLon(n, newLon.toFloat());
+	    highestLevel = n;}
 
-	  float newRmw = newConfig->getParam(childElement, "rmw", level,
-					  nString).toFloat();
-	  newData.setRMW(n, newRmw);
+	  QString newAlt = newConfig->getParam(childElement, "altitude", level,
+					  nString);
+	  if(newAlt!=QString()) {
+	    newData.setHeight(n, newAlt.toFloat());
+	    highestLevel = n;}
+
+	  QString newRmw = newConfig->getParam(childElement, "rmw", level,
+					  nString);
+	  if(newRmw!=QString()) {
+	    newData.setRMW(n, newRmw.toFloat());
+	    highestLevel = n;}
 	  
-	  float newRmwUncertainty = newConfig->getParam(childElement, 
-						     "rmw_uncertainty", 
-						     level, 
-						     nString).toFloat();
-	  newData.setRMWUncertainty(n, newRmwUncertainty);
+	  QString newRmwUncertainty = newConfig->getParam(childElement, 
+							  "rmw_uncertainty", 
+							  level, 
+							  nString);
+	  if(newRmwUncertainty!=QString()) {
+	    newData.setRMWUncertainty(n, newRmwUncertainty.toFloat());
+	    highestLevel = n;}
 	  
-	  int numCenters = newConfig->getParam(childElement, 
+	  QString numCenters = newConfig->getParam(childElement, 
 					    "num_converging_centers",level,
-					    QString().setNum(n)).toInt();
-	  newData.setNumConvergingCenters(n, numCenters);
+					    QString().setNum(n));
+	  if(numCenters!=QString()) {
+	    newData.setNumConvergingCenters(n, numCenters.toInt());
+	    highestLevel = n;}
 
-	  float centerStd = newConfig->getParam(childElement, 
+	  QString centerStd = newConfig->getParam(childElement, 
 					     "center_std_dev",
-					     level, nString).toFloat();
-	  newData.setCenterStdDev(n, centerStd);
+					     level, nString);
+	  if(centerStd!=QString()) {
+	    newData.setCenterStdDev(n, centerStd.toFloat());
+	    highestLevel = n;}
 
-	  QDomElement coeff = childElement.firstChildElement("coefficient");
-	  int num = 0;
-	  while(!coeff.isNull()) {
-	    Coefficient newCoeff;
-	    newCoeff.setLevel(coeff.attribute(level).toInt());
-	    newCoeff.setRadius(coeff.attribute("radius").toInt());
-	    newCoeff.setParameter(coeff.attribute("parameter"));
-	    newData.setCoefficient((int)newCoeff.getLevel(), 
-				   (int)newCoeff.getRadius(), 
-				   num, newCoeff);
-	    coeff = coeff.nextSiblingElement("coefficient");
-	    num++;
+	}
+	newData.setNumLevels(highestLevel+1);
+
+	QDomElement coeff = childElement.firstChildElement("coefficient");
+	int num[newData.getMaxLevels()][newData.getMaxRadii()];
+	for(int level = 0; level < newData.getMaxLevels(); level++) {
+	  for(int rad = 0; rad < newData.getMaxRadii(); rad++) {
+	    num[level][rad] = 0;
 	  }
 	}
+	int currNumWaveNum = 0;
+	int currNumRadii = 0;
+	while((!coeff.isNull())&&(currNumWaveNum<=newData.getMaxWaveNum())) {
+	  Coefficient newCoeff;
+	  int thisLevel = coeff.attribute(QString("level")).toInt();
+	  int thisRadius = coeff.attribute(QString("radius")).toInt();
+	  newCoeff.setLevel(thisLevel);
+	  newCoeff.setRadius(thisRadius);
+	  num[thisLevel][thisRadius]++;
+	  if(num[thisLevel][thisRadius] > currNumWaveNum)
+	    currNumWaveNum = num[thisLevel][thisRadius];
+	  if(thisRadius > currNumRadii)
+	    currNumRadii = thisRadius;
+	  newCoeff.setParameter(coeff.attribute("parameter"));
+	  if(coeff.text()!=QString()) {
+	    newCoeff.setValue(coeff.text().toFloat());
+	    newData.setCoefficient((int)newCoeff.getLevel(), 
+				   (int)newCoeff.getRadius(), 
+				   num[thisLevel][thisRadius], newCoeff);
+	  }
+	  coeff = coeff.nextSiblingElement("coefficient");
+	}
+	newData.setNumWaveNum(currNumWaveNum);
+	newData.setNumWaveNum(currNumRadii+1);
+	
 	QList<VortexData>::append(newData);
 	vortexDataConfigs->append(newConfig);
 	configFileNames->append(nodeFileName);

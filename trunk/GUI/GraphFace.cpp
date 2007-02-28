@@ -646,6 +646,51 @@ void GraphFace::checkPressure(VortexData* point)
 void GraphFace::checkRmw(VortexData* point)
 {
   
+  // We want to get statistics on all the rmws and then take the average
+
+  float rmwSum = 0;
+  float rmwUnSum = 0;
+  int count = 0;
+  int numLev = point->getNumLevels();
+  for(int ii = 0; ii < numLev; ii++) {
+    float newRMW = point->getRMW(ii);
+    if((newRMW!=0)&&(newRMW!=-999)) {
+      if(point->getRMWUncertainty(ii) > 10)
+	continue;
+      rmwSum += newRMW;
+      rmwUnSum += point->getRMWUncertainty(ii);
+      count++;
+    }
+  }
+  if(count == 0)
+    return;
+
+  float aveRmw = rmwSum/(float)count;	
+  float aveRmwUn = rmwUnSum/(float)count;  
+
+  if ((aveRmw + aveRmwUn) > autoRmwMax) {
+    // Update the Max and Min for rmw
+    
+    autoRmwMax = (aveRmw + aveRmwUn);
+    autoRGMax = aveRmw + 2*aveRmwUn +.5;
+    // And add on a half meter so nothing hits the sides of graph
+  }
+  
+  if ((aveRmw - aveRmwUn)< autoRmwMin) {
+    autoRmwMin = aveRmw - aveRmwUn;
+    autoRGMin = aveRmw -1*2*aveRmwUn -.5;
+  }
+  if (autoAxes) {
+    rmwMax = autoRmwMax;
+    rmwMin = autoRmwMin;
+    rGMax = autoRGMax;
+    rGMin = autoRGMin;
+  }
+
+  /*
+    We used this before I switched to averaging the rmw from all level
+    to avoid bad data 2/24/07 -LM
+
   if ((point->getRMW() + point->getRMWUncertainty()) > autoRmwMax) {
     // Update the Max and Min for rmw
     
@@ -663,6 +708,7 @@ void GraphFace::checkRmw(VortexData* point)
     rGMax = autoRGMax;
     rGMin = autoRGMin;
   }
+  */
 }
 
 QPointF GraphFace::makePressurePoint(VortexData d)
@@ -791,6 +837,9 @@ float GraphFace::getSTDMultiplier(VortexData p, float z)
   // do something with the probability z to find and return the corresponding 
   // number multiple of standard deviations to display
   // assuming the uncertainty is one standard deviation
+
+  if(p==VortexData())
+    return 0;
  
   if (z == .67) {
     return 1;

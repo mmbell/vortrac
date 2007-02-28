@@ -14,6 +14,7 @@
 #include <QDomNodeList>
 
 TestGraph::TestGraph(QWidget *parent)
+  :QWidget(parent)
 {
   this->setObjectName("testGraph");
 }

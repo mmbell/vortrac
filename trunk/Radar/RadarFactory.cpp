@@ -72,8 +72,10 @@ RadarData* RadarFactory::getUnprocessedData()
   // Get the latest files off the queue and make a radar object
 
   if (radarQueue->isEmpty()) {
-    // Problem, shouldn't be here
-    emit log(Message("Trying to get nonexistent radar data off queue"));
+    // We might end up here if we restart a trial that has no new
+    // data ... 
+    emit log(Message("No new data available for processing"));
+    return NULL;
   }
 
   // Get the files off the queue

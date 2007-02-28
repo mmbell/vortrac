@@ -110,9 +110,11 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
 		
 		float* stdError = new float[numCoeffs];
 		if(!llsSolver.lls(numCoeffs, numData, xLLS, yLLS, vtdStdDev, FourierCoeffs, stdError)) {
+
+		  Message::toScreen("GBVTD Returned Nothing from LLS");
 			//emit log(Message("Failed in lls"));
 			for (int i = 0; i<=numCoeffs-1; i++)
-				delete[] xLLS;
+				delete[] xLLS[i];
 			delete[] yLLS;
 			delete[] stdError;
 			delete[] ringPsi;

@@ -32,15 +32,15 @@ class GriddedData
   float getIdim() const { return iDim; }
   float getJdim() const { return jDim; }
   float getKdim() const { return kDim; }
-  void setIdim(const int& dim);
-  void setJdim(const int& dim);
-  void setKdim(const int& dim);
+  //void setIdim(const int& dim);
+  //void setJdim(const int& dim);
+  //void setKdim(const int& dim);
   float getIGridsp() const { return iGridsp; }
   float getJGridsp() const { return jGridsp; }
   float getKGridsp() const { return kGridsp; }
-  void setIGridsp(const float& iSpacing);
-  void setJGridsp(const float& jSpacing);
-  void setKGridsp(const float& kSpacing);
+  //void setIGridsp(const float& iSpacing);
+  //void setJGridsp(const float& jSpacing);
+  //void setKGridsp(const float& kSpacing);
   // int getCoordSystem() { return coordSystem; }
   float fixAngle(float angle);
   void setLatLonOrigin(float *knownLat, float *knownLon, float *relX, 
@@ -67,9 +67,9 @@ class GriddedData
   float getCartesianPointFromIndexJ (const float& indexJ);
   float getCartesianPointFromIndexK (const float& indexK);
   
-  float getIndexFromCartesianPointI (const float& cartI);
-  float getIndexFromCartesianPointJ (const float& cartJ);
-  float getIndexFromCartesianPointK (const float& cartK);
+  int getIndexFromCartesianPointI (const float& cartI);
+  int getIndexFromCartesianPointJ (const float& cartJ);
+  int getIndexFromCartesianPointK (const float& cartK);
   
   // Return a 1D array of values
   float* getNativeData();
@@ -186,8 +186,10 @@ class GriddedData
   coordSystems coordSystem;
   */
 
+  // The mins & maxs have units of km relative to radar location
   float xmin, xmax;
   float ymin, ymax;
+  // zmin & zmax have units in km relative to radar altitude
   float zmin, zmax;
 
   bool test();

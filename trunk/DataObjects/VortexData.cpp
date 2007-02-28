@@ -277,6 +277,16 @@ Coefficient VortexData::getCoefficient(const int& lev, const int& rad,
   return coefficients[lev][rad][waveNum];
 }
 
+Coefficient VortexData::getCoefficient(const int& lev, const int& rad,
+				       const QString& parameter) const
+{
+  for(int i = 0; i < numWaveNum; i++) {
+    if(coefficients[lev][rad][i].getParameter()==parameter)
+      return coefficients[lev][rad][i];
+  }
+  return Coefficient();
+}
+
 void VortexData::setCoefficient(const int& lev, const int& rad, 
 	       const int& waveNum, const Coefficient &coefficient)
 {
@@ -331,4 +341,22 @@ void VortexData::printString()
     out<<"  ----------------------------------------------------------" <<endl;
   }
   
+}
+
+void VortexData::setNumLevels(const int& num)
+{
+  if(num <= maxLevels)
+    numLevels = num;
+}
+
+void VortexData::setNumRadii(const int& num)
+{
+  if(num <= maxRadii)
+    numRadii = num;
+}
+
+void VortexData::setNumWaveNum(const int& num)
+{
+  if(num <= maxWaveNum)
+    numWaveNum = num;
 }

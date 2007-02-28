@@ -521,9 +521,9 @@ CappiPanel::CappiPanel()
 
   QGroupBox *grid = new QGroupBox(tr("Griding Configurations"));
 
-  QLabel *xdim = new QLabel(tr("Grid Length in X Direction (km)"));
-  QLabel *ydim = new QLabel(tr("Grid Length in Y Direction (km)"));
-  QLabel *zdim = new QLabel(tr("Grid Length in Z Direction (km)"));
+  QLabel *xdim = new QLabel(tr("Grid Dimension in X Direction"));
+  QLabel *ydim = new QLabel(tr("Grid Dimension in Y Direction"));
+  QLabel *zdim = new QLabel(tr("Grid Dimension in Z Direction"));
   xDimBox = new QDoubleSpinBox;
   xDimBox->setDecimals(1);
   xDimBox->setRange(0,1000000);

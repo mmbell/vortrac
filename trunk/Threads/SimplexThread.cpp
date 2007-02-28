@@ -164,8 +164,8 @@ void SimplexThread::run()
     //Message::toScreen("SimplexThread: Mutex Unlock 2");
     mutex.unlock();
     
-    int numLevels = lastLevel-firstLevel+1;
-    int loopPercent= (int)40/float(numLevels+1);
+    int numLevels = int(lastLevel-firstLevel+1);
+    int loopPercent = int(40.0/float(numLevels+1));
     int endPercent = 40-(numLevels*loopPercent);
     //Message::toScreen("Percent assigned to each level completed "+QString().setNum(loopPercent)+" numLevels = "+QString().setNum(numLevels));
 
@@ -181,7 +181,7 @@ void SimplexThread::run()
       mutex.unlock();
       
       if(!abort) {
-	for (float radius = firstRing; radius <= lastRing; radius++) {
+	for (float radius = firstRing; radius <= lastRing; radius+=ringWidth) {
 	  //Message::toScreen("SimplexThread: Mutex Lock 4");
 	  mutex.lock();
 	  

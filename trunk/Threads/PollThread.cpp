@@ -340,6 +340,8 @@ void PollThread::run()
 	    
 	    // Fire up the analysis thread to process it
 	    RadarData *newVolume = dataSource->getUnprocessedData();
+	    if(newVolume == NULL)
+	      continue;
 	    
 	    //emit log(Message(QString(),2,this->objectName()));
 
