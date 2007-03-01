@@ -422,7 +422,7 @@ void VortexThread::calcCentralPressure()
 	// Should have a sum of pressure estimates now, if not use 1013
 	float avgPressure = 0;
 	float avgWeight = 0;
-	if (numEstimates > 0) {
+	if (numEstimates > 1) {
 		avgPressure = pressSum/pressWeight;
 		avgWeight = pressWeight/(float)numEstimates;
 	
@@ -435,12 +435,18 @@ void VortexThread::calcCentralPressure()
 		
 		centralPressureStdDev = sumSquares/(avgWeight * (numEstimates-1));
 		centralPressure = avgPressure;
-		
 	
+	} else if (numEstimates == 1) {
+		// Can use a single pressure estimate but no standard deviation
+		centralPressure = pressSum/pressWeight;
+		centralPressureStdDev = 5;
+		emit log(Message("Single anchor pressure only, using 5 hPa for uncertainty"));
+		
 	} else {
 		// Assume standard environmental pressure
 		centralPressure = 1013 - (pressureDeficit[(int)lastRing] - pressureDeficit[0]);
 		centralPressureStdDev = 5;
+		emit log(Message("No anchor pressures, using 1013 hPa for environment and 5 hPa for uncertainty"));
 	}
 	
 }

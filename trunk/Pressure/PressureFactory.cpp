@@ -97,9 +97,19 @@ PressureList* PressureFactory::getUnprocessedData()
 		while (!in.atEnd()) {
 			QString ob = in.readLine();
 			AWIPS *pressureData = new AWIPS(ob);
+			// Check to make sure it is not a duplicate -- this messes up the XML structure
+			bool duplicateOb = false;
+			for (int i = 0; i < pressureList->size(); i++) {
+				if ((pressureList->at(i).getStationName() == pressureData->getStationName())
+					and (pressureList->at(i).getTime() == pressureData->getTime())) {
+					emit log(Message("Omitting duplicate surface ob"));
+					duplicateOb = true;
+				}
+			}
 			// Check to make sure it is a near-surface measurement
 			if ((pressureData->getAltitude() >= 0) and
-				(pressureData->getAltitude() <= 20)) {
+				(pressureData->getAltitude() <= 20) and
+				(!duplicateOb)) {
 				pressureList->append(*pressureData);
 			}
 			delete pressureData;

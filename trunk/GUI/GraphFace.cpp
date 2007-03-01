@@ -618,6 +618,7 @@ void GraphFace::checkRanges()
 
 void GraphFace::checkPressure(VortexData* point)
 {
+	
   if ((point->getPressure() + 
        point->getPressureUncertainty())> autoPressureMax) {
     
