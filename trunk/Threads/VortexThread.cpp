@@ -177,10 +177,12 @@ void VortexThread::run()
 		// Loop through the levels and rings
 		//for (float height = firstLevel; height <= lastLevel; height++) {
 		// We can't iterate through height like this and keep z spacing working -LM
+		int storageIndex = -1;
 		for(int h = 0; h < gridData->getKdim(); h++) {
 		  float height = gridData->getCartesianPointFromIndexK(h);
 		  if((height<firstLevel)||(height>lastLevel)) { continue; }
-			mutex.lock();
+		  storageIndex++;
+		        mutex.lock();
 			// Set the reference point
 			float refLat = vortexData->getLat(h);
 			float refLon = vortexData->getLon(h);
@@ -229,7 +231,7 @@ void VortexThread::run()
 				delete[] ringAzimuths;
 				
 				// All done with this radius and height, archive it
-				archiveWinds(radius, height, maxCoeffs);
+				archiveWinds(radius, storageIndex, maxCoeffs);
 			}
 			}
 			mutex.unlock();
@@ -243,7 +245,7 @@ void VortexThread::run()
 		// Integrate the winds to get the pressure deficit at the 2nd level (presumably 2km)
 		pressureDeficit = new float[(int)lastRing+1];
 		getPressureDeficit(firstLevel+1);
-		
+				
 		// Get the central pressure
 		calcCentralPressure();
 		vortexData->setPressure(centralPressure);
@@ -282,16 +284,17 @@ void VortexThread::run()
 	}
 }
 
-void VortexThread::archiveWinds(float& radius, float& height, float& maxCoeffs)
+void VortexThread::archiveWinds(float& radius, int& hIndex, float& maxCoeffs)
 {
 
-	// Save the centers to the VortexData object
-	int level = int(height - firstLevel);
-	int ring = int(radius - firstRing);
+  // Save the centers to the VortexData object
+
+  int level = hIndex;
+  int ring = int(radius - firstRing);
 	
-	for (int coeff = 0; coeff < (int)(maxCoeffs); coeff++) {
-		vortexData->setCoefficient(level, ring, coeff, vtdCoeffs[coeff]);
-	}
+  for (int coeff = 0; coeff < (int)(maxCoeffs); coeff++) {
+    vortexData->setCoefficient(level, ring, coeff, vtdCoeffs[coeff]);
+  }
 	
 }
 
@@ -299,6 +302,9 @@ void VortexThread::getPressureDeficit(const float& height)
 {
 
 	float* dpdr = new float[(int)lastRing+1];
+
+	// get the index of the height we want
+	int heightIndex = vortexData->getHeightIndex(height);
 
 	// Assuming radius is in KM here, when we correct for units later change this
 	float deltar = 1000;
@@ -310,11 +316,11 @@ void VortexThread::getPressureDeficit(const float& height)
 	}
 	
 	// Get coriolis parameter
-	float f = 2 * 7.29e-5 * sin(vortexData->getLat(int(height-firstLevel)));
+	float f = 2 * 7.29e-5 * sin(vortexData->getLat(heightIndex));
 	
 	for (float radius = firstRing; radius <= lastRing; radius++) {
-		if (vortexData->getCoefficient((int)height, (int)radius, 0).getParameter() == "VTC0") {
-			float meanVT = vortexData->getCoefficient((int)height, (int)radius, 0).getValue();
+		if (!(vortexData->getCoefficient(height, radius, QString("VTC0")) == Coefficient())) {
+			float meanVT = vortexData->getCoefficient(height, radius, QString("VTC0")).getValue();
 			if (meanVT != 0) {
 				dpdr[(int)radius] = ((f * meanVT) + (meanVT * meanVT)/(radius * deltar)) * rhoBar[(int)height-1];
 			}
@@ -340,7 +346,7 @@ void VortexThread::getPressureDeficit(const float& height)
 			pressureDeficit[(int)radius] = pressureDeficit[(int)firstRing];
 		}
 	}
-	
+	centralPressureStdDev = vortexData->getCenterStdDev(heightIndex);
 	delete [] dpdr;
 	
 }
@@ -422,7 +428,9 @@ void VortexThread::calcCentralPressure()
 	// Should have a sum of pressure estimates now, if not use 1013
 	float avgPressure = 0;
 	float avgWeight = 0;
+	Message::toScreen("Print Number of Estimates "+QString().setNum(numEstimates));
 	if (numEstimates > 1) {
+	  Message::toScreen("Option 1");
 		avgPressure = pressSum/pressWeight;
 		avgWeight = pressWeight/(float)numEstimates;
 	
@@ -437,15 +445,18 @@ void VortexThread::calcCentralPressure()
 		centralPressure = avgPressure;
 	
 	} else if (numEstimates == 1) {
+	  Message::toScreen("Option 2");
 		// Can use a single pressure estimate but no standard deviation
 		centralPressure = pressSum/pressWeight;
-		centralPressureStdDev = 5;
+		//centralPressureStdDev = 5;
+	  
 		emit log(Message("Single anchor pressure only, using 5 hPa for uncertainty"));
 		
 	} else {
+	  Message::toScreen("Option 3");
 		// Assume standard environmental pressure
 		centralPressure = 1013 - (pressureDeficit[(int)lastRing] - pressureDeficit[0]);
-		centralPressureStdDev = 5;
+		
 		emit log(Message("No anchor pressures, using 1013 hPa for environment and 5 hPa for uncertainty"));
 	}
 	

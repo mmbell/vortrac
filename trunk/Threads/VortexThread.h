@@ -70,7 +70,7 @@ class VortexThread : public QThread
      float centralPressure;
      float centralPressureStdDev;
      float* pressureDeficit;
-     void archiveWinds(float& radius,float& height,float& maxCoeffs);
+     void archiveWinds(float& radius,int& height,float& maxCoeffs);
      void getPressureDeficit(const float& height);
      void calcCentralPressure();
 

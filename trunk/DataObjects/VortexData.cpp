@@ -11,6 +11,7 @@
 #include "VortexData.h"
 #include <QTextStream>
 #include "Message.h"
+#include <math.h>
 
 VortexData::VortexData()
 {
@@ -132,6 +133,31 @@ float VortexData::getHeight(const int& i) const
   return centerAltitude[0];
 }
 
+int VortexData::getHeightIndex(const float& height) const
+{
+
+  // Takes height in KM
+  if(centerAltitude[0]==-999) {
+    Message::toScreen("VORTEXDATA:NO HEIGHT DATA IS IN SYSTEM!!!!");
+    return -1;
+  }
+ 
+  float heightDiff = 100;
+  int closestIndex = -1;
+  
+  for(int i = 0; i < numLevels; i++) {
+    if(centerAltitude[i] == -999) { continue; }
+    if(fabs(height - centerAltitude[i]) < heightDiff) {
+      heightDiff = fabs(height-centerAltitude[i]);
+      closestIndex = i;
+    }
+  }
+  if(closestIndex == -1) {
+    Message::toScreen("VORTEXDATA:UNABLE TO FIND SUITABLE INDEX");
+    return -1;
+  }
+  return closestIndex;
+}
 
 void VortexData::setHeight(const int& index, const float& altitude)
 {
@@ -285,6 +311,18 @@ Coefficient VortexData::getCoefficient(const int& lev, const int& rad,
       return coefficients[lev][rad][i];
   }
   return Coefficient();
+}
+
+Coefficient VortexData::getCoefficient(const float& height, const int& rad,
+				       const QString& parameter) const
+{
+  int level = getHeightIndex(height);
+  //int radIndex = getCoeffRadiusIndex(height,rad);
+  if((level == -1)||(rad == -1)) {
+    Message::toScreen("VortexData: GetCoefficient: Can't Get Needed Indices");
+    return Coefficient();
+  }
+  return getCoefficient(level, rad, parameter);
 }
 
 void VortexData::setCoefficient(const int& lev, const int& rad, 

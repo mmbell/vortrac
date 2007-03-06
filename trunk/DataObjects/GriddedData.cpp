@@ -342,7 +342,7 @@ float GriddedData::getCartesianPointFromIndexJ (const float& indexJ)
 float GriddedData::getCartesianPointFromIndexK (const float& indexK)
 {
   //	return (indexK + zmin)*kGridsp;
-  if((indexK > 0)&&(indexK < kDim)) {
+  if((indexK >= 0)&&(indexK < kDim)) {
     float distance =  indexK*kGridsp+zmin;
     if((distance >= zmin) && (distance <= zmax)) {
       return distance;

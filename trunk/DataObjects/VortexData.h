@@ -37,6 +37,7 @@ class VortexData
   float getHeight(const int& i) const;
   void setHeight(const int& index, const float& altitude);
   void setHeight(const float a[], const int& howMany);
+  int getHeightIndex(const float& height) const;
 
   QDateTime getTime() const;
   void setTime(const QDateTime& radartime);
@@ -64,11 +65,12 @@ class VortexData
   float getCenterStdDev(const int& i) const;
   void setCenterStdDev(const int& index, const float& number);
   void setCenterStdDev(const float a[], const int& howMany);
-
- 
+  
   Coefficient getCoefficient(const int& lev, const int& rad, 
 			     const int& waveNum) const;
   Coefficient getCoefficient(const int& lev, const int& rad,
+			     const QString& parameter) const;
+  Coefficient getCoefficient(const float& height, const int& rad,
 			     const QString& parameter) const;
   void setCoefficient(const int& lev, const int& rad, 
 		      const int& waveNum, const Coefficient &coefficient);
