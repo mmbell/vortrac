@@ -447,7 +447,7 @@ void SimplexList::createDomSimplexDataEntry(const SimplexData &newData)
 				QString("center"), centerIndex);
 	      if(newData.getInitialY(i,j,k)!=-999) {
 		QDomElement yElem = newConfig->getElementWithAttrib(searchParent, QString("y"),QString("center"), centerIndex);
-		yElem.setAttribute(QString("y0"), QString().setNum(newData.getInitialX(i,j,k)));
+		yElem.setAttribute(QString("y0"), QString().setNum(newData.getInitialY(i,j,k)));
 	      }
 	    }
 	    if(currCenter.getMaxVT()!=-999)

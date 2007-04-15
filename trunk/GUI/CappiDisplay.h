@@ -28,6 +28,9 @@ public:
 
     bool openImage(const QString &fileName);
     bool saveImage(const QString &fileName, const char *fileFormat);
+
+    float getMaxRec() { return maxRec; }
+    float getMaxApp() { return maxApp; }
 						
 public slots:
   void clearImage();
@@ -51,6 +54,8 @@ private:
     int PaintEngineMode;
     bool exitNow;
     QColor backColor;
+    float maxApp;
+    float maxRec;
     float maxVel;
     float minVel;
     float velIncr;

@@ -282,6 +282,11 @@ void VortexList::setVortexName(const QString &newVortexName)
 
 }
 
+void VortexList::setProductType(const QString &newProductType)
+{
+  productType = newProductType;
+}
+
 void VortexList::setNewWorkingDirectory(const QString &newDirectory)
 {
   workingDir = newDirectory;

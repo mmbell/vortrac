@@ -27,6 +27,8 @@ CappiDisplay::CappiDisplay(QWidget *parent)
     legendImage = QImage(10,50,QImage::Format_RGB32);        
     maxVel = 1;
     minVel = 0;
+    maxRec = 0; 
+    maxApp = 0;
     velIncr = 1;
 
 	//Set the palette
@@ -211,9 +213,21 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
   QPainter painter(this);
   backColor = painter.background().color();
   //Message::toScreen("background Color r = "+QString().setNum(backColor.red())+" g = "+QString().setNum(backColor.green())+" b = "+QString().setNum(backColor.blue()));
-  painter.drawImage(QPoint(0,0), image);
+  /*
+    painter.drawText(QPoint(0, (int)image.size().height()*.35),
+    "Maximum Receeding");
+    painter.drawText(QPoint(0, (int)image.size().height()*.45),
+    " "+QString().setNum(maxRec)+" m/s");
+    painter.drawText(QPoint(0, (int)image.size().height()*.55),
+    "Maximum Approaching");
+    painter.drawText(QPoint(0, (int)image.size().height()*.65),
+    " "+QString().setNum(maxApp)+" m/s");
+  */
+  //painter.drawText(QPoint(0,0),"Max. Receeding: "+QString().setNum(maxRec)+" m/s; Max. Approaching: "+QString().setNum(maxApp));
+  painter.drawImage(QPoint(image.size().width()*0,0), image);
   painter.drawImage(QPoint(image.size().width()*1.1,0),
     		    legendImage);
+  //painter.drawText(QPoint(0,int(image.size().height()*1.05)),"Max. Receeding: "+QString().setNum(maxRec)+" m/s; Max. Approaching: "+QString().setNum(maxApp));
   //painter.drawText(QPoint(0, this->height()), cappiLabel);
 
   // I don't know what this was for -LM 1/18/07
@@ -282,7 +296,7 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
   
   // Get the minimum and maximum Doppler velocities
   maxVel = -9999;
-  minVel = 9999;
+  minVel= 9999;
   float k = 0;
   QString field("ve");
   for (float i = 0; i < iDim; i++) {
@@ -299,6 +313,8 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
     }
   }
 
+  maxApp = fabs(maxVel);
+  maxRec = fabs(minVel);
   //Message::toScreen("maxVel is "+QString().setNum(maxVel)+" minVel is "+QString().setNum(minVel));
   float velRange;
   if(maxVel>fabs(minVel)) {

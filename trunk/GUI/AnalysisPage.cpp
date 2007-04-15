@@ -147,8 +147,40 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   layout->addLayout(subLayout);
   pressureGraph->setLayout(layout);
 
+  appMaxWind = new QLCDNumber();
+  appMaxWind->setSegmentStyle(QLCDNumber::Flat);
+  appMaxWind->resize(100,100);
+  appMaxWind->display(cappiDisplay->getMaxApp());
+  QLabel* appMaxLabel = new QLabel(tr("Maximum"));
+  QLabel* appMaxLabel2 = new QLabel(tr("Approaching Wind (m/s)"));
+  recMaxWind = new QLCDNumber();
+  recMaxWind->setSegmentStyle(QLCDNumber::Flat);
+  recMaxWind->resize(100,100);
+  recMaxWind->display(cappiDisplay->getMaxRec());
+  QLabel* recMaxLabel = new QLabel(tr("Maximum"));
+  QLabel* recMaxLabel2 = new QLabel(tr("Receeding Wind (m/s)"));
+  QLabel* emptyLabel = new QLabel();
+  QLabel* emptyLabel2 = new QLabel();
+  QLabel* emptyLabel3 = new QLabel();  
+  QVBoxLayout *appRecLayout = new QVBoxLayout();
+  appRecLayout->addStretch();
+  appRecLayout->addWidget(emptyLabel, 100, Qt::AlignHCenter);
+  appRecLayout->addWidget(appMaxLabel, 0, Qt::AlignHCenter);
+  appRecLayout->addWidget(appMaxLabel2, 0, Qt::AlignHCenter);
+  appRecLayout->addWidget(appMaxWind, 0, Qt::AlignHCenter);
+  appRecLayout->addWidget(emptyLabel2, 100, Qt::AlignHCenter);
+  appRecLayout->addWidget(recMaxLabel, 0, Qt::AlignHCenter);
+  appRecLayout->addWidget(recMaxLabel2, 0, Qt::AlignHCenter);
+  appRecLayout->addWidget(recMaxWind, 0, Qt::AlignHCenter);
+  appRecLayout->addWidget(emptyLabel3, 100, Qt::AlignHCenter);
+  appRecLayout->addStretch();
+
+  connect(cappiDisplay, SIGNAL(hasImage(bool)), 
+	  this, SLOT(updateCappiDisplay(bool)));
+  
   QScrollArea* cappiBox = new QScrollArea;
   QHBoxLayout *cappiLayout = new QHBoxLayout(cappiBox);
+  cappiLayout->addLayout(appRecLayout);
   cappiLayout->addStretch();
   cappiLayout->addWidget(cappiDisplay);
   cappiLayout->addStretch();
@@ -558,18 +590,20 @@ void AnalysisPage::updateCappi(const GriddedData* cappi)
 {
   Message::toScreen("Creating Cappi Image");
   // Got a cappi now, create a new image
-  //  cappiDisplay->constructImage(cappi);
-  // getting a thread error with calling so we will try signals and slot
 
   emit newCappi(cappi);
+}
 
-  //cappiDisplay->show();
-  //cappiDisplay->setVisible(true);  cannot let other threads change the
-  // visibility of objects created in this one - fatal errors
- 
-  // Add the tab to the tab widget if it is not already available
-  //visuals->setTabEnabled(visuals->indexOf(cappiDisplay), true);
-  //visuals->setTabEnabled(1, true);
+void AnalysisPage::updateCappiDisplay(bool hasImage)
+{
+  if(hasImage) {
+    appMaxWind->display(cappiDisplay->getMaxApp());
+    recMaxWind->display(cappiDisplay->getMaxRec());
+  }
+  else {
+    appMaxWind->display(0);
+    recMaxWind->display(0);
+  }
   
 }
 

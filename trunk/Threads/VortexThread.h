@@ -25,15 +25,16 @@
 #include "DataObjects/VortexData.h"
 #include "ChooseCenter.h"
 #include "Pressure/PressureList.h"
+#include "Radar/RadarData.h"
 
 class VortexThread : public QThread
 {
   Q_OBJECT
     
  public:
-     VortexThread(QObject *parent = 0);
-     ~VortexThread();
-	 void getWinds(Configuration *wholeConfig, GriddedData *dataPtr, VortexData *vortexPtr, PressureList *pressurePtr);
+  VortexThread(QObject *parent = 0);
+  ~VortexThread();
+  void getWinds(Configuration *wholeConfig, GriddedData *dataPtr, RadarData *radarPtr, VortexData *vortexPtr, PressureList *pressurePtr);
 
  public slots:
      void catchLog(const Message& message);
@@ -51,28 +52,49 @@ class VortexThread : public QThread
      QWaitCondition waitForData;
      bool abort;
      GriddedData *gridData;
+     RadarData *radarVolume;
      VortexData *vortexData;
      PressureList *pressureList;
      Configuration *configData;
-     QDomElement vtdConfig;
-     float* refLat;
-     float* refLon;
+     
      float* dataGaps;
      GBVTD* vtd;
      Coefficient* vtdCoeffs; 
+
+     QString vortexPath;
+     QString geometry;
+     QString refField;
+     QString velField;
+     QString closure;
      float firstLevel;
      float lastLevel;
      float firstRing;
      float lastRing;
+     float ringWidth;
+     int maxWave;
+     float maxObRadius;
+     float maxObTimeDiff;
+     float hvvpResult;
+     float hvvpUncertainty;
+     
+     int numEstimates;
+     PressureData presObs[100];
+
      float vtdStdDev;
      float convergingCenters;
      float rhoBar[16];
-     float centralPressure;
-     float centralPressureStdDev;
-     float* pressureDeficit;
      void archiveWinds(float& radius,int& height,float& maxCoeffs);
-     void getPressureDeficit(const float& height);
-     void calcCentralPressure();
+     void archiveWinds(VortexData& data, float& radius,
+		       int& height,float& maxCoeffs);
+     // void getPressureDeficit(const float& height);
+     void getPressureDeficit(VortexData* data, float* pDeficit, 
+			     const float& height);
+     //void calcCentralPressure();
+     void calcCentralPressure(VortexData* vortex, float* pD, float height);
+     void calcPressureUncertainty(bool useLimit, QString nameAddition);
+     void storePressureUncertaintyData(QString& fileLocation);
+     void readInConfig();
+     bool calcHVVP();
 
 };
 

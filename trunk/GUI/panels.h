@@ -340,6 +340,14 @@ class PressurePanel:public AbstractPanel
 
   QDoubleSpinBox *maxObsDist;
   // The maximum distance to threshold pressure observations on
+  
+  QSpinBox* avInterval;
+  // The number of volumes that are averaged to determine rapid
+  // increases or decreases in TC central pressure.
+
+  QDoubleSpinBox *rapidLimit;
+  // The limit (in mb per hr) before a storms progress is considered
+  // notably intense.
 
   QRadioButton *maxObsDistCenter, *maxObsDistRing;
   // Determining the method for thresholding pressure observations

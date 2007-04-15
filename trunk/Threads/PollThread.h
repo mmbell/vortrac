@@ -57,6 +57,7 @@ class PollThread : public QThread
   private:
 	QMutex mutex;
 	bool runOnce;
+	bool processPressureData;
 	QWaitCondition waitForAnalysis;
 	bool abort;
 	bool continuePreviousRun;
@@ -72,6 +73,8 @@ class PollThread : public QThread
 	Configuration *simplexConfig;
 	Configuration *pressureConfig;
 	Configuration *dropSondeConfig;
+
+	void checkIntensification();
 	
 };
 

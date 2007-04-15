@@ -126,19 +126,21 @@ Ray* AnalyticRadar::addRay()
   newRay->setNyquist_vel( nyqVel );
 
   int numPoints = data->getSphericalRangeLength(azimAngle, elevAngle);
- 
+  /*
   if((numPoints==0)||(numRays%45==0)) {
     Message::toScreen("ray = "+QString().setNum(numRays)+" = "+QString().setNum(numPoints));
     int testNumPoints = data->getSphericalRangeLengthTest(azimAngle,elevAngle);
     Message::toScreen("Regular "+QString().setNum(numPoints)+" Test "+QString().setNum(testNumPoints));
   }
+  */
   float *raw_ref_data;
   float *raw_ref_positions;
 
   QString dataType("DZ");
-  raw_ref_data = data->getSphericalRangeData(dataType,
-					     azimAngle, elevAngle);
-  raw_ref_positions = data->getSphericalRangePosition(azimAngle, elevAngle);
+  raw_ref_data = data->getSphericalRangeData(dataType,azimAngle, 
+					     elevAngle, numPoints);
+  raw_ref_positions = data->getSphericalRangePosition(azimAngle, elevAngle, 
+						      numPoints);
 
   // Selects all points from data that are in the theoretical radar beam
   
@@ -191,8 +193,10 @@ Ray* AnalyticRadar::addRay()
   float *raw_vel_data;
   float *raw_vel_positions;
   dataType = QString("VE");
-  raw_vel_data = data->getSphericalRangeData(dataType,azimAngle, elevAngle);
-  raw_vel_positions = data->getSphericalRangePosition(azimAngle, elevAngle);
+  raw_vel_data = data->getSphericalRangeData(dataType,azimAngle, 
+					     elevAngle, numPoints);
+  raw_vel_positions = data->getSphericalRangePosition(azimAngle, elevAngle, 
+						      numPoints);
   float *vel_data = new float[numVelGates];
   float *sw_data = new float[numVelGates];
   gateBoundary = 0;
@@ -405,8 +409,10 @@ bool AnalyticRadar::readVolumeAnalytic()
 	if(totNumSweeps > 4) {
 	  elevations[3] = 3.5;
 	  if(totNumSweeps > 5) {
-	    elevations[4] = 4.5;
-	  }}}}}
+	    elevations[4] = 5;
+	    if(totNumSweeps > 6) {
+	      elevations[5] = 7;
+	    }}}}}}
   
   Sweeps = new Sweep[totNumSweeps];
   Rays = new Ray[totNumSweeps*numRaysPerSweep]; 

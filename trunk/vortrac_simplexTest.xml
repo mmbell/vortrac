@@ -92,6 +92,8 @@
         <maxobstime>59</maxobstime>
         <maxobsdist>50</maxobsdist>
         <maxobsmethod>ring</maxobsmethod>
+        <av_interval>8</av_interval>
+        <rapidlimit>3</rapidlimit>
     </pressure>
     <graphics>
         <autolimits>on</autolimits>

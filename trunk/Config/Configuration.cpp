@@ -17,6 +17,7 @@ Configuration::Configuration(QObject *parent, const QString &filename)
   :QObject(parent)
 {
   this->setObjectName("configuration");
+  logChanges = true;
   if(filename.isEmpty()) 
     {
       // Create a new configuration from scratch
@@ -244,7 +245,8 @@ void Configuration::setParam(const QDomElement &element,
     
     QString message("Configuration Changed: ");
     message+=(element.tagName()+": "+paramName+" = "+paramValue);
-    emit log(Message(message));
+    if(logChanges)
+      emit log(Message(message));
     emit configChanged();
   }
   else {
@@ -285,7 +287,8 @@ void Configuration::setParam(const QDomElement &element,
     QString message("Configuration Changed: ");
     message+=(element.tagName()+": "+paramName+": "+attribName+": "+attribValue);
     message+=(" = "+paramValue);
-    emit log(Message(message));
+    if(logChanges)
+      emit log(Message(message));
     emit configChanged();
   }
 }
@@ -323,7 +326,8 @@ void Configuration::addDom(const QDomElement &element,
       }
       QString message("Config Changed: ");
       message+=(element.tagName()+": "+paramName+"= "+paramValue+" was created");
-      emit log(Message(message));
+      if(logChanges)
+	emit log(Message(message));
     }
     else {
       parentNode = getRoot(); 
@@ -338,7 +342,8 @@ void Configuration::addDom(const QDomElement &element,
 
       QString message("Config Changed: ");
       message+=(element.tagName()+": "+paramName+" was created");
-      emit log(Message(message));
+      if(logChanges)
+	emit log(Message(message));
     }
     
     isModified = true;
@@ -390,7 +395,8 @@ void Configuration::addDom(const QDomElement &element,
       QString message("Config Changed: ");
       message+=(element.tagName()+": "+paramName+": "+attribName+": ");
       message+=(attribValue+" = "+paramValue+" was created");
-      emit log(Message(message));
+      if(logChanges)
+	emit log(Message(message));
     }
     else{
       parentNode = getRoot(); 
@@ -406,7 +412,8 @@ void Configuration::addDom(const QDomElement &element,
       QString message("Config Changed: ");
       message+=(element.tagName()+": "+paramName+": "+attribName+": ");
       message+=(attribValue+" was created");
-      emit log(Message(message));
+      if(logChanges)
+	emit log(Message(message));
     }
       
       isModified = true;
@@ -435,8 +442,8 @@ void Configuration::removeDom(const QDomElement &element,
 
     QString message("Config Changed: ");
     message+=(element.tagName()+": "+paramName+" was removed");
-    emit log(Message(message));
-
+    if(logChanges)
+      emit log(Message(message));
     emit configChanged();
   }
 }
@@ -467,7 +474,8 @@ void Configuration::removeDom(const QDomElement &element,
     QString message("Config Changed: ");
     message+=(element.tagName()+": "+paramName+": "+attribName+": ");
     message+=(attribValue+" was removed");
-    emit log(Message(message));
+    if(logChanges)
+      emit log(Message(message));
 
     emit configChanged();
   }
@@ -600,4 +608,18 @@ Configuration& Configuration::operator = (const Configuration &other)
   
 }
 
-
+void Configuration::setLogChanges(bool logStatus)
+{
+  logChanges = logStatus;
+  QString message;
+  if(!logChanges) {
+    message = QString(tr("Stopped Logging Item Change Messages"));
+    emit log(Message(message, 0, this->objectName()));
+    Message::toScreen(message);
+  }
+  else {
+    message = QString(tr("Started Logging Item Change Messages"));
+    emit log(Message(message, 0, this->objectName()));
+    Message::toScreen(message);
+  }
+}

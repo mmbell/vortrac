@@ -20,6 +20,7 @@ PollThread::PollThread(QObject *parent)
   //  Message::toScreen("PollThread Constructor");
   abort = false;
   runOnce = false;
+  processPressureData = true;
   analysisThread = NULL;
 
   dataSource= NULL;
@@ -103,6 +104,7 @@ void PollThread::abortThread()
 void PollThread::analysisDoneProcessing()
 {
   waitForAnalysis.wakeOne();
+  processPressureData = false;
 }
 
 void PollThread::run()
@@ -139,6 +141,8 @@ void PollThread::run()
     file = QString("vortrac_defaultPressureListStorage.xml");
     //pressureConfig = new Configuration(0,QString());
     pressureConfig = new Configuration(0, file);
+    pressureConfig->setObjectName("pressureConfig");
+    pressureConfig->setLogChanges(false);
     connect(pressureConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     pressureList = new PressureList(pressureConfig);
@@ -207,6 +211,8 @@ void PollThread::run()
     }
     emit log(Message(file));
     pressureConfig = new Configuration(0, workingDirectoryPath+file);
+    pressureConfig->setObjectName("pressureConfig");
+    pressureConfig->setLogChanges(false);
     connect(pressureConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     pressureList = new PressureList(pressureConfig);
@@ -334,6 +340,7 @@ void PollThread::run()
 	  
 	  // Check for new data
 	  if (dataSource->hasUnprocessedData()) {
+	    mutex.lock();
 	    dataSource->updateDataQueue(vortexList);
 	    analysisThread->setNumVolProcessed(dataSource->getNumProcessed());
 	    //Message::toScreen("Radar Factory has "+QString().setNum(dataSource->getNumProcessed())+" processed volumes in PollThread");
@@ -349,35 +356,46 @@ void PollThread::run()
 	    
 	    if(!newVolume->fileIsReadable()) {
 	      emit log(Message(QString("The radar data file "+newVolume->getFileName()+" is not readable"), -1,this->objectName()));
+	      mutex.unlock();
 	      continue;
 	    }
-
+	    mutex.unlock();
+	    //Message::toScreen("Before Analyze");
 	    analysisThread->analyze(newVolume,configData);
-	    
+	    //Message::toScreen("After Analyze");
 	    mutex.lock();
 	    if (!abort) {
-	      while(!waitForAnalysis.wait(&mutex, 60000)) {
-		//Message::toScreen("Not abort: in pollthread loop");
-		// Check for new pressure measurements every minute while we are waiting
-		while (pressureSource->hasUnprocessedData()) {
-		  PressureList* newObs = pressureSource->getUnprocessedData();
-		  for (int i = 0; i < newObs->size(); i++) 
-		    pressureList->append(newObs->at(i));
-		  delete newObs;
-		  // Hopefully, the filename has been set by the analysisThread by this point
-		  // have to be careful about synchronization here, this may not be the best way to do this
-		  if (!pressureList->getFileName().isNull()) 	
-		    pressureList->save();						
+	      
+	      //Message::toScreen("In PollThread Pressure Loop");
+	      // Check for new pressure measurements every minute while we are waiting
+	      while (pressureSource->hasUnprocessedData()
+		     && processPressureData) {
+			
+		PressureList* newObs = pressureSource->getUnprocessedData();
+		for (int i = newObs->size()-1;i>=0; i--) {
+		  pressureList->append(newObs->at(i));
+		  //delete pressureList->takeLast();
 		}
+		delete newObs;
+		// Hopefully, the filename has been set by the analysisThread by this point
+		// have to be careful about synchronization here, this may not be the best way to do this
+		if (!pressureList->getFileName().isNull()) 	
+		  pressureList->save();
 		
 	      }
 	      
+	      //Message::toScreen("STOPPED MAKING PRESSURES!");
+	      if(!processPressureData || waitForAnalysis.wait(&mutex))
+		processPressureData = true;
+	      //Message::toScreen("Got the mutex back...");
+	      
 	      // Done with radar volume, send a signal to the Graph to update
 	      emit vortexListUpdate(vortexList);
-	      //Message::toScreen("Wait for analysis done");
 	    }
 	    mutex.unlock();  
 	  }
+	  
+	  checkIntesification();
 	  
 	  // Check to see if we should quit
 	  if (abort) {
@@ -429,4 +447,68 @@ void PollThread::setOnlyRunOnce(const bool newRunOnce) {
 void PollThread::setContinuePreviousRun(const bool &decision)
 {
   continuePreviousRun = decision;
+}
+
+void PollThread::checkIntensification()
+{
+  // Checks for any rapid changes in pressure
+
+  // Make this an input parameter
+  float rapidRate = 3; // Units of mb per hr
+
+  // So we don't report falsely there must be a rapid increase trend which 
+  // spans several measurements
+
+  // Make this an input parameter
+  int volSpan = 8;  // Number of volumes which are averaged.
+
+  int lastVol = vortexList->count()-1;
+
+  if(lastVol > 2*volSpan) {
+    if(vortexList->at(int(volSpan/2.)).getTime().secsTo(vortexList->at(lastVol-int(volSpan/2.)).getTime()) > 3600) {
+      float recentAv = 0;
+      float pastAv = 0;
+      int recentCount = 0;
+      int pastCenter = 0;
+      int pastCount = 0;
+      for(int k = lastVol; k >= lastVol-volSpan; k--) {
+	if(vortexList->at(k).getPressure()==-999)
+	  continue;
+	recentAv+=vortexList->at(k).getPressure();
+	recentCount++;
+      }      
+      recentAv /= (recentCount*1.);
+      float timeSpan = vortexList->at(lastVol-volSpan).getTime().secsTo(vortexList->at(lastVol).getTime());
+      QDateTime pastTime = vortexList->at(lastVol).getTime().addSecs(-1*int(timeSpan/2+3600));
+      for(int k = 0; k < lastVol; k++) {
+	if(vortexList->at(k).getPressure()==-999)
+	  continue;
+	if(vortexList->at(k).getTime() > pastTime)
+	  pastCenter = k;
+      }      
+      for(int j = pastCenter-int(volSpan/2.); 
+	  j < pastCenter+int(volSpan/2.); j++) {
+	if(vortexList->at(j).getPressure()==-999)
+	  continue;
+	pastAv+= vortexList->at(j).getPressure();
+	pastCount++;
+      }
+      pastAv /= (pastCount*1.);
+      if(recentAv - pastAv > rapidRate) {
+	emit(log(Message(QString("Storm pressure is increasing"), 0,
+			 this->objectName(), Green, QString(), 
+			 RapidIncrease, QString())));
+      } else {
+	if(recentAv - pastAv < -1*rapidRate) {
+	  emit(log(Message(QString("Storm pressure is dropping"), 0, 
+			   this->objectName(), Green, QString(), 
+			   RapidDecrease, QString())));
+	}
+	else {
+	  emit(log(Message(QString(), 0, this->objectName(),Green, 
+			   QString(), Ok, QString())));
+	}
+      }
+    }
+  }
 }

@@ -33,6 +33,7 @@ public:
      void setFileName(const QString &newFileName);
      void setRadarName(const QString &newRadarName);
      void setVortexName(const QString &newVortexName);
+     void setProductType(const QString &newProductType);
      QString getVortexName() { return vortexName; }
      void setNewWorkingDirectory(const QString &newDirectory);
      QString getFileName() { return fileName; }

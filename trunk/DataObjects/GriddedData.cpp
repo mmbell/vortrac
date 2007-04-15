@@ -166,7 +166,7 @@ void GriddedData::setCartesianReferencePoint(float ii, float jj, float kk)
   refPointJ = int(floor(jj/jGridsp - ymin+.5));
   refPointK = int(floor(kk/kGridsp - zmin+.5));
   */
-  // The reference point is coming in in meters?  added -LM 2/24/07
+  // The reference point is coming in in km
   refPointI = int(floor((ii- xmin)/iGridsp+.5));
   refPointJ = int(floor((jj - ymin)/jGridsp+.5));
   refPointK = int(floor((kk - zmin)/kGridsp+.5));
@@ -622,9 +622,15 @@ int GriddedData::getSphericalRangeLength(float azimuth, float elevation)
 }
 
 float* GriddedData::getSphericalRangeData(QString& fieldName, float azimuth, 
-					  float elevation)
-{    
+					  float elevation) 
+{
   int numPoints = getSphericalRangeLength(azimuth, elevation);
+  return getSphericalRangeData(fieldName, azimuth, elevation, numPoints);
+}
+
+float* GriddedData::getSphericalRangeData(QString& fieldName, float azimuth, 
+					  float elevation, int numPoints)
+{    
   int field = getFieldIndex(fieldName);
   float *values = new float[numPoints];
 
@@ -652,7 +658,12 @@ float* GriddedData::getSphericalRangeData(QString& fieldName, float azimuth,
 float* GriddedData::getSphericalRangePosition(float azimuth, float elevation)
 {
   int numPoints = getSphericalRangeLength(azimuth, elevation);
-  
+  return getSphericalRangePosition(azimuth,elevation,numPoints);
+}
+
+float* GriddedData::getSphericalRangePosition(float azimuth, float elevation,
+					      int numPoints)
+{
   float *positions = new float[numPoints];
 
   int count = 0;

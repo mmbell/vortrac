@@ -317,12 +317,24 @@ Coefficient VortexData::getCoefficient(const float& height, const int& rad,
 				       const QString& parameter) const
 {
   int level = getHeightIndex(height);
-  //int radIndex = getCoeffRadiusIndex(height,rad);
   if((level == -1)||(rad == -1)) {
-    Message::toScreen("VortexData: GetCoefficient: Can't Get Needed Indices");
+    Message::toScreen("VortexData: GetCoefficient(3): Can't Get Needed Indices");
     return Coefficient();
   }
   return getCoefficient(level, rad, parameter);
+}
+
+Coefficient VortexData::getCoefficient(const float& height, const float& rad,
+				       const QString& parameter) const
+{
+  int level = getHeightIndex(height);
+  float minRad = getCoefficient(level,0,parameter).getRadius();
+  int radIndex = int(rad - minRad);
+  if((level == -1)||(radIndex < 0 )||(radIndex > numRadii)) {
+    Message::toScreen("VortexData: GetCoefficient(4): Can't Get Needed Indices: Level = "+QString().setNum(level)+" radIndex = "+QString().setNum(radIndex));
+    return Coefficient();
+  }
+  return getCoefficient(level, radIndex, parameter);
 }
 
 void VortexData::setCoefficient(const int& lev, const int& rad, 

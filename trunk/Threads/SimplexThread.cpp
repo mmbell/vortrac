@@ -151,6 +151,7 @@ void SimplexThread::run()
     simplexData = new SimplexData(int(lastLevel - firstLevel + 1), 
 				  int(lastRing - firstRing + 1), 
 				  (int)numPoints);
+    //Message::toScreen(vortexData->getTime().toString());
     simplexData->setTime(vortexData->getTime());
     simplexData->setNumPointsUsed((int)numPoints);
     
@@ -214,7 +215,7 @@ void SimplexThread::run()
 	  for (int point = 0; point <= numPoints-1; point++) {
 	    //Message::toScreen("SimplexThread: Mutex Lock Special 4B");
 	    mutex.lock();
-	    if (point <= boxRowLength) {
+	    if (point < boxRowLength) {
 	      RefI = cornerI + float(point) * boxIncr;
 	    } else { 
 	      RefI = cornerI + float((point)%int(boxRowLength)) * boxIncr;

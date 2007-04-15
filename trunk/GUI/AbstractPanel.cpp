@@ -284,6 +284,18 @@ bool AbstractPanel::checkDirectory()
   }
   QFileInfo directory(location);
   directory.makeAbsolute();
+
+  // Analytic Run Case Need File In Directory
+  if((this->objectName()=="radar")&&(!directory.isDir())) {
+    // Check to see that the file in directory exists
+    if(!directory.isFile()) {
+      QString message("Cannot read "+directory.path()+" please check the file");
+      emit log(Message(message, 0, this->objectName(), Red, QString(" Cannot Read From Directory ")));
+      return false;
+    }
+    return true;
+  }
+
   if((!directory.exists())||(!directory.isDir())) {
     QString message("Cannot read from "+directory.path()+" please check the directory");
     

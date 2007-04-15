@@ -263,6 +263,7 @@ void AnalysisThread::run()
 		  if(abs(obsDateTime.secsTo(volDateTime))<15*60) {
 		    vortexLat = configData->getParam(vortex,"lat").toFloat();
 		    vortexLon = configData->getParam(vortex,"lon").toFloat();
+		    
 		  }
 		  else {
 		    // Use the starting position in conjunction with the storm
@@ -289,7 +290,7 @@ void AnalysisThread::run()
 		    vortexLon = configData->getParam(vortex,"lon").toFloat();
 		    
 		    int elapsedSeconds =obsDateTime.secsTo(volDateTime);
-		    //Message::toScreen("Seconds since start "+QString().setNum(elapsedSeconds)+" in AnalysisThread");
+		    Message::toScreen("Seconds since start "+QString().setNum(elapsedSeconds)+" in AnalysisThread");
 		    float distanceMoved = elapsedSeconds*stormSpeed/1000.0;
 		    float changeInX = distanceMoved*cos(stormDirection);
 		    float changeInY = distanceMoved*sin(stormDirection);
@@ -299,8 +300,8 @@ void AnalysisThread::run()
 		    vortexLat = newLatLon[0];
 		    vortexLon = newLatLon[1];
 		    //Message::toScreen("New vortexLat = "+QString().setNum(vortexLat)+" New vortexLon = "+QString().setNum(vortexLon));
-		  }   
-		}
+		  }
+       }
 
 		emit log(Message(QString(),2,this->objectName()));
        
@@ -311,6 +312,7 @@ void AnalysisThread::run()
 				             radarVolume->getRadarLat(), 
 					     radarVolume->getRadarLon(),
 					     &vortexLat, &vortexLon);
+		
 		//Message::toScreen("Distance Between Radar and Storm "+QString().setNum(relDist));
 		bool beyondRadar = true;
 		bool closeToEdge = false;
@@ -324,6 +326,7 @@ void AnalysisThread::run()
 		    closeToEdge = true;
 		  }
 		}
+
 		if (beyondRadar) {
 		  // Too far away for Doppler, need to send a signal
 		  // Calculate the estimated time of arrival
@@ -360,7 +363,6 @@ void AnalysisThread::run()
 		  mutex.unlock();
 		  continue;
 		}
-
 		//Message::toScreen("gets to create vortexData analysisThread");
 
 		// Create data instance to hold the analysis results
@@ -374,7 +376,7 @@ void AnalysisThread::run()
 		
 		// Pass VCP value to display
 		emit newVCP(radarVolume->getVCP());
-
+		
 		// Dealias 		
 		if(!radarVolume->isDealiased()){
 		  
@@ -449,7 +451,9 @@ void AnalysisThread::run()
 			 
 			 Hvvp *envWindFinder1 = new Hvvp;
 			 envWindFinder1->setRadarData(radarVolume,rt1, cca1, rmw1);
-			 envWindFinder1->findHVVPWinds();
+			 if(!envWindFinder1->findHVVPWinds()){
+			 
+			 }
 			 float missingLink1 = envWindFinder1->getAvAcrossBeamWinds();
 			 Message::toScreen("Hvvp gives "+QString().setNum(missingLink1));
 			 delete envWindFinder1;
@@ -535,65 +539,6 @@ void AnalysisThread::run()
 		simplexTime.append(" minutes elapsed");
 		emit log(Message(simplexTime));
 
-		mutex.unlock();
-		if(abort)
-		  return;
-		mutex.lock();
-
-		//vortexData->printString(); //Prints new vortexData
-	
-		// Get environmental wind
-		/*
-		* rt: Range from radar to circulation center (km).
-		*
-		* cca: Meteorological azimuth angle of the direction
-		*      to the circulation center (degrees from north).
-		*
-		* rmw: radius of maximum wind measured from the TC circulation
-		*      center outward.
-		*/
-		QDomElement radar = configData->getConfig("radar");
-		float radarLat = configData->getParam(radar,"lat").toFloat();
-		float radarLon = configData->getParam(radar,"lon").toFloat();
-		
-		float* distance;
-		distance = gridData->getCartesianPoint(&radarLat, &radarLon, 
-						       &vortexLat, &vortexLon);
-		float rt = sqrt(distance[0]*distance[0]+distance[1]*distance[1]);
-		float cca = atan2(distance[0], distance[1])*180/acos(-1);
-		delete[] distance;
-		float rmw = 0;
-		int goodrmw = 0;
-		for(int level = 0; level < vortexData->getNumLevels(); level++) {
-		  if(vortexData->getRMW(level)!=-999) {
-		    //Message::toScreen("radius @ level "+QString().setNum(level)+" = "+QString().setNum(vortexData->getRMW(level)));
-		    rmw += vortexData->getRMW(level);
-		    goodrmw++;
-		  }
-		}
-		rmw = rmw/(1.0*goodrmw);
-	    
-       // RMW is the average rmw taken over all levels of the vortexData
-       // The multiplying by 2 bit is blatant cheating, I don't know 
-       // if this if the radius's returned need to be adjusted by spacing or
-       // or what the deal is but these numbers look closer to right for 
-       // the two volumes I am looking at.
-
-		Message::toScreen("Hvvp Parameters: Distance to Radar "+QString().setNum(rt)+" angle to vortex center in degrees ccw from north "+QString().setNum(cca)+" rmw "+QString().setNum(rmw));
-
-		emit log(Message(QString(), 1,this->objectName()));
-
-		Hvvp *envWindFinder = new Hvvp;
-		connect(envWindFinder, SIGNAL(log(const Message)), 
-			this, SLOT(catchLog(const Message)), 
-			Qt::DirectConnection);
-		envWindFinder->setRadarData(radarVolume,rt, cca, rmw);
-		emit log(Message(QString(), 1,this->objectName()));
-		//envWindFinder->findHVVPWinds(false); for first fit only
-		envWindFinder->findHVVPWinds(true);
-		float missingLink = envWindFinder->getAvAcrossBeamWinds();
-		Message::toScreen("Hvvp gives "+QString().setNum(missingLink));
-		emit log(Message(QString(), 1,this->objectName()));
 		mutex.unlock();  	
 		
 		if (!abort) {
@@ -601,7 +546,7 @@ void AnalysisThread::run()
 		  mutex.lock();
 		  // Get the GBVTD winds
 		  emit log(Message(QString(), 1,this->objectName()));
-		  vortexThread->getWinds(configData, gridData, 
+		  vortexThread->getWinds(configData, gridData, radarVolume, 
 					 vortexData, pressureList);
 		  waitForWinds.wait(&mutex); 
 		  mutex.unlock();
@@ -674,8 +619,7 @@ void AnalysisThread::run()
 		//vortexList->append(*vortexData);	
 		//vortexList->save();
 		
-		// Delete CAPPI, RadarData and HVVP objects
-		delete envWindFinder;
+		// Delete CAPPI and RadarData objects
 		delete radarVolume;
 		delete gridData;
 		delete vortexData;

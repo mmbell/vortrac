@@ -2223,12 +2223,36 @@ PressurePanel::PressurePanel()
   maxObsDistBoxLayout->addWidget(maxObsDistRing);
   maxObsDistBoxLayout->addLayout(maxObsDistLayout);
   maxObsDistBox->setLayout(maxObsDistBoxLayout);
+
+  QGroupBox *intenseBox = new QGroupBox("Intensification Specifications");
+  QLabel *avIntervalLabel = new QLabel(tr("Number of volumes averaged"));
+  avInterval = new QSpinBox;
+  avInterval->setRange(3,12);
+  avInterval->setValue(8);
+  QHBoxLayout *avIntLayout = new QHBoxLayout();
+  avIntLayout->addWidget(avIntervalLabel,50);
+  avIntLayout->addWidget(avInterval,0);
+
+  QLabel *rapidLimitLabel = new QLabel(tr("Pressure Change for Warnings (mb/hr)"));
+  rapidLimit = new QDoubleSpinBox;
+  rapidLimit->setDecimals(1);
+  rapidLimit->setRange(1,10);
+  rapidLimit->setValue(3);
+  QHBoxLayout *rapidLimitLayout = new QHBoxLayout;
+  rapidLimitLayout->addWidget(rapidLimitLabel,50);
+  rapidLimitLayout->addWidget(rapidLimit,0);
+  QVBoxLayout *intenseLayout = new QVBoxLayout(intenseBox);
+  intenseLayout->addLayout(rapidLimitLayout);
+  intenseLayout->addLayout(avIntLayout);
+  intenseBox->setLayout(intenseLayout);
+  
   
   QVBoxLayout *main = new QVBoxLayout;
   main->addLayout(dirLayout);
   main->addLayout(pressureFormatLayout);
   main->addLayout(maxObsTimeLayout);
   main->addWidget(maxObsDistBox);
+  main->addWidget(intenseBox);
   main->addStretch(1);
   setLayout(main);
 
@@ -2244,6 +2268,10 @@ PressurePanel::PressurePanel()
 	  this, SLOT(valueChanged(const bool)));
   connect(maxObsDistRing, SIGNAL(toggled(const bool)),
 	  this, SLOT(valueChanged(const bool)));
+  connect(avInterval, SIGNAL(valueChanged(const QString&)),
+	  this, SLOT(valueChanged(const QString&)));
+  connect(rapidLimit, SIGNAL(valueChanged(const QString&)),
+	  this, SLOT(valueChanged(const QString&)));
 
   setPanelChanged(false);
 }
@@ -2256,6 +2284,8 @@ PressurePanel::~PressurePanel()
     delete maxObsDist;
     delete maxObsDistCenter;
     delete maxObsDistRing;
+    delete avInterval;
+    delete rapidLimit;
 }
 
 void PressurePanel::updatePanel(const QDomElement panelElement)
@@ -2298,6 +2328,13 @@ void PressurePanel::updatePanel(const QDomElement panelElement)
 	maxObsDistRing->setChecked(true);
       }
     }
+    if(name == "rapidlimit") {
+      if(parameter.toFloat()!=rapidLimit->value()) 
+	rapidLimit->setValue(parameter.toFloat()); }
+    if(name == "av_interval") {
+      if(parameter.toInt()!=avInterval->value())
+	avInterval->setValue(parameter.toInt()); }
+
     child = child.nextSiblingElement();
   }
   setPanelChanged(false);
@@ -2333,6 +2370,15 @@ bool PressurePanel::updateConfig()
 	emit changeDom(element, QString("maxobsmethod"), QString("center"));
       if(maxObsDistRing->isChecked())
 	emit changeDom(element, QString("maxobsmethod"), QString("ring"));
+
+      if(getFromElement("av_interval").toInt()!=avInterval->value()) {
+	emit changeDom(element, QString("av_interval"), 
+		       QString().setNum(avInterval->value()));
+      }
+      if(getFromElement("rapidlimit").toFloat()!=rapidLimit->value()) {
+	emit changeDom(element, QString("av_interval"), 
+		       QString().setNum(rapidLimit->value()));
+      }
     }
   setPanelChanged(false);
   return true;

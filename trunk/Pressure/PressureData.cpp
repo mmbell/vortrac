@@ -25,6 +25,19 @@ PressureData::PressureData()
 	
 }
 
+PressureData::PressureData(const PressureData& other)
+{
+  latitude = other.latitude;
+  longitude = other.longitude;
+  altitude = other.altitude;
+  pressure = other.pressure;
+  windSpeed = other.windSpeed;
+  windDirection = other.windDirection;
+  stationName = other.stationName;
+  time = other.time;
+
+}
+
 PressureData::~PressureData()
 {
 }

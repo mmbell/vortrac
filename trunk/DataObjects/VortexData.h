@@ -72,6 +72,8 @@ class VortexData
 			     const QString& parameter) const;
   Coefficient getCoefficient(const float& height, const int& rad,
 			     const QString& parameter) const;
+  Coefficient getCoefficient(const float& height, const float& rad,
+			     const QString& parameter) const;
   void setCoefficient(const int& lev, const int& rad, 
 		      const int& waveNum, const Coefficient &coefficient);
 
@@ -94,7 +96,7 @@ class VortexData
 
  private:
   static const int maxLevels = 15;
-  static const int maxRadii = 30;
+  static const int maxRadii = 60;
   static const int maxWaveNum = 25;
 
   int numLevels;

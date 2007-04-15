@@ -105,9 +105,15 @@ class GriddedData
   // Spherical Coordinates
 
   int getSphericalRangeLength(float azimuth, float elevation);
+
   float* getSphericalRangeData(QString& fieldName, float azimuth, 
 			       float elevation);
+  float* getSphericalRangeData(QString& fieldName, float azimuth, 
+			       float elevation, int numPoints);
+
   float* getSphericalRangePosition(float azimuth, float elevation);
+  float* getSphericalRangePosition(float azimuth, float elevation, int numPts);
+
   int getSphericalAzimuthLength(float range,float elevation);
   float* getSphericalAzimuthData(QString& fieldName, float range, 
 				 float elevation);

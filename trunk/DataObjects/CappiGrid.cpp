@@ -99,7 +99,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   ymin = nearbyintf(relDist[1] - (jDim/2)*jGridsp);
   ymax = nearbyintf(relDist[1] + (jDim/2)*jGridsp);
   
-  Message::toScreen("Xmin = "+QString().setNum(xmin)+" Xmax = "+QString().setNum(xmax)+" Ymin = "+QString().setNum(ymin)+" Ymax = "+QString().setNum(ymax));
+  //  Message::toScreen("Xmin = "+QString().setNum(xmin)+" Xmax = "+QString().setNum(xmax)+" Ymin = "+QString().setNum(ymin)+" Ymax = "+QString().setNum(ymax));
 
   // Adjust the cappi so that it doesn't waste space on areas without velocity data
   if (xmin < -180) {

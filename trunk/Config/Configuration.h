@@ -33,6 +33,8 @@ class Configuration:public QObject
   bool read(const QString &filename);
   bool write(const QString &filename);
   bool isNull();
+  bool loggingChanges() { return logChanges; }
+  void setLogChanges(bool logStatus);
   
   QDomElement getConfig(const QString &configName);
   QDomElement getConfig(const QString &configName,
@@ -108,6 +110,7 @@ class Configuration:public QObject
   QDomNodeList groupList;
   QHash<QString, int> indexForTagName;
   bool isModified;
+  bool logChanges;
 		
  signals:
   void log(const Message& message);

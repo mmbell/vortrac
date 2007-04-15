@@ -60,6 +60,7 @@ class AnalysisPage : public QWidget
     void catchLog(const Message& message); 
     void catchVCP(const int vcp); 
     void updateCappi(const GriddedData* cappi);
+    void updateCappiDisplay(bool hasImage);
 
     // void changeStopLight(StopLightColor color, const QString message);
     // void changeStormSignal(StormSignalStatus status, const QString message);
@@ -81,7 +82,7 @@ class AnalysisPage : public QWidget
     void abortThread();
     void autoScroll();
     void prepareToClose();
-	void pollVortexUpdate(VortexList* list);
+    void pollVortexUpdate(VortexList* list);
 
  protected:
   void closeEvent(QCloseEvent *event);
@@ -106,6 +107,8 @@ class AnalysisPage : public QWidget
   QLCDNumber *currDeficit;
   QTabWidget* visuals;
   CappiDisplay* cappiDisplay;
+  QLCDNumber *appMaxWind;
+  QLCDNumber *recMaxWind;
   QLabel* deficitLabel;
   TestGraph *tester;
 

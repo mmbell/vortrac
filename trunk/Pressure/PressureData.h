@@ -19,6 +19,7 @@ class PressureData
 	
 public:
 	PressureData();
+	PressureData(const PressureData& other);
 	virtual ~PressureData();
 	virtual bool readObs();
 

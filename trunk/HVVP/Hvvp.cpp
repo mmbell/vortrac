@@ -223,6 +223,12 @@ bool Hvvp::findHVVPWinds(bool both)
    *
    */
   
+  if(volume->getNumSweeps() < 0) {
+    // For Analytic No Volume Case
+    Message::toScreen("No volume to process");
+    return false;
+  }
+
   if(both)
     Message::toScreen("Running with both 1st and 2nd lls fits");
   else
