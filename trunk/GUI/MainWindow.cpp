@@ -198,8 +198,8 @@ AnalysisPage *MainWindow::createAnalysisPage()
   AnalysisPage *child = new AnalysisPage;
   
   // Connect the configuration to the tab widget
-  connect(child, SIGNAL(tabLabelChanged(const QString&)), 
-	  this, SLOT(updateTabLabel(const QString&)));
+  connect(child, SIGNAL(tabLabelChanged(QWidget*, const QString&)), 
+	  this, SLOT(updateTabLabel(QWidget*, const QString&)));
   
   return child;
 }
@@ -389,9 +389,10 @@ AnalysisPage *MainWindow::findAnalysisPage(const QString &fileName)
     return 0;
 }
 
-void MainWindow::updateTabLabel(const QString& new_Label)
+void MainWindow::updateTabLabel(QWidget* labelWidget, 
+				const QString& new_Label)
 {
-  tabWidget->setTabText(tabWidget->currentIndex(), new_Label);
+  tabWidget->setTabText(tabWidget->indexOf(labelWidget), new_Label);
 }
 
 void MainWindow::openConfigDialog()

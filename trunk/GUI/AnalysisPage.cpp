@@ -72,7 +72,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   visuals->setTabPosition(QTabWidget::West);
 
   GraphFace *graph = new GraphFace();
-  graph->updateTitle(vortexLabel);
+  graph->updateTitle(this,vortexLabel);
   connect(graph, SIGNAL(log(const Message&)), 
 	  this, SLOT(catchLog(const Message&)));
 
@@ -86,8 +86,8 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   
   connect(configData, SIGNAL(configChanged()), this, SLOT(updatePage()));
 
-  connect(this, SIGNAL(tabLabelChanged(const QString&)), 
-  	  graph, SLOT(updateTitle(const QString&)));
+  connect(this, SIGNAL(tabLabelChanged(QWidget*, const QString&)), 
+  	  graph, SLOT(updateTitle(QWidget*, const QString&)));
 
 
   // Construct Analysis Page Layout
@@ -358,7 +358,8 @@ bool AnalysisPage::saveFile(const QString &fileName)
 {
   
   if (!configData->write(fileName)) {
-    emit log(Message("Couldn't save configuration file")); 
+    emit log(Message(QString("Failed to save configuration file to "+fileName),
+		     0,this->objectName(),Yellow,QString("Unable to Save"))); 
     return false;
   } 
   
@@ -374,20 +375,19 @@ bool AnalysisPage::saveFile(const QString &fileName)
     noExtensionFileName.remove(0,slashIndex+1);
   }
 
-  Message::toScreen("No extension file name is ... "+noExtensionFileName);
+  //Message::toScreen("No extension file name is ... "+noExtensionFileName);
 
   if(workingDirectory.exists()) {
-    Message::toScreen("AnalysisPage: Saving copies of .log and .png in the working directory: "+workingDirectory.filePath(noExtensionFileName));
+    emit log(Message(QString("AnalysisPage: Saving copies of .log and .png in the working directory: "+workingDirectory.filePath(noExtensionFileName)),0,this->objectName()));
     if(!statusLog->saveLogFile(workingDirectory.filePath(noExtensionFileName+".log")))
-      Message::toScreen("AnalysisPage: Failed to save .log file in working directory");
+      emit log(Message(QString("Failed to save .log file in "+workingDirectory.path()),0,this->objectName()));
       
     emit saveGraphImage(workingDirectory.filePath(noExtensionFileName+".png"));
   }
   else {
-    Message::toScreen("AnalysisPage: workingDirectory doesn not exist?");
-    statusLog->saveLogFile(noExtensionFileName+".log");
-    emit saveGraphImage(noExtensionFileName+".png");
+    emit log(Message(QString("Cannot find "+workingDirectory.path()+", Cannot save log & image files"),0,this->objectName(),Yellow,QString("Couldn't Save Log")));
   }
+  configFileName = fileName;
 
   return true;
 
@@ -402,7 +402,7 @@ void AnalysisPage::setVortexLabel()
 					    "name");
   QString underscore = "_";
   vortexLabel = vortexName + underscore + radarName;
-  emit tabLabelChanged(vortexLabel);
+  emit tabLabelChanged(this,vortexLabel);
 
 }
 
@@ -447,7 +447,7 @@ void AnalysisPage::updatePage()
   // Can add more here as need be
   setVortexLabel();
   QString temp = getVortexLabel();
-  emit(tabLabelChanged(temp));
+  emit(tabLabelChanged(this,temp));
   //Message::toScreen("updatepage before "+workingDirectory.path());
   QString newPathString(configData->getParam(configData->getConfig("vortex"), 
 					     "dir"));
@@ -525,7 +525,11 @@ void AnalysisPage::runThread()
       pollThread->setOnlyRunOnce();
       pollThread->setConfig(configData);
       pollThread->start();
+      connect(pollThread, SIGNAL(vortexListUpdate(VortexList*)), 
+	      this, SLOT(pollVortexUpdate(VortexList*)));
     }
+    else 
+      emit log(Message(QString("Shouldn't get here.. Something went wrong in analyticModel"),0,this->objectName(),Red,QString("Problem with Analytic")));
   }
   else {
     pollThread->setConfig(configData);
@@ -687,6 +691,7 @@ bool AnalysisPage::analyticModel()
 
 void AnalysisPage::pollVortexUpdate(VortexList* list)
 {
+  Message::toScreen("Made it too pollVortexUpdate in AnalysisPage");
   if((list!=NULL)&&(list->count() > 0)) {
     
     // Find the outermost vtd mean wind coefficient that is not equal to -999

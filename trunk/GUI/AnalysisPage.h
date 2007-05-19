@@ -66,7 +66,7 @@ class AnalysisPage : public QWidget
     // void changeStormSignal(StormSignalStatus status, const QString message);
 	
  signals:
-    void tabLabelChanged(const QString& new_Label);
+    void tabLabelChanged(QWidget* labelWidget, const QString& new_Label);
     void log(const Message& message);
     void saveGraphImage(const QString& name);
     void vortexListChanged(VortexList* list);

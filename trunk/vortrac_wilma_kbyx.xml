@@ -7,6 +7,8 @@
         <speed>6.2</speed>
         <lon>-84.5</lon>
         <dir>/scr/science40/mauger/Working/trunk/workingDirs/WilmaKBYX</dir>
+        <obsdate>2005-10-23</obsdate>
+        <obstime>21:00:00</obstime>
     </vortex>
     <radar>
         <name>KBYX</name>
@@ -22,12 +24,12 @@
     </radar>
     <cappi>
         <dir>/scr/science40/mauger/Working/trunk/workingDirs/WilmaKBYX/cappi</dir>
-        <xdim>150</xdim>
-        <ydim>150</ydim>
-        <zdim>2</zdim>
-        <xgridsp>1.0</xgridsp>
-        <ygridsp>1.0</ygridsp>
-        <zgridsp>2</zgridsp>
+        <xdim>200</xdim>
+        <ydim>200</ydim>
+        <zdim>3</zdim>
+        <xgridsp>1</xgridsp>
+        <ygridsp>1</ygridsp>
+        <zgridsp>1</zgridsp>
         <adv_u>0.0</adv_u>
         <adv_v>0.0</adv_v>
         <interpolation>cressman</interpolation>

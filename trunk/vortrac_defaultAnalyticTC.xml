@@ -30,15 +30,15 @@
   </deformation>
   <analytic_radar>
      <sample>true</sample>
-     <velgatesp>.5</velgatesp>
-     <refgatesp>.5</refgatesp>
+     <velgatesp>1</velgatesp>
+     <refgatesp>1</refgatesp>
      <beamwidth>1</beamwidth>
      <nyquistVel>80</nyquistVel>
      <dealiasdata>false</dealiasdata>
      <noiseScale>10</noiseScale>
      <percent_noisy_gates>0</percent_noisy_gates>
-     <numgates>300</numgates>
-     <numsweeps>2</numsweeps>
+     <numgates>100</numgates>
+     <numsweeps>5</numsweeps>
      <sweep0>2.5</sweep0>
      <sweep1>4.5</sweep1>
      <sweep2>3.5</sweep2>

@@ -129,7 +129,18 @@ void VortexThread::run()
 		float maxCoeffs = maxWave*2 + 3;
 		
 		// Create a GBVTD object to process the rings
-		vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
+		if(closure.contains(QString("hvvp"),Qt::CaseInsensitive)) {
+		  if(calcHVVP())
+		    vtd = new GBVTD(geometry, closure, maxWave, dataGaps, hvvpResult);
+		  else {
+		    emit log(Message(QString(),0,this->objectName(),Yellow,
+				     QString("HVVP Failure: Could Not Retrieve HVVP Winds")));
+		    vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
+		  }
+		}
+		else {
+		  vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
+		}
 		vtdCoeffs = new Coefficient[20];
 	
 		// Placeholders for centers
@@ -218,7 +229,8 @@ void VortexThread::run()
 	     		
 		// Get the central pressure
 		calcCentralPressure(vortexData,pressureDeficit, firstLevel); // is firstLevel right?
-		calcHVVP();
+		   //Message::toScreen("VortexThreads: Pressure = "+QString().setNum(vortexData->getPressure()));
+		   //calcHVVP();
 
 		mutex.unlock();
 		if(abort)
@@ -226,8 +238,9 @@ void VortexThread::run()
 		mutex.lock();
 
 		// Get the central pressure uncertainty
-		calcPressureUncertainty(false, QString("CenterStdPresErr"));
-		calcPressureUncertainty(true, QString("FlatPresErr"));
+		calcPressureUncertainty(0, QString("CenterStdPresErr"));
+		calcPressureUncertainty(1, QString("FlatPresErr"));
+		calcPressureUncertainty(1.5, QString("FlatPresErr"));
 
 		
 		if(!foundWinds)
@@ -396,115 +409,7 @@ void VortexThread::getPressureDeficit(VortexData* data, float* pDeficit,const fl
 	delete [] dpdr;
 	
 }
-/*
-void VortexThread::calcCentralPressure()
-{
-  // temp location for this
-  float centralPressureStdDev = vortexData->getCenterStdDev(heightIndex);
 
-  // Sum values to hold pressure estimates
-  float pressWeight = 0;
-  float pressSum = 0;
-  numEstimates = 0;
-      
-  // Iterate through the pressure data
-  for (int i = 0; i < pressureList->size(); i++) {
-    float obPressure = pressureList->at(i).getPressure();
-    if (obPressure > 0) {
-      // Check the time
-      QDateTime time = pressureList->at(i).getTime();
-      int obTimeDiff = time.secsTo(vortexData->getTime());
-      if ((obTimeDiff > 0) and (obTimeDiff <= maxObTimeDiff)) {
-	// Check the distance
-	float vortexLat = vortexData->getLat(1);
-	float vortexLon = vortexData->getLon(1);
-	float obLat = pressureList->at(i).getLat();
-	float obLon = pressureList->at(i).getLon();
-	float* relDist = gridData->getCartesianPoint(&vortexLat, &vortexLon,
-						     &obLat, &obLon);
-	float obRadius = sqrt(relDist[0]*relDist[0] + relDist[1]*relDist[1]);
-	delete [] relDist;
-	
-	if ((obRadius >= vortexData->getRMW(1)) and (obRadius <= maxObRadius)) {
-	  // Good ob anchor!
-	  presObs[numEstimates]=pressureList->at(i);
-	  
-	  float pPrimeOuter;
-	  if (obRadius >= lastRing) {
-	    pPrimeOuter = pressureDeficit[(int)lastRing];
-	  } else {
-	    pPrimeOuter = pressureDeficit[(int)obRadius];
-	  }
-	  float cpEstimate = obPressure - (pPrimeOuter - pressureDeficit[0]);
-	  float weight = (((maxObTimeDiff - obTimeDiff) / maxObTimeDiff) +
-			  ((maxObRadius - obRadius) / maxObRadius)) / 2;
-	  
-	  // Sum the estimate and save the value for Std Dev calculation
-	  pressWeight += weight;
-	  pressSum += (weight * cpEstimate);
-	  pressEstimates[numEstimates] = cpEstimate;
-	  weightEstimates[numEstimates] = weight;
-	  numEstimates++;
-	  // Log the estimate
-	  QString station = pressureList->at(i).getStationName();
-	  QString pressLog = "Anchor pressure " + QString::number(obPressure) + " found at " + station
-	    + " " + time.toString(Qt::ISODate) + "," + QString::number(obRadius) + " km"
-	    + "(CP = " + QString::number(cpEstimate) + ")";
-	  emit log(Message(pressLog));
-	} else if (obRadius < vortexData->getRMW(1)) {
-	  // Close enough to be called a central pressure
-	  // Let PollThread handle that one
-	}
-	
-	if(numEstimates > 100) {
-	  log(Message(QString("Reached Pressure Estimate Limit"),0,this->objectName(),Yellow));
-	  break;
-	}
-      }
-    }
-  }
-  
-  // Should have a sum of pressure estimates now, if not use 1013
-  float avgPressure = 0;
-  float avgWeight = 0;
-  Message::toScreen("Print Number of Estimates "+QString().setNum(numEstimates));
-  if (numEstimates > 1) {
-  //Message::toScreen("Option 1");
-    avgPressure = pressSum/pressWeight;
-    avgWeight = pressWeight/(float)numEstimates;
-    
-		// Calculate the standard deviation of the estimates and set the global variables
-    float sumSquares = 0;
-    for (int i = 0; i < numEstimates; i++) {
-      float square = weightEstimates[i] * (pressEstimates[i] - avgPressure) * (pressEstimates[i] - avgPressure);
-      sumSquares += square;
-    }
-		
-    centralPressureStdDev = sumSquares/(avgWeight * (numEstimates-1));
-    float centralPressure = avgPressure;
-    
-  } else if (numEstimates == 1) {
-  //Message::toScreen("Option 2");
-    // Can use a single pressure estimate but no standard deviation
-    centralPressure = pressSum/pressWeight;
-    centralPressureStdDev = 5;
-	  
-    emit log(Message("Single anchor pressure only, using 5 hPa for uncertainty"));
-    
-  } else {
-  //Message::toScreen("Option 3");
-    // Assume standard environmental pressure
-    centralPressure = 1013 - (pressureDeficit[(int)lastRing] - pressureDeficit[0]);
-    
-    emit log(Message("No anchor pressures, using 1013 hPa for environment and 5 hPa for uncertainty"));
-  }
-
-  vortexData->setPressure(centralPressure);
-  vortexData->setPressureUncertainty(centralPressureStdDev);
-  vortexData->setPressureDeficit(pressureDeficit[(int)lastRing]-pressureDeficit[(int)firstRing]);
-  
-}
-*/
 void VortexThread::calcCentralPressure(VortexData* vortex, float* pD, float height)
 {
 
@@ -594,14 +499,14 @@ void VortexThread::calcCentralPressure(VortexData* vortex, float* pD, float heig
       sumSquares += square;
     }
 		
-    centralPressureStdDev = sumSquares/(avgWeight * (numEstimates-1));
+    //centralPressureStdDev = sumSquares/(avgWeight * (numEstimates-1));
     centralPressure = avgPressure;
     
   } else if (numEstimates == 1) {
     //Message::toScreen("Option 2");
     // Can use a single pressure estimate but no standard deviation
     centralPressure = pressSum/pressWeight;
-    centralPressureStdDev = 5;
+    //centralPressureStdDev = 5;
 	  
     emit log(Message("Single anchor pressure only, using 5 hPa for uncertainty"));
     
@@ -614,7 +519,7 @@ void VortexThread::calcCentralPressure(VortexData* vortex, float* pD, float heig
   }
 
   vortex->setPressure(centralPressure);
-  vortex->setPressureUncertainty(centralPressureStdDev);
+  //vortex->setPressureUncertainty(centralPressureStdDev);
   vortex->setPressureDeficit(pD[(int)lastRing]-pD[(int)firstRing]);
   
 }
@@ -625,7 +530,7 @@ void VortexThread::catchLog(const Message& message)
 }
 
 
-void VortexThread::calcPressureUncertainty(bool useLimit, QString nameAddition)
+void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
 {
   // Calculates the uncertanty in pressure by perturbing the center of the vortex
 
@@ -637,11 +542,11 @@ void VortexThread::calcPressureUncertainty(bool useLimit, QString nameAddition)
   
   Message::toScreen("VortexThread: CalcPressureUncertainty: Uncertainty of center from vortexData is "+QString().setNum(centerStd));
   
-  if((centerStd < 1.5)&& useLimit) {
-    centerStd = 1.5;
+  if(setLimit!=0) {
+    centerStd = setLimit;
     Message::toScreen("VortexThread: CalcPressureUncertainty: Uncertainty of center from vortexData is "+QString().setNum(centerStd));    
   }
-         
+  nameAddition = nameAddition+QString().setNum(centerStd);
 
   // Now move this amount of space in each cardinal direction to get 4 additional pressure estimates
   int numErrorPoints = 4;
@@ -681,14 +586,25 @@ void VortexThread::calcPressureUncertainty(bool useLimit, QString nameAddition)
   errorVertices->save();
 
   // Create a GBVTD object to process the rings
-  vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
+  if(closure.contains(QString("hvvp"),Qt::CaseInsensitive)) {
+    if(calcHVVP())
+      vtd = new GBVTD(geometry, closure, maxWave, dataGaps, hvvpResult);
+    else{
+      emit log(Message(QString(),0,this->objectName(),Yellow,
+		       QString("HVVP Failure: Could Not Retrieve HVVP Winds")));
+      vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
+    }
+  }
+  else {
+    vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
+  }
   vtdCoeffs = new Coefficient[20];
 
   float refLat = vortexData->getLat(goodLevel);
   float refLon = vortexData->getLon(goodLevel);
   for(int p = 0; p < numErrorPoints; p++) {
     VortexData* errorVertex = new VortexData(1,vortexData->getNumRadii(), vortexData->getNumWaveNum());
-    errorVertex->setTime(QDateTime::currentDateTime().addDays(p));
+    errorVertex->setTime(vortexData->getTime().addDays(p).addYears(2));
 
     // Set the reference point
     float* newLatLon = gridData->getAdjustedLatLon(refLat,refLon,
@@ -751,8 +667,18 @@ void VortexThread::calcPressureUncertainty(bool useLimit, QString nameAddition)
     // Add in uncertainty within HVVP measurement
 
     // Add in uncertainty from multiple pressure measurements
-    if(numEstimates >= 1) {
+    if(numEstimates < 1){
+      // No outside data available use the 1013 bit.
+      errorVertex->setPressure(1013 - (errorPressureDeficit[(int)lastRing] - errorPressureDeficit[0]));
+      errorVertex->setPressureDeficit(errorPressureDeficit[(int)lastRing] - errorPressureDeficit[0]);
+      //Message::toScreen("Adding uncertainty calib pressure "+QString().setNum(errorVertex->getPressure()));
+      errorVertices->append(*errorVertex);
+      errorVertices->save();
+    }
+    else {
       for(int j = 0; j < numEstimates; j++) {
+	QString stationName = presObs[j].getStationName();
+	QString obsTime = presObs[j].getTime().toString();
 	float obPressure = presObs[j].getPressure();
 	float vortexLat = errorVertex->getLat(0);
 	float vortexLon = errorVertex->getLon(0);
@@ -770,39 +696,58 @@ void VortexThread::calcPressureUncertainty(bool useLimit, QString nameAddition)
 	}
 	//Message::toScreen("Calculating uncertainty calib "+QString().setNum(j)+" = "+QString().setNum(obPressure)+" @ "+QString().setNum(obRadius));
 	errorVertex->setPressure(obPressure - (pPrimeOuter - errorPressureDeficit[0]));
-	if(j > 0) {
-	  VortexData* errorVertex2 = new VortexData(*errorVertex);
-	  errorVertex2->setTime(QDateTime::currentDateTime().addDays(p).addSecs(j*60));
-	  errorVertices->append(*errorVertex2);
-	}
-	else {
-	  errorVertices->append(*errorVertex);
-	}
+	errorVertex->setPressureDeficit(errorPressureDeficit[(int)lastRing] - errorPressureDeficit[0]);
+
+	VortexData* errorVertex2 = new VortexData(*errorVertex);
+	errorVertex2->setTime(vortexData->getTime().addYears(2).addDays(p).addSecs((j+1)*60));
+	errorVertices->append(*errorVertex2);
+	QString obsStamp = stationName+"_"+obsTime;
+	obsStamp+="_"+QString().setNum(obPressure);
+	errorVertices->setIndividualProductType(errorVertices->count()-1,
+						obsStamp);
 	//Message::toScreen("Adding uncertainty calib pressure "+QString().setNum(errorVertex->getPressure()));
 
 	errorVertices->save();
       }
     }
-    else {
-      // No outside data available use the 1013 bit.
-      errorVertex->setPressure(1013 - (errorPressureDeficit[(int)lastRing] - errorPressureDeficit[0]));
-      //Message::toScreen("Adding uncertainty calib pressure "+QString().setNum(errorVertex->getPressure()));
-      errorVertices->append(*errorVertex);
-      errorVertices->save();
-    }
   }
   delete [] vtdCoeffs;
   delete vtd;
-
+  /*
   // Average them all together
 
   float pressureSum = 0;
-  for(int i = 0; i < errorVertices->count(); i++) {
+  for(int i = 1; i < errorVertices->count(); i++) {
     pressureSum+=errorVertices->at(i).getPressure();
   }
   float pressureUncertainty = fabs(pressureSum/(float)errorVertices->count() - vortexData->getPressure());
   Message::toScreen("Uncertainty = "+QString().setNum(pressureUncertainty));
+  */
+  // Standard deviation from the center point
+  float sqSum = 0;
+  for(int i = 1; i < errorVertices->count();i++) {
+    sqSum += pow((errorVertices->at(i).getPressure()-vortexData->getPressure()),2);
+  }
+  float pressureUncertainty = sqrt(sqSum/(errorVertices->count()-2));
+  if((numEstimates <= 1)&&(pressureUncertainty<5)) {
+    pressureUncertainty = 5.0;
+  }
   vortexData->setPressureUncertainty(pressureUncertainty);
+  for(int jj = 0; jj < vortexData->getNumLevels();jj++) {
+    if(vortexData->getRMWUncertainty(jj) < gridData->getIGridsp()||
+       vortexData->getRMWUncertainty(jj) < gridData->getJGridsp()) {
+      if(gridData->getIGridsp()>=gridData->getJGridsp()) 
+	vortexData->setRMWUncertainty(jj,gridData->getIGridsp());
+      else
+	vortexData->setRMWUncertainty(jj,gridData->getJGridsp());
+    }
+  }
+  Message::toScreen(nameAddition+" uncertainty is "+QString().setNum(pressureUncertainty));
+  errorVertices->takeFirst();
+  errorVertices->prepend(*vortexData);
+  errorVertices->save();
+  delete errorVertices;
+
 }
 
 void VortexThread::readInConfig()
@@ -897,8 +842,13 @@ bool VortexThread::calcHVVP()
   // if this if the radius's returned need to be adjusted by spacing or
   // or what the deal is but these numbers look closer to right for 
   // the two volumes I am looking at.
-  
+
+  float* pair = gridData->getAdjustedLatLon(radarLat,radarLon,87.7712*cos(450-60.1703),87.7712*sin(450-60.1703));
+  Message::toScreen("New Lat Lon: ("+QString().setNum(pair[0])+", "+QString().setNum(pair[1])+"), old set = ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")");  
+  Message::toScreen("Vortex (Lat,Lon): ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")");
+  emit log(Message(QString("Vortex (Lat,Lon): ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")")));
   Message::toScreen("Hvvp Parameters: Distance to Radar "+QString().setNum(rt)+" angle to vortex center in degrees ccw from north "+QString().setNum(cca)+" rmw "+QString().setNum(rmw));
+  emit log(Message(QString("Hvvp Parameters: Distance to Radar "+QString().setNum(rt)+" angle to vortex center in degrees ccw from north "+QString().setNum(cca)+" rmw "+QString().setNum(rmw))));
   
   emit log(Message(QString(), 1,this->objectName()));
   
@@ -917,3 +867,113 @@ bool VortexThread::calcHVVP()
     
   return hasHVVP;
 }
+
+/*
+void VortexThread::calcCentralPressure()
+{
+  // temp location for this
+  float centralPressureStdDev = vortexData->getCenterStdDev(heightIndex);
+
+  // Sum values to hold pressure estimates
+  float pressWeight = 0;
+  float pressSum = 0;
+  numEstimates = 0;
+      
+  // Iterate through the pressure data
+  for (int i = 0; i < pressureList->size(); i++) {
+    float obPressure = pressureList->at(i).getPressure();
+    if (obPressure > 0) {
+      // Check the time
+      QDateTime time = pressureList->at(i).getTime();
+      int obTimeDiff = time.secsTo(vortexData->getTime());
+      if ((obTimeDiff > 0) and (obTimeDiff <= maxObTimeDiff)) {
+	// Check the distance
+	float vortexLat = vortexData->getLat(1);
+	float vortexLon = vortexData->getLon(1);
+	float obLat = pressureList->at(i).getLat();
+	float obLon = pressureList->at(i).getLon();
+	float* relDist = gridData->getCartesianPoint(&vortexLat, &vortexLon,
+						     &obLat, &obLon);
+	float obRadius = sqrt(relDist[0]*relDist[0] + relDist[1]*relDist[1]);
+	delete [] relDist;
+	
+	if ((obRadius >= vortexData->getRMW(1)) and (obRadius <= maxObRadius)) {
+	  // Good ob anchor!
+	  presObs[numEstimates]=pressureList->at(i);
+	  
+	  float pPrimeOuter;
+	  if (obRadius >= lastRing) {
+	    pPrimeOuter = pressureDeficit[(int)lastRing];
+	  } else {
+	    pPrimeOuter = pressureDeficit[(int)obRadius];
+	  }
+	  float cpEstimate = obPressure - (pPrimeOuter - pressureDeficit[0]);
+	  float weight = (((maxObTimeDiff - obTimeDiff) / maxObTimeDiff) +
+			  ((maxObRadius - obRadius) / maxObRadius)) / 2;
+	  
+	  // Sum the estimate and save the value for Std Dev calculation
+	  pressWeight += weight;
+	  pressSum += (weight * cpEstimate);
+	  pressEstimates[numEstimates] = cpEstimate;
+	  weightEstimates[numEstimates] = weight;
+	  numEstimates++;
+	  // Log the estimate
+	  QString station = pressureList->at(i).getStationName();
+	  QString pressLog = "Anchor pressure " + QString::number(obPressure) + " found at " + station
+	    + " " + time.toString(Qt::ISODate) + "," + QString::number(obRadius) + " km"
+	    + "(CP = " + QString::number(cpEstimate) + ")";
+	  emit log(Message(pressLog),0,this->objectName());
+	} else if (obRadius < vortexData->getRMW(1)) {
+	  // Close enough to be called a central pressure
+	  // Let PollThread handle that one
+	}
+	
+	if(numEstimates > 100) {
+	  log(Message(QString("Reached Pressure Estimate Limit"),0,this->objectName(),Yellow));
+	  break;
+	}
+      }
+    }
+  }
+  
+  // Should have a sum of pressure estimates now, if not use 1013
+  float avgPressure = 0;
+  float avgWeight = 0;
+  Message::toScreen("Print Number of Estimates "+QString().setNum(numEstimates));
+  if (numEstimates > 1) {
+  //Message::toScreen("Option 1");
+    avgPressure = pressSum/pressWeight;
+    avgWeight = pressWeight/(float)numEstimates;
+    
+		// Calculate the standard deviation of the estimates and set the global variables
+    float sumSquares = 0;
+    for (int i = 0; i < numEstimates; i++) {
+      float square = weightEstimates[i] * (pressEstimates[i] - avgPressure) * (pressEstimates[i] - avgPressure);
+      sumSquares += square;
+    }
+		
+    centralPressureStdDev = sumSquares/(avgWeight * (numEstimates-1));
+    float centralPressure = avgPressure;
+    
+  } else if (numEstimates == 1) {
+  //Message::toScreen("Option 2");
+    // Can use a single pressure estimate but no standard deviation
+    centralPressure = pressSum/pressWeight;
+    centralPressureStdDev = 5;
+	  
+    emit log(Message("Single anchor pressure only, using 5 hPa for uncertainty"));
+    
+  } else {
+  //Message::toScreen("Option 3");
+    // Assume standard environmental pressure
+    centralPressure = 1013 - (pressureDeficit[(int)lastRing] - pressureDeficit[0]);
+    
+    emit log(Message("No anchor pressures, using 1013 hPa for environment and 5 hPa for uncertainty"));
+  }
+
+  vortexData->setPressure(centralPressure);
+  vortexData->setPressureUncertainty(centralPressureStdDev);
+  vortexData->setPressureDeficit(pressureDeficit[(int)lastRing]-pressureDeficit[(int)firstRing]);
+  
+}
+*/

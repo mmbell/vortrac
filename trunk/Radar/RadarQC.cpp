@@ -266,8 +266,7 @@ void RadarQC::getConfig(QDomElement qcConfig)
     velMax = qcConfig.firstChildElement("vel_max").text().toFloat();
     refMin = qcConfig.firstChildElement("ref_min").text().toFloat();
     refMax = qcConfig.firstChildElement("ref_max").text().toFloat();
-    specWidthLimit = 
-      qcConfig.firstChildElement("sw_threshold").text().toFloat();
+    specWidthLimit = qcConfig.firstChildElement("sw_threshold").text().toFloat();
     numVGatesAveraged = qcConfig.firstChildElement("bbcount").text().toInt();
     maxFold = qcConfig.firstChildElement("maxfold").text().toInt();
 
@@ -292,8 +291,8 @@ void RadarQC::getConfig(QDomElement qcConfig)
 
 	useVADWinds = true;
 	// Possible parameters vadthr, gvadthr
-	vadthr = qcConfig.firstChildElement("vadthr").text().toFloat();
-	gvadthr = qcConfig.firstChildElement("gvadthr").text().toFloat();
+	vadthr = qcConfig.firstChildElement("vadthr").text().toInt();
+	gvadthr = qcConfig.firstChildElement("gvadthr").text().toInt();
 	vadLevels = qcConfig.firstChildElement("vadlevels").text().toInt();
 	numCoEff = qcConfig.firstChildElement("numcoeff").text().toInt();
       }
@@ -443,9 +442,10 @@ void RadarQC::thresholdData()
       float *refGates = currentRay->getRefData();
       for (int j = 0; j < numVGates; j++)
 	{
+	  
 	  if((swGates[j] > specWidthLimit)||
 	     (fabs(vGates[j]) < velMin) ||
-	     (fabs(vGates[j]) > velMax))
+	     (fabs(vGates[j]) > velMax)) 
 	    // ||(refGates[j] < refMin) ||(refGates[j] > refMax)) 
 	    {
 	      // This was extended to threshold against min and max 
@@ -453,6 +453,7 @@ void RadarQC::thresholdData()
 	      // these thresholds - LM
 	      vGates[j] = velNull;
 	    }
+	  
 	  if(vGates[j]!=velNull) {
 	    validBinCount[sweepIndex][j]++;
 	  }

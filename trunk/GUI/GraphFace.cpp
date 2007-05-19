@@ -544,7 +544,8 @@ void GraphFace::makeKey()
 
 
 //************************--updateTitle--*************************************
- void GraphFace::updateTitle(const QString& new_Label)
+ void GraphFace::updateTitle(QWidget* labelWidget, 
+			     const QString& new_Label)
 {
   graphTitle = new_Label;
   imageAltered = true;
@@ -1010,7 +1011,7 @@ QPainter* GraphFace::updateImage(QPainter* painter)
       
   //creates pressure tics and labels for the pressure axis
   
-  float pPosition = 870;          // this variable is created for incrementing 
+  float pPosition = 800;          // this variable is created for incrementing 
                                   // through the possible pressure range
  
   // The loop creates a tic mark and a label for every 5 mbar 
@@ -1029,7 +1030,10 @@ QPainter* GraphFace::updateImage(QPainter* painter)
       painter->drawText(QPointF(-.55*LEFT_MARGIN_WIDTH,0),iString);
     }
     painter->restore();
-    pPosition +=5;                            
+    if(pressureRange > (1013-800)/2.)
+      pPosition +=10;
+    else
+      pPosition +=5;                            
     // This is where the increment of 5 mbar is hard coded in 
   } 
   

@@ -12,6 +12,8 @@
 #include <QString>
 #include "Matrix.h"
 #include "IO/Message.h"
+#include <QFile>
+#include <QTextStream>
 
 Matrix::Matrix() 
 {
@@ -23,7 +25,7 @@ Matrix::~Matrix()
 
 }
 
-bool Matrix::lls(const int &numCoeff,const int &numData, 
+bool Matrix::lls(const int &numCoeff,const long &numData, 
 		  float** &x, float* &y, 
 		  float &stDeviation, float* &coeff, float* &stError)
 {
@@ -37,7 +39,7 @@ bool Matrix::lls(const int &numCoeff,const int &numData,
    *
    */
 
-  if(numData < numCoeff) {
+  if(numData < long(numCoeff)) {
     //emit log(Message("Least Squares: Not Enough Data"));
     return false;
   }
@@ -64,7 +66,7 @@ bool Matrix::lls(const int &numCoeff,const int &numData,
   // accumulate the covariances of all the data into the regression
   // matrices
 
-  for(int i = 0; i < numData; i++) {
+  for(long i = 0; i < numData; i++) {
     for(int row = 0; row < numCoeff; row++) {
       for(int col = 0; col < numCoeff; col++) {
 	A[row][col]+=(x[row][i]*x[col][i]);
@@ -130,7 +132,7 @@ bool Matrix::lls(const int &numCoeff,const int &numData,
   
   // calculate the stDeviation and stError
   float sum = 0;
-  for(int i = 0; i < numData; i++) {
+  for(long i = 0; i < numData; i++) {
     float regValue = 0;
     for(int j = 0; j < numCoeff; j++) {
       regValue += coeff[j]*x[j][i]; 
@@ -140,7 +142,7 @@ bool Matrix::lls(const int &numCoeff,const int &numData,
 
   
   if(numData!=numCoeff)
-    stDeviation = sqrt(sum/float(numData-numCoeff));
+    stDeviation = sqrt(sum/float(numData-long(numCoeff)));
   else
     stDeviation = sqrt(sum);
 
@@ -171,9 +173,10 @@ bool Matrix::lls(const int &numCoeff,const int &numData,
   return true;
 } 
 
-bool Matrix::oldlls(const int &numCoeff,const int &numData, 
-		  float** &x, float* &y, 
-		  float &stDeviation, float* &coeff, float* &stError)
+bool Matrix::oldlls(const int &numCoeff,const long &numData, 
+		    float** &x, float* &y, 
+		    float &stDeviation, float* &coeff, float* &stError,
+		    QString& fileName)
 {
   /*
    * x is a matrix with numCoeff rows, and numData columns,
@@ -185,7 +188,7 @@ bool Matrix::oldlls(const int &numCoeff,const int &numData,
    *
    */
 
-  if(numData < numCoeff) {
+  if(numData < long(numCoeff)) {
     //emit log(Message("Least Squares: Not Enough Data"));
     return false;
   }
@@ -212,7 +215,7 @@ bool Matrix::oldlls(const int &numCoeff,const int &numData,
   // accumulate the covariances of all the data into the regression
   // matrices
 
-  for(int i = 0; i < numData; i++) {
+  for(long i = 0; i < numData; i++) {
     for(int row = 0; row < numCoeff; row++) {
       for(int col = 0; col < numCoeff; col++) {
 	A[row][col]+=(x[row][i]*x[col][i]);
@@ -222,7 +225,24 @@ bool Matrix::oldlls(const int &numCoeff,const int &numData,
       BB[row][0] +=(x[row][i]*y[i]);
     }
   }
-
+  
+  QFile* outputFile = new QFile(fileName);
+  outputFile->open(QIODevice::WriteOnly);
+  QTextStream out(outputFile);
+  out << "Matrix A"<< endl << endl;
+  for(int ll = 0; ll < numCoeff;ll++) {
+    QString printLine = QString();
+    for(int mm = 0; mm < numCoeff; mm++)
+      printLine = printLine+QString().setNum(A[ll][mm])+QString(" ");
+    out << printLine << endl;
+  }
+  out << endl;
+  out << "Matrix B" << endl << endl;
+  for(int ll = 0; ll < numCoeff;ll++) {
+    out << B[ll] << endl;
+  }
+  out << endl;
+  outputFile->close();
   
   float** Ainv = new float*[numCoeff];
   for(int p = 0; p < numCoeff; p++) {
@@ -283,7 +303,7 @@ bool Matrix::oldlls(const int &numCoeff,const int &numData,
   */
   // calculate the stDeviation and stError
   float sum = 0;
-  for(int i = 0; i < numData; i++) {
+  for(long i = 0; i < numData; i++) {
     float regValue = 0;
     for(int j = 0; j < numCoeff; j++) {
       regValue += coeff[j]*x[j][i]; 
@@ -292,8 +312,8 @@ bool Matrix::oldlls(const int &numCoeff,const int &numData,
   }
 
   
-  if(numData!=numCoeff)
-    stDeviation = sqrt(sum/float(numData-numCoeff));
+  if(numData!=long(numCoeff))
+    stDeviation = sqrt(sum/float(numData-long(numCoeff)));
   else
     stDeviation = sqrt(sum);
 

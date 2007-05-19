@@ -50,7 +50,7 @@ private slots:
     void activatePreviousAnalysis();
     AnalysisPage *createAnalysisPage();
     void openConfigDialog();
-    void updateTabLabel(const QString& new_Label);
+    void updateTabLabel(QWidget* labelWidget, const QString& new_Label);
     void saveGraph();
     void saveLog();
 

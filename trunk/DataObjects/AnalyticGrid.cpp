@@ -18,10 +18,7 @@
 AnalyticGrid::AnalyticGrid() 
   : GriddedData()
 {
-  /* outdated - LM 12/06
-  coordSystem = cartesian;
-  // Original coordinate system for gridded data points
-  */
+
 
   iDim = jDim = kDim = 0;
   // Dimensions of the gridded data set (number of points) 
@@ -60,7 +57,7 @@ AnalyticGrid::~AnalyticGrid()
 bool AnalyticGrid::getConfigInfo(Configuration* mainConfig,
 				 Configuration* analyticConfig)
 {
- // Set the output file
+  // Set the output file
   QDomElement cappi = mainConfig->getConfig("cappi");
   QString filePath = mainConfig->getParam(cappi,"dir");
   QString fileName("analyticModel");
@@ -75,8 +72,6 @@ bool AnalyticGrid::getConfigInfo(Configuration* mainConfig,
 
   kDim = mainConfig->getParam(cappi, "zdim").toFloat();
   // kDim: Number of data points running on the k-axis
-  zmin = 0;
-  zmax = kDim;
 
   iGridsp = mainConfig->getParam(cappi, "xgridsp").toFloat();
   jGridsp = mainConfig->getParam(cappi, "ygridsp").toFloat();
@@ -111,17 +106,19 @@ bool AnalyticGrid::getConfigInfo(Configuration* mainConfig,
   xmax = nearbyintf(radLocation[0] + (iDim/2)*iGridsp);
   ymin = nearbyintf(radLocation[1] - (jDim/2)*jGridsp);
   ymax = nearbyintf(radLocation[1] + (jDim/2)*jGridsp);
+  zmin = 1;
+  zmax = zmin+kDim*kGridsp;
 
-  //Message::toScreen("Xmin = "+QString().setNum(xmin)+" Xmax = "+QString().setNum(xmax)+" Ymin = "+QString().setNum(ymin)+" Ymax = "+QString().setNum(ymax));
+  Message::toScreen("Xmin = "+QString().setNum(xmin)+" Xmax = "+QString().setNum(xmax)+" Ymin = "+QString().setNum(ymin)+" Ymax = "+QString().setNum(ymax));
  
-  setCartesianReferencePoint(0,0,0);
+  setCartesianReferencePoint(0,0,1);
     
   centX = iDim/2*iGridsp+xmin;  // x coordinate of storm center on grid
   centY = jDim/2*jGridsp+ymin;  // y coordinate of storm center on grid
   
   delete[] radLocation;
   
-  //testing Message::toScreen("RadX,Y ="+QString().setNum(radX)+", "+QString().setNum(radY)+"  VortX,Y ="+QString().setNum(centX)+", "+QString().setNum(centY));
+  //testing Message::toScreen("RadX,Y ="+QString().setNum(*rXDistance)+", "+QString().setNum(*rYDistance)+"  VortX,Y ="+QString().setNum(centX)+", "+QString().setNum(centY));
   
   if (sourceString == QString("wind_field")) {
     // This indicates that the analytic storm will be constructed from 

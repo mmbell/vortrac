@@ -30,7 +30,7 @@ Hvvp::Hvvp()
   setObjectName("hvvp");
   // Generic constructor, initializes some variables..
   velNull = -999.0;
-  deg2rad = acos(-1)/180;
+  deg2rad = acos(-1)/180.0;
   rad2deg = 1.0/deg2rad;
   levels = 14;       
   xlsDimension = 16;
@@ -59,7 +59,7 @@ Hvvp::Hvvp()
       xls[k][kk] = velNull;
   }
 	  
-  printOutput = false;
+  printOutput = true;
   
 }
 
@@ -99,14 +99,22 @@ float Hvvp::rotateAzimuth(const float &angle)
   return newAngle;
 }
 
-int Hvvp::hvvpPrep(int m) {
+long Hvvp::hvvpPrep(int m) {
+
+  QString fileName("FirstGates_"+QString().setNum(m));
+  QFile* outputFile = new QFile(fileName);
+  outputFile->open(QIODevice::WriteOnly);
+  QTextStream out(outputFile);
+  out << "Checking the first 10 entries in Level " << m << endl;
 
   //Message::toScreen("HVVP Prep");
 
   //**float hgtStart = .500;                // km
-  float hgtStart = .600;                // km 
+  float hgtStart = .600;                // km   // Most Recently Used
+  //  float hgtStart = 1.0;
   //**float hInc = .075;                    // km
-  float hInc = .1;                       // km
+  float hInc = .1;                       // km  // Most Recently Used
+  //float hInc = .5;
   float rangeStart = -.375;             // ???? km
   float cumin = 5.0/rt;                 // What are the units here?
   float cuspec = 0.6;                   // Unitless
@@ -133,22 +141,27 @@ int Hvvp::hvvpPrep(int m) {
     }
   }
 
-  int count = 0;
-  float h0 = hgtStart+hInc*m;
+  long count = 0;
+  float h0 = hgtStart+hInc*float(m);
   z[m] = h0;
   float hLow = h0-hInc;
   float hHigh = h0+hInc;
+
+  out << " num sweeps = " << volume->getNumSweeps();
+  
   for(int s = 0; s < volume->getNumSweeps(); s++) {
     currentSweep = volume->getSweep(s);
-    float elevation = currentSweep->getElevation();     // deg
-    if(elevation <= 5) {
-      int startRay = currentSweep->getFirstRay();
-      int stopRay = currentSweep->getLastRay();
-       for(int r = startRay; r <= stopRay; r++) {
-	currentRay = volume->getRay(r);
+    //float elevation = currentSweep->getElevation();     // deg
+    // if(elevation <= 5.0) {
+    int startRay = currentSweep->getFirstRay();
+    int stopRay = currentSweep->getLastRay();
+    for(int r = startRay; r <= stopRay; r++) {
+      currentRay = volume->getRay(r);
+      float elevation = currentRay->getElevation();
+      if(elevation <= 5.0) {                           // deg
 	vel = currentRay->getVelData();          // still in km/s
 	float vGateSpace = currentRay->getVel_gatesp(); // in m
-	vGateSpace /= 1000;
+	vGateSpace /= 1000.0;   // now in km
 	float numGates = currentRay->getVel_numgates();
 	int first = 0;
 	// int first = currentRay->getFirst_vel_gate();   
@@ -164,6 +177,7 @@ int Hvvp::hvvpPrep(int m) {
 	  if(vel[v]!=velNull) {
 	    float srange = (rangeStart+float(v)*vGateSpace);
 	    float cu = srange/rt * cos(elevation*deg2rad);    // unitless
+	    //float alt = volume->absoluteRadarBeamHeight(srange, elevation);  // km
 	    float alt = volume->radarBeamHeight(srange, elevation);  // km
 	    if((cu > cumin)&&(cu < cuthr)&&(alt >= hLow)&&(alt < hHigh)) {
 	      float ee = elevation*deg2rad;
@@ -173,10 +187,17 @@ int Hvvp::hvvpPrep(int m) {
 	      float yy = srange*cosee*cosaa;
 	      float rr = srange*srange*cosee*cosee*cosee;
 	      float zz = alt-h0;
+	      
+	      //Used for checking the first ten entries
 	      /*
-		if(count <=10){
-		Message::toScreen(QString().setNum(count)+"= v: "+QString().setNum(vel[v])+" gate "+QString().setNum(v)+" ray "+QString().setNum(r-startRay)+" elev# "+QString().setNum(s));
-		Message::toScreen(QString().setNum(count)+"= srange: "+QString().setNum(srange)+" cu "+QString().setNum(cu)+" alt "+QString().setNum(alt)+" zz "+QString().setNum(zz));
+	      if(((count<=30)||(s == 6))&&(m==0)){
+		out << count << "= v: " << vel[v] << " gate " << v << " ray " <<r-startRay << " orig az = " << currentRay->getAzimuth() << endl;
+		  out << " elev# " << s << " = " << elevation << endl;
+		out << count << "= srange: " << srange << " cu " << cu << " alt " << alt << " zz " << zz << endl;
+	      }
+	      
+	      if(m==0) {
+	      out << vel[v] << ", " << v << ", " << r-startRay <<", " << currentRay->getAzimuth() << ", " << s << ",  " << elevation << ", " << srange << ", " << cu << ", " << alt << ", " << zz << endl;
 	      }
 	      */
 	      yls[count] = vel[v];
@@ -202,15 +223,20 @@ int Hvvp::hvvpPrep(int m) {
 	    }
 	  }
 	}
-	currentRay = NULL;
 	vel = NULL;
       }
+      currentRay = NULL;
     }
     currentSweep = NULL;
   }
   delete currentSweep;
   delete currentRay;
   delete vel;
+
+  out << "Level " << m << " count = " << count << endl;
+  
+  outputFile->close();
+
   return count;
 }
 
@@ -234,7 +260,7 @@ bool Hvvp::findHVVPWinds(bool both)
   else
     Message::toScreen("Running with 1st fit only");    
 
-  int count = 0; 
+  long count = 0; 
   float mod_Rankine_xt[levels];
   int last = 0;
 
@@ -264,26 +290,53 @@ bool Hvvp::findHVVPWinds(bool both)
     
     //Message::toScreen("HVVP count requires 6500, level "+QString().setNum(m)+" has "+QString().setNum(count));
 
-    if(count >= 6500) {
+    if(count >= 6500.0) {
       
       float sse;
       float *stand_err = new float[xlsDimension];
       float *cc = new float[xlsDimension];
       bool flag, outlier;
       
-      //      QString fileName("/scr/science40/mauger/Working/trunk/hvvp0007Char"+QString().setNum(m)+".dat");
-      //writeToFile(fileName,xlsDimension,count,count,1,xls,yls);
+      // Only for comparisons in Mathematica
+      /*
+      QString fileName("/scr/science40/mauger/Working/trunk/hvvp1824Char"+QString().setNum(m)+".dat");
+      writeToFile(fileName,xlsDimension,count,count,1,xls,yls);
+      QString midFileName = fileName+QString(".printA");
+      flag = Matrix::oldlls(xlsDimension, count, xls, yls, sse, cc, stand_err, midFileName);
+      Message::toScreen(QString(" count = ")+QString().setNum(count));
+      QFile* outputFile = new QFile(fileName+QString(".cpplls"));
+      outputFile->open(QIODevice::WriteOnly);
+      QTextStream out(outputFile);
+      out << "Volume Used" << volume->getDateTimeString() << endl;
+      out << "Range: " << rt << endl;
+      out << "CCA: " << cca << endl;
+      out << "RMW: " << rmw << endl;
+      out << endl;
+      out << "OLD C++ ROUTINE" << endl << endl;
+      out << "SSE: "<<sse<<endl;
+      out << "stand_dev@" << m << ": " << sse << endl;
+      for(int zz = 0; zz < xlsDimension; zz++) {
+      	out << cc[zz] << " " << stand_err[zz] << endl;
+      }
 
       flag = Matrix::lls(xlsDimension, count, xls, yls, sse, cc, stand_err);
-
-      //Message::toScreen("SSE = "+QString().setNum(sse));
-      /*
-      Message::toScreen("stand_dev @ "+QString().setNum(m)+" = "+QString().setNum(sse));
+      
+      out << "NEW C++ ROUTINE" << endl << endl;
+      out << "SSE: "<< sse << endl;
+      out << "stand_dev@" << m << ": " << sse << endl;
       for(int zz = 0; zz < xlsDimension; zz++) {
-      	Message::toScreen(QString().setNum(cc[zz])+", "+QString().setNum(stand_err[zz]));
+      	out << cc[zz] << " " << stand_err[zz] << endl;
       }
+      
+      outputFile->close();
       */
       
+      flag = Matrix::lls(xlsDimension, count, xls, yls, sse, cc, stand_err);
+
+      Message::toScreen("SSE = "+QString().setNum(sse));
+
+      //Message::toScreen("Finished Printing in HVVP");
+
       /*
        * Check for outliers that deviate more than two standard 
        *   deviations from the least squares fit.
@@ -292,8 +345,8 @@ bool Hvvp::findHVVPWinds(bool both)
      
       if(flag) {
 		  outlier = false;
-		  int cgood = 0;
-		  for (int n = 0; n < count; n++) {
+		  long cgood = 0;
+		  for (long n = 0; n < count; n++) {
 			  float vr_est = 0;
 			  for(int p = 0; p < xlsDimension; p++) {
 				  vr_est = vr_est+cc[p]*xls[p][n];
@@ -312,14 +365,14 @@ bool Hvvp::findHVVPWinds(bool both)
 		  
 
 		  if(both) {
-		    if(outlier && (cgood >=6500)) {
-		      int qc_count = 0;
+		    if(outlier && (cgood >=long(6500))) {
+		      long qc_count = 0;
 		      float** qcxls = new float*[xlsDimension];
 		      float* qcyls = new float[count];
 		      for(int d = 0; d < xlsDimension; d++) {
 			qcxls[d] = new float[count];
 		      } 
-		      for (int n = 0; n < count; n++) {
+		      for (long n = 0; n < count; n++) {
 			qcyls[n] = 0;
 			for(int p = 0; p < xlsDimension; p++) {
 			  qcxls[p][n] = 0;
@@ -333,6 +386,7 @@ bool Hvvp::findHVVPWinds(bool both)
 			  qc_count++;
 			}
 		      }
+		      // Message::toScreen("qc_count = "+QString().setNum(qc_count));
 		      flag=Matrix::lls(xlsDimension,qc_count,qcxls,qcyls,sse,cc,stand_err);
 		      for(int ii = 0; ii < xlsDimension; ii++) {
 			delete [] qcxls[ii];
@@ -351,7 +405,7 @@ bool Hvvp::findHVVPWinds(bool both)
 		  float vm_c = cc[3]+vr;
 		  		  
 		  // Rankine exponent of the radial wind.
-		  float xr = -1*cc[4]/cc[1];
+		  float xr = -1.0*cc[4]/cc[1];
 		  		  
 		  /* 
 		   * Variance of xr.  This is used in the
@@ -375,7 +429,7 @@ bool Hvvp::findHVVPWinds(bool both)
 		  
 		  if(vr > 0) {
 		    if(xr > 0)
-		      xt = 1-xr;
+		      xt = 1.0-xr;
 		    else
 		      xt = -1.0*xr/2.0;
 		  }
@@ -383,7 +437,7 @@ bool Hvvp::findHVVPWinds(bool both)
 		    if(xr >= 0)
 		      xt = xr/2.0;
 		    else
-		      xt = 1+xr;
+		      xt = 1.+xr;
 		  }
 		  
 		  mod_Rankine_xt[m] = xt;
@@ -408,7 +462,7 @@ bool Hvvp::findHVVPWinds(bool both)
 		  float vm_s = cc[0]-vt;
 		  //Message::toScreen(" vm_s = "+QString().setNum(vm_s));
 		  
-		  var[m] = sqrt(stand_err[0]*stand_err[0]+var[m]*var[m]);
+		  var[m] = sqrt(stand_err[0]*stand_err[0] + var[m]*var[m]);
 		  
 		  // rotate vm_c and vm_s to standard cartesian U and V components,
 		  // ue and ve, using cca.
@@ -425,43 +479,45 @@ bool Hvvp::findHVVPWinds(bool both)
 		  
 		  // Set realistic limit on magnitude of results.
 		  if((xt < 0)||(fabs(ue)>30.0)||(fabs(ve)>30)) {
-			  //Message::toScreen("First Crappy Fail Option");
-			  //z[m] = h0;               
-			  u[m] = velNull;
-			  v[m] = velNull;
-			  vm_sin[m] = velNull;
+		    Message::toScreen("First Crappy Fail Option");
+		    //z[m] = h0;               
+		    u[m] = velNull;
+		    v[m] = velNull;
+		    vm_sin[m] = velNull;
 		  } else {
-			  //Message::toScreen("Only Good Option");
-			  //z[m] = hgtStart+hInc*float(m);
-			  u[m] = ue;
-			  v[m] = ve;
-			  vm_sin[m] = vm_s;
+		    Message::toScreen("Only Good Option");
+		    //z[m] = hgtStart+hInc*float(m);
+		    u[m] = ue;
+		    v[m] = ve;
+		    vm_sin[m] = vm_s;
 		  }
       } else {
-		  //z[m] = h0;
-		  u[m] = velNull;
-		  v[m] = velNull;
-		  vm_sin[m] = velNull;
+	Message::toScreen("Second Crappy Fail Option");
+	//z[m] = h0;
+	u[m] = velNull;
+	v[m] = velNull;
+	vm_sin[m] = velNull;
       }
       delete [] stand_err;
       delete [] cc;
     } else {
+      Message::toScreen("Third Crappy Fail Option");
       //z[m] = h0;
       u[m] = velNull;
       v[m] = velNull;
       vm_sin[m] = velNull;
     }
-    //Message::toScreen("HVVP Output From Level "+QString().setNum(m)+" z = "+QString().setNum(z[m])+" vm_sin = "+QString().setNum(vm_sin[m]));
+    Message::toScreen("HVVP Output From Level "+QString().setNum(m)+" z = "+QString().setNum(z[m])+" vm_sin = "+QString().setNum(vm_sin[m]));
 	
   }
   
   /*
    *  Reject results whose Xt is greater than one SD from average Xt
    */
-
+  
   //  Comment this section out until further testing is complete
   emit log(Message(QString(),1,this->objectName()));
-
+  
   float xtav=0;
   float xtsd=0;
   count=0;
@@ -480,15 +536,27 @@ bool Hvvp::findHVVPWinds(bool both)
 	xtsd+=((mod_Rankine_xt[i]-xtav)*(mod_Rankine_xt[i]-xtav));
       }
     }
+    /*
+    // LM: 5/19/07 - This was previously in here, temp remove to compare with
+    // Paul's version.
     // (count-1) added by PH - previously incorrect
-    xtsd = sqrt(xtsd/(count-1));
+    xtsd = sqrt(xtsd/(count-1));  
     for(int i = 0; i < levels; i++) {
-      //if(mod_Rankine_xt[i] > xtsd) { // ----- Pauls code I don't agree -LM
-      // I agree LM, this is what I intended to write, but you forgot the additional correction noted above - PH
-      if((fabs(mod_Rankine_xt[i]-xtav) > xtsd)||(mod_Rankine_xt[i]==velNull)) {
+    if((fabs(mod_Rankine_xt[i]-xtav) > xtsd)||(mod_Rankine_xt[i]==velNull)) {
+    u[i] = velNull;
+    }
+    }
+    */
+
+    // LISA TEsTing ONLY - Now it looks like other without junk above
+    xtsd = sqrt(xtsd);  
+    for(int i = 0; i < levels; i++) {
+      if(mod_Rankine_xt[i] > xtsd) {
 	u[i] = velNull;
       }
     }
+    // END LISA TestING ONLY
+  
   }
   // commented section ended here 
   
@@ -757,7 +825,43 @@ void Hvvp::writeToFile(QString& fileName, int aRows, int aCols,
   }
   out << endl;
 
-  Message::toScreen("Writing B");
+  for(int i = 0; i < bRows; i++) {
+    out << reset << qSetRealNumberPrecision(5) << scientific << qSetFieldWidth(13) << b[i] << endl;
+    
+  }
+  out << endl;
+  
+  
+  outputFile->close();
+
+}
+
+void Hvvp::writeToFileWithAltitude(QString& fileName, int aRows, int aCols,
+		       int bRows, int bCols, float** a, float* b)
+{
+  QFile* outputFile = new QFile(fileName);
+  outputFile->open(QIODevice::WriteOnly);
+  QTextStream out(outputFile);
+  out << "Writing Matrices To File" << endl;
+  out << aRows << endl;
+  out << aCols << endl;
+  out << bRows << endl;
+  out << bCols << endl;
+
+  int line = 0;
+  for(int i = 0; i < aRows; i++) {
+    for(int j = 0; j < aCols; j++) {
+      out << reset << qSetRealNumberPrecision(5) << scientific << qSetFieldWidth(13) << a[i][j];
+      line++;
+      if(line == 8) {
+	out << endl;
+	line = 0;
+      }
+    }
+    line = 0;
+    out << endl;
+  }
+  out << endl;
 
   for(int i = 0; i < bRows; i++) {
     out << reset << qSetRealNumberPrecision(5) << scientific << qSetFieldWidth(13) << b[i] << endl;

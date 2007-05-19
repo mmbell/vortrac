@@ -126,7 +126,7 @@ private:
 
    float rotateAzimuth(const float &angle);
 
-   int hvvpPrep(int m);
+   long hvvpPrep(int m);
    
    
    //Moved to static functions in Math/Matrix 
@@ -140,6 +140,8 @@ private:
    void smoothHvvp(float* data);
    void smoothHvvpVmSin(float* data1, float* data2);
    void writeToFile(QString& nameOfFile, int aRows, int aCols,
+		    int bRows, int bCols, float** a, float* b);
+   void writeToFileWithAltitude(QString& nameOfFile, int aRows, int aCols,
 		    int bRows, int bCols, float** a, float* b);
 
 signals:

@@ -39,6 +39,7 @@ class AnalysisThread : public QThread
      void setPressureList(PressureList *archivePtr);
      void setDropSondeList(PressureList *archivePtr);
      void setNumVolProcessed(const float& num);
+     void setAnalyticRun(const bool& runOnce);
 	 
  public slots:
      void catchLog(const Message& message);
@@ -66,7 +67,7 @@ class AnalysisThread : public QThread
      RadarData *radarVolume;
      GriddedFactory gridFactory;
      SimplexThread *simplexThread;
-	 VortexThread *vortexThread;
+     VortexThread *vortexThread;
      VortexList *vortexList;
      SimplexList *simplexList;
      PressureList *pressureList;
@@ -75,6 +76,7 @@ class AnalysisThread : public QThread
      void archiveAnalysis();
      float vortexLat, vortexLon;
      int numVolProcessed;
+     bool analyticRun;
 
 };
 

@@ -18,8 +18,9 @@
 #include "Math/Matrix.h"
 #include <QDateTime>
 
-class ChooseCenter 
+class ChooseCenter : public QObject
 {
+  Q_OBJECT
 
  public:
      ChooseCenter(Configuration* newConfig = new Configuration(), 
@@ -39,7 +40,12 @@ class ChooseCenter
     // void checkHeights();
     float getMinutesTo(const QDateTime &volTime);
 
-  
+ public slots:
+    void catchLog(const Message& message);
+
+ signals:
+    void errorlog(const Message& message);
+
  private:
     Configuration* config;       // Should this be a constant parameter
     const SimplexList* simplexResults;

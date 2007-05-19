@@ -22,18 +22,19 @@ Configuration::Configuration(QObject *parent, const QString &filename)
     {
       // Create a new configuration from scratch
       QDomDocument domDoc("CurrConfig");
-      /* if(!read("vortrac_default.xml")) {
-	 emit log(Message("Error reading configuration file (default)"));
+      /*      if(!read("vortrac_default.xml")) {
+	 emit log(Message(QString("Error Reading Default Configuration File, Please Locate vortrac_default.xml"),0,this->objectName(),Red,QString("Locate Default File")));
 	 } */
     }
   else
     {
       QDomDocument domDoc("CurrConfig");
       if(!read(filename)) {
-	emit log(Message("Error reading configuration file (constructor)"));
+	emit log(Message(QString("Error Reading Configuration File "+filename),0,this->objectName(),Red,QString("Could Not Locate File")));
       }
     }
   isModified = false;
+  emit log(Message(QString(),0,this->objectName(),Green));
 }
 
 Configuration::~Configuration()
@@ -59,7 +60,7 @@ bool Configuration::read(const QString &filename)
 
   QFile file(filename);
   if (!file.open(QIODevice::ReadOnly)) {
-    emit log(Message("Error opening configuration file"));
+    emit log(Message(QString("Error Opening Configuration File, Check Permissions on "+filename),0,this->objectName(),Red, QString("Check File Permissions")));
     return false;
   }
 
@@ -70,11 +71,11 @@ bool Configuration::read(const QString &filename)
 
   // Set the DOM document contents to those of the file
   if (!domDoc.setContent(&file, true, &errorStr, &errorLine, &errorColumn)) {
-    QString errorReport = QString("Parse error at line %1, column %2:\n%3")
+    QString errorReport = QString("XML Parse Error in "+filename+" at Line %1, Column %2:\n%3")
       .arg(errorLine)
       .arg(errorColumn)
       .arg(errorStr);
-    emit log(Message(errorReport));
+    emit log(Message(errorReport,0,this->objectName(),Yellow, QString("XML Parse Error")));
     file.close();
     return false;
   }
@@ -83,7 +84,7 @@ bool Configuration::read(const QString &filename)
   // Basic check to see if this is really a configuration file
   QDomElement root = domDoc.documentElement();
   if (root.tagName() != "vortrac") {
-      emit log(Message("The file is not an VORTRAC configuration file."));
+      emit log(Message(QString("The file is not an VORTRAC configuration file."),0,this->objectName(),Red,QString("Not a VORTRAC file")));
     return false;
 
   }
@@ -98,6 +99,7 @@ bool Configuration::read(const QString &filename)
   isModified = false;
   return true;
   
+  emit log(Message(QString(), 0, this->objectName(),Green));
 
 }
 
@@ -108,13 +110,13 @@ bool Configuration::write(const QString &filename)
  
   QFile file(filename);
   if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-    // return false;
     QTextStream out(&file);
     domDoc.save(out, IndentSize);
     isModified = false;
+    emit log(Message(QString(),0,this->objectName(),Green));
     return true;
   }
-  Message::toScreen("CONFIGURATION: Failed to save to file");
+  emit log(Message(QString("Failed to save XML File to "+filename),0,this->objectName(),Yellow,QString("Failed to save XML file")));
   return false;
 }
 
@@ -139,10 +141,10 @@ QDomElement Configuration::getConfig(const QString &configName)
 
   QDomElement child = groupList.item(indexForTagName.value(configName)).toElement();
   if (child.isNull()) {
-    emit log(Message("Null Config Node!"));
+    emit log(Message(QString("Null Config Node: "+configName),0,this->objectName(),Yellow, QString("Bad XML Node")));
   }
   if(child.tagName()!=configName){
-    emit log(Message(QString("Could not find the configNode "+configName),0,
+    emit log(Message(QString("Could Not Find The Config Node "+configName),0,
 		     this->objectName()));
     return QDomElement();
   }
@@ -173,7 +175,7 @@ QDomElement Configuration::getConfig(const QString &configName,
       }
     }
   }
-  emit log(Message("Null Node!"));
+  emit log(Message(QString("Null XML Node/Element: "+configName+"."+attribName+" = "+attribValue),0,this->objectName()));
   QDomElement child;
   return child;
 }
@@ -307,8 +309,7 @@ void Configuration::addDom(const QDomElement &element,
    */
 
   if(element.isNull()) {
-    emit log(Message("Configuration could not find "+element.tagName()));
-    //Message::toScreen("Configuration could not find "+element.tagName());
+    emit log(Message(QString("Could Not Find Config Section "+element.tagName()),0,this->objectName()));
   }
   else {
     QDomElement newChildElement = domDoc.createElement(paramName);
@@ -370,8 +371,7 @@ void Configuration::addDom(const QDomElement &element,
    */
 
   if(element.isNull()) {
-    emit log(Message("Configuration could not find "+element.tagName()));
-    //Message::toScreen("Configuration could not find "+element.tagName());
+    emit log(Message(QString("Could Not Find Config Section "+element.tagName()),0,this->objectName()));
   }
   else {
     QDomElement newChildElement;
@@ -438,12 +438,12 @@ void Configuration::removeDom(const QDomElement &element,
     int index = indexForTagName[element.tagName()];
     QDomNode testNode(groupList.item(index).removeChild(oldElement));
     if (testNode.isNull())
-      emit log(Message("Unable to delete the element "+paramName+" from "+element.tagName()));
+      emit log(Message(QString("Unable to delete the element "+paramName+" from "+element.tagName()),0,this->objectName()));
 
     QString message("Config Changed: ");
     message+=(element.tagName()+": "+paramName+" was removed");
     if(logChanges)
-      emit log(Message(message));
+      emit log(Message(message,0,this->objectName()));
     emit configChanged();
   }
 }
@@ -469,7 +469,7 @@ void Configuration::removeDom(const QDomElement &element,
     int index = indexForTagName[element.tagName()];
     QDomNode testNode(groupList.item(index).removeChild(oldElement));
     if (testNode.isNull())
-      emit log(Message("Unable to delete the element "+paramName+" from "+element.tagName()));
+      emit log(Message(QString("Unable to delete the element "+paramName+" from "+element.tagName()),0,this->objectName()));
 
     QString message("Config Changed: ");
     message+=(element.tagName()+": "+paramName+": "+attribName+": ");
@@ -505,10 +505,9 @@ const QString Configuration::getAttribute(const QDomElement &element,
     elementWithParam.nextSiblingElement(paramName);
   }
   if(attribValue.isNull()) {
-    QString errMessage = "Configuration could not find "+element.tagName();
+    QString errMessage = "Could Not Find The Config Element "+element.tagName();
       errMessage +=(": " + paramName + ": " + attribName);
-      emit log(Message(errMessage));
-      //Message::toScreen(errMessage);
+      emit log(Message(errMessage,0,this->objectName()));
   }
   return attribValue;
 }
@@ -559,10 +558,9 @@ const QDomElement Configuration::getElementWithAttrib(const QDomElement &element
       sibling = sibling.nextSiblingElement(paramName);
     }
     if(elementWithAttribute.isNull()) {
-      QString errMessage = "Configuration could not find "+element.tagName();
+      QString errMessage = "Could Not Find The Config Element "+element.tagName();
       errMessage +=(": " + paramName + ": " + attribName + ": " + attribValue);
-      emit log(Message(errMessage));
-      //Message::toScreen(errMessage);
+      emit log(Message(errMessage,0,this->objectName()));
       
     }
   }
@@ -584,10 +582,9 @@ const QDomElement Configuration::getElement(const QDomElement &element,
   if((desiredElement.tagName()!=paramName)
      ||(desiredElement.isNull())) {
 
-    QString errMessage = "Configuration could not find "+element.tagName();
+    QString errMessage = "Could Not Find Config Element: "+element.tagName();
     errMessage +=(": " + paramName);
-    emit log(Message(errMessage));
-    //Message::toScreen(errMessage);
+    emit log(Message(errMessage,0,this->objectName()));
     
     desiredElement = QDomElement();
     desiredElement.clear();
@@ -610,16 +607,15 @@ Configuration& Configuration::operator = (const Configuration &other)
 
 void Configuration::setLogChanges(bool logStatus)
 {
-  logChanges = logStatus;
   QString message;
   if(!logChanges) {
-    message = QString(tr("Stopped Logging Item Change Messages"));
-    emit log(Message(message, 0, this->objectName()));
-    Message::toScreen(message);
+    message = QString(tr("Stopped Logging XML Item Change Messages For This Configuration"));
+    emit log(Message(message, 0, this->objectName(),Green));
+    logChanges = logStatus;
   }
   else {
-    message = QString(tr("Started Logging Item Change Messages"));
-    emit log(Message(message, 0, this->objectName()));
-    Message::toScreen(message);
+    logChanges = logStatus;
+    message = QString(tr("Started Logging XML Item Change Messages For This Configuration"));
+    emit log(Message(message, 0, this->objectName(),Green));
   }
 }

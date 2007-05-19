@@ -22,10 +22,12 @@ class GBVTD
 	
 public:
 	GBVTD(QString& initGeometry, QString& initClosure, int& wavenumbers, float*& gaps);
+	GBVTD(QString& initGeometry, QString& initClosure, int& wavenumbers, float*& gaps, float& hvvpwind);
 	~GBVTD();
 	
 	bool analyzeRing(float& xCenter, float& yCenter, float& radius, float& height, int& numData,
 					 float*& ringData, float*& ringAzimuths, Coefficient*& vtdCoeffs, float& stdDev);
+	void setHVVP(const float& meanWind);
 private:
 		
 	QString geometry;
@@ -44,6 +46,8 @@ private:
 	float level;
 	float* FourierCoeffs;
 	Matrix llsSolver;
+
+	float hvvpMeanWind;
 	
 	void setWindCoefficients(float& radius, float& height, int& numCoefficients, float*& FourierCoeffs, Coefficient*& vtdCoeffs);
 	int getNumCoefficients(int& numData);

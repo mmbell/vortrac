@@ -36,6 +36,7 @@ AnalysisThread::AnalysisThread(QObject *parent)
 		  this, SLOT(foundWinds()), Qt::DirectConnection);
 
   numVolProcessed = 0;
+  analyticRun = false;
   configData = NULL;
   radarVolume = NULL;
   vortexList = NULL;
@@ -260,7 +261,8 @@ void AnalysisThread::run()
 		  // given vortex center for our center
 		  // Message::toScreen(" secs between start and this one "+QString().setNum(obsDateTime.secsTo(volDateTime)));
 
-		  if(abs(obsDateTime.secsTo(volDateTime))<15*60) {
+		  if((abs(obsDateTime.secsTo(volDateTime))<15*60)
+		     ||(analyticRun)) {
 		    vortexLat = configData->getParam(vortex,"lat").toFloat();
 		    vortexLon = configData->getParam(vortex,"lon").toFloat();
 		    
@@ -290,10 +292,12 @@ void AnalysisThread::run()
 		    vortexLon = configData->getParam(vortex,"lon").toFloat();
 		    
 		    int elapsedSeconds =obsDateTime.secsTo(volDateTime);
-		    Message::toScreen("Seconds since start "+QString().setNum(elapsedSeconds)+" in AnalysisThread");
+		    //Message::toScreen("Seconds since start "+QString().setNum(elapsedSeconds)+" in AnalysisThread");
 		    float distanceMoved = elapsedSeconds*stormSpeed/1000.0;
 		    float changeInX = distanceMoved*cos(stormDirection);
 		    float changeInY = distanceMoved*sin(stormDirection);
+		    //QString message("changeInX = "+QString().setNum(changeInX)+" changeInY = "+QString().setNum(changeInY));
+		    //  emit(log(Message(message,0,this->objectName())));
 		    float *newLatLon = GriddedData::getAdjustedLatLon(vortexLat,vortexLon, changeInX, changeInY);
 
 
@@ -326,6 +330,9 @@ void AnalysisThread::run()
 		    closeToEdge = true;
 		  }
 		}
+
+		if(analyticRun)
+		  beyondRadar = false;
 
 		if (beyondRadar) {
 		  // Too far away for Doppler, need to send a signal
@@ -399,16 +406,16 @@ void AnalysisThread::run()
 		}
 		else
 		  emit log(Message("RadarVolume is Dealiased"));
-		         /*
-		
+		/*
+		 
 			 // Using this for running FORTRAN version
-			 QString name("fchar0007.dat");
+			 QString name("fchar1824.dat");
 			 Message::toScreen("Writing Vortrac Input "+name);
 			 radarVolume->writeToFile(name);
 			 Message::toScreen("Wrote Vortrac Input "+name);
-			 */
-		
-		         /*
+		*/
+			 
+		         
 			 // Testing HVVP before Cappi to save time 
 			 // only good for Charley 1824
 			 
@@ -416,12 +423,21 @@ void AnalysisThread::run()
 			 float cca1 = 177.204;
 			 float rmw1 = 11;
 			 
+			 /*
 			 // Testing HVVP before Cappi to save time 
 			 // only good for Charley 140007
 			 
 			 float rt1 = 87.7712;
 			 float cca1 = 60.1703;
 			 float rmw1 = 16.667;
+			 
+			 
+			 // Testing HVVP before Cappi to save time 
+			 // only good for Charley 140007
+			 
+			 float rt1 = 88.8294;
+			 float cca1 = 63.466;
+			 float rmw1 = 15.667;
 			 
 			 
 			 // Testing HVVP before Cappi to save time 
@@ -446,20 +462,21 @@ void AnalysisThread::run()
 			 float rt1 = 70.60;
 			 float cca1 = 45.19;
 			 float rmw1 = 7;
-			 
+			 */
+			 Message::toScreen("Vortex (Lat,Lon): ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")");
 			 Message::toScreen("Hvvp Parameters: Distance to Radar "+QString().setNum(rt1)+" angel to vortex center in degrees ccw from north "+QString().setNum(cca1)+" rmw "+QString().setNum(rmw1));
 			 
 			 Hvvp *envWindFinder1 = new Hvvp;
 			 envWindFinder1->setRadarData(radarVolume,rt1, cca1, rmw1);
-			 if(!envWindFinder1->findHVVPWinds()){
-			 
+			 if(!envWindFinder1->findHVVPWinds(true)){
+			   
 			 }
 			 float missingLink1 = envWindFinder1->getAvAcrossBeamWinds();
 			 Message::toScreen("Hvvp gives "+QString().setNum(missingLink1));
 			 delete envWindFinder1;
 			 
-			 //return;
-			 */
+			 return;
+			 
  
 		mutex.unlock();
 		if(abort)
@@ -516,6 +533,7 @@ void AnalysisThread::run()
 		   SLOT(catchLog(const Message&)), Qt::DirectConnection); */
 		
 		// Output Radar data to check if dealias worked
+
 		gridData->writeAsi();
 		emit log(Message("Done with Cappi",30));
 		QString cappiTime;
@@ -531,7 +549,8 @@ void AnalysisThread::run()
 		
 	      
 		//Find Center 
-		simplexThread->findCenter(configData, gridData, simplexList, vortexData);
+		simplexThread->findCenter(configData, gridData, radarVolume, 
+					  simplexList, vortexData);
 		waitForCenter.wait(&mutex); 
 					 
 		QString simplexTime;
@@ -690,4 +709,9 @@ void AnalysisThread::catchLog(const Message& message)
 void AnalysisThread::setNumVolProcessed(const float& num)
 {
   numVolProcessed = (int)num;
+}
+
+void AnalysisThread::setAnalyticRun(const bool& runOnce)
+{
+  analyticRun = runOnce;
 }

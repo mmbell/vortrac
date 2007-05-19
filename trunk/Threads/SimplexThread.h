@@ -36,7 +36,8 @@ class SimplexThread : public QThread
      SimplexThread(QObject *parent = 0);
      ~SimplexThread();
      void findCenter(Configuration *wholeConfig, GriddedData *dataPtr, 
-		     SimplexList *simplexPtr, VortexData *vortexPtr);
+		     RadarData* radarPtr, SimplexList *simplexPtr, 
+		     VortexData *vortexPtr);
 
  public slots:
      void catchLog(const Message& message);
@@ -53,6 +54,7 @@ class SimplexThread : public QThread
      QWaitCondition waitForData;
      bool abort;
 	 GriddedData *gridData;
+	 RadarData *radarData;
 	 SimplexData *simplexData;
 	 SimplexList *simplexResults;
 	 VortexData *vortexData;
@@ -82,6 +84,8 @@ class SimplexThread : public QThread
 	 float Xind[25],Yind[25],VTind[25];
 	 float Xconv[25],Yconv[25],VTconv[25];
 	 float initialX[25], initialY[25];
+	 float hvvpResult;
+	 float hvvpUncertainty;
 
 	 
 	 void archiveCenters(float& radius,float& height,float& numPoints);
@@ -90,6 +94,7 @@ class SimplexThread : public QThread
 	 float simplexTest(float**& vertex, float*& VT, float*& vertexSum, 
 			   float& radius, float& height, float& RefK,
 			   QString& velField, int& high,double factor);
+	 bool calcHVVP(float& lat = 0, float& lon = 0);
 	 
 	 // Choosecenter variables
 	 float velNull;

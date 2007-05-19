@@ -151,7 +151,7 @@ void GriddedData::setReferencePoint(int ii, int jj, int kk)
   Message::toScreen("GriddedData: Using the Index Based Reference Assignment");
 
   if((ii > iDim)||(ii < 0)||(jj > jDim)||(jj < 0)||(kk > kDim)||(kk < 0))
-    Message::toScreen("GriddedData: trying to examine point outside cappi");
+    Message::toScreen("GriddedData: trying to examine point outside cappi for setReferencePoint: i = "+QString().setNum(ii)+" j = "+QString().setNum(jj)+" k = "+QString().setNum(kk));
   refPointI = ii;
   refPointJ = jj;
   refPointK = kk;
@@ -160,12 +160,6 @@ void GriddedData::setReferencePoint(int ii, int jj, int kk)
 
 void GriddedData::setCartesianReferencePoint(float ii, float jj, float kk)
 {
-  /*
-  //Message::toScreen("Setting Cartesian Reference Point"); removed 2/24/07 -LM
-  refPointI = int(floor(ii/iGridsp - xmin+.5));
-  refPointJ = int(floor(jj/jGridsp - ymin+.5));
-  refPointK = int(floor(kk/kGridsp - zmin+.5));
-  */
   // The reference point is coming in in km
   refPointI = int(floor((ii- xmin)/iGridsp+.5));
   refPointJ = int(floor((jj - ymin)/jGridsp+.5));
@@ -176,7 +170,7 @@ void GriddedData::setCartesianReferencePoint(float ii, float jj, float kk)
   if((refPointI > iDim)||(refPointI < 0) || 
      (refPointJ > jDim)||(refPointJ < 0) ||
      (refPointK > kDim)||(refPointK < 0))
-    Message::toScreen("GriddedData: trying to examine point outside cappi");
+    Message::toScreen("GriddedData: trying to examine point outside cappi for setCartesianReferencePoint: i = "+QString().setNum(ii)+" j = "+QString().setNum(jj)+" k = "+QString().setNum(kk)+" iRef = "+QString().setNum(refPointI)+" jRef = "+QString().setNum(refPointJ)+" kRef = "+QString().setNum(refPointK));
   /*
    * Why is this giving errors here? I thought we set this up so that we 
    * attached the radar position with the radar lat lon which is typically 

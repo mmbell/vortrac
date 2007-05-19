@@ -77,8 +77,9 @@ VortexPanel::VortexPanel()
   obsDateTime->setDisplayFormat("MMM-dd-yyyy hh:mm:ss");
   QDate minDate(QDate::fromString(QString("1900-01-01"),"yyyy-MM-dd"));
   QTime minTime(QTime::fromString(QString("00:00:00"), "hh:mm:ss"));
-  //obsDateTime->setMinimumTime(minTime);
-  //obsDateTime->setMinimumDate(minDate);
+  obsDateTime->setMinimumTime(minTime);
+  obsDateTime->setMinimumDate(minDate);
+  obsDateTime->setDateTime(QDateTime::currentDateTime());
   QHBoxLayout *obs = new QHBoxLayout;
   obs->addWidget(obsLabel);
   obs->addStretch();
@@ -304,8 +305,9 @@ RadarPanel::RadarPanel()
   startDateTime->setDisplayFormat("MMM-dd-yyyy hh:mm:ss");
   QDate minDate(QDate::fromString(QString("1900-01-01"),"yyyy-MM-dd"));
   QTime minTime(QTime::fromString(QString("00:00:00"), "hh:mm:ss"));
-  //startDateTime->setMinimumTime(minTime);
-  //startDateTime->setMinimumDate(minDate);
+  startDateTime->setMinimumTime(minTime);
+  startDateTime->setMinimumDate(minDate);
+  startDateTime->setDateTime(QDateTime::currentDateTime());
   QHBoxLayout *startLayout = new QHBoxLayout;
   startLayout->addWidget(start);
   startLayout->addWidget(startDateTime);
@@ -313,8 +315,9 @@ RadarPanel::RadarPanel()
   QLabel *end = new QLabel(tr("End Date and Time"));
   endDateTime = new QDateTimeEdit();
   endDateTime->setDisplayFormat("MMM-dd-yyyy hh:mm:ss");
-  //endDateTime->setMinimumTime(minTime);
-  //endDateTime->setMinimumDate(minDate);
+  endDateTime->setMinimumTime(minTime);
+  endDateTime->setMinimumDate(minDate);
+  endDateTime->setDateTime(QDateTime::currentDateTime());
   QHBoxLayout *endLayout = new QHBoxLayout;
   endLayout->addWidget(end);
   endLayout->addWidget(endDateTime);
@@ -881,9 +884,13 @@ CenterPanel::CenterPanel()
   closureOptions = new QHash<QString, QString>;
   closureOptions->insert(QString("Original"), 
 			QString("original"));
+  closureOptions->insert(QString("Original-HVVP"), 
+			 QString("original_hvvp"));
+  
+  // Add addtional options here
+
   closureOptions->insert(QString("Select closure assumption"),
 			 QString(""));
-  // Add addtional options here
 
   closureBox = new QComboBox;
   options = closureOptions->keys();
@@ -1432,6 +1439,11 @@ ChooseCenterPanel::ChooseCenterPanel()
   QLabel *start = new QLabel(tr("Start Date and Time"));
   startDateTime = new QDateTimeEdit();
   startDateTime->setDisplayFormat("MMM-dd-yyyy hh:mm:ss");
+  QDate minDate(QDate::fromString(QString("1900-01-01"),"yyyy-MM-dd"));
+  QTime minTime(QTime::fromString(QString("00:00:00"), "hh:mm:ss"));
+  startDateTime->setMinimumTime(minTime);
+  startDateTime->setMinimumDate(minDate);
+  startDateTime->setDateTime(QDateTime::currentDateTime());
   QHBoxLayout *startLayout = new QHBoxLayout;
   startLayout->addWidget(start);
   startLayout->addWidget(startDateTime);
@@ -1439,6 +1451,9 @@ ChooseCenterPanel::ChooseCenterPanel()
   QLabel *end = new QLabel(tr("End Date and Time"));
   endDateTime = new QDateTimeEdit();
   endDateTime->setDisplayFormat("MMM-dd-yyyy hh:mm:ss");
+  endDateTime->setMinimumTime(minTime);
+  endDateTime->setMinimumDate(minDate);
+  endDateTime->setDateTime(QDateTime::currentDateTime());
   QHBoxLayout *endLayout = new QHBoxLayout;
   endLayout->addWidget(end);
   endLayout->addWidget(endDateTime);
@@ -1780,9 +1795,13 @@ VTDPanel::VTDPanel()
   closureOptions = new QHash<QString, QString>;
   closureOptions->insert(QString("Original"), 
 			QString("original"));
+  closureOptions->insert(QString("Original-HVVP"), 
+			 QString("original_hvvp"));
+
+  // Add addtional options here
+
   closureOptions->insert(QString("Select closure assumption"),
 			 QString(""));
-  // Add addtional options here
   
   closureBox = new QComboBox;
   options = closureOptions->keys();
@@ -2466,9 +2485,20 @@ GraphicsPanel::GraphicsPanel()
   
   QLabel *beginTimeLabel = new QLabel(tr("Beginning Time"));
   startDateTime = new QDateTimeEdit();
+  startDateTime->setDisplayFormat("MMM-dd-yyyy hh:mm:ss");
+  QDate minDate(QDate::fromString(QString("1900-01-01"),"yyyy-MM-dd"));
+  QTime minTime(QTime::fromString(QString("00:00:00"), "hh:mm:ss"));
+  startDateTime->setMinimumTime(minTime);
+  startDateTime->setMinimumDate(minDate);
+  startDateTime->setDateTime(QDateTime::currentDateTime());
   
   QLabel *endTimeLabel = new QLabel (tr("Endding Time"));
   endDateTime = new QDateTimeEdit();
+  endDateTime->setDisplayFormat("MMM-dd-yyyy hh:mm:ss");
+  endDateTime->setMinimumTime(minTime);
+  endDateTime->setMinimumDate(minDate);
+  endDateTime->setDateTime(QDateTime::currentDateTime());
+
   
   graph->addWidget(pMax, 0,0);
   graph->addWidget(pMaxBox, 0, 1);

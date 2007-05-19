@@ -26,7 +26,7 @@
         <dir>/scr/science40/mauger/Working/trunk/workingDirs/cappi</dir>
         <xdim>100</xdim>
         <ydim>100</ydim>
-        <zdim>4</zdim>
+        <zdim>3</zdim>
         <xgridsp>1.0</xgridsp>
         <ygridsp>1.0</ygridsp>
         <zgridsp>1.0</zgridsp>
@@ -41,7 +41,7 @@
         <reflectivity>DZ</reflectivity>
         <velocity>VE</velocity>
         <bottomlevel>1</bottomlevel>
-        <toplevel>5</toplevel>
+        <toplevel>3</toplevel>
         <innerradius>5</innerradius>
         <outerradius>20</outerradius>
         <ringwidth>1.0</ringwidth>
@@ -79,7 +79,7 @@
         <reflectivity>DZ</reflectivity>
         <velocity>VE</velocity>
         <bottomlevel>1</bottomlevel>
-        <toplevel>5</toplevel>
+        <toplevel>3</toplevel>
         <innerradius>1</innerradius>
         <outerradius>60</outerradius>
         <ringwidth>1.0</ringwidth>
@@ -87,10 +87,9 @@
         <maxdatagap wavenum="0" >180</maxdatagap>
         <maxdatagap wavenum="1" >120</maxdatagap>
     </vtd>
-    <hvvp>
-    </hvvp>
+    <hvvp/>
     <pressure>
-        <dir>/scr/science40/mauger/Working/trunk/workingDirs/pressure</dir>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs/</dir>
         <format>AWIPS</format>
         <maxobstime>59</maxobstime>
         <maxobsdist>50</maxobsdist>

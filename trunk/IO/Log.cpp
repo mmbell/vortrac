@@ -22,24 +22,22 @@ Log::Log(QWidget *parent)
   workingDirectory = QDir::current();
   logFileName = QString("autoLog");
 
-  logFile = new QFile(workingDirectory.filePath(logFileName+".log"));
-  int i = 1;
+  int i = 0;
   QString newName(logFileName);
-  while(logFile->exists())
+  while(QFile::exists(workingDirectory.filePath(newName+".log")))
     {
       i++;
       newName = logFileName+QString().setNum(i);
-      logFile->setFileName(workingDirectory.filePath(newName+".log"));
     }
 
   logFileName = newName + ".log";
-  logFile->setFileName(workingDirectory.filePath(logFileName));
+  logFile = new QFile(workingDirectory.filePath(logFileName));
   
   absoluteProgress = 0;
   //displayLocation = false;
   displayLocation = true;
 
-  Message::toScreen("log:constructor: "+workingDirectory.path());
+  // Message::toScreen("log:constructor: "+workingDirectory.path());
 }
 
 Log::~Log()
@@ -59,14 +57,10 @@ void Log::setWorkingDirectory(QDir& newDir)
     // Don't need to do anything
     return;
   }
-  if(newDir.exists()) {
-    //Message::toScreen("Path does exist");
-  }
-  else {
-    //Message::toScreen("Path does not exist yet");
+  if(!newDir.exists()) {
     newDir.mkpath(newDir.path());
-    if(newDir.exists()) {
-      //Message::toScreen("Path exists NOW?");
+    if(!newDir.exists()) {
+      emit log(Message(QString("Could not create directory "+newDir.path()+" check permissions"), 0, this->objectName()));
     }
   }
   if(!newDir.isAbsolute())
@@ -74,18 +68,20 @@ void Log::setWorkingDirectory(QDir& newDir)
 
   QString newFileName("autoLog");
   QFile newLogFile(newDir.filePath(newFileName+".log"));
-  int i = 1;
+  int i = 0;
   QString newName(newFileName);
-  while(newLogFile.exists())
+  while(QFile::exists(newDir.filePath(newName+".log")))
     {
       i++;
       newName = newFileName+QString().setNum(i);
-      newLogFile.setFileName(workingDirectory.filePath(newName+".log"));
+      //      Message::toScreen("Trying..."+newDir.filePath(newName+".log"));
     }
   newFileName = newName+".log";
+  newLogFile.setFileName(workingDirectory.filePath(newName+".log"));
   
-  if(!logFile->copy(newDir.filePath(logFileName))) {
-    Message::toScreen("Log::setWorkingDirectory: could not copy "+logFile->fileName()+" to "+newDir.filePath(logFileName));
+  if(!logFile->copy(newDir.filePath(newFileName))) {
+    emit log(Message(QString("SetWorkingDirectory: Could not copy "+logFile->fileName()+" to "+newDir.filePath(newFileName)+".  May not be logging errors"),0,this->objectName(),Yellow,QString("Could not move log file!")));
+    return;
   }
   
   logFile->remove();
@@ -97,8 +93,8 @@ void Log::setWorkingDirectory(QDir& newDir)
   QFile* oldLogFile = logFile;
   delete oldLogFile;
   logFile = new QFile(workingDirectory.filePath(logFileName));
-  Message::toScreen(" after working dir changed file = "+logFile->fileName());
   logFile->setFileName(workingDirectory.filePath(logFileName));
+  emit log(Message(QString("Log location after working dir changed, log file = "+logFile->fileName()),0,this->objectName(),Green));
 }
 
 void Log::setLogFileName(QString& newName) 

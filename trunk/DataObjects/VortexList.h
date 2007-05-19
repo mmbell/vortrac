@@ -34,6 +34,7 @@ public:
      void setRadarName(const QString &newRadarName);
      void setVortexName(const QString &newVortexName);
      void setProductType(const QString &newProductType);
+     void setIndividualProductType(int dataIndex, const QString& newType);
      QString getVortexName() { return vortexName; }
      void setNewWorkingDirectory(const QString &newDirectory);
      QString getFileName() { return fileName; }

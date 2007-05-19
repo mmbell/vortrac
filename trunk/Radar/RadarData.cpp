@@ -101,14 +101,17 @@ float* RadarData::getRadarLon()
 float RadarData::radarBeamHeight(float &distance, float elevation)
 {
 
-  const float REarth = 6370.0;
+  const float REarth = 6371.0;
   const float curve = 1.333;
-  const float RE = curve * REarth;
+  const float RE = 4*REarth/3;
   const float REsq = RE * RE;
 
   float elevRadians = elevation * acos(-1.0) / 180.0;
-  float height = sqrt(distance * distance + REsq 
-		      + 2.0 * distance * RE * sin(elevRadians)) - RE;
+  float sinelev = sin(elevRadians);
+  //float height = sqrt(distance * distance + REsq + 2.0 * distance * RE * sin(elevRadians)) - RE;
+  float top = distance*distance+2*distance*RE*sinelev;
+  float bottom =  sqrt(distance*distance + REsq + 2.*distance*RE*sinelev) + RE;
+  float height = top/bottom;
   // height+=altitude;
 
   return height; 
@@ -134,7 +137,7 @@ bool RadarData::writeToFile(const QString fileName)
   QTextStream out(outputFile);
   out << "vbin" << endl;
   for(int i = 0; i < numSweeps; i++) {
-    out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << Sweeps[i].getVel_numgates();
+    out << reset << qSetRealNumberPrecision(7) << scientific << qSetFieldWidth(15) << Sweeps[i].getVel_numgates();
     out << endl;
   }
   int line = 0;
@@ -145,7 +148,7 @@ bool RadarData::writeToFile(const QString fileName)
     int stop = Sweeps[i].getLastRay();
     out << stop-start+1 << endl;
     for(int j = start; j <= stop; j++) {
-      out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << Rays[j].getAzimuth();
+      out << reset << qSetRealNumberPrecision(7) << scientific << qSetFieldWidth(15) << Rays[j].getAzimuth();
       line++;
       if(line == 8) {
 	out << endl;
@@ -162,7 +165,7 @@ bool RadarData::writeToFile(const QString fileName)
     int stop = Sweeps[i].getLastRay();
     out << stop-start+1 << endl;
     for(int j = start; j <= stop; j++) {
-      out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << Rays[j].getElevation();
+      out << reset << qSetRealNumberPrecision(7) << scientific << qSetFieldWidth(15) << Rays[j].getElevation();
       line++;
       if(line==8){
 	out << endl;
@@ -182,7 +185,7 @@ bool RadarData::writeToFile(const QString fileName)
       float* vel_data = Rays[j].getVelData();
       out << Rays[j].getVel_numgates() << endl;
       for(int k = 0; k < Rays[j].getVel_numgates(); k++) {
-	out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << vel_data[k];
+	out << reset << qSetRealNumberPrecision(7) << scientific << qSetFieldWidth(15) << vel_data[k];
 	line++;
 	if(line==8){
 	  out << endl;

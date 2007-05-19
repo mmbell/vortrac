@@ -49,7 +49,7 @@ public slots:
        // This slot recieves a pointer to the dropSonde list when
        // changes to the list occur
        // this modifies nessecary ranges
-   void updateTitle(const QString& new_Label);
+   void updateTitle(QWidget* labelWidget, const QString& new_Label);
    void saveImage();
    void saveImage(QString fileName);
    void manualAxes(const QString& name, const bool change);

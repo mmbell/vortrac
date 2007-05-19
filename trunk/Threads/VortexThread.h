@@ -91,7 +91,7 @@ class VortexThread : public QThread
 			     const float& height);
      //void calcCentralPressure();
      void calcCentralPressure(VortexData* vortex, float* pD, float height);
-     void calcPressureUncertainty(bool useLimit, QString nameAddition);
+     void calcPressureUncertainty(float setLimit, QString nameAddition);
      void storePressureUncertaintyData(QString& fileLocation);
      void readInConfig();
      bool calcHVVP();

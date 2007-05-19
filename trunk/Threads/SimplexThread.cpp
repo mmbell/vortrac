@@ -15,6 +15,7 @@
 #include "DataObjects/Center.h"
 #include "VTD/GBVTD.h"
 #include "Math/Matrix.h"
+#include "HVVP/Hvvp.h"
 
 SimplexThread::SimplexThread(QObject *parent)
   : QThread(parent)
@@ -22,6 +23,19 @@ SimplexThread::SimplexThread(QObject *parent)
   this->setObjectName("simplexThread");
   velNull = -999.;
   abort = false;
+  gridData = NULL;
+  radarData = NULL;
+  simplexData = NULL;
+  simplexResults = NULL;
+  vortexData = NULL;
+  configData = NULL;
+  
+  dataGaps = NULL;
+  vtd = NULL;
+  vtdCoeffs = NULL;
+  vertex = NULL;
+  VT = NULL;
+  vertexSum = NULL;
 }
 
 SimplexThread::~SimplexThread()
@@ -39,12 +53,26 @@ SimplexThread::~SimplexThread()
   // Wait for the thread to finish running if it is still processing
   if(this->isRunning())
     wait(); 
+  gridData = NULL; 
+  delete gridData;
+  radarData = NULL;
+  delete radarData;
+  simplexData = NULL;
+  delete simplexData;
+  simplexResults = NULL;
+  delete simplexResults;
+  vortexData = NULL;
+  delete vortexData;
+  configData = NULL;
+  delete configData;
+ 
   Message::toScreen("Leaving the SimplexThread Destructor");
 
 }
 
-void SimplexThread::findCenter(Configuration *wholeConfig, GriddedData *dataPtr,
-							   SimplexList* simplexPtr, VortexData* vortexPtr)
+void SimplexThread::findCenter(Configuration *wholeConfig,GriddedData *dataPtr,
+			       RadarData* radarPtr, SimplexList* simplexPtr, 
+			       VortexData* vortexPtr)
 {
 
 	// Lock the thread
@@ -52,6 +80,9 @@ void SimplexThread::findCenter(Configuration *wholeConfig, GriddedData *dataPtr,
         
 	// Set the grid object
 	gridData = dataPtr;
+
+	// Set the radar object
+	radarData = radarPtr;
 
 	// Set the simplex list object
 	simplexResults = simplexPtr;
@@ -124,6 +155,9 @@ void SimplexThread::run()
 					   QString("ringwidth")).toFloat();
     int maxWave = configData->getParam(simplexConfig, 
 				       QString("maxwavenumber")).toInt();
+    QDomElement radar = configData->getConfig("radar");
+    float radarLat = configData->getParam(radar, "lat").toFloat();
+    float radarLon = configData->getParam(radar, "lon").toFloat();
     
     // Set the output directory??
     //simplexResults.setNewWorkingDirectory(simplexPath);
@@ -137,7 +171,20 @@ void SimplexThread::run()
     }
     
     // Create a GBVTD object to process the rings
-    vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
+
+    if(closure.contains(QString("hvvp"),Qt::CaseInsensitive)) {
+      float zero = 0;
+      if(calcHVVP(zero,zero))
+    	vtd = new GBVTD(geometry, closure, maxWave, dataGaps, hvvpResult);
+      else {
+    	emit log(Message(QString(),0,this->objectName(),Yellow,
+    			 QString("HVVP Failure: Could Not Retrieve HVVP Winds")));
+    	vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
+    	}
+    }
+    else {
+      vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
+    }
     vtdCoeffs = new Coefficient[20];
 
     //Message::toScreen("SimplexThread: Mutex Unlock 1");
@@ -243,6 +290,16 @@ void SimplexThread::run()
 	      gridData->setCartesianReferencePoint(int(vertex[v][0]),
 						   int(vertex[v][1]),
 						   int(RefK));
+	      if(closure.contains(QString("hvvp"),Qt::CaseInsensitive)) {
+		float* hvvpLatLon = gridData->getAdjustedLatLon(radarLat,radarLon,int(vertex[v][0]),int(vertex[v][1]));
+		
+		if(calcHVVP(hvvpLatLon[0],hvvpLatLon[1]))
+		  vtd->setHVVP(hvvpResult);
+		else {
+		  emit log(Message(QString("HVVP Failed to Locate Mean Wind"),0,this->objectName(),Yellow,QString("HVVP Failure")));
+		  vtd->setHVVP(0);
+		}
+	      }
 	      int numData = gridData->getCylindricalAzimuthLength(radius, 
 								  height);
 	      float* ringData = new float[numData];
@@ -484,6 +541,8 @@ void SimplexThread::run()
     //Now pick the best center
     simplexResults->timeSort();
     ChooseCenter *centerFinder = new ChooseCenter(configData,simplexResults,vortexData);
+    connect(centerFinder, SIGNAL(errorlog(const Message&)),
+	    this, SLOT(catchLog(const Message&)),Qt::DirectConnection);
     //delete centerFinder;
     //Message::toScreen("Clean entrance and exit");
     foundCenter = centerFinder->findCenter();
@@ -651,4 +710,78 @@ float SimplexThread::simplexTest(float**& vertex,float*& VT,float*& vertexSum,
 
 }
 
+
+bool SimplexThread::calcHVVP(float& lat, float& lon)
+{
+  // Get environmental wind
+  /*
+   * rt: Range from radar to circulation center (km).
+   *
+   * cca: Meteorological azimuth angle of the direction
+   *      to the circulation center (degrees from north).
+   *
+   * rmw: radius of maximum wind measured from the TC circulation
+   *      center outward.
+   */
+
+  QDomElement radar = configData->getConfig("radar");
+  float radarLat = configData->getParam(radar,"lat").toFloat();
+  float radarLon = configData->getParam(radar,"lon").toFloat();
+  float vortexLat, vortexLon;
+  if((lat == 0 )&&(lon == 0)) {
+    QDomElement vortex = configData->getConfig("vortex");
+    vortexLat = configData->getParam(vortex, "lat").toFloat();
+    vortexLon = configData->getParam(vortex, "lon").toFloat();
+  }
+  else {
+    vortexLat = lat;
+    vortexLon = lon;
+  }
+  
+  float* distance;
+  distance = gridData->getCartesianPoint(&radarLat, &radarLon, 
+					 &vortexLat, &vortexLon);
+  float rt = sqrt(distance[0]*distance[0]+distance[1]*distance[1]);
+  float cca = atan2(distance[0], distance[1])*180/acos(-1);
+  delete[] distance;
+  float rmw = 0;
+  int goodrmw = 0;
+  for(int level = 0; level < vortexData->getNumLevels(); level++) {
+    if(vortexData->getRMW(level)!=-999) {
+      //Message::toScreen("radius @ level "+QString().setNum(level)+" = "+QString().setNum(vortexData->getRMW(level)));
+      rmw += vortexData->getRMW(level);
+      goodrmw++;
+    }
+  }
+  rmw = rmw/(1.0*goodrmw);
+  // RMW is the average rmw taken over all levels of the vortexData
+  // The multiplying by 2 bit is blatant cheating, I don't know 
+  // if this if the radius's returned need to be adjusted by spacing or
+  // or what the deal is but these numbers look closer to right for 
+  // the two volumes I am looking at.
+
+  float* pair = gridData->getAdjustedLatLon(radarLat,radarLon,87.7712*cos(450-60.1703),87.7712*sin(450-60.1703));
+  Message::toScreen("New Lat Lon: ("+QString().setNum(pair[0])+", "+QString().setNum(pair[1])+"), old set = ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")");  
+  Message::toScreen("Vortex (Lat,Lon): ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")");
+  emit log(Message(QString("Vortex (Lat,Lon): ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")")));
+  Message::toScreen("Hvvp Parameters: Distance to Radar "+QString().setNum(rt)+" angle to vortex center in degrees ccw from north "+QString().setNum(cca)+" rmw "+QString().setNum(rmw));
+  emit log(Message(QString("Hvvp Parameters: Distance to Radar "+QString().setNum(rt)+" angle to vortex center in degrees ccw from north "+QString().setNum(cca)+" rmw "+QString().setNum(rmw))));
+  
+  emit log(Message(QString(), 1,this->objectName()));
+  
+  Hvvp *envWindFinder = new Hvvp;
+  connect(envWindFinder, SIGNAL(log(const Message)), 
+	  this, SLOT(catchLog(const Message)), 
+	  Qt::DirectConnection);
+  envWindFinder->setRadarData(radarData, rt, cca, rmw);
+  emit log(Message(QString(), 1,this->objectName()));
+  //envWindFinder->findHVVPWinds(false); for first fit only
+  bool hasHVVP = envWindFinder->findHVVPWinds(true);
+  hvvpResult = envWindFinder->getAvAcrossBeamWinds();
+  hvvpUncertainty = envWindFinder->getAvAcrossBeamWindsStdError();
+  Message::toScreen("Hvvp gives "+QString().setNum(hvvpResult)+" +/- "+QString().setNum(hvvpUncertainty));
+  emit log(Message(QString(), 1,this->objectName()));
+    
+  return hasHVVP;
+}
 

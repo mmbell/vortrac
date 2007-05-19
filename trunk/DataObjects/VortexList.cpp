@@ -453,3 +453,10 @@ void VortexList::timeSort()
   }
   
 }
+
+void VortexList::setIndividualProductType(int dataIndex,const QString& newType)
+{
+  QDomElement vortex = vortexDataConfigs->at(dataIndex)->getConfig("vortex");
+  vortexDataConfigs->at(dataIndex)->setParam(vortex, 
+					     QString("product"), newType);
+}

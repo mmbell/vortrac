@@ -15,6 +15,7 @@
 
 ChooseCenter::ChooseCenter(Configuration* newConfig, 
 			   const SimplexList* newList, VortexData* vortexPtr)
+  :QObject()
 {
   velNull = -999.;
   config = newConfig;
@@ -128,33 +129,38 @@ bool ChooseCenter::findCenter()
   
    initialize();
    if(!chooseMeanCenters()) {
-     //emit log(Message("Choose Mean Centers Failed!"));
-     Message::toScreen("Choose Mean Centers Failed!");
+     emit errorlog(Message(QString("Failed in ChooseMeanCenters!"),
+			   0,this->objectName(), Red,
+			   QString("Data Issues Could Not Find Mean Center")));
      return false;
    }
-   //Message::toScreen("Returned From ChooseMeanCenters");
   
    if(simplexResults->count() > minVolumes) {
-     Message::toScreen("ChooseCenter: Try Construct Polynomials");
+     emit errorlog(Message(QString("Using Polynomial Fit to Determine Best Center"),0,this->objectName()));
      if(constructPolynomial()) {
-       //emit log(Message("Choose Center failed to Construct Polynomial"));
-       Message::toScreen("Choose Center Constructed Polynomial - Trying Fix Centers");
        if(!fixCenters()) {
-	 Message::toScreen("Choose Center failed in fixCenters");
+	 QString fail("Failed to Find Polynomial Fit Center - Reverting To Mean");
+	 emit errorlog(Message(fail,0,this->objectName(),Yellow,
+			       QString("Center From Fit Not Found")));
 	 useLastMean();
-	 return false;
+	 return true;
        }
        else {
+	 emit errorlog(Message(QString(),0,this->objectName(),Green));
 	 return true;
        }
      }
      else {
+       QString fail("Failed to Find Polynomial Fit Center - Reverting To Mean");
+       emit errorlog(Message(fail,0,this->objectName(),Yellow,
+			QString("Center From Fit Not Found")));
        useLastMean();
        return true;
      }
    }
    else {
-     Message::toScreen("ChooseCenter: Using Last Mean Center For Guess");
+     emit errorlog(Message(QString("Using Last Mean Center For Guess"),
+			   0,this->objectName()));
      useLastMean();
    }
    return true;
@@ -510,8 +516,10 @@ bool ChooseCenter::chooseMeanCenters()
       }*/
       float bestScore = 0.0;
       for(int j = 0; j < simplexResults->at(i).getNumRadii(); j++) {
-	if(isnan(score[i][j][k])||isinf(score[i][j][k]))
-	  Message::toScreen("ChooseCenter: ChooseMeanCenters: Score no good here... i = "+QString().setNum(i)+" j = "+QString().setNum(j)+" k = "+QString().setNum(k)+" score = "+QString().setNum(score[i][j][k]));
+	if(isnan(score[i][j][k])||isinf(score[i][j][k])) {
+	  emit errorlog(Message(QString("ChooseCenter: ChooseMeanCenters: Score no good here... i = "+QString().setNum(i)+" j = "+QString().setNum(j)+" k = "+QString().setNum(k)+" score = "+QString().setNum(score[i][j][k])),0,this->objectName(),Red,QString("Bad Score in ChooseMeanCenters")));
+	  return false;
+	}
 	if(score[i][j][k] > bestScore) {
 	  bestScore = score[i][j][k];
 	  bestIndex = j;
@@ -695,7 +703,8 @@ bool ChooseCenter::constructPolynomial()
 	//Message::toScreen("BB");
 	//Matrix::printMatrix(BB,simplexResults->count());
 	if(!Matrix::lls(n+1,simplexResults->count(),MM, BB, stDev, currentCoeff, stError)) {
-	  Message::toScreen("least square fit failed in find center");
+	  emit errorlog(Message(QString("Least Squares Fit Failed in Construct Polynomial"),0,this->objectName(),Yellow,QString("Least Squares Fit Failed")));
+	  return false;
 	}
        
 	float errorSum = 0;
@@ -972,7 +981,7 @@ bool ChooseCenter::fixCenters()
       windErrorSum += windError;
       
       if(i == lastTimeIndex) {
-	Message::toScreen("Vortex Data level "+QString().setNum(k)+" time "+vortexData->getTime().toString()+" radius = "+QString().setNum(rad)+" radError "+QString().setNum(radError));
+	//Message::toScreen("Vortex Data level "+QString().setNum(k)+" time "+vortexData->getTime().toString()+" radius = "+QString().setNum(rad)+" radError "+QString().setNum(radError));
 	// if the volume we are looking at is the last one we will want to keep
 	// all the info in vortexData
 	
@@ -1042,7 +1051,7 @@ bool ChooseCenter::fixCenters()
   for(int i = 0; i < 4; i++)
     delete [] newVariance[i];
   delete [] newVariance;
-  Message::toScreen("Made it out of fixCenters");
+  //Message::toScreen("Made it out of fixCenters");
   // I need to go through and figure out which variables are of some importance
   // after the program has run to completion
   return true;
@@ -1079,4 +1088,9 @@ float ChooseCenter::getMinutesTo(const QDateTime &volTime)
 {
   float min = ((float)firstTime.secsTo(volTime)/60.0);
   return min;
+}
+
+void ChooseCenter::catchLog(const Message& message)
+{
+  emit errorlog(message);
 }

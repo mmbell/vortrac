@@ -207,12 +207,13 @@ void PollThread::run()
       file = allPossibleFiles.filter("pressureList").value(0);
     }
     else {
-      file = QString("vortrac_defaultPressureListStorage.xml");
+      file = QString("/scr/science/mauger/Working/trunk/vortrac_defaultPressureListStorage.xml");
     }
     emit log(Message(file));
-    pressureConfig = new Configuration(0, workingDirectoryPath+file);
+//   pressureConfig = new Configuration(0, workingDirectoryPath+file);
+    pressureConfig = new Configuration(0, file);
     pressureConfig->setObjectName("pressureConfig");
-    pressureConfig->setLogChanges(false);
+    //    pressureConfig->setLogChanges(false);
     connect(pressureConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     pressureList = new PressureList(pressureConfig);
@@ -332,6 +333,8 @@ void PollThread::run()
   analysisThread->setSimplexList(simplexList);
   analysisThread->setPressureList(pressureList);
   analysisThread->setDropSondeList(dropSondeList);
+  analysisThread->setAnalyticRun(runOnce);
+
 
 	// Begin polling loop
 	forever {
@@ -391,11 +394,12 @@ void PollThread::run()
 	      
 	      // Done with radar volume, send a signal to the Graph to update
 	      emit vortexListUpdate(vortexList);
+	      Message::toScreen("PollThreads After VortexList Update");
 	    }
 	    mutex.unlock();  
 	  }
 	  
-	  checkIntesification();
+	  checkIntensification();
 	  
 	  // Check to see if we should quit
 	  if (abort) {
@@ -487,7 +491,7 @@ void PollThread::checkIntensification()
 	  pastCenter = k;
       }      
       for(int j = pastCenter-int(volSpan/2.); 
-	  j < pastCenter+int(volSpan/2.); j++) {
+	  (j < pastCenter+int(volSpan/2.))&&(j<lastVol); j++) {
 	if(vortexList->at(j).getPressure()==-999)
 	  continue;
 	pastAv+= vortexList->at(j).getPressure();

@@ -23,6 +23,23 @@ GBVTD::GBVTD(QString& initGeometry, QString& initClosure,int& wavenumbers, float
 	deg2rad = Pi/180.;
 	rad2deg = 180./Pi;
 	FourierCoeffs = new float[maxWavenumber*2 + 3];
+	hvvpMeanWind = 0;
+}
+
+GBVTD::GBVTD(QString& initGeometry, QString& initClosure, int& wavenumbers, 
+	     float*& gaps, float& hvvpwind)
+{
+	// Construct with data gaps
+	geometry = initGeometry;
+	closure = initClosure;
+	maxWavenumber = wavenumbers;
+	dataGaps = gaps;
+	Pi = 3.141592653589793238462643;
+	deg2rad = Pi/180.;
+	rad2deg = 180./Pi;
+	FourierCoeffs = new float[maxWavenumber*2 + 3];
+	hvvpMeanWind = 0; 
+	this->setHVVP(hvvpwind);
 }
 
 GBVTD::~GBVTD()
@@ -169,11 +186,17 @@ void GBVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, flo
 	}
 	
 	// Use the specified closure method to set VT, VR, and VM		
-	if (closure == "original") {
+	if (closure.contains(QString("original"),Qt::CaseInsensitive)) {
 		vtdCoeffs[0].setLevel(level);
 		vtdCoeffs[0].setRadius(radius);
 		vtdCoeffs[0].setParameter("VTC0");
-		float value = -B[1]-B[3];
+		float value;
+		if(closure.contains(QString("hvvp"),Qt::CaseInsensitive)) {
+		  value = -B[1]-B[3]-hvvpMeanWind*sinAlphamax;
+		}
+		else {
+		  value = -B[1]-B[3];
+		}
 		vtdCoeffs[0].setValue(value);
 		
 		vtdCoeffs[1].setLevel(level);
@@ -296,3 +319,7 @@ float GBVTD::fixAngle(float& angle)
 }
 
 
+void GBVTD::setHVVP(const float& meanWind)
+{
+  hvvpMeanWind = meanWind;
+}

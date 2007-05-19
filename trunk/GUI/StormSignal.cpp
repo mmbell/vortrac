@@ -82,49 +82,43 @@ void StormSignal::paintEvent(QPaintEvent *event)
   QTextOption textHint(Qt::AlignCenter);
   textHint.setWrapMode(QTextOption::WordWrap);
   QString stormMessage;
-  QFont font("Helvetica", 8, QFont::Bold);
-  QFontMetrics fontMetrics(font);
-  float fontHeight = fontMetrics.height();
-  painter->setFont(font);
   painter->setBrush(QBrush(QColor(0,100,0)));
   QRectF wordBox(25,25,50,50);
-  QRectF wordBox1(25,25-fontHeight*.5,50,50);
-  QRectF wordBox2(25,25,50,50);
-  QRectF wordBox3(25,25+fontHeight*.5,50,50);
-  QRectF wordBox21(25,25-fontHeight*.3,50,50);
-  QRectF wordBox22(25,25+fontHeight*.3,50,50);
-  //  painter->drawRect(wordBox);
+  QRectF wordBox1(30,30,40,40);
+  painter->setFont(QFont(QString("Ariel"),14));
 
   switch(currentStatus)
     {
     case Nothing:
       break;
     case RapidIncrease:
-      painter->drawText(wordBox1, QString("Rapid"), textHint);
-      painter->drawText(wordBox2, QString("Pressure"), textHint);
-      painter->drawText(wordBox3, QString("Rise"), textHint);
+      stormMessage = QString("Rapid Pressure Rise");
       break;
     case RapidDecrease:
-      painter->drawText(wordBox1, QString("Rapid"), textHint);
-      painter->drawText(wordBox2, QString("Pressure"), textHint);
-      painter->drawText(wordBox3, QString("Fall"),textHint);
+      stormMessage = QString("Rapid Pressure Fall");
       break;
     case Ok:
-      font = QFont("Helvetica", 14, QFont::Bold);
-      painter->setFont(font);
-      painter->drawText(wordBox, QString("OK"), textHint);
+      stormMessage = QString("OK");
       break;
     case OutOfRange:
-      painter->drawText(wordBox1, QString("Center"), textHint);
-      painter->drawText(wordBox2, QString("out of"), textHint);
-      painter->drawText(wordBox3, QString("Range"), textHint);
+      stormMessage = QString("Center out of Range");
+      wordBox = wordBox1;
       break;
     case SimplexError:
-      painter->drawText(wordBox21, QString("Simplex"), textHint);
-      painter->drawText(wordBox22, QString("Error"), textHint);
+      wordBox = wordBox1;
+      stormMessage = QString("Simplex Error");
       break;
     }
-
+  while(stormMessage!=QString()) {
+    QRectF br = painter->boundingRect(wordBox, stormMessage, textHint);
+    if(br.width()*br.height() < wordBox.width()*wordBox.height()) 
+      break;
+    QFont current = painter->font();
+    current.setPointSize(current.pointSize()-1);
+    painter->setFont(current);
+  }
+  painter->drawText(wordBox, stormMessage, textHint);
+  
   if(flashing)
     on = !on;
   
