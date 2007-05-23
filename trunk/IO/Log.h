@@ -17,6 +17,7 @@
 #include <QFile>
 #include <QDomElement>
 #include <QDir>
+#include <QMutex>
 #include "Message.h"
 
 class Log : public QWidget
@@ -50,8 +51,11 @@ class Log : public QWidget
   QDir workingDirectory;
   int absoluteProgress;
   bool displayLocation;
+  QStringList messagesWaiting;
+  // bool usingFile;
+  QMutex usingFile;
 
-  bool writeToFile(const QString& message);
+  bool writeToFile();
 
   struct SLChange {
     StopLightColor color;

@@ -11,6 +11,7 @@
 #include "PressureData.h"
 #include <QTextStream>
 #include "math.h"
+#include "Message.h"
 
 PressureData::PressureData()
 {
@@ -144,9 +145,11 @@ float  PressureData::getVwind() const
 
 bool PressureData::operator ==(const PressureData &other)
 {
-	if(this->time == other.time)
-		return true;
-	return false;
+    
+  if((this->time.time() == other.time.time())
+     &&(this->stationName==other.stationName))
+    return true;
+  return false;
 }
 
 bool PressureData::operator < (const PressureData &other)

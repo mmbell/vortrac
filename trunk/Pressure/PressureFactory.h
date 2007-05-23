@@ -32,7 +32,7 @@ class PressureFactory : public QObject
  public:
   PressureFactory(Configuration *wholeConfig, QObject *parent = 0);
   ~PressureFactory();
-  PressureList* getUnprocessedData();
+  QList<PressureData>* getUnprocessedData();
   bool hasUnprocessedData();
 
  public slots:

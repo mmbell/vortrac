@@ -11,6 +11,7 @@
 
 #include "panels.h"
 #include "Message.h"
+#include <math.h>
 
 #include <QtGui>
 #include <QFileDialog>
@@ -287,7 +288,7 @@ RadarPanel::RadarPanel()
 			     QString(""));
   radarFormatOptions->insert(QString("NCDC Level II"), QString("NCDCLEVELII"));
   radarFormatOptions->insert(QString("LDM Level II"), QString("LDMLEVELII"));
-  radarFormatOptions->insert(QString("Analytic Model"), QString("MODEL"));
+  //radarFormatOptions->insert(QString("Analytic Model"), QString("MODEL"));
   radarFormat = new QComboBox();
   QList<QString> options = radarFormatOptions->keys();
   for(int i = 0; i < options.count(); i++) 
@@ -317,7 +318,7 @@ RadarPanel::RadarPanel()
   endDateTime->setDisplayFormat("MMM-dd-yyyy hh:mm:ss");
   endDateTime->setMinimumTime(minTime);
   endDateTime->setMinimumDate(minDate);
-  endDateTime->setDateTime(QDateTime::currentDateTime());
+  endDateTime->setDateTime(QDateTime::currentDateTime().addDays(3));
   QHBoxLayout *endLayout = new QHBoxLayout;
   endLayout->addWidget(end);
   endLayout->addWidget(endDateTime);
@@ -884,8 +885,8 @@ CenterPanel::CenterPanel()
   closureOptions = new QHash<QString, QString>;
   closureOptions->insert(QString("Original"), 
 			QString("original"));
-  closureOptions->insert(QString("Original-HVVP"), 
-			 QString("original_hvvp"));
+  //closureOptions->insert(QString("Original-HVVP"), 
+  //			 QString("original_hvvp"));
   
   // Add addtional options here
 
@@ -971,7 +972,7 @@ CenterPanel::CenterPanel()
   QLabel *searchCrit = new QLabel(tr("Center finding Criteria"));
   criteriaOptions = new QHash<QString,QString>;
   criteriaOptions->insert(QString("Maximum Tangential Velocity"),
-			  QString("MAXVTO"));
+			  QString("MAXVT0"));
   criteriaOptions->insert(QString(tr("Select Criteria")),
 			  QString(""));
   // Add additional options here
@@ -1453,7 +1454,7 @@ ChooseCenterPanel::ChooseCenterPanel()
   endDateTime->setDisplayFormat("MMM-dd-yyyy hh:mm:ss");
   endDateTime->setMinimumTime(minTime);
   endDateTime->setMinimumDate(minDate);
-  endDateTime->setDateTime(QDateTime::currentDateTime());
+  endDateTime->setDateTime(QDateTime::currentDateTime().addDays(3));
   QHBoxLayout *endLayout = new QHBoxLayout;
   endLayout->addWidget(end);
   endLayout->addWidget(endDateTime);
@@ -1662,36 +1663,39 @@ bool ChooseCenterPanel::updateConfig()
 	emit changeDom(element, QString("min_volumes"),
 		       QString().setNum(minVolumes->value()));
       }
-      if(getFromElement("wind_weight").toFloat() !=windWeightBox->value()) {
+      if(fabs(getFromElement("wind_weight").toFloat()-windWeightBox->value())
+	 >=.01) {
 	emit changeDom(element, QString("wind_weight"),
 		       QString().setNum(windWeightBox->value()));
       }
-      if(getFromElement("stddev_weight").toFloat()!=stdDevWeightBox->value()) {
+      if(fabs(getFromElement("stddev_weight").toFloat()-stdDevWeightBox->value())>=0.01) {
 	emit changeDom(element, QString("stddev_weight"),
 		       QString().setNum(stdDevWeightBox->value()));
       }
-      if(getFromElement("pts_weight").toFloat() !=ptsWeightBox->value()) {
+      if(fabs(getFromElement("pts_weight").toFloat()-ptsWeightBox->value())
+	 >=0.01) {
 	emit changeDom(element, QString("pts_weight"),
 		       QString().setNum(ptsWeightBox->value()));
       }
-      if(getFromElement("position_weight").toFloat()
-	 !=positionWeightBox->value()) {
+      if(fabs(getFromElement("position_weight").toFloat()-positionWeightBox->value())>=0.01) {
 	emit changeDom(element, QString("position_weight"),
 		       QString().setNum(positionWeightBox->value()));
       }
-      if(getFromElement("rmw_weight").toFloat() !=rmwWeightBox->value()) {
+      if(fabs(getFromElement("rmw_weight").toFloat()-rmwWeightBox->value())>=0.01) {
 	emit changeDom(element, QString("rmw_weight"),
 		       QString().setNum(rmwWeightBox->value()));
       }
-      if(getFromElement("vt_weight").toFloat() !=velWeightBox->value()) {
+      if(fabs(getFromElement("vt_weight").toFloat()-velWeightBox->value())>=0.01) {
 	emit changeDom(element, QString("vt_weight"),
 		       QString().setNum(velWeightBox->value()));
       }
       if(fTest99Button->isChecked()) {
-	emit changeDom(element, QString("stats"), QString().setNum(99));
+	if(getFromElement("stats").toInt()!=99)
+	  emit changeDom(element, QString("stats"), QString().setNum(99));
       }
       if(fTest95Button->isChecked()) {
-	emit changeDom(element, QString("stats"), QString().setNum(95));
+	if(getFromElement("stats").toInt()!=95)
+	  emit changeDom(element, QString("stats"), QString().setNum(95));
       }
     }
   setPanelChanged(false);
@@ -2386,10 +2390,13 @@ bool PressurePanel::updateConfig()
 		       QString().setNum(maxObsDist->value()));
       }
       if(maxObsDistCenter->isChecked())
-	emit changeDom(element, QString("maxobsmethod"), QString("center"));
+	if(getFromElement("maxobsmethod")!=QString("center")) {
+	  emit changeDom(element, QString("maxobsmethod"), QString("center"));
+	}
       if(maxObsDistRing->isChecked())
-	emit changeDom(element, QString("maxobsmethod"), QString("ring"));
-
+	if(getFromElement("maxobsmethod")!=QString("ring")) {
+	  emit changeDom(element, QString("maxobsmethod"), QString("ring"));
+	}
       if(getFromElement("av_interval").toInt()!=avInterval->value()) {
 	emit changeDom(element, QString("av_interval"), 
 		       QString().setNum(avInterval->value()));
@@ -2497,7 +2504,7 @@ GraphicsPanel::GraphicsPanel()
   endDateTime->setDisplayFormat("MMM-dd-yyyy hh:mm:ss");
   endDateTime->setMinimumTime(minTime);
   endDateTime->setMinimumDate(minDate);
-  endDateTime->setDateTime(QDateTime::currentDateTime());
+  endDateTime->setDateTime(QDateTime::currentDateTime().addSecs(3*3600));
 
   
   graph->addWidget(pMax, 0,0);
@@ -2944,8 +2951,9 @@ bool QCPanel::updateConfig()
 		       QString().setNum(maxFoldCount->value()));
       }
       if(vad->isChecked()) {
-	emit changeDom(element, QString("wind_method"), QString("vad"));
-	
+	if(getFromElement("wind_method")!=QString("vad")) {
+	  emit changeDom(element, QString("wind_method"), QString("vad"));
+	}
 	if(getFromElement("vadlevels").toInt()!= vadLevels->value()) {
 	  emit changeDom(element, QString("vadlevels"),
 			  QString().setNum(vadLevels->value()));
@@ -2964,8 +2972,9 @@ bool QCPanel::updateConfig()
 	}
       }
       if(user->isChecked()) {
-	emit changeDom(element, QString("wind_method"), QString("user"));
-	
+	if(getFromElement("wind_method")!=QString("user")) {
+	  emit changeDom(element, QString("wind_method"), QString("user"));
+	}
 	if(getFromElement("windspeed").toDouble()!= windSpeed->value()) {
 	  emit changeDom(element, QString("windspeed"),
 			  QString().setNum(windSpeed->value()));

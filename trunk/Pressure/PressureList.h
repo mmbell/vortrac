@@ -28,7 +28,6 @@ public:
      
      bool save();
      bool open();
-     bool openNodeFile(const QDomNode &newNode);
      void setFileName(const QString &newFileName);
 	 void setRadarName(const QString &newRadarName);
 	 void setVortexName(const QString &newVortexName);

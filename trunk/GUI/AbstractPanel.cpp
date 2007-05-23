@@ -84,8 +84,10 @@ void AbstractPanel::getDirectory()
   QString filePath = QFileDialog::getExistingDirectory(this,
 					     QString(tr("Select Directory")),
 						       dir->text());
-  dir->clear();
-  dir->insert(filePath);
+  if(filePath!=QString()) {
+    dir->clear();
+    dir->insert(filePath);
+  }
 }
 
 void AbstractPanel::getFileName()
@@ -211,7 +213,7 @@ void AbstractPanel::radarChanged(const QString& text)
   if(text == getEditPanel){
     // If the other option is selected a panel appears for editing and adding
     // new radars to the existing radar list
-    
+
     RadarListDialog *editRadar = new RadarListDialog(this, radars);
     
     updatePanel(elem);

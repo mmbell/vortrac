@@ -10,6 +10,7 @@
 #include <QtGui>
 #include "PollThread.h"
 #include "Message.h"
+#include <math.h>
 
 #include "DataObjects/SimplexList.h"
 
@@ -17,7 +18,7 @@ PollThread::PollThread(QObject *parent)
   : QThread(parent)
 {
   this->setObjectName("pollThread");
-  //  Message::toScreen("PollThread Constructor");
+  //  emit log(Message(QString("Constructor"),0,this->objectName()));
   abort = false;
   runOnce = false;
   processPressureData = true;
@@ -38,7 +39,7 @@ PollThread::PollThread(QObject *parent)
 
 PollThread::~PollThread()
 {
-  Message::toScreen("PollThread Destructor IN");
+  emit log(Message(QString("INTO Destructor"),0,this->objectName()));
   mutex.lock();
   abort = true;
   mutex.unlock();
@@ -62,7 +63,7 @@ PollThread::~PollThread()
     delete dropSondeConfig;   // This should be deleted do we need to save?
     }
   */
-  Message::toScreen("PollThread Destructor OUT");
+  emit log(Message(QString("OUT OF Destructor"),0,this->objectName()));
 }
 
 void PollThread::setConfig(Configuration *configPtr)
@@ -74,7 +75,7 @@ void PollThread::setConfig(Configuration *configPtr)
 
 void PollThread::abortThread()
 {
-  Message::toScreen("In PollThread Abort");
+  emit log(Message(QString("Enter ABORT"),0,this->objectName()));
   mutex.lock();
   abort = true;
   mutex.unlock();
@@ -82,9 +83,11 @@ void PollThread::abortThread()
   delete analysisThread;
 
   //this->exit();
-  if(this->isRunning())
+  if(this->isRunning()) {
     waitForAnalysis.wakeAll();  // What does this do ? -LM
-    wait();
+    waitForInitialization.wakeAll();
+  }
+  wait();
 
   // Deleting Members
   configData = NULL;
@@ -97,7 +100,7 @@ void PollThread::abortThread()
   // delete simplexConfig;  // This should be deleted do we need to save?
   // delete pressureConfig;   // This should be deleted do we need to save?
   // delete dropSondeConfig;   // This should be deleted do we need to save?
-  Message::toScreen("Leaving PollThread Abort");
+  emit log(Message(QString("Leaving Abort"),0,this->objectName()));
  
 }
 
@@ -110,8 +113,6 @@ void PollThread::analysisDoneProcessing()
 void PollThread::run()
 {
 
-  //Message::toScreen("Begining run sequence in PollThread");
-  
   abort = false;
   emit log(Message(QString("Polling for data..."), 0, this->objectName()));
   dataSource = new RadarFactory(configData);
@@ -125,6 +126,8 @@ void PollThread::run()
   if(!continuePreviousRun) {
     QString file("vortrac_defaultVortexListStorage.xml");
     vortexConfig = new Configuration(0, file);
+    vortexConfig->setObjectName("vortexConfig");
+    vortexConfig->setLogChanges(false);
     connect(vortexConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     vortexList = new VortexList(vortexConfig);
@@ -133,6 +136,8 @@ void PollThread::run()
     file = QString("vortrac_defaultSimplexListStorage.xml");
     //simplexConfig = new Configuration(0,QString());
     simplexConfig = new Configuration(0, file);
+    simplexConfig->setObjectName("simplexConfig");
+    simplexConfig->setLogChanges(false);
     connect(simplexConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     simplexList = new SimplexList(simplexConfig);
@@ -149,6 +154,8 @@ void PollThread::run()
     pressureList->open();
 
     dropSondeConfig = new Configuration(0, file);
+    dropSondeConfig->setObjectName("dropSondeConfig");
+    dropSondeConfig->setLogChanges(false);
     connect(dropSondeConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     dropSondeList = new PressureList(dropSondeConfig);
@@ -172,8 +179,10 @@ void PollThread::run()
     allPossibleFiles = allPossibleFiles.filter(nameFilter, Qt::CaseInsensitive);
 
     QString file = allPossibleFiles.filter("vortexList").value(0);
-    emit log(Message(file));
+    emit log(Message(QString("Loading Vortex List from File: "+file),0,this->objectName()));
     vortexConfig = new Configuration(0, workingDirectory.filePath(file));
+    vortexConfig->setObjectName("vortexConfig");
+    vortexConfig->setLogChanges(false);
     connect(vortexConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     vortexList = new VortexList(vortexConfig);
@@ -188,16 +197,44 @@ void PollThread::run()
     vortexList->setNewWorkingDirectory(vortexWorkingDirectory.path()+"/");
   
     file = allPossibleFiles.filter("simplexList").value(0);
-    emit log(Message(file));
+    emit log(Message(QString("Loading Simplex List from File: "+file),0,this->objectName()));
     simplexConfig = new Configuration(0, workingDirectory.filePath(file));
+    simplexConfig->setObjectName("simplexConfig");
+    simplexConfig->setLogChanges(false);
     connect(simplexConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     simplexList = new SimplexList(simplexConfig);
+    
     simplexList->open();
+    /*
+    // Testing simplex List
+    Configuration* newSimplexConfig = new Configuration(0,QString("/scr/science40/mauger/Working/trunk/vortrac_defaultSimplexListStorage.xml"));
+    SimplexList* testSimplexList = new SimplexList(newSimplexConfig);
+    QString simplexPath = configData->getParam(configData->getConfig("center"),
+					       "dir");
+    QDir simplexWorkingDirectory(simplexPath);
+    simplexWorkingDirectory.cdUp();
+    simplexWorkingDirectory.cd("centercopy");
+    outFileName = workingDirectory.path() + "/";
+    outFileName += vortexName+"_"+radarName+"_"+year+"_simplexCOPYList.xml";
+    testSimplexList->setFileName(outFileName);
+    testSimplexList->setNewWorkingDirectory(simplexWorkingDirectory.path()+"/");
+    for(int i = 0; i < simplexList->count(); i++) {
+      testSimplexList->append(simplexList->value(i));
+    }
+    testSimplexList->save();
+    QString endOfTest("FINISHED TESTING SIMPLEX");
+    Message::toScreen(endOfTest);
+    emit log(Message(endOfTest));
+    return;
+    
+    // end simplex list testing
+    */
 
     QString simplexPath = configData->getParam(configData->getConfig("center"),
 					       "dir");
     QDir simplexWorkingDirectory(simplexPath);
+
     outFileName = workingDirectory.path() + "/";
     outFileName += vortexName+"_"+radarName+"_"+year+"_simplexList.xml";
     simplexList->setFileName(outFileName);
@@ -205,15 +242,16 @@ void PollThread::run()
     
     if(allPossibleFiles.filter("pressureList").count() > 0) {
       file = allPossibleFiles.filter("pressureList").value(0);
+      pressureConfig = new Configuration(0, workingDirectory.filePath(file));
     }
     else {
-      file = QString("/scr/science/mauger/Working/trunk/vortrac_defaultPressureListStorage.xml");
+      file = QString("vortrac_defaultPressureListStorage.xml");
+      pressureConfig = new Configuration(0, QDir::current().filePath(file));
     }
-    emit log(Message(file));
-//   pressureConfig = new Configuration(0, workingDirectoryPath+file);
-    pressureConfig = new Configuration(0, file);
+   
+    emit log(Message(QString("Loading Pressure List from File: "+file),0,this->objectName()));
     pressureConfig->setObjectName("pressureConfig");
-    //    pressureConfig->setLogChanges(false);
+    pressureConfig->setLogChanges(false);
     connect(pressureConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     pressureList = new PressureList(pressureConfig);
@@ -226,12 +264,15 @@ void PollThread::run()
 
     if(allPossibleFiles.filter("dropSondeList").count() > 0) {
       file = allPossibleFiles.filter("dropSondeList").value(0);
+      dropSondeConfig = new Configuration(0, workingDirectory.filePath(file));
     }
     else {
       file = QString("vortrac_defaultPressureListStorage.xml");
+      dropSondeConfig = new Configuration(0, QDir::current().filePath(file));
     }
     emit log(Message(file));
-    dropSondeConfig = new Configuration(0, workingDirectoryPath+file);
+    dropSondeConfig->setObjectName("dropSondeConfig");
+    dropSondeConfig->setLogChanges(false);
     connect(dropSondeConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     dropSondeList = new PressureList(dropSondeConfig);
@@ -242,11 +283,11 @@ void PollThread::run()
     dropSondeList->setFileName(outFileName);
     dropSondeList->setNewWorkingDirectory(workingDirectory.path());
 
+    checkListConsistency();
+
     emit vortexListUpdate(vortexList);
 
   }  
-
-  //    Message::toScreen("Past list initialization in PollThread");
 
           //Message::toScreen("Num simplex: "+QString().setNum(list->count()));
           /* Fake simplex list data
@@ -329,6 +370,8 @@ void PollThread::run()
 	  this, SLOT(catchVCP(const int)), Qt::DirectConnection);
   connect(analysisThread, SIGNAL(newCappi(const GriddedData*)),
 	  this, SLOT(catchCappi(const GriddedData*)), Qt::DirectConnection);
+  connect(analysisThread, SIGNAL(finishedInitialization()), this, SLOT(initializationComplete()), 
+	  Qt::DirectConnection);
   analysisThread->setVortexList(vortexList);
   analysisThread->setSimplexList(simplexList);
   analysisThread->setPressureList(pressureList);
@@ -339,14 +382,11 @@ void PollThread::run()
 	// Begin polling loop
 	forever {
 
-	  //	  Message::toScreen("In forever loop in PollThread");
-	  
-	  // Check for new data
+     	  // Check for new data
 	  if (dataSource->hasUnprocessedData()) {
 	    mutex.lock();
 	    dataSource->updateDataQueue(vortexList);
 	    analysisThread->setNumVolProcessed(dataSource->getNumProcessed());
-	    //Message::toScreen("Radar Factory has "+QString().setNum(dataSource->getNumProcessed())+" processed volumes in PollThread");
 	    
 	    // Fire up the analysis thread to process it
 	    RadarData *newVolume = dataSource->getUnprocessedData();
@@ -363,38 +403,59 @@ void PollThread::run()
 	      continue;
 	    }
 	    mutex.unlock();
-	    //Message::toScreen("Before Analyze");
+	 
 	    analysisThread->analyze(newVolume,configData);
-	    //Message::toScreen("After Analyze");
+	    
 	    mutex.lock();
+
+	    // Insure that the list are initialized
+	    waitForInitialization.wait(&mutex);
+	    QString radarFileName = newVolume->getFileName();
+
 	    if (!abort) {
 	      
-	      //Message::toScreen("In PollThread Pressure Loop");
 	      // Check for new pressure measurements every minute while we are waiting
 	      while (pressureSource->hasUnprocessedData()
 		     && processPressureData) {
 			
-		PressureList* newObs = pressureSource->getUnprocessedData();
+		QList<PressureData>* newObs = pressureSource->getUnprocessedData();
 		for (int i = newObs->size()-1;i>=0; i--) {
-		  pressureList->append(newObs->at(i));
-		  //delete pressureList->takeLast();
+		  bool match = false;
+		  for(int j = 0; (!match)&&(j < pressureList->size()); j++) {
+		    if(pressureList->value(j)==newObs->value(i)) {
+		      match = true;
+		    }
+		  }
+		  if(!match) {
+		    pressureList->append(newObs->at(i));
+		  }
 		}
 		delete newObs;
+		/*
+
+		// Moving this step to later so we know that analysisThread is done
+		// This should only present a problem if we crash mid run, then the pressure obs
+		// Will not be in the list, but if we crash I think this is the least of our problems -LM
+		
 		// Hopefully, the filename has been set by the analysisThread by this point
 		// have to be careful about synchronization here, this may not be the best way to do this
 		if (!pressureList->getFileName().isNull()) 	
-		  pressureList->save();
+		pressureList->save();
+		*/
 		
 	      }
 	      
-	      //Message::toScreen("STOPPED MAKING PRESSURES!");
 	      if(!processPressureData || waitForAnalysis.wait(&mutex))
 		processPressureData = true;
-	      //Message::toScreen("Got the mutex back...");
+	           
+	      // Saving the new data entries
+	      if (!pressureList->getFileName().isNull()) 	
+		pressureList->save();
 	      
 	      // Done with radar volume, send a signal to the Graph to update
 	      emit vortexListUpdate(vortexList);
-	      Message::toScreen("PollThreads After VortexList Update");
+	      emit log(Message(QString("Completed Analysis On Volume "+radarFileName),100,
+			       this->objectName(),Green));
 	    }
 	    mutex.unlock();  
 	  }
@@ -403,7 +464,6 @@ void PollThread::run()
 	  
 	  // Check to see if we should quit
 	  if (abort) {
-	    //Message::toScreen("Abort is true, before return in pollthread");
 	    delete dataSource;
 	    delete pressureSource;
 	    return;
@@ -456,15 +516,27 @@ void PollThread::setContinuePreviousRun(const bool &decision)
 void PollThread::checkIntensification()
 {
   // Checks for any rapid changes in pressure
+  
+  QDomElement pressure = configData->getConfig("pressure");
 
   // Make this an input parameter
-  float rapidRate = 3; // Units of mb per hr
-
+  //float rapidRate = 3; // Units of mb per hr
+  float rapidRate = configData->getParam(pressure, QString("rapidlimit")).toFloat();
+  if(isnan(rapidRate)) {
+    emit log(Message(QString("Could Not Find Rapid Intensification Rate, Using 3 mb/sec"),
+		     0,this->objectName()));
+    rapidRate = 3.0;
+  }
+  
   // So we don't report falsely there must be a rapid increase trend which 
   // spans several measurements
 
-  // Make this an input parameter
-  int volSpan = 8;  // Number of volumes which are averaged.
+  //  int volSpan = 8;  // Number of volumes which are averaged.
+  int volSpan = configData->getParam(pressure, QString("av_interval")).toInt();
+  if(isnan(volSpan)) {
+    emit log(Message(QString("Could Not Find Pressure Averaging Interval for Rapid Intensification, Using 8 volumes"),0,this->objectName()));
+    volSpan = 8;
+  }
 
   int lastVol = vortexList->count()-1;
 
@@ -499,20 +571,56 @@ void PollThread::checkIntensification()
       }
       pastAv /= (pastCount*1.);
       if(recentAv - pastAv > rapidRate) {
-	emit(log(Message(QString("Storm pressure is increasing"), 0,
-			 this->objectName(), Green, QString(), 
-			 RapidIncrease, QString())));
+	emit(log(Message(QString("Rapid Intensification Reported @ Rate of "+QString().setNum(recentAv-pastAv)+" mb/hour"), 0,this->objectName(), Green, QString(), RapidIncrease, QString("Storm Pressure Rising"))));
       } else {
 	if(recentAv - pastAv < -1*rapidRate) {
-	  emit(log(Message(QString("Storm pressure is dropping"), 0, 
-			   this->objectName(), Green, QString(), 
-			   RapidDecrease, QString())));
+	  emit(log(Message(QString("Rapid Decline in Storm Central Pressure Reporting @ Rate of "+QString().setNum(recentAv-pastAv)+" mb/hour"), 0, this->objectName(), Green, QString(), RapidDecrease, QString("Storm Pressure Dropping"))));
 	}
 	else {
-	  emit(log(Message(QString(), 0, this->objectName(),Green, 
+	  emit(log(Message(QString("Storm Central Pressure Stablized"), 0, this->objectName(),Green, 
 			   QString(), Ok, QString())));
 	}
       }
     }
   }
 }
+
+void PollThread::initializationComplete()
+{
+  waitForInitialization.wakeAll();
+}
+
+void PollThread::checkListConsistency()
+{
+  if(vortexList->count()!=simplexList->count()) {
+    emit log(Message(QString("Storage Lists Reloaded With Mismatching Volume Entries")));
+  }
+  for(int vv = 0; vv < vortexList->count(); vv++) {
+    bool foundMatch = false;
+    for(int ss = 0; ss < simplexList->count(); ss++) {
+      if(vortexList->at(vv).getTime()==simplexList->at(ss).getTime())
+	foundMatch = true;
+    }
+      if(!foundMatch) {
+	emit log(Message(QString("Removing Vortex Entry @ "+vortexList->at(vv).getTime().toString(Qt::ISODate)+" because no matching simplex was found"),0,this->objectName()));
+	vortexList->removeAt(vv);
+      }
+  }
+
+  for(int ss = 0; ss < simplexList->count(); ss++) {
+    bool foundMatch = false;
+    for(int vv = 0; vv < vortexList->count(); vv++) {
+      if(simplexList->at(ss).getTime() == vortexList->at(vv).getTime())
+	foundMatch = true;
+    }
+    if(!foundMatch) {
+      emit log(Message(QString("Removing Simplex Entry @ "+simplexList->at(ss).getTime().toString(Qt::ISODate)+" Because No Matching Vortex Was Found"),0,this->objectName()));
+      simplexList->removeAt(ss);
+    }
+  } 
+  // Removing the last ones for safety, any partially formed file could do serious damage
+  // to data integrity
+  simplexList->removeAt(simplexList->count()-1);
+  vortexList->removeAt(vortexList->count()-1);
+}
+  

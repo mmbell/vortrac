@@ -225,7 +225,7 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
   */
   //painter.drawText(QPoint(0,0),"Max. Receeding: "+QString().setNum(maxRec)+" m/s; Max. Approaching: "+QString().setNum(maxApp));
   painter.drawImage(QPoint(image.size().width()*0,0), image);
-  painter.drawImage(QPoint(image.size().width()*1.1,0),
+  painter.drawImage(QPointF(image.size().width()*1.1,0),
     		    legendImage);
   //painter.drawText(QPoint(0,int(image.size().height()*1.05)),"Max. Receeding: "+QString().setNum(maxRec)+" m/s; Max. Approaching: "+QString().setNum(maxApp));
   //painter.drawText(QPoint(0, this->height()), cappiLabel);
@@ -352,7 +352,8 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
   //  + QString().setNum(minVel) + " in " + QString().setNum(velIncr) + " m/s incr.";);
   //legendImage.fill(qRgb(255,255,0));
   //legendImage.fill(image.color(40));
-  this->setMinimumSize(QSize(image.size().width()*1.2, image.size().height()));
+  this->setMinimumSize(QSize(int(image.size().width()*1.2), 
+			      int(image.size().height())));
   this->resize(this->minimumSize());
   emit hasImage(true);
   

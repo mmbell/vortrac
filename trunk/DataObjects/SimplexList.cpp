@@ -56,7 +56,7 @@ bool SimplexList::save()
       //Message::toScreen(QString().setNum(fileSaves));
     }
     if(fileSaves == QList<SimplexData>::count()) {
-      Message::toScreen(QString().setNum(fileSaves));
+      //Message::toScreen(QString().setNum(fileSaves));
       return true;
     }
     Message::toScreen("SIMPLEXLIST FAIL:Failed to save all subFiles");

@@ -102,7 +102,6 @@ float RadarData::radarBeamHeight(float &distance, float elevation)
 {
 
   const float REarth = 6371.0;
-  const float curve = 1.333;
   const float RE = 4*REarth/3;
   const float REsq = RE * RE;
 

@@ -40,7 +40,7 @@ SimplexThread::SimplexThread(QObject *parent)
 
 SimplexThread::~SimplexThread()
 {
-  Message::toScreen("Entered SimplexThread Destructor");
+  //emit log(Message(QString("Entered SimplexThread Destructor")));
   
   waitForData.wakeOne(); // if we are not currently running the simplex thread this allows us
   // to wake it up and unlock and abort it.
@@ -66,7 +66,7 @@ SimplexThread::~SimplexThread()
   configData = NULL;
   delete configData;
  
-  Message::toScreen("Leaving the SimplexThread Destructor");
+  //emit log(Message("Leaving the SimplexThread Destructor"));
 
 }
 
@@ -113,7 +113,6 @@ void SimplexThread::run()
       return;
     
     // OK, Let's find a center
-    //Message::toScreen("SimplexThread: Mutex Lock 1");
     mutex.lock();
     
     bool foundCenter = true;
@@ -187,18 +186,15 @@ void SimplexThread::run()
     }
     vtdCoeffs = new Coefficient[20];
 
-    //Message::toScreen("SimplexThread: Mutex Unlock 1");
     mutex.unlock();
     if(abort)
       return;
-    //Message::toScreen("SimplexThread: Mutex Lock 2");
     mutex.lock();
     
     // Create a simplexData object to hold the results;
     simplexData = new SimplexData(int(lastLevel - firstLevel + 1), 
 				  int(lastRing - firstRing + 1), 
 				  (int)numPoints);
-    //Message::toScreen(vortexData->getTime().toString());
     simplexData->setTime(vortexData->getTime());
     simplexData->setNumPointsUsed((int)numPoints);
     
@@ -209,28 +205,26 @@ void SimplexThread::run()
     vertex[2] = new float[2];
     VT = new float[3];
     vertexSum = new float[2];
-    //Message::toScreen("SimplexThread: Mutex Unlock 2");
+    
     mutex.unlock();
     
     int numLevels = int(lastLevel-firstLevel+1);
     int loopPercent = int(40.0/float(numLevels+1));
     int endPercent = 40-(numLevels*loopPercent);
-    //Message::toScreen("Percent assigned to each level completed "+QString().setNum(loopPercent)+" numLevels = "+QString().setNum(numLevels));
-
+    
     // Loop through the levels and rings
     for (float height = firstLevel; height <= lastLevel; height++) {
       emit log(Message(QString(), loopPercent, this->objectName()));
-      //Message::toScreen("SimplexThread: Mutex Lock 3");
+
       mutex.lock();
       
       // Set the reference point
       gridData->setAbsoluteReferencePoint(refLat, refLon, height);
-      //Message::toScreen("SimplexThread: Mutex Unlock 3");
+
       mutex.unlock();
       
       if(!abort) {
 	for (float radius = firstRing; radius <= lastRing; radius+=ringWidth) {
-	  //Message::toScreen("SimplexThread: Mutex Lock 4");
 	  mutex.lock();
 	  
 	  // Set the corner of the box
@@ -245,7 +239,6 @@ void SimplexThread::run()
 	    // Out of bounds problem
 	    emit log(Message("Initial simplex guess is outside CAPPI"));
 	    archiveNull(radius, height, numPoints);
-	    //Message::toScreen("SimplexThread: Mutex Unlock 4A");
 	    mutex.unlock();
 	    continue;
 	  }
@@ -257,10 +250,9 @@ void SimplexThread::run()
 	  stdDevVertex = stdDevVT = 0;
 	  convergingCenters = 0;
 	  // Loop through the initial guesses
-	  //Message::toScreen("SimplexThread: Mutex Unlock Special 4B");
+
 	  mutex.unlock();
 	  for (int point = 0; point <= numPoints-1; point++) {
-	    //Message::toScreen("SimplexThread: Mutex Lock Special 4B");
 	    mutex.lock();
 	    if (point < boxRowLength) {
 	      RefI = cornerI + float(point) * boxIncr;
@@ -337,14 +329,12 @@ void SimplexThread::run()
 	    int mid = 0;
 	    int high = 0;
 
-	    //Message::toScreen("SimplexThread: Mutex Unlock 4B");
 	    mutex.unlock();
 	    
 	    for(;;) {
 	      if(abort)
 		return;
 	      
-	      //Message::toScreen("SimplexThread: Mutex Lock 5");
 	      mutex.lock();
 	      low = 0;
 	      // Sort the initial guesses
@@ -363,7 +353,6 @@ void SimplexThread::run()
 		VTsolution = VT[high];
 		Xsolution = vertex[high][0];
 		Ysolution = vertex[high][1];
-		//Message::toScreen("SimplexThread: Mutex Unlock 5A");
 		mutex.unlock();
 		break;
 	      }
@@ -371,7 +360,6 @@ void SimplexThread::run()
 	      // Check iterations
 	      if (numIterations > maxIterations) {
 		emit log(Message("Maximum iterations exceeded in Simplex!"));
-		//Message::toScreen("SimplexThread: Mutex Lock 5B");
 		mutex.unlock();
 		break;
 	      }
@@ -431,10 +419,9 @@ void SimplexThread::run()
 		  getVertexSum(vertex,vertexSum);
 		}
 	      } else --numIterations;
-	      //Message::toScreen("SimplexThread: Mutex Unlock 5C");
 	      mutex.unlock();
 	    }
-	    //Message::toScreen("SimplexThread: Mutex Lock 6");
+
 	    mutex.lock();
 	    // Done with simplex loop, should have values for the current point
 	    if ((VTsolution < 100.) and (VTsolution > 0.)) {
@@ -453,10 +440,8 @@ void SimplexThread::run()
 	      Yind[point] = -999;
 	      VTind[point] = -999;
 	    }
-	    //Message::toScreen("SimplexThread: Mutex Unlock 6");
 	    mutex.unlock();
 	  }
-	  //Message::toScreen("SimplexThread: Mutex Lock 7");
 	  mutex.lock();
 	  // All points done, calculate means
 	  if (meanCount == 0) {
@@ -514,18 +499,12 @@ void SimplexThread::run()
 	      archiveCenters(radius, height, numPoints);
 	    }
 	  }
-	  //Message::toScreen("SimplexThread: Mutex Unlock 7");
 	  mutex.unlock();
 	}
       }
-      ////Message::toScreen("SimplexThread: Mutex Unlock 8");
-      //mutex.unlock();
-      
       if(abort)
 	return;
-      
     }
-    //Message::toScreen("SimplexThread: Mutex Lock 9");
     mutex.lock();
     
     //Message::toScreen("SimplexRun Complete");
@@ -543,8 +522,6 @@ void SimplexThread::run()
     ChooseCenter *centerFinder = new ChooseCenter(configData,simplexResults,vortexData);
     connect(centerFinder, SIGNAL(errorlog(const Message&)),
 	    this, SLOT(catchLog(const Message&)),Qt::DirectConnection);
-    //delete centerFinder;
-    //Message::toScreen("Clean entrance and exit");
     foundCenter = centerFinder->findCenter();
     
     // Save again to keep mean values found in chooseCenter
@@ -569,24 +546,18 @@ void SimplexThread::run()
 	return;
       } else {
 	// Update the vortex list
-	// vortexData ???
 	emit log(Message(QString("Done with Simplex"),endPercent, this->objectName()));
-	// Update the progress bar and log
-	//emit log(Message("Done with Simplex",60));
 	
 	// Let the poller know we're done
 	emit(centerFound());
       }
-    //Message::toScreen("SimplexThread: Mutex Unlock 9");
     mutex.unlock();
     
     // Go to sleep, wait for more data   
     if (!abort) {
-      //Message::toScreen("SimplexThread: Mutex Lock 10");
       mutex.lock();
       // Wait until new data is available
       waitForData.wait(&mutex);	
-      //Message::toScreen("SimplexThread: Mutex Unlock 10");
       mutex.unlock();    
     }
     if(abort)
@@ -760,14 +731,8 @@ bool SimplexThread::calcHVVP(float& lat, float& lon)
   // or what the deal is but these numbers look closer to right for 
   // the two volumes I am looking at.
 
-  float* pair = gridData->getAdjustedLatLon(radarLat,radarLon,87.7712*cos(450-60.1703),87.7712*sin(450-60.1703));
-  Message::toScreen("New Lat Lon: ("+QString().setNum(pair[0])+", "+QString().setNum(pair[1])+"), old set = ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")");  
-  Message::toScreen("Vortex (Lat,Lon): ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")");
-  emit log(Message(QString("Vortex (Lat,Lon): ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")")));
-  Message::toScreen("Hvvp Parameters: Distance to Radar "+QString().setNum(rt)+" angle to vortex center in degrees ccw from north "+QString().setNum(cca)+" rmw "+QString().setNum(rmw));
-  emit log(Message(QString("Hvvp Parameters: Distance to Radar "+QString().setNum(rt)+" angle to vortex center in degrees ccw from north "+QString().setNum(cca)+" rmw "+QString().setNum(rmw))));
-  
-  emit log(Message(QString(), 1,this->objectName()));
+  //Message::toScreen("Hvvp Parameters: Distance to Radar "+QString().setNum(rt)+" angle to vortex center in degrees ccw from north "+QString().setNum(cca)+" rmw "+QString().setNum(rmw));
+  //emit log(Message(QString("Hvvp Parameters: Distance to Radar "+QString().setNum(rt)+" angle to vortex center in degrees ccw from north "+QString().setNum(cca)+" rmw "+QString().setNum(rmw))));
   
   Hvvp *envWindFinder = new Hvvp;
   connect(envWindFinder, SIGNAL(log(const Message)), 
@@ -779,8 +744,7 @@ bool SimplexThread::calcHVVP(float& lat, float& lon)
   bool hasHVVP = envWindFinder->findHVVPWinds(true);
   hvvpResult = envWindFinder->getAvAcrossBeamWinds();
   hvvpUncertainty = envWindFinder->getAvAcrossBeamWindsStdError();
-  Message::toScreen("Hvvp gives "+QString().setNum(hvvpResult)+" +/- "+QString().setNum(hvvpUncertainty));
-  emit log(Message(QString(), 1,this->objectName()));
+  //  Message::toScreen("Hvvp gives "+QString().setNum(hvvpResult)+" +/- "+QString().setNum(hvvpUncertainty));
     
   return hasHVVP;
 }

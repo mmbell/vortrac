@@ -116,7 +116,7 @@ bool VortexList::openNodeFile(const QDomNode &newNode)
     QString nodeTimeString = config->getParam(nodeElement, "time");
     QStringList timeParts =  nodeTimeString.remove("volume_").split("T");
     if(timeParts.count()!=2){
-      Message::toScreen("VortexList: OpenNodeFile: Failing to read the volume times correctly - 97");
+      Message::toScreen(QString("OpenNodeFile: Cannot Read Volume Times in: "+fileName));
       return false;
     }
     QDate nodeDate = QDate::fromString(timeParts[0],Qt::ISODate);
@@ -139,6 +139,9 @@ bool VortexList::openNodeFile(const QDomNode &newNode)
 	newRadar = newConfig->getParam(childElement, "radar");
 	newType = newConfig->getParam(childElement, "product");
 	// Check to make sure these line up........
+	if((newName!=vortexName)||(newRadar!=radarName)) {
+	  Message::toScreen(QString("Difficulty Loading VortexList File: "+nodeFileName+", this file may have been altered or incomplete"));
+	}
       }
       else {
 	// Has information about a vortexData;
@@ -341,7 +344,7 @@ void VortexList::createDomVortexDataEntry(const VortexData &newData)
 
   QDomElement header = newConfig->getConfig("vortex");
   if(!vortexName.isEmpty())
-    newConfig->setParam(header, QString("vortexName"), vortexName);
+    newConfig->setParam(header, QString("name"), vortexName);
   if(!radarName.isEmpty())
     newConfig->setParam(header, QString("radar"), radarName);
   if(!productType.isEmpty())
@@ -422,7 +425,7 @@ void VortexList::removeAt(int i)
   configFileNames->removeAt(i);
   vortexDataConfigs->removeAt(i);
   if(vortexDataConfigs->count() >= initialCount)
-    Message::toScreen("VortexList: Remove At didn't get smaller");
+    Message::toScreen(QString("RemoveAt didn't reduce the number of data points in the list"));
   QString timeString = this->at(i).getTime().toString(Qt::ISODate);
   timeString.replace(QString("-"), QString("_"));
   timeString.replace(QString(":"), QString("_"));

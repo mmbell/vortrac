@@ -56,6 +56,7 @@ class AnalysisThread : public QThread
      void newVCP(const int);
      void newCappi(const GriddedData*);
      void abortChanged(volatile bool *abortStatus);
+     void finishedInitialization();
 	 
  private:
      QMutex mutex;

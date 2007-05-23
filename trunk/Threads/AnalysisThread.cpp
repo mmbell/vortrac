@@ -161,8 +161,8 @@ void AnalysisThread::run()
 
        forever {
 		// Check to see if we should quit
-		if (abort)
-		  return;
+	 if (abort)
+	   return;
 
 		// OK, Let's process some radar data
 		mutex.lock();
@@ -181,7 +181,8 @@ void AnalysisThread::run()
 		if(abort)
 		  return;
 		mutex.lock();
-		
+       
+		bool beyondRadar;
 		// Check the vortex list for a current center		
 		if (!vortexList->isEmpty()) {
 		  vortexList->timeSort();
@@ -200,7 +201,7 @@ void AnalysisThread::run()
 		    QString vortexName = configData->getParam(vortex,"name");
 		    
 		    QString year;
-		    year.setNum(QDate::fromString(configData->getParam(vortex,"obsdate"), "yyyy-MM-dd").year());
+		    year.setNum(QDate::fromString(configData->getParam(radar,"startdate"), "yyyy-MM-dd").year());
 		    
 		    QString workingPath = configData->getParam(configData->getConfig("vortex"),"dir");
 		    QString vortexPath = configData->getParam(configData->getConfig("vtd"), "dir");
@@ -263,11 +264,13 @@ void AnalysisThread::run()
 
 		  if((abs(obsDateTime.secsTo(volDateTime))<15*60)
 		     ||(analyticRun)) {
+		    // Message::toScreen("Using lat lon in Config");
 		    vortexLat = configData->getParam(vortex,"lat").toFloat();
 		    vortexLon = configData->getParam(vortex,"lon").toFloat();
 		    
 		  }
 		  else {
+		    //Message::toScreen("Using Velocity");
 		    // Use the starting position in conjunction with the storm
 		    // velocity to find a current guess for the vortex center
 		    
@@ -293,6 +296,10 @@ void AnalysisThread::run()
 		    
 		    int elapsedSeconds =obsDateTime.secsTo(volDateTime);
 		    //Message::toScreen("Seconds since start "+QString().setNum(elapsedSeconds)+" in AnalysisThread");
+		    if(isnan(elapsedSeconds)) {
+		      emit log(Message(QString("Cannont calculate time until strom is in range of radar, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Yellow,QString("Can not calculate time until storm in range")));
+		      beyondRadar = false;
+		    }
 		    float distanceMoved = elapsedSeconds*stormSpeed/1000.0;
 		    float changeInX = distanceMoved*cos(stormDirection);
 		    float changeInY = distanceMoved*sin(stormDirection);
@@ -305,7 +312,7 @@ void AnalysisThread::run()
 		    vortexLon = newLatLon[1];
 		    //Message::toScreen("New vortexLat = "+QString().setNum(vortexLat)+" New vortexLon = "+QString().setNum(vortexLon));
 		  }
-       }
+		}
 
 		emit log(Message(QString(),2,this->objectName()));
        
@@ -318,7 +325,7 @@ void AnalysisThread::run()
 					     &vortexLat, &vortexLon);
 		
 		//Message::toScreen("Distance Between Radar and Storm "+QString().setNum(relDist));
-		bool beyondRadar = true;
+		beyondRadar = true;
 		bool closeToEdge = false;
 		for(int i = 0; i < radarVolume->getNumSweeps(); i++) {
 		  if((relDist < radarVolume->getSweep(i)->getUnambig_range())
@@ -330,7 +337,7 @@ void AnalysisThread::run()
 		    closeToEdge = true;
 		  }
 		}
-
+		
 		if(analyticRun)
 		  beyondRadar = false;
 
@@ -355,27 +362,62 @@ void AnalysisThread::run()
 		  //Message::toScreen(" relDist = "+QString().setNum(relDist));
 		  float alpha = acos(-1)-asin(palpha);
 		  //Message::toScreen(" alpha = "+QString().setNum(alpha));
-		  float dist2go = 174*sin(acos(-1)+cca-stormDirection-alpha)/sin(stormDirection-cca);
+		  float dist2go = 0;
+		  if((stormDirection-cca)==0) {
+		    dist2go = relDist-174;
+		  }
+		  else {
+		    dist2go = 174*sin(acos(-1)+cca-stormDirection-alpha)/sin(stormDirection-cca);
+		  }
 		  //Message::toScreen(" dist2go = "+QString().setNum(dist2go));
 		  float eta = (dist2go/stormSpeed)/60;
 		  //Message::toScreen("minutes till radar"+QString().setNum(eta));
-		  emit log(Message(
-			 QString(),
-			 -1,this->objectName(),AllOff,QString(),OutOfRange, 
-			 QString("Storm in range in "+QString().setNum(eta, 'f', 0)+" min")));
-		  //Message::toScreen("Estimated center is out of Doppler range!");
-		  delete radarVolume;
-		  emit doneProcessing();
-		  waitForData.wait(&mutex);
-		  mutex.unlock();
-		  continue;
+		  
+		  if((stormSpeed == 0)||(dist2go < 10)||
+		     (eta < 0)||(isnan(eta))) {
+
+		    // These is something wrong with our calculation of time
+		    // until storm is in range, continue processing with
+		    // warnings.
+		    if((stormSpeed == 0)||(eta < 0)||(isnan(eta))) {
+		    emit log(Message(QString("Difficulties Processing Time Until Radar is in Range, Please check observation parameters"),0,this->objectName(),Yellow, QString("Check Observation Parameter is Vortex Panel")));
+		    if(stormSpeed == 0)
+		      Message::toScreen("StromSpeed Problema");
+		    if(eta < 0)
+		      Message::toScreen("ETA < 0");
+		    if(isnan(eta))
+		      Message::toScreen("ETA is NAN");
+		    }
+
+		    // Let program continue if the storm is this close
+
+		  }
+		  else {
+		    emit log(Message(
+			    QString(),
+			    -1,this->objectName(),AllOff,QString(),OutOfRange, 
+			    QString("Storm in range in "+QString().setNum(eta, 
+						    'f', 0)+" min")));
+		    //Message::toScreen("Estimated center is out of Doppler range!");
+		    delete radarVolume;
+		    emit doneProcessing();
+		    waitForData.wait(&mutex);
+		    mutex.unlock();
+		    emit finishedInitialization();
+		    continue;
+		  }
 		}
 		//Message::toScreen("gets to create vortexData analysisThread");
-
+		emit finishedInitialization();
+		
 		// Create data instance to hold the analysis results
 		VortexData *vortexData = new VortexData(); 
 		vortexData->setTime(radarVolume->getDateTime());
-		
+		for(int i = 0; i < vortexData->getNumLevels(); i++) {
+		  vortexData->setLat(i,vortexLat);
+		  vortexData->setLon(i,vortexLon);
+		}		
+
 		mutex.unlock();
 		if(abort)
 		  return;
@@ -413,17 +455,14 @@ void AnalysisThread::run()
 			 Message::toScreen("Writing Vortrac Input "+name);
 			 radarVolume->writeToFile(name);
 			 Message::toScreen("Wrote Vortrac Input "+name);
-		*/
-			 
-		         
+         
 			 // Testing HVVP before Cappi to save time 
 			 // only good for Charley 1824
 			 
 			 float rt1 = 167.928;
 			 float cca1 = 177.204;
 			 float rmw1 = 11;
-			 
-			 /*
+			
 			 // Testing HVVP before Cappi to save time 
 			 // only good for Charley 140007
 			 
@@ -462,7 +501,7 @@ void AnalysisThread::run()
 			 float rt1 = 70.60;
 			 float cca1 = 45.19;
 			 float rmw1 = 7;
-			 */
+			 
 			 Message::toScreen("Vortex (Lat,Lon): ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")");
 			 Message::toScreen("Hvvp Parameters: Distance to Radar "+QString().setNum(rt1)+" angel to vortex center in degrees ccw from north "+QString().setNum(cca1)+" rmw "+QString().setNum(rmw1));
 			 
@@ -476,7 +515,7 @@ void AnalysisThread::run()
 			 delete envWindFinder1;
 			 
 			 return;
-			 
+			 */
  
 		mutex.unlock();
 		if(abort)
@@ -596,6 +635,9 @@ void AnalysisThread::run()
 		if(hasConvergingCenters) {
 		  vortexList->append(*vortexData);	
 		  vortexList->save();
+		}
+		else {
+		  emit log(Message(QString("Insufficient Convergence of Simplex Centers"),0,this->objectName(),AllOff,QString(),SimplexError,QString("Could Not Obtain Center Convergence")));
 		}
 		  
 		/*

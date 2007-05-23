@@ -15,9 +15,12 @@
 PressureList::PressureList(const QString &newFileName)
 {
   fileName = newFileName;
+  Message::toScreen("Constructor filename = "+fileName);
   workingDir = QString("");
-  if(fileName.isEmpty())
+  if(fileName.isEmpty()) {
     fileName = QString("vortrac_defaultPressureListStorage.xml");
+    Message::toScreen("Trying to use defaults pressure storage file");
+  }
 
   config = new Configuration(0, newFileName);
   QList<PressureData>::QList<PressureData>();
@@ -26,7 +29,8 @@ PressureList::PressureList(const QString &newFileName)
 PressureList::PressureList(Configuration* newConfig)
 {
 
-	config = newConfig;
+  config = newConfig;
+  Message::toScreen("Constructor from Config, root is "+newConfig->getRoot().toElement().tagName());
 	
 }
 
@@ -50,13 +54,75 @@ bool PressureList::save()
 
 bool PressureList::open()
 {
-  // Do we still need this if all the elements are in one file?
-  return true;
-}
-
-bool PressureList::openNodeFile(const QDomNode &newNode)
-{
-  return false;
+  Message::toScreen("Pressure Root "+config->getRoot().toElement().tagName());
+  int numPressureObs = 0;
+  Message::toScreen("Opening PressureList count = "+QString().setNum(config->getGroupList()->count()));
+  
+  for(int i = 0; i < config->getGroupList()->count(); i++) {
+    QDomNode node = config->getGroupList()->item(i);
+    QDomElement currElement = node.toElement();
+    //Message::toScreen(currElement.tagName());
+    if(currElement.tagName()==QString("pressure")) {
+      vortexName = config->getParam(currElement, "name");
+      radarName = config->getParam(currElement, "radar");
+      productType = config->getParam(currElement, "product");
+    }
+    else {
+      
+      // Has information about a pressureData
+      PressureData newPressure;
+      // Station Name
+      QString stName = config->getParam(currElement,
+					QString("station"));
+      if(stName != QString())
+	newPressure.setStationName(stName);
+      // Latitude
+      float newLat = config->getParam(currElement, 
+				      QString("latitude")).toFloat();
+      if(newLat!=-999)
+	newPressure.setLat(newLat);
+      // Longitude 
+      float newLon = config->getParam(currElement, 
+				      QString("longitude")).toFloat();
+      if(newLon!=-999)
+	newPressure.setLon(newLon);
+      // Altitude 
+      float newAlt = config->getParam(currElement, 
+				      QString("altitude")).toFloat();
+      if(newAlt!=-999)
+	newPressure.setAltitude(newAlt);
+      // DateTime
+      QString dateTimeString = config->getParam(currElement, 
+						QString("time"));
+      QDateTime newTime = QDateTime::fromString(dateTimeString, Qt::ISODate);
+      if(newTime.isValid())
+	newPressure.setTime(newTime);
+      // Pressure
+      float pressureOb = config->getParam(currElement, 
+					  QString("pressure")).toFloat();
+      if(pressureOb != -999)
+	newPressure.setPressure(pressureOb);
+      // Wind Speed
+      float newWindSpeed = config->getParam(currElement, 
+					    QString("windspeed")).toFloat();
+      if(newWindSpeed!=-999)
+	newPressure.setWindSpeed(newWindSpeed);
+      // Wind Direction
+      float newWindDir = config->getParam(currElement, 
+					  QString("winddir")).toFloat();
+      if(newWindDir!=-999)
+	newPressure.setWindDirection(newWindDir);
+      
+      QList<PressureData>::append(newPressure);
+      numPressureObs++;
+    }
+  }
+  if(numPressureObs == config->getGroupList()->count()-1)
+    return true;
+  else {
+    Message::toScreen("Failed to Properly Load All Saved Surface Pressure Observations, Only Loaded "+QString().setNum(numPressureObs));
+    return false;
+  }
 }
 
 void PressureList::setFileName(const QString &newFileName)
@@ -105,7 +171,7 @@ void PressureList::createDomPressureDataEntry(const PressureData &newData)
   // Add element to main xml identifing specific file
 
   QDomElement root = config->getRoot();
-  QString stationInfo = "surfaceob_" + newData.getStationName() + "_" + newData.getTime().toString(Qt::ISODate);
+  QString stationInfo = "surfaceob_" + newData.getStationName() + "_" + timeString;
   config->addDom(root, stationInfo, QString(""));
   
   QDomElement parent = config->getConfig(stationInfo);

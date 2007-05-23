@@ -125,6 +125,8 @@ void StormSignal::paintEvent(QPaintEvent *event)
   if (painter->isActive())
     painter->end();
   delete painter;
+
+  //event->accept();
 }
 
 void StormSignal::catchLog(const Message& message)

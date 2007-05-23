@@ -258,4 +258,10 @@
         <latitude>0.0</latitude>
         <altitude>0.0</altitude>
     </OTHER>
+    <TRAS>
+        <text>TRAS in trashland</text>
+        <longitude>2</longitude>
+        <latitude>1</latitude>
+        <altitude>3</altitude>
+    </TRAS>
 </vortrac>

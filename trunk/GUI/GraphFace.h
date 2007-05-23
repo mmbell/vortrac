@@ -163,12 +163,12 @@ private:
    
    // Constants related to the absolute size of the margins and face of the graph
    // These are in Qt sizes not scaled sizes
-   static const int GRAPH_WIDTH = 800;
-   static const int GRAPH_HEIGHT = 400;
-   static const int LEFT_MARGIN_WIDTH = 50;
-   static const int RIGHT_MARGIN_WIDTH = 50;
+   static const int GRAPH_WIDTH = 600;
+   static const int GRAPH_HEIGHT = 300;
+   static const int LEFT_MARGIN_WIDTH = 40;
+   static const int RIGHT_MARGIN_WIDTH = 40;
    static const int BOTTOM_MARGIN_HEIGHT = 40;
-   static const int TOP_MARGIN_HEIGHT =30;
+   static const int TOP_MARGIN_HEIGHT =25;
 
    // These constants define the percentiles of the error bars   
    static const float Z1 = .67;

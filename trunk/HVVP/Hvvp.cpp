@@ -100,14 +100,17 @@ float Hvvp::rotateAzimuth(const float &angle)
 }
 
 long Hvvp::hvvpPrep(int m) {
+  /*
+
+  // For Printing the results to file for Fortran Comparisons
 
   QString fileName("FirstGates_"+QString().setNum(m));
   QFile* outputFile = new QFile(fileName);
   outputFile->open(QIODevice::WriteOnly);
   QTextStream out(outputFile);
   out << "Checking the first 10 entries in Level " << m << endl;
+  */
 
-  //Message::toScreen("HVVP Prep");
 
   //**float hgtStart = .500;                // km
   float hgtStart = .600;                // km   // Most Recently Used
@@ -147,7 +150,7 @@ long Hvvp::hvvpPrep(int m) {
   float hLow = h0-hInc;
   float hHigh = h0+hInc;
 
-  out << " num sweeps = " << volume->getNumSweeps();
+  //out << " num sweeps = " << volume->getNumSweeps();
   
   for(int s = 0; s < volume->getNumSweeps(); s++) {
     currentSweep = volume->getSweep(s);
@@ -233,9 +236,9 @@ long Hvvp::hvvpPrep(int m) {
   delete currentRay;
   delete vel;
 
-  out << "Level " << m << " count = " << count << endl;
+  //out << "Level " << m << " count = " << count << endl;
   
-  outputFile->close();
+  //outputFile->close();
 
   return count;
 }
@@ -251,14 +254,18 @@ bool Hvvp::findHVVPWinds(bool both)
   
   if(volume->getNumSweeps() < 0) {
     // For Analytic No Volume Case
-    Message::toScreen("No volume to process");
+    emit log(Message(QString("Found No Volume To Process"),0,
+		     this->objectName(),Red,
+		     QString("Could Not Locate Volume")));
     return false;
   }
 
   if(both)
-    Message::toScreen("Running with both 1st and 2nd lls fits");
+    emit log(Message(QString("Using Outlier Thresholding in Second Fit"),
+	     0,this->objectName()));
   else
-    Message::toScreen("Running with 1st fit only");    
+    emit log(Message(QString("Running With First Fit Only"),
+		     0,this->objectName()));
 
   long count = 0; 
   float mod_Rankine_xt[levels];
@@ -266,19 +273,15 @@ bool Hvvp::findHVVPWinds(bool both)
 
   // For updating the percentage bar we have 7% to give away in this routine
   float increment = float(levels)/7.0;
-  //Message::toScreen("HVVP increment is ..."+QString().setNum(increment));
 
   for(int m = 0; m < levels; m++) {
     
     if(int((m+1)/increment) > last) {
       last++;
-      //Message::toScreen("For m = "+QString().setNum(m)+" last upgraded to "+QString().setNum(last));
       emit log(Message(QString(),1,this->objectName()));
     }
 
-    mod_Rankine_xt[m] = velNull;
-    float hgtStart = .600;    
-    float h0 = hgtStart+.1*m;
+    mod_Rankine_xt[m] = velNull; 
     
     count = hvvpPrep(m);
    
@@ -288,7 +291,6 @@ bool Hvvp::findHVVPWinds(bool both)
      *
      */
     
-    //Message::toScreen("HVVP count requires 6500, level "+QString().setNum(m)+" has "+QString().setNum(count));
 
     if(count >= 6500.0) {
       
@@ -303,7 +305,7 @@ bool Hvvp::findHVVPWinds(bool both)
       writeToFile(fileName,xlsDimension,count,count,1,xls,yls);
       QString midFileName = fileName+QString(".printA");
       flag = Matrix::oldlls(xlsDimension, count, xls, yls, sse, cc, stand_err, midFileName);
-      Message::toScreen(QString(" count = ")+QString().setNum(count));
+      //Message::toScreen(QString(" count = ")+QString().setNum(count));
       QFile* outputFile = new QFile(fileName+QString(".cpplls"));
       outputFile->open(QIODevice::WriteOnly);
       QTextStream out(outputFile);
@@ -333,7 +335,7 @@ bool Hvvp::findHVVPWinds(bool both)
       
       flag = Matrix::lls(xlsDimension, count, xls, yls, sse, cc, stand_err);
 
-      Message::toScreen("SSE = "+QString().setNum(sse));
+      //Message::toScreen("SSE = "+QString().setNum(sse));
 
       //Message::toScreen("Finished Printing in HVVP");
 
@@ -451,8 +453,10 @@ bool Hvvp::findHVVPWinds(bool both)
 		  float vt = rt*cc[6]/(xt+1.0);
 		  
 		  	  
-		  if(xt == 0)
-		    Message::toScreen("Going to have issues in xt");
+		  if(xt == 0) {
+		    emit log(Message(QString("Xt is Zero, Program Logic Problem"),0,this->objectName(),Red,QString("Xt = 0")));
+		    return false;
+		  }
 		  
 		  temp = (2./rt)*(2./rt)+(stand_err[6]/cc[6])*(stand_err[6]/cc[6]);
 		  temp += (var[m]/xt)*(var[m]/xt);
@@ -479,20 +483,20 @@ bool Hvvp::findHVVPWinds(bool both)
 		  
 		  // Set realistic limit on magnitude of results.
 		  if((xt < 0)||(fabs(ue)>30.0)||(fabs(ve)>30)) {
-		    Message::toScreen("First Crappy Fail Option");
+		    //Message::toScreen("First Crappy Fail Option");
 		    //z[m] = h0;               
 		    u[m] = velNull;
 		    v[m] = velNull;
 		    vm_sin[m] = velNull;
 		  } else {
-		    Message::toScreen("Only Good Option");
+		    //Message::toScreen("Only Good Option");
 		    //z[m] = hgtStart+hInc*float(m);
 		    u[m] = ue;
 		    v[m] = ve;
 		    vm_sin[m] = vm_s;
 		  }
       } else {
-	Message::toScreen("Second Crappy Fail Option");
+	// Message::toScreen("Second Crappy Fail Option");
 	//z[m] = h0;
 	u[m] = velNull;
 	v[m] = velNull;
@@ -501,13 +505,13 @@ bool Hvvp::findHVVPWinds(bool both)
       delete [] stand_err;
       delete [] cc;
     } else {
-      Message::toScreen("Third Crappy Fail Option");
+      //Message::toScreen("Third Crappy Fail Option");
       //z[m] = h0;
       u[m] = velNull;
       v[m] = velNull;
       vm_sin[m] = velNull;
     }
-    Message::toScreen("HVVP Output From Level "+QString().setNum(m)+" z = "+QString().setNum(z[m])+" vm_sin = "+QString().setNum(vm_sin[m]));
+    //Message::toScreen("HVVP Output From Level "+QString().setNum(m)+" z = "+QString().setNum(z[m])+" vm_sin = "+QString().setNum(vm_sin[m]));
 	
   }
   
@@ -604,21 +608,42 @@ bool Hvvp::findHVVPWinds(bool both)
   }
   //Message::toScreen("ifoundit = "+QString().setNum(ifoundit));
   QString message;
+  QString shortMessage;
   //if(ifoundit >= 1) {
-    // Here Pauls code does a lot of printing which I will make optional 
-    // depending on whether or not printOutput is set to true, the default
-    // is false
-    message += "RAW HVVP RESULTS\n";
-    message += "\n\n";
-    message += "Layer, variance-weighted, average Vm_Sim = ";
-    message += QString().setNum(av_VmSin)+" +-";
-    message += QString().setNum(sqrt(var_av_VmSin))+" (m/s).";
-    message += "\n\n";
+  // Here Pauls code does a lot of printing which I will make optional 
+  // depending on whether or not printOutput is set to true, the default
+  // is false
+  message += "RAW HVVP RESULTS\n";
+  message += "\n";
+  message += "Layer, variance-weighted, average Vm_Sim = ";
+  message += QString().setNum(av_VmSin)+" +-";
+  message += QString().setNum(sqrt(var_av_VmSin))+" (m/s).";
+  message += "\n";
+  message += "Vm_Sin value closest to 2 km altitude is ";
+  message += QString().setNum(vm_sin[ifoundit])+" +- ";
+  message += QString().setNum(sqrt(var[ifoundit]))+" m/s at ";
+  message += QString().setNum(z[ifoundit])+" km altitude.";
+  message += "\n";
+  message += "Z (km)  Ue (m/s)  Ve (m/s)  Vm_Sin (m/s)";
+  message += "   Stderr_Vm_Sin (m/s)\n\n";
+  for(int i = 0; i < levels; i++) {
+    if((u[i]!=velNull) && (v[i]!=velNull)) {
+      message +=QString().setNum(z[i])+"\t   "+QString().setNum(u[i]);
+      message +="\t   "+QString().setNum(v[i])+"\t   "+QString().setNum(vm_sin[i]);
+      message +="\t   "+QString().setNum(sqrt(var[i]))+"\n";
+    }
+  }
+  message += "Smoothing width is 3 levels, so at least smooth somewhat";
+  message += " beyond 3 levels\n";
+  if(count > 4) {
+    smoothHvvp(u);
+    smoothHvvp(v);
+    smoothHvvpVmSin(vm_sin, var);
+      
     message += "Vm_Sin value closest to 2 km altitude is ";
-    message += QString().setNum(vm_sin[ifoundit])+" +- ";
+    message += QString().setNum(vm_sin[ifoundit])+" +-";
     message += QString().setNum(sqrt(var[ifoundit]))+" m/s at ";
-    message += QString().setNum(z[ifoundit])+" km altitude.";
-    message += "\n\n";
+    message += QString().setNum(z[ifoundit])+" km altitude.\n\n";
     message += "Z (km)  Ue (m/s)  Ve (m/s)  Vm_Sin (m/s)";
     message += "   Stderr_Vm_Sin (m/s)\n\n";
     for(int i = 0; i < levels; i++) {
@@ -628,42 +653,69 @@ bool Hvvp::findHVVPWinds(bool both)
 	message +="\t   "+QString().setNum(sqrt(var[i]))+"\n";
       }
     }
-    message += "Smoothing width is 3 levels, so at least smooth somewhat";
-    message += " beyond 3 levels\n\n";
+  }
+  
+  // Shorten message for HVVP Results in Log File
+  shortMessage += "Smoothed HVVP RESULTS\n";
+  shortMessage += "\n";
+  shortMessage += "Layer, variance-weighted, average Vm_Sim = ";
+  shortMessage += QString().setNum(av_VmSin)+" +-";
+  shortMessage += QString().setNum(sqrt(var_av_VmSin))+" (m/s).";
+  shortMessage += "\n";
+  //shortMessage += "Vm_Sin value closest to 2 km altitude is ";
+  //shortMessage += QString().setNum(vm_sin[ifoundit])+" +- ";
+  //shortMessage += QString().setNum(sqrt(var[ifoundit]))+" m/s at ";
+  //shortMessage += QString().setNum(z[ifoundit])+" km altitude.";
+  //shortMessage += "\n";
+  shortMessage += "Z (km)  Ue (m/s)  Ve (m/s)  Vm_Sin (m/s)";
+  shortMessage += "   Stderr_Vm_Sin (m/s)\n\n";
+  for(int i = 0; i < levels; i++) {
+    if((u[i]!=velNull) && (v[i]!=velNull)) {
+      shortMessage +=QString().setNum(z[i])+"\t   "+QString().setNum(u[i]);
+      shortMessage +="\t   "+QString().setNum(v[i])+"\t   "+QString().setNum(vm_sin[i]);
+      shortMessage +="\t   "+QString().setNum(sqrt(var[i]))+"\n";
+    }
+  }
+  /*
+    shortMessage += "Smoothing width is 3 levels, so at least smooth somewhat";
+    shortMessage += " beyond 3 levels\n";
     if(count > 4) {
-      smoothHvvp(u);
-      smoothHvvp(v);
-      smoothHvvpVmSin(vm_sin, var);
-      
-      message += "Vm_Sin value closest to 2 km altitude is ";
-      message += QString().setNum(vm_sin[ifoundit])+" +-";
-      message += QString().setNum(sqrt(var[ifoundit]))+" m/s at ";
-      message += QString().setNum(z[ifoundit])+" km altitude.\n\n";
-      message += "Z (km)  Ue (m/s)  Ve (m/s)  Vm_Sin (m/s)";
-      message += "   Stderr_Vm_Sin (m/s)\n\n";
-      for(int i = 0; i < levels; i++) {
-	if((u[i]!=velNull) && (v[i]!=velNull)) {
-	  message +=QString().setNum(z[i])+"\t   "+QString().setNum(u[i]);
-	  message +="\t   "+QString().setNum(v[i])+"\t   "+QString().setNum(vm_sin[i]);
-	  message +="\t   "+QString().setNum(sqrt(var[i]))+"\n";
-	}
-      }
+    smoothHvvp(u);
+    smoothHvvp(v);
+    smoothHvvpVmSin(vm_sin, var);
+    
+    shortMessage += "Vm_Sin value closest to 2 km altitude is ";
+    shortMessage += QString().setNum(vm_sin[ifoundit])+" +-";
+    shortMessage += QString().setNum(sqrt(var[ifoundit]))+" m/s at ";
+    shortMessage += QString().setNum(z[ifoundit])+" km altitude.\n\n";
+    shortMessage += "Z (km)  Ue (m/s)  Ve (m/s)  Vm_Sin (m/s)";
+    shortMessage += "   Stderr_Vm_Sin (m/s)\n\n";
+    for(int i = 0; i < levels; i++) {
+    if((u[i]!=velNull) && (v[i]!=velNull)) {
+    shortMessage +=QString().setNum(z[i])+"\t   "+QString().setNum(u[i]);
+    shortMessage +="\t   "+QString().setNum(v[i])+"\t   "+QString().setNum(vm_sin[i]);
+    shortMessage +="\t   "+QString().setNum(sqrt(var[i]))+"\n";
     }
-    if(printOutput) {
-      emit log(Message(message));
+    } 
+    }
+  */
+  
+  if(printOutput) {
+      emit log(Message(shortMessage,0,this->objectName(),Green));
       Message::toScreen(message);
-    }
-    return true;
-    /*}
-  else {
+  }
+  return true;
+  /*
+    else {
     message = "No Hvvp Results Found";
     if(printOutput) {
-      emit log(Message(message));
-      Message::toScreen(message);
+    emit log(Message(message));
+    Message::toScreen(message);
     }
     return false;
-  }
+    }
     */
+  emit log(Message(QString(),0,this->objectName(),Green));
 }
 
 

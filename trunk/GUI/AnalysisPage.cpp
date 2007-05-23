@@ -691,7 +691,7 @@ bool AnalysisPage::analyticModel()
 
 void AnalysisPage::pollVortexUpdate(VortexList* list)
 {
-  Message::toScreen("Made it too pollVortexUpdate in AnalysisPage");
+  //Message::toScreen("Made it too pollVortexUpdate in AnalysisPage");
   if((list!=NULL)&&(list->count() > 0)) {
     
     // Find the outermost vtd mean wind coefficient that is not equal to -999

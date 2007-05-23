@@ -36,7 +36,7 @@ Log::Log(QWidget *parent)
   absoluteProgress = 0;
   //displayLocation = false;
   displayLocation = true;
-
+  //  usingFile = false;
   // Message::toScreen("log:constructor: "+workingDirectory.path());
 }
 
@@ -53,6 +53,8 @@ Log::~Log()
 
 void Log::setWorkingDirectory(QDir& newDir)
 {
+ 
+  
   if (newDir == workingDirectory) {
     // Don't need to do anything
     return;
@@ -79,6 +81,10 @@ void Log::setWorkingDirectory(QDir& newDir)
   newFileName = newName+".log";
   newLogFile.setFileName(workingDirectory.filePath(newName+".log"));
   
+  usingFile.lock();
+  if(logFile->isOpen())
+    logFile->close();
+  
   if(!logFile->copy(newDir.filePath(newFileName))) {
     emit log(Message(QString("SetWorkingDirectory: Could not copy "+logFile->fileName()+" to "+newDir.filePath(newFileName)+".  May not be logging errors"),0,this->objectName(),Yellow,QString("Could not move log file!")));
     return;
@@ -94,41 +100,50 @@ void Log::setWorkingDirectory(QDir& newDir)
   delete oldLogFile;
   logFile = new QFile(workingDirectory.filePath(logFileName));
   logFile->setFileName(workingDirectory.filePath(logFileName));
+
   emit log(Message(QString("Log location after working dir changed, log file = "+logFile->fileName()),0,this->objectName(),Green));
+
+  usingFile.unlock();
+
 }
 
 void Log::setLogFileName(QString& newName) 
 {
+  
   // check and see if it has a file extension
   if(!newName.contains(QString(".log")))
     if(!newName.contains(QString(".")))
       newName.append(QString(".log"));
 	// if not, then add .log extension
 
-  QFile newFile(workingDirectory.filePath(newName));
-
-  if(newFile.exists())
+  if(QFile::exists(workingDirectory.filePath(newName)))
     {
-      newFile.remove();
+      QFile::remove(workingDirectory.filePath(newName));
     }
+  
+  usingFile.lock();
 
   if(!logFile->copy(workingDirectory.filePath(newName)))
     //Message::toScreen("Log::setWorkingDirectory: could not copy "+logFile->fileName()+" to "+workingDirectory.filePath(newName));
-  logFileName = newName;
+    logFileName = newName;
   logFile->setFileName(workingDirectory.filePath(logFileName));
   //logFile = new QFile(workingDirectory.filePath(logFileName));
-  
+  usingFile.unlock();
 }
 
 bool Log::saveLogFile()
 {
- QString saveName=QFileDialog::getSaveFileName(this, QString(tr("Save Status Log File as...")), workingDirectory.path(), QString(tr("Text Files *.txt")));
+  QString saveName=QFileDialog::getSaveFileName(this, QString(tr("Save Status Log File as...")), workingDirectory.path(), QString(tr("Text Files *.txt")));
+  
   if(!saveName.isEmpty()) {
+    usingFile.lock();
     if(logFile->copy(saveName)) {
+      usingFile.unlock();
       return true;
     }
     else {
       Message::toScreen(tr("Failed to save log file"));
+      usingFile.unlock();
       return false;
     }
   }
@@ -144,29 +159,36 @@ bool Log::saveLogFile(const QString& fileName)
     checkFileName.truncate(lastSlash);
   }
   QDir check(checkFileName);
-  QFile *newLogFile;
+  QString newFileName;
+
   if(check.isAbsolute())
-    newLogFile = new QFile(fileName);
+    newFileName = fileName;
   else 
-    newLogFile = new QFile(workingDirectory.filePath(fileName));
+    newFileName = workingDirectory.filePath(fileName);
   
-  if(newLogFile->exists())
-    newLogFile->remove();
-  delete newLogFile;
+  if(QFile::exists(newFileName))
+    QFile::remove(newFileName);
+
+  usingFile.lock();
   if(check.isAbsolute())
+    
     if(logFile->copy(fileName)) {
+      usingFile.unlock();
       return true;
     }
     else {
       Message::toScreen(tr("Failed to save log file"));
+      usingFile.unlock();
       return false;
     }
   else {
     if(logFile->copy(workingDirectory.filePath(fileName))) {
+      usingFile.unlock();
       return true;
     }
     else {
       Message::toScreen(tr("Failed to save log file"));
+      usingFile.unlock();
       return false;
     }
   }
@@ -188,8 +210,9 @@ void Log::catchLog(const Message& logEntry)
       message = location+": "+message;
     }
     message+="\n";
-    writeToFile(message);
+    messagesWaiting.append(message);
     emit(newLogEntry(message));
+    writeToFile();
   }
   
   if(progress!=0) {
@@ -214,25 +237,25 @@ void Log::catchLog(const Message& logEntry)
 }
 
 
-bool Log::writeToFile(const QString& message)
+bool Log::writeToFile()
 {
-  
-  if(logFile->isOpen()) {
-    Message::toScreen("When logging message: "+message+" logFile was already open");
-    logFile->close();
-  }
-  if(logFile->open(QIODevice::Append)) 
-    {
-      logFile->write(message.toAscii());
-      logFile->close();
-      if(logFile->isOpen())
-	Message::toScreen("When logging message: "+message+" logFile did not close but did not fail");
+  if(usingFile.tryLock()) {
+      if(logFile->open(QIODevice::Append)) {
+	while((messagesWaiting.count() > 0)) {
+	  logFile->write(messagesWaiting.first().toAscii());
+	  QString message = messagesWaiting.takeFirst();
+	}
+	logFile->close();
+	if(logFile->isOpen()) {
+	  Message::toScreen("When logging messags logFile did not close but did not fail");
+	  usingFile.unlock();
+	  return false;
+	}
+      }
+      usingFile.unlock();
       return true;
-    }
-
-  Message::toScreen("Failed to write Log message to file");
+  }
   return false;
-  
 }
 
 bool Log::handleStopLightUpdate(StopLightColor newColor, QString message, 

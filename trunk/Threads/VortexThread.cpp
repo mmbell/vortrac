@@ -130,7 +130,7 @@ void VortexThread::run()
 		
 		// Create a GBVTD object to process the rings
 		if(closure.contains(QString("hvvp"),Qt::CaseInsensitive)) {
-		  if(calcHVVP())
+		  if(calcHVVP(true))
 		    vtd = new GBVTD(geometry, closure, maxWave, dataGaps, hvvpResult);
 		  else {
 		    emit log(Message(QString(),0,this->objectName(),Yellow,
@@ -229,8 +229,6 @@ void VortexThread::run()
 	     		
 		// Get the central pressure
 		calcCentralPressure(vortexData,pressureDeficit, firstLevel); // is firstLevel right?
-		   //Message::toScreen("VortexThreads: Pressure = "+QString().setNum(vortexData->getPressure()));
-		   //calcHVVP();
 
 		mutex.unlock();
 		if(abort)
@@ -238,9 +236,10 @@ void VortexThread::run()
 		mutex.lock();
 
 		// Get the central pressure uncertainty
-		calcPressureUncertainty(0, QString("CenterStdPresErr"));
-		calcPressureUncertainty(1, QString("FlatPresErr"));
-		calcPressureUncertainty(1.5, QString("FlatPresErr"));
+		//calcPressureUncertainty(0, QString("CenterStdPresErr"));
+		//calcPressureUncertainty(1, QString("FlatPresErr"));
+		//calcPressureUncertainty(1.5, QString("FlatPresErr"));
+		calcPressureUncertainty(1.5,QString());
 
 		
 		if(!foundWinds)
@@ -311,7 +310,7 @@ void VortexThread::getPressureDeficit(const float& height)
 
 	// get the index of the height we want
 	int heightIndex = vortexData->getHeightIndex(height);
-	Message::toScreen("GetPressureDeficit for height "+QString().setNum(height)+" km which corresponds to index "+QString().setNum(heightIndex)+" in vortexData; this corresponds to level "+QString().setNum(gridData->getIndexFromCartesianPointK(height)));
+	//Message::toScreen("GetPressureDeficit for height "+QString().setNum(height)+" km which corresponds to index "+QString().setNum(heightIndex)+" in vortexData; this corresponds to level "+QString().setNum(gridData->getIndexFromCartesianPointK(height)));
 
 	// Assuming radius is in KM here, when we correct for units later change this
 	float deltar = 1000;
@@ -364,7 +363,7 @@ void VortexThread::getPressureDeficit(VortexData* data, float* pDeficit,const fl
 
 	// get the index of the height we want
 	int heightIndex = data->getHeightIndex(height);
-	Message::toScreen("GetPressureDeficit for height "+QString().setNum(height)+" km which corresponds to index "+QString().setNum(heightIndex)+" in data; this corresponds to level "+QString().setNum(gridData->getIndexFromCartesianPointK(height)));
+	//Message::toScreen("GetPressureDeficit for height "+QString().setNum(height)+" km which corresponds to index "+QString().setNum(heightIndex)+" in data; this corresponds to level "+QString().setNum(gridData->getIndexFromCartesianPointK(height)));
 
 	// Assuming radius is in KM here, when we correct for units later change this
 	float deltar = 1000;
@@ -414,11 +413,10 @@ void VortexThread::calcCentralPressure(VortexData* vortex, float* pD, float heig
 {
 
   int heightIndex = vortex->getHeightIndex(height);
-  float centralPressureStdDev = vortex->getCenterStdDev(heightIndex);
   float centralPressure = 0;
 
   // Sum values to hold pressure estimates
-  Message::toScreen("Real height = "+QString().setNum(height)+"km corresponds with vortexData index of "+QString().setNum(heightIndex));
+  emit log(Message(QString("Calculating Pressure at height = "+QString().setNum(height)+"km "),0,this->objectName()));
   float pressWeight = 0;
   float pressSum = 0;
   numEstimates = 0;
@@ -485,7 +483,7 @@ void VortexThread::calcCentralPressure(VortexData* vortex, float* pD, float heig
   // Should have a sum of pressure estimates now, if not use 1013
   float avgPressure = 0;
   float avgWeight = 0;
-  Message::toScreen("Print Number of Estimates "+QString().setNum(numEstimates));
+  emit log(Message(QString("Number of Anchor Pressures Available "+QString().setNum(numEstimates)),0,this->objectName()));
   if (numEstimates > 1) {
     //Message::toScreen("Option 1");
     avgPressure = pressSum/pressWeight;
@@ -540,13 +538,14 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
   float maxCoeffs = maxWave*2 + 3;
   float centerStd = vortexData->getCenterStdDev(goodLevel);
   
-  Message::toScreen("VortexThread: CalcPressureUncertainty: Uncertainty of center from vortexData is "+QString().setNum(centerStd));
+  //Message::toScreen("VortexThread: CalcPressureUncertainty: Uncertainty of center from vortexData is "+QString().setNum(centerStd));
   
   if(setLimit!=0) {
     centerStd = setLimit;
-    Message::toScreen("VortexThread: CalcPressureUncertainty: Uncertainty of center from vortexData is "+QString().setNum(centerStd));    
+    //Message::toScreen("VortexThread: CalcPressureUncertainty: Uncertainty of center from vortexData is "+QString().setNum(centerStd));    
   }
-  nameAddition = nameAddition+QString().setNum(centerStd);
+  if(nameAddition!=QString())
+    nameAddition = nameAddition+QString().setNum(centerStd);
 
   // Now move this amount of space in each cardinal direction to get 4 additional pressure estimates
   int numErrorPoints = 4;
@@ -555,6 +554,7 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
   // Create extra vortexData to house uncertainty stuff
   QString file("vortrac_defaultVortexListStorage.xml");
   Configuration* vortexConfig = new Configuration(0, file);
+  vortexConfig->setLogChanges(false);
   connect(vortexConfig, SIGNAL(log(const Message&)), 
 	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
   VortexList* errorVertices = new VortexList(vortexConfig);
@@ -571,23 +571,30 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
   QString timeString = vortexData->getTime().toString("yyyy_MM_ddThh_mm_ss");
   
   QDir workingDirectory(vortexPath);
-  workingDirectory.mkdir("pError_"+nameAddition+"_"+timeString);
-  QString outFileName = workingDirectory.path()+"/";
-  outFileName += vortexName+"_"+radarName+"_"+timeString+"_"+nameAddition+".xml";
-  errorVertices->setFileName(outFileName);
-  errorVertices->setNewWorkingDirectory(workingDirectory.path()+"/pError_"+nameAddition+"_"+timeString+"/");
-  errorVertices->save();
+  if(nameAddition!=QString()) {
+
+    // Output of the uncertainty will save if the file name addition is not 
+    // empty - Testing and analysis of methods only
+
+    workingDirectory.mkdir("pError_"+nameAddition+"_"+timeString);
+    QString outFileName = workingDirectory.path()+"/";
+    outFileName += vortexName+"_"+radarName+"_"+timeString+"_"+nameAddition+".xml";
+    errorVertices->setFileName(outFileName);
+    errorVertices->setNewWorkingDirectory(workingDirectory.path()+"/pError_"+nameAddition+"_"+timeString+"/");
+    errorVertices->save();
+  }
 
   // Add the current vortexData to the errorVertices for comparison purposes
   // Be careful how we handle this point in subsequent averages
   //errorVertices->setNewWorkingDirectory(workingDirectory.path()+"/uncertainty+"+QString().setNum(0)+"/");
   //workingDirectory.mkdir("uncertainty"+QString().setNum(0)+"/");
   errorVertices->append(*vortexData);
-  errorVertices->save();
+  if(nameAddition!=QString())
+    errorVertices->save();
 
   // Create a GBVTD object to process the rings
   if(closure.contains(QString("hvvp"),Qt::CaseInsensitive)) {
-    if(calcHVVP())
+    if(calcHVVP(false))
       vtd = new GBVTD(geometry, closure, maxWave, dataGaps, hvvpResult);
     else{
       emit log(Message(QString(),0,this->objectName(),Yellow,
@@ -673,7 +680,8 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
       errorVertex->setPressureDeficit(errorPressureDeficit[(int)lastRing] - errorPressureDeficit[0]);
       //Message::toScreen("Adding uncertainty calib pressure "+QString().setNum(errorVertex->getPressure()));
       errorVertices->append(*errorVertex);
-      errorVertices->save();
+      if(nameAddition!=QString())
+	errorVertices->save();
     }
     else {
       for(int j = 0; j < numEstimates; j++) {
@@ -707,7 +715,8 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
 						obsStamp);
 	//Message::toScreen("Adding uncertainty calib pressure "+QString().setNum(errorVertex->getPressure()));
 
-	errorVertices->save();
+	if(nameAddition!=QString())
+	  errorVertices->save();
       }
     }
   }
@@ -721,7 +730,7 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
     pressureSum+=errorVertices->at(i).getPressure();
   }
   float pressureUncertainty = fabs(pressureSum/(float)errorVertices->count() - vortexData->getPressure());
-  Message::toScreen("Uncertainty = "+QString().setNum(pressureUncertainty));
+  //Message::toScreen("Uncertainty = "+QString().setNum(pressureUncertainty));
   */
   // Standard deviation from the center point
   float sqSum = 0;
@@ -742,10 +751,11 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
 	vortexData->setRMWUncertainty(jj,gridData->getJGridsp());
     }
   }
-  Message::toScreen(nameAddition+" uncertainty is "+QString().setNum(pressureUncertainty));
+  //Message::toScreen(nameAddition+" uncertainty is "+QString().setNum(pressureUncertainty));
   errorVertices->takeFirst();
   errorVertices->prepend(*vortexData);
-  errorVertices->save();
+  if(nameAddition!=QString())
+    errorVertices->save();
   delete errorVertices;
 
 }
@@ -803,7 +813,7 @@ void VortexThread::readInConfig()
   }
 }
 
-bool VortexThread::calcHVVP()
+bool VortexThread::calcHVVP(bool printOutput)
 {
   // Get environmental wind
   /*
@@ -842,17 +852,17 @@ bool VortexThread::calcHVVP()
   // if this if the radius's returned need to be adjusted by spacing or
   // or what the deal is but these numbers look closer to right for 
   // the two volumes I am looking at.
-
-  float* pair = gridData->getAdjustedLatLon(radarLat,radarLon,87.7712*cos(450-60.1703),87.7712*sin(450-60.1703));
-  Message::toScreen("New Lat Lon: ("+QString().setNum(pair[0])+", "+QString().setNum(pair[1])+"), old set = ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")");  
-  Message::toScreen("Vortex (Lat,Lon): ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")");
-  emit log(Message(QString("Vortex (Lat,Lon): ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")")));
-  Message::toScreen("Hvvp Parameters: Distance to Radar "+QString().setNum(rt)+" angle to vortex center in degrees ccw from north "+QString().setNum(cca)+" rmw "+QString().setNum(rmw));
-  emit log(Message(QString("Hvvp Parameters: Distance to Radar "+QString().setNum(rt)+" angle to vortex center in degrees ccw from north "+QString().setNum(cca)+" rmw "+QString().setNum(rmw))));
   
-  emit log(Message(QString(), 1,this->objectName()));
+  if(printOutput) {
+    //Message::toScreen("Vortex (Lat,Lon): ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")");
+    emit log(Message(QString("Vortex (Lat,Lon): ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")")));
+    QString hvvpInput("Hvvp Parameters: Distance to Radar "+QString().setNum(rt)+" (km), angle to vortex center in degrees ccw from north "+QString().setNum(cca)+" (deg), rmw "+QString().setNum(rmw)+" km");
+    emit log(Message(hvvpInput,1,this->objectName()));
+    //Message::toScreen(hvvpInput);
+  }
   
   Hvvp *envWindFinder = new Hvvp;
+  envWindFinder->setPrintOutput(printOutput);
   connect(envWindFinder, SIGNAL(log(const Message)), 
 	  this, SLOT(catchLog(const Message)), 
 	  Qt::DirectConnection);
@@ -862,7 +872,16 @@ bool VortexThread::calcHVVP()
   bool hasHVVP = envWindFinder->findHVVPWinds(true);
   hvvpResult = envWindFinder->getAvAcrossBeamWinds();
   hvvpUncertainty = envWindFinder->getAvAcrossBeamWindsStdError();
-  Message::toScreen("Hvvp gives "+QString().setNum(hvvpResult)+" +/- "+QString().setNum(hvvpUncertainty));
+  if(isnan(hvvpResult)||(hvvpResult == -999)||
+     isnan(hvvpUncertainty)||(hvvpUncertainty == -999)){
+    hvvpResult = 0;
+    hvvpUncertainty = 0;
+    hasHVVP = false;
+  }
+
+  if(printOutput)
+    Message::toScreen("Hvvp gives "+QString().setNum(hvvpResult)+" +/- "+QString().setNum(hvvpUncertainty));
+
   emit log(Message(QString(), 1,this->objectName()));
     
   return hasHVVP;

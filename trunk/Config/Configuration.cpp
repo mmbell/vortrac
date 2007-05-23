@@ -22,9 +22,7 @@ Configuration::Configuration(QObject *parent, const QString &filename)
     {
       // Create a new configuration from scratch
       QDomDocument domDoc("CurrConfig");
-      /*      if(!read("vortrac_default.xml")) {
-	 emit log(Message(QString("Error Reading Default Configuration File, Please Locate vortrac_default.xml"),0,this->objectName(),Red,QString("Locate Default File")));
-	 } */
+      emit log(Message(QString("Error Reading Configuration File"),0,this->objectName(),Red,QString("Locate Default File")));
     }
   else
     {
@@ -340,7 +338,6 @@ void Configuration::addDom(const QDomElement &element,
       parentNode.appendChild(newChildElement);
       indexForTagName.insert(newChildElement.tagName(), 
 			     indexForTagName.count());
-
       QString message("Config Changed: ");
       message+=(element.tagName()+": "+paramName+" was created");
       if(logChanges)
@@ -435,11 +432,18 @@ void Configuration::removeDom(const QDomElement &element,
   
   QDomElement oldElement = getElement(element, paramName);
   if(!oldElement.isNull()) {
-    int index = indexForTagName[element.tagName()];
-    QDomNode testNode(groupList.item(index).removeChild(oldElement));
-    if (testNode.isNull())
-      emit log(Message(QString("Unable to delete the element "+paramName+" from "+element.tagName()),0,this->objectName()));
-
+    if(element!=getRoot()) {
+      int index = indexForTagName[element.tagName()];
+      QDomNode testNode(groupList.item(index).removeChild(oldElement));
+      if (testNode.isNull())
+	emit log(Message(QString("Unable to delete the element "+paramName+" from "+element.tagName()),0,this->objectName()));
+    }
+    else {
+      QDomNode rootNode = getRoot();
+      QDomNode testNode(rootNode.removeChild(oldElement));
+      if (testNode.isNull())
+	emit log(Message(QString("Unable to delete the element "+paramName+" from root"),0,this->objectName()));
+    }
     QString message("Config Changed: ");
     message+=(element.tagName()+": "+paramName+" was removed");
     if(logChanges)

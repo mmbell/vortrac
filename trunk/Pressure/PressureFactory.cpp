@@ -63,7 +63,7 @@ PressureFactory::~PressureFactory()
   delete pressureQueue;
 }
 
-PressureList* PressureFactory::getUnprocessedData()
+QList<PressureData>* PressureFactory::getUnprocessedData()
 {
   
   // Get the latest files off the queue and make pressure objects
@@ -80,7 +80,7 @@ PressureList* PressureFactory::getUnprocessedData()
   fileParsed[fileName] = true;
     
   // Now make a new pressureList from that file and send it back
-  PressureList* pressureList = new PressureList();
+  QList<PressureData>* pressureList = new QList<PressureData>;
   switch(pressureFormat) {
   case metar :
     {
@@ -100,11 +100,11 @@ PressureList* PressureFactory::getUnprocessedData()
 			// Check to make sure it is not a duplicate -- this messes up the XML structure
 			bool duplicateOb = false;
 			for (int i = 0; i < pressureList->size(); i++) {
-				if ((pressureList->at(i).getStationName() == pressureData->getStationName())
-					and (pressureList->at(i).getTime() == pressureData->getTime())) {
-					emit log(Message("Omitting duplicate surface ob"));
-					duplicateOb = true;
-				}
+			  if ((pressureList->at(i).getStationName() == pressureData->getStationName())
+			      and (pressureList->at(i).getTime() == pressureData->getTime())) {
+			    //emit log(Message("Omitting duplicate surface ob"));
+			    duplicateOb = true;
+			  }
 			}
 			// Check to make sure it is a near-surface measurement
 			if ((pressureData->getAltitude() >= 0) and
