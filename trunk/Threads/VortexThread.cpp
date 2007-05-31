@@ -39,7 +39,7 @@ VortexThread::VortexThread(QObject *parent)
 	  rhoBar[13] = 2.6;
 	  rhoBar[14] = 2.2;
 	  rhoBar[15] = 1.8;
-	  	  
+	  
 	  abort = false;
 
 	  // Claim and empty all the memory set aside
@@ -375,7 +375,7 @@ void VortexThread::getPressureDeficit(VortexData* data, float* pDeficit,const fl
 	}
 	
 	// Get coriolis parameter
-	float f = 2 * 7.29e-5 * sin(data->getLat(heightIndex));
+	float f = 2 * 7.29e-5 * sin(data->getLat(heightIndex)*3.141592653589793238462643/180.);
 	
 	for (float radius = firstRing; radius <= lastRing; radius++) {
 		if (!(data->getCoefficient(height, radius, QString("VTC0")) == Coefficient())) {
@@ -400,6 +400,9 @@ void VortexThread::getPressureDeficit(VortexData* data, float* pDeficit,const fl
 			} else if (dpdr[(int)radius+1] != -999) {
 				pDeficit[(int)radius] = pDeficit[(int)radius+1] - 
 					dpdr[(int)radius+1] * deltar * 0.001;
+			} else {
+				// Flat extrapolation for data gaps > 2 radii
+				pDeficit[(int)radius] = pDeficit[(int)radius+1];
 			}
 		} else {
 			pDeficit[(int)radius] = pDeficit[(int)firstRing];
@@ -805,10 +808,10 @@ void VortexThread::readInConfig()
   if(configData->getParam(pressureConfig, "maxobsmethod") == "ring")
     maxObRadius = lastRing+configData->getParam(pressureConfig, "maxobsdist").toFloat();
 
-  if(maxObRadius = -999){
+  if(maxObRadius == -999){
      maxObRadius = lastRing + 50;
   }
-  if(maxObTimeDiff = -999){
+  if(maxObTimeDiff == -999){
      maxObTimeDiff = 59 * 60;
   }
 }

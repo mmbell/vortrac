@@ -191,7 +191,8 @@ void GBVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, flo
 		vtdCoeffs[0].setRadius(radius);
 		vtdCoeffs[0].setParameter("VTC0");
 		float value;
-		if(closure.contains(QString("hvvp"),Qt::CaseInsensitive)) {
+		if(closure.contains(QString("hvvp"),Qt::CaseInsensitive) and 
+		   (B[1] != 0)) {
 		  value = -B[1]-B[3]-hvvpMeanWind*sinAlphamax;
 		}
 		else {
