@@ -183,8 +183,8 @@ bool GraphFace::event(QEvent *event)
 	  measurement.setNum(VortexDataList->value(index).getPressure());
 	  time = VortexDataList->value(index).getTime().toString("dd-hh:mm");
 	  QString message("Pressure Estimate\nPressure = "
-			  + measurement + " mb\n"+ time
-			  +"\nClick For More Info...");
+					  + measurement + " mb\n"+ time);
+	  //			  +"\nClick For More Info...");
 	  QToolTip::showText(find->globalPos(), message, this);
 	}
 	else {

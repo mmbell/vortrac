@@ -746,12 +746,12 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
   }
   vortexData->setPressureUncertainty(pressureUncertainty);
   for(int jj = 0; jj < vortexData->getNumLevels();jj++) {
-    if(vortexData->getRMWUncertainty(jj) < gridData->getIGridsp()||
-       vortexData->getRMWUncertainty(jj) < gridData->getJGridsp()) {
+    if(vortexData->getRMWUncertainty(jj) < (gridData->getIGridsp()/2)||
+       vortexData->getRMWUncertainty(jj) < (gridData->getJGridsp()/2)) {
       if(gridData->getIGridsp()>=gridData->getJGridsp()) 
-	vortexData->setRMWUncertainty(jj,gridData->getIGridsp());
+	vortexData->setRMWUncertainty(jj,gridData->getIGridsp()/2);
       else
-	vortexData->setRMWUncertainty(jj,gridData->getJGridsp());
+	vortexData->setRMWUncertainty(jj,gridData->getJGridsp()/2);
     }
   }
   //Message::toScreen(nameAddition+" uncertainty is "+QString().setNum(pressureUncertainty));
@@ -802,7 +802,7 @@ void VortexThread::readInConfig()
    }
 
   maxObRadius = 0;
-  maxObTimeDiff = configData->getParam(pressureConfig, "maxobstime").toFloat();
+  maxObTimeDiff = 60 * configData->getParam(pressureConfig, "maxobstime").toFloat();
   if(configData->getParam(pressureConfig, "maxobsmethod") == "center")
     maxObRadius = configData->getParam(pressureConfig, "maxobdist").toFloat();
   if(configData->getParam(pressureConfig, "maxobsmethod") == "ring")
