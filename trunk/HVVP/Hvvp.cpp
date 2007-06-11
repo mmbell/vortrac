@@ -55,11 +55,15 @@ Hvvp::Hvvp()
   yls = new float[maxpoints];
   for(int k = 0; k < xlsDimension; k++) {
     xls[k] = new float[maxpoints];
-    for(int kk = 0; kk < maxpoints; kk++)
+    for(long kk = 0; kk < maxpoints; kk++)
       xls[k][kk] = velNull;
   }
 	  
   printOutput = true;
+  hgtStart = .600;                // km   // Most Recently Used
+  //hgtStart = 1.0;
+  hInc = .1;                       // km  // Most Recently Used
+  //hInc = .5;
   
 }
 
@@ -88,6 +92,20 @@ void Hvvp::setRadarData(RadarData *newVolume, float range, float angle,
   rmw = vortexRmw;        // in km
 }
 
+void Hvvp::setConfig(Configuration* newConfig)
+{
+  configData = newConfig;
+  
+  // Load all configuration parameters
+  // If this function is not called the parameters default
+  //  to values in the constructor
+
+  QDomElement hvvp = configData->getConfig("hvvp");
+  levels = configData->getParam(hvvp, QString("levels")).toInt();
+  hgtStart = configData->getParam(hvvp, QString("hgt_start")).toFloat();
+  hInc = configData->getParam(hvvp, QString("hinc")).toFloat();
+}
+
 float Hvvp::rotateAzimuth(const float &angle)
 {
   // Angle received is in Meteorological Coordinates (degrees from north)
@@ -100,24 +118,7 @@ float Hvvp::rotateAzimuth(const float &angle)
 }
 
 long Hvvp::hvvpPrep(int m) {
-  /*
-
-  // For Printing the results to file for Fortran Comparisons
-
-  QString fileName("FirstGates_"+QString().setNum(m));
-  QFile* outputFile = new QFile(fileName);
-  outputFile->open(QIODevice::WriteOnly);
-  QTextStream out(outputFile);
-  out << "Checking the first 10 entries in Level " << m << endl;
-  */
-
-
-  //**float hgtStart = .500;                // km
-  float hgtStart = .600;                // km   // Most Recently Used
-  //  float hgtStart = 1.0;
-  //**float hInc = .075;                    // km
-  float hInc = .1;                       // km  // Most Recently Used
-  //float hInc = .5;
+ 
   float rangeStart = -.375;             // ???? km
   float cumin = 5.0/rt;                 // What are the units here?
   float cuspec = 0.6;                   // Unitless
@@ -132,13 +133,29 @@ long Hvvp::hvvpPrep(int m) {
     cuthr = cuspec; 
   else 
     cuthr = curmw;
+  /*
 
+  // For Printing the results to file for Fortran Comparisons
+  
+  QString fileName("PointsSelected_BigLevel"+QString().setNum(m)+".csv");
+  QFile* outputFile = new QFile(fileName);
+  outputFile->open(QIODevice::WriteOnly);
+  QTextStream out(outputFile);
+  out << "Printing Data Points in Level " << m << endl;
+  Message::toScreen("Writing to "+outputFile->fileName()+" .... ");
+  
+  if(m == 0) {
+    out << "CUTHR, "<< cuthr << endl;
+    out << "CUMIN, "<< cumin << endl;
+    out << " alt(km), cu, Vd(m/s), elvn(adjusted for range in rad), ray index, az(after rotation in rad)" << endl;
+  }
+  */
   rot = cca*deg2rad;               // ** 
   // float rot = (cca-4.22)*deg2rad; **
   // ** Special case scenerio for KBRO Data of Bret (1999)
   
   for(int k = 0; k < xlsDimension; k++) {
-    for(int l = 0; l < maxpoints; l++) {
+    for(long l = 0; l < maxpoints; l++) {
       xls[k][l] = 0;
       yls[l] = 0;
     }
@@ -184,7 +201,7 @@ long Hvvp::hvvpPrep(int m) {
 	    float alt = volume->radarBeamHeight(srange, elevation);  // km
 	    if((cu > cumin)&&(cu < cuthr)&&(alt >= hLow)&&(alt < hHigh)) {
 	      float ee = elevation*deg2rad;
-	      ee+=asin(srange*cos(elevation)/(ae+alt));
+	      ee+=asin(srange*cos(elevation*deg2rad)/(ae+alt));
 	      float cosee = cos(ee);
 	      float xx = srange*cosee*sinaa;
 	      float yy = srange*cosee*cosaa;
@@ -193,16 +210,23 @@ long Hvvp::hvvpPrep(int m) {
 	      
 	      //Used for checking the first ten entries
 	      /*
-	      if(((count<=30)||(s == 6))&&(m==0)){
+	      //if(((count<=30)||(s == 6))&&(m==0)){
 		out << count << "= v: " << vel[v] << " gate " << v << " ray " <<r-startRay << " orig az = " << currentRay->getAzimuth() << endl;
 		  out << " elev# " << s << " = " << elevation << endl;
 		out << count << "= srange: " << srange << " cu " << cu << " alt " << alt << " zz " << zz << endl;
 	      }
 	      
-	      if(m==0) {
+	      if(m == 0) {
+		// What Paul would like to receive for comparisons
+		out << alt << ", " << cu << ", " << vel[v] << ", " << ee << ", "<< r << ", " << aa << endl;
+		
+		//What I was using for test comparisons
 	      out << vel[v] << ", " << v << ", " << r-startRay <<", " << currentRay->getAzimuth() << ", " << s << ",  " << elevation << ", " << srange << ", " << cu << ", " << alt << ", " << zz << endl;
+		
+
 	      }
 	      */
+	      
 	      yls[count] = vel[v];
               wgt[count] = 1; 
              // why are we weighting it if they are all the same? -LM
@@ -301,7 +325,7 @@ bool Hvvp::findHVVPWinds(bool both)
       
       // Only for comparisons in Mathematica
       /*
-      QString fileName("/scr/science40/mauger/Working/trunk/hvvp1824Char"+QString().setNum(m)+".dat");
+      QString fileName("/scr/science40/mauger/Working/trunk/hvvp1824CharBigRepeat"+QString().setNum(m)+".dat");
       writeToFile(fileName,xlsDimension,count,count,1,xls,yls);
       QString midFileName = fileName+QString(".printA");
       flag = Matrix::oldlls(xlsDimension, count, xls, yls, sse, cc, stand_err, midFileName);
@@ -320,7 +344,7 @@ bool Hvvp::findHVVPWinds(bool both)
       for(int zz = 0; zz < xlsDimension; zz++) {
       	out << cc[zz] << " " << stand_err[zz] << endl;
       }
-
+      
       flag = Matrix::lls(xlsDimension, count, xls, yls, sse, cc, stand_err);
       
       out << "NEW C++ ROUTINE" << endl << endl;
@@ -524,6 +548,7 @@ bool Hvvp::findHVVPWinds(bool both)
   
   float xtav=0;
   float xtsd=0;
+  float xtsdthr=0;
   count=0;
   for(int i = 0; i < levels; i++) {
     if(u[i]!=velNull) {
@@ -540,29 +565,15 @@ bool Hvvp::findHVVPWinds(bool both)
 	xtsd+=((mod_Rankine_xt[i]-xtav)*(mod_Rankine_xt[i]-xtav));
       }
     }
-    /*
-    // LM: 5/19/07 - This was previously in here, temp remove to compare with
-    // Paul's version.
-    // (count-1) added by PH - previously incorrect
+    
     xtsd = sqrt(xtsd/(count-1));  
+    xtsdthr = 2.0*xtsd;
     for(int i = 0; i < levels; i++) {
-    if((fabs(mod_Rankine_xt[i]-xtav) > xtsd)||(mod_Rankine_xt[i]==velNull)) {
-    u[i] = velNull;
-    }
-    }
-    */
-
-    // LISA TEsTing ONLY - Now it looks like other without junk above
-    xtsd = sqrt(xtsd);  
-    for(int i = 0; i < levels; i++) {
-      if(mod_Rankine_xt[i] > xtsd) {
+      if((fabs(mod_Rankine_xt[i]-xtav)>xtsdthr)||(mod_Rankine_xt[i]==velNull)){
 	u[i] = velNull;
       }
     }
-    // END LISA TestING ONLY
-  
   }
-  // commented section ended here 
   
   /*
    *   Calculate the layer, variance-weighted average of vm_sin. 
@@ -590,12 +601,13 @@ bool Hvvp::findHVVPWinds(bool both)
   if((sumwgt!=0) && (var_av_VmSin!=0)) {
     av_VmSin /= sumwgt;
     var_av_VmSin = 1.0/var_av_VmSin;
+    stdErr_VmSin = sqrt(var_av_VmSin);
   }
   else {
     av_VmSin= velNull;
     var_av_VmSin=velNull;
+    stdErr_VmSin = velNull;
   }
-  
 
   float diff = 100;
   for(int i = 0; i < levels; i++) {
@@ -609,15 +621,16 @@ bool Hvvp::findHVVPWinds(bool both)
   //Message::toScreen("ifoundit = "+QString().setNum(ifoundit));
   QString message;
   QString shortMessage;
-  //if(ifoundit >= 1) {
+  
   // Here Pauls code does a lot of printing which I will make optional 
   // depending on whether or not printOutput is set to true, the default
   // is false
+  
   message += "RAW HVVP RESULTS\n";
   message += "\n";
-  message += "Layer, variance-weighted, average Vm_Sim = ";
+  message += "Layer, variance-weighted, average Vm_Sin = ";
   message += QString().setNum(av_VmSin)+" +-";
-  message += QString().setNum(sqrt(var_av_VmSin))+" (m/s).";
+  message += QString().setNum(stdErr_VmSin)+" (m/s).";
   message += "\n";
   message += "Vm_Sin value closest to 2 km altitude is ";
   message += QString().setNum(vm_sin[ifoundit])+" +- ";
@@ -639,7 +652,7 @@ bool Hvvp::findHVVPWinds(bool both)
     smoothHvvp(u);
     smoothHvvp(v);
     smoothHvvpVmSin(vm_sin, var);
-      
+    
     message += "Vm_Sin value closest to 2 km altitude is ";
     message += QString().setNum(vm_sin[ifoundit])+" +-";
     message += QString().setNum(sqrt(var[ifoundit]))+" m/s at ";
@@ -658,9 +671,9 @@ bool Hvvp::findHVVPWinds(bool both)
   // Shorten message for HVVP Results in Log File
   shortMessage += "Smoothed HVVP RESULTS\n";
   shortMessage += "\n";
-  shortMessage += "Layer, variance-weighted, average Vm_Sim = ";
+  shortMessage += "Layer, variance-weighted, average Vm_Sin = ";
   shortMessage += QString().setNum(av_VmSin)+" +-";
-  shortMessage += QString().setNum(sqrt(var_av_VmSin))+" (m/s).";
+  shortMessage += QString().setNum(stdErr_VmSin)+" (m/s).";
   shortMessage += "\n";
   //shortMessage += "Vm_Sin value closest to 2 km altitude is ";
   //shortMessage += QString().setNum(vm_sin[ifoundit])+" +- ";
@@ -700,22 +713,22 @@ bool Hvvp::findHVVPWinds(bool both)
     }
   */
   
-  if(printOutput) {
-      emit log(Message(shortMessage,0,this->objectName(),Green));
-      Message::toScreen(message);
-  }
-  return true;
-  /*
-    else {
-    message = "No Hvvp Results Found";
+  if(ifoundit>0) {
     if(printOutput) {
-    emit log(Message(message));
-    Message::toScreen(message);
+      emit log(Message(shortMessage,0,this->objectName(),Green));
+      //Message::toScreen(message);
     }
+    emit log(Message(QString(),0,this->objectName(),Green)); 
+  }
+  else {
+    if(printOutput) {
+      message = "No Hvvp Results Found";
+      emit log(Message(message));
+      //Message::toScreen(message);
+    }
+    emit log(Message(QString("Failed to Find HVVP Output"),0,this->objectName(),Yellow)); 
     return false;
-    }
-    */
-  emit log(Message(QString(),0,this->objectName(),Green));
+  }
 }
 
 
@@ -850,8 +863,8 @@ void Hvvp::smoothHvvpVmSin(float* data1, float* data2) {
   delete [] temp2;
 }
 
-void Hvvp::writeToFile(QString& fileName, int aRows, int aCols,
-		       int bRows, int bCols, float** a, float* b)
+void Hvvp::writeToFile(QString& fileName, long aRows, long aCols,
+		       long bRows, long bCols, float** a, float* b)
 {
   QFile* outputFile = new QFile(fileName);
   outputFile->open(QIODevice::WriteOnly);
@@ -863,8 +876,8 @@ void Hvvp::writeToFile(QString& fileName, int aRows, int aCols,
   out << bCols << endl;
 
   int line = 0;
-  for(int i = 0; i < aRows; i++) {
-    for(int j = 0; j < aCols; j++) {
+  for(long i = 0; i < aRows; i++) {
+    for(long j = 0; j < aCols; j++) {
       out << reset << qSetRealNumberPrecision(5) << scientific << qSetFieldWidth(13) << a[i][j];
       line++;
       if(line == 8) {
@@ -877,7 +890,7 @@ void Hvvp::writeToFile(QString& fileName, int aRows, int aCols,
   }
   out << endl;
 
-  for(int i = 0; i < bRows; i++) {
+  for(long i = 0; i < bRows; i++) {
     out << reset << qSetRealNumberPrecision(5) << scientific << qSetFieldWidth(13) << b[i] << endl;
     
   }
@@ -888,8 +901,8 @@ void Hvvp::writeToFile(QString& fileName, int aRows, int aCols,
 
 }
 
-void Hvvp::writeToFileWithAltitude(QString& fileName, int aRows, int aCols,
-		       int bRows, int bCols, float** a, float* b)
+void Hvvp::writeToFileWithAltitude(QString& fileName, long aRows, long aCols,
+		       long bRows, long bCols, float** a, float* b)
 {
   QFile* outputFile = new QFile(fileName);
   outputFile->open(QIODevice::WriteOnly);
@@ -901,8 +914,8 @@ void Hvvp::writeToFileWithAltitude(QString& fileName, int aRows, int aCols,
   out << bCols << endl;
 
   int line = 0;
-  for(int i = 0; i < aRows; i++) {
-    for(int j = 0; j < aCols; j++) {
+  for(long i = 0; i < aRows; i++) {
+    for(long j = 0; j < aCols; j++) {
       out << reset << qSetRealNumberPrecision(5) << scientific << qSetFieldWidth(13) << a[i][j];
       line++;
       if(line == 8) {
@@ -915,7 +928,7 @@ void Hvvp::writeToFileWithAltitude(QString& fileName, int aRows, int aCols,
   }
   out << endl;
 
-  for(int i = 0; i < bRows; i++) {
+  for(long i = 0; i < bRows; i++) {
     out << reset << qSetRealNumberPrecision(5) << scientific << qSetFieldWidth(13) << b[i] << endl;
     
   }

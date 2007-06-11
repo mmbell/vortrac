@@ -214,6 +214,7 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
       delete refValues2;
     }
   }
+
   // Get maximum number of velocity gates in each sweep to get
   // aveVADHeight, which is an average height in each sweep for each gate index
   
@@ -355,39 +356,18 @@ bool RadarQC::dealias()
    *  on a single radar volume
    *
    */
-  
-
-  QString checkPrint("First");
-  //Message::toScreen(checkPrint);
-  //emit log(Message(checkPrint));
-  //checkRay();
-  //crazyCheck();
 
   if(!terminalVelocity())
     return false;
   
   emit log(Message(QString(),1,this->objectName()));
   
-  checkPrint = QString("Terminal Vel");
-  //Message::toScreen(checkPrint);
-  //emit log(Message(checkPrint));
-  //checkRay();
-  //crazyCheck();
-  
   thresholdData();
   emit log(Message(QString(),1,this->objectName()));
-  
-  checkPrint = QString("Threshold Data");
-  //Message::toScreen(checkPrint);
-  //emit log(Message(checkPrint));
-  //checkRay();
-  //crazyCheck();
   
   if(!findEnvironmentalWind()) {
     Message::toScreen("Failed finding environmental wind");
   }
-  //Message::toScreen("findEnvironmentalWind");
-  //crazyCheck();
 
   emit log(Message(QString(),1,this->objectName()));
   
@@ -395,13 +375,6 @@ bool RadarQC::dealias()
     Message::toScreen("Failed in Bargen-Brown dealising");
     return false;
   }
-  
-  checkPrint = QString("BB");
-  //Message::toScreen(checkPrint);
-  //emit log(Message(checkPrint));
-  //crazyCheck();
-  
-  //checkRay();
   
   return true;
 }
@@ -477,7 +450,7 @@ bool RadarQC::terminalVelocity()
    */
 
 
-  float ae = 6371*4./3.; // Adjustment factor for 4/3 Earth Radius (in km)
+  float ae = 6371.*4./3.; // Adjustment factor for 4/3 Earth Radius (in km)
   int numRays = radarData->getNumRays();
   int numVGates;
   Ray* currentRay;
@@ -557,7 +530,7 @@ bool RadarQC::terminalVelocity()
 	    }
 	}
       else {
-      	for(int j = 0; j < numVGates; j++) {
+	for(int j = 0; j < numVGates; j++) {
       	  vGates[j] = velNull;
       	}
       }

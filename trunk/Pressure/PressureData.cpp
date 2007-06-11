@@ -165,3 +165,10 @@ bool PressureData::operator > (const PressureData &other)
 		return true;
 	return false;
 }
+
+void PressureData::printString()
+{
+  QString printMessage(getStationName()+"_"+getTime().toString()+"_"+QString().setNum(getPressure()));
+  Message::toScreen(printMessage);
+
+}

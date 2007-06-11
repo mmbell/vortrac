@@ -114,23 +114,23 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   //--For Demo
   QHBoxLayout *subLayout = new QHBoxLayout;
 
-  QPushButton *example = new QPushButton("Plot Example Points");
+  //QPushButton *example = new QPushButton("Plot Example Points");
 
-  tester = new TestGraph;
+  //tester = new TestGraph;
 
-  connect(example, SIGNAL(clicked()), 
-	  tester, SLOT(listPlot()));
-  connect(tester, SIGNAL(listChanged(VortexList*)), 
-	  graph, SLOT(newInfo(VortexList*)));
-  connect(tester, SIGNAL(dropListChanged(VortexList*)), 
-	  graph, SLOT(newDropSonde(VortexList*)));
+  //connect(example, SIGNAL(clicked()), 
+  //	  tester, SLOT(listPlot()));
+  //  connect(tester, SIGNAL(listChanged(VortexList*)), 
+  //	  graph, SLOT(newInfo(VortexList*)));
+  //connect(tester, SIGNAL(dropListChanged(VortexList*)), 
+  //	  graph, SLOT(newDropSonde(VortexList*)));
   connect(legend, SIGNAL(clicked()), graph, SLOT(makeKey()));
 
   connect(this, SIGNAL(vortexListChanged(VortexList*)), 
   	  graph, SLOT(newInfo(VortexList*)));
 
   subLayout->addWidget(legend);
-  subLayout->addWidget(example);
+  //subLayout->addWidget(example);
   subLayout->addWidget(saveGraph);
   //--For Demo
 
@@ -280,7 +280,7 @@ AnalysisPage::~AnalysisPage()
   delete currRMW;
   delete currDeficit;
   delete deficitLabel;
-  delete tester;
+  //  delete tester;
 }
 
 void AnalysisPage::newFile()
@@ -592,7 +592,6 @@ void AnalysisPage::catchVCP(const int vcp)
 
 void AnalysisPage::updateCappi(const GriddedData* cappi)
 {
-  Message::toScreen("Creating Cappi Image");
   // Got a cappi now, create a new image
 
   emit newCappi(cappi);
@@ -707,23 +706,10 @@ void AnalysisPage::pollVortexUpdate(VortexList* list)
     }
     currPressure->display((int)list->last().getPressure());
 
-    // Get the average RMW from those levels with low uncertainty in rmw
-    float rmwSum = 0;
-    int count = 0;
-    int numLev = list->last().getNumLevels();
-    for(int ii = 0; ii < numLev; ii++) {
-      float newRMW = list->last().getRMW(ii);
-      if((newRMW!=0)&&(newRMW!=-999)) {
-	if(list->last().getRMWUncertainty(ii) > 10)
-	  continue;
-	rmwSum += newRMW;
-	count++;
-      }
-    }
-    if(count == 0)
+    if(list->last().getAveRMW()==-999.0)
       currRMW->display("0");
     else
-      currRMW->display(rmwSum/(float)count);	
+      currRMW->display(list->last().getAveRMW());	
   
     currDeficit->display(list->last().getPressureDeficit());
     deficitLabel->setText(tr("Pressure Deficit From ")+QString().setNum(maxRadius)+tr(" km (mb):"));

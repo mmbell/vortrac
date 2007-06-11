@@ -172,7 +172,7 @@ class CenterPanel:public AbstractPanel
   QHash<QString, QString> *velocityOptions;
   QHash<QString, QString> *criteriaOptions;
   
-  QSpinBox *bLBox,*tLBox,*iRBox,*oRBox;
+  QDoubleSpinBox *bLBox,*tLBox,*iRBox,*oRBox;
   // bLBox controls the lowest search level of the cappi
   // tLBox controls the highest search level of the cappi
   // iRBox controls the inner search radius
@@ -293,7 +293,7 @@ class VTDPanel:public AbstractPanel
   QHash<QString, QString> *reflectivityOptions;
   QHash<QString, QString> *velocityOptions;
 
-  QSpinBox *bLBox, *tLBox, *iRBox, *oRBox;
+  QDoubleSpinBox *bLBox, *tLBox, *iRBox, *oRBox;
   // bLBox controls the lowest search level of the cappi
   // tLBox controls the highest search level of the cappi
   // iRBox controls the inner search radius
@@ -311,6 +311,14 @@ class HVVPPanel:public AbstractPanel
   ~HVVPPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
+ private:
+  QSpinBox *numLevels;
+  // numLevels changes the number of levels used in HVVP
+  
+  QDoubleSpinBox *hgtStart, *hInc;
+  // hgtStart contains the starting level for HVVP
+  // hInc contains the level thickness for HVVP
+  
 };
 
 class PressurePanel:public AbstractPanel
@@ -338,7 +346,7 @@ class PressurePanel:public AbstractPanel
   QSpinBox *maxObsTime;
   // The number of minutes to threshold pressure observations
 
-  QDoubleSpinBox *maxObsDist;
+  QDoubleSpinBox *maxObsDist, *gradientHeight;
   // The maximum distance to threshold pressure observations on
   
   QSpinBox* avInterval;

@@ -931,14 +931,28 @@ CenterPanel::CenterPanel()
 
   QGroupBox *searchRegion = new QGroupBox(tr("Center Search Limitations"));
   QGridLayout *search = new QGridLayout;
+
   QLabel *bottomLevel = new QLabel(tr("Bottom Level (km)"));
-  bLBox = new QSpinBox;
+  bLBox = new QDoubleSpinBox;
+  bLBox->setRange(1,5);
+  bLBox->setDecimals(2);
+  bLBox->setValue(1);
   QLabel *topLevel = new QLabel(tr("Top Level (km)"));
-  tLBox = new QSpinBox;
+  tLBox = new QDoubleSpinBox;
+  tLBox->setRange(2,20);
+  tLBox->setDecimals(2);
+  tLBox->setValue(4);
   QLabel *innerRad = new QLabel(tr("Inner Radius (km)"));
-  iRBox = new QSpinBox;
+  iRBox = new QDoubleSpinBox;
+  iRBox->setDecimals(2);
+  iRBox->setRange(1,120);
+  iRBox->setValue(10);
   QLabel *outerRad = new QLabel(tr("Outer Radius (km)"));
-  oRBox = new QSpinBox;
+  oRBox = new QDoubleSpinBox;
+  oRBox->setDecimals(2);
+  oRBox->setRange(2,150);
+  oRBox->setValue(40);
+
   search->addWidget(bottomLevel, 0,0);
   search->addWidget(bLBox, 0, 1);
   search->addWidget(topLevel, 1, 0);
@@ -1846,13 +1860,25 @@ VTDPanel::VTDPanel()
   QGroupBox *searchRegion = new QGroupBox(tr("VTD Grid Region"));
   QGridLayout *search = new QGridLayout;
   QLabel *bottomLevel = new QLabel(tr("Bottom Level (km)"));
-  bLBox = new QSpinBox;
+  bLBox = new QDoubleSpinBox;
+  bLBox->setRange(1,5);
+  bLBox->setDecimals(2);
+  bLBox->setValue(1);
   QLabel *topLevel = new QLabel(tr("Top Level (km)"));
-  tLBox = new QSpinBox;
+  tLBox = new QDoubleSpinBox;
+  tLBox->setRange(2,20);
+  tLBox->setDecimals(2);
+  tLBox->setValue(4);
   QLabel *innerRad = new QLabel(tr("Inner Radius (km)"));
-  iRBox = new QSpinBox;
+  iRBox = new QDoubleSpinBox;
+  iRBox->setDecimals(2);
+  iRBox->setRange(1,100);
+  iRBox->setValue(3);
   QLabel *outerRad = new QLabel(tr("Outer Radius (km)"));
-  oRBox = new QSpinBox;
+  oRBox = new QDoubleSpinBox;
+  oRBox->setDecimals(2);
+  oRBox->setRange(2,150);
+  oRBox->setValue(80);
   search->addWidget(bottomLevel, 0,0);
   search->addWidget(bLBox, 0, 1);
   search->addWidget(topLevel, 1, 0);
@@ -2163,29 +2189,108 @@ bool VTDPanel::setDefaultDirectory(QDir* newDir)
 HVVPPanel::HVVPPanel()
   :AbstractPanel()
 {
-  //Do nothing
+  QGroupBox *hvvp = new QGroupBox(QString(tr("HVVP Parameters")));
+  
+  QLabel *numLevelsLabel = new QLabel(tr("Number of Levels Used in HVVP"));
+  numLevels = new QSpinBox;
+  numLevels->setRange(1,50);
+  numLevels->setValue(14);
+  QHBoxLayout *numLevelsLayout = new QHBoxLayout;
+  numLevelsLayout->addWidget(numLevelsLabel);
+  numLevelsLayout->addStretch();
+  numLevelsLayout->addWidget(numLevels);
+  
+  QLabel *hgtStartLabel = new QLabel(tr("Height of First Level (km)"));
+  hgtStart = new QDoubleSpinBox;
+  hgtStart->setDecimals(2);
+  hgtStart->setRange(.5,50.0);
+  hgtStart->setValue(.5);
+  QHBoxLayout *hgtStartLayout = new QHBoxLayout;
+  hgtStartLayout->addWidget(hgtStartLabel);
+  hgtStartLayout->addStretch();
+  hgtStartLayout->addWidget(hgtStart);
+
+  QLabel *hIncLabel = new QLabel(tr("Thickness of Layers (km)"));
+  hInc = new QDoubleSpinBox;
+  hInc->setDecimals(2);
+  hInc->setRange(.01,2.0);
+  hInc->setValue(.1);
+  QHBoxLayout *hIncLayout = new QHBoxLayout;
+  hIncLayout->addWidget(hIncLabel);
+  hIncLayout->addStretch();
+  hIncLayout->addWidget(hInc);
+  
+  QVBoxLayout *hvvpLayout = new QVBoxLayout;
+  hvvpLayout->addLayout(numLevelsLayout);
+  hvvpLayout->addLayout(hgtStartLayout);
+  hvvpLayout->addLayout(hIncLayout);
+  hvvp->setLayout(hvvpLayout);
+  
+  QVBoxLayout *main = new QVBoxLayout;
+  main->addWidget(hvvp);
+  main->addStretch();
+  setLayout(main);
+
+  connect(numLevels, SIGNAL(valueChanged(const QString&)), 
+	  this, SLOT(valueChanged(const QString&)));
+  connect(hgtStart, SIGNAL(valueChanged(const QString&)),
+	  this, SLOT(valueChanged(const QString&)));
+  connect(hInc, SIGNAL(valueChanged(const QString&)),
+	  this, SLOT(valueChanged(const QString&)));
+
   setPanelChanged(false);
 }
 
 HVVPPanel::~HVVPPanel()
 {
-  // Will be implemented after constructor is
-  // no parameters as of yet
-
+  delete numLevels;
+  delete hgtStart;
+  delete hInc;
 }
 
 void HVVPPanel::updatePanel(const QDomElement panelElement)
 {
+  // Sets the location of the panel's information in the Configuration
+  // Iterates through all elements within this section of the Configuration
+  // and writes the values of these parameters to the corresponding member
+  // widget.
+
   setElement(panelElement);
-  //Do nothing for now
+  QDomElement child = panelElement.firstChildElement();
+  while (!child.isNull()) {
+    QString name = child.tagName();
+    QString parameter = child.text();
+    if (name == "levels") {
+      if(parameter.toInt()!=numLevels->value())
+	numLevels->setValue(parameter.toInt()); }
+    if(name == "hgt_start") {
+      if(parameter.toFloat()!=hgtStart->value()) 
+	hgtStart->setValue(parameter.toFloat()); }
+    if(name == "hinc") {
+      if(parameter.toFloat()!=hInc->value())
+	hInc->setValue(parameter.toFloat()); }
+    child = child.nextSiblingElement();
+  }
   setPanelChanged(false);
 }
 
 bool HVVPPanel::updateConfig()
 {
+  QDomElement element = getPanelElement();
   if(checkPanelChanged())
     {
-      //Do nothing
+      if(getFromElement("levels").toInt()!=numLevels->value()) {
+	emit changeDom(element, QString("levels"), 
+		       QString().setNum(numLevels->value()));
+      }
+      if(getFromElement("hgt_start").toFloat()!=hgtStart->value()) {
+	emit changeDom(element, QString("hgt_start"), 
+		       QString().setNum(hgtStart->value()));
+      }
+      if(getFromElement("hinc").toFloat()!=hInc->value()) {
+	emit changeDom(element, QString("hinc"), 
+		       QString().setNum(hInc->value()));
+      }
     }
   setPanelChanged(false);
   return true;
@@ -2200,6 +2305,16 @@ PressurePanel::PressurePanel()
   dirLayout->addWidget(dirLabel, 0, 0);
   dirLayout->addWidget(dir, 1, 0, 1, 3);
   dirLayout->addWidget(browse, 1,3);
+
+  QLabel *gradientHeightLabel = new QLabel(tr("Height at which pressure gradient is calculated (km)"));
+  gradientHeight = new QDoubleSpinBox;
+  gradientHeight->setDecimals(2);
+  gradientHeight->setRange(1,20);
+  gradientHeight->setValue(1);
+  QHBoxLayout *gradientHeightLayout = new QHBoxLayout;
+  gradientHeightLayout->addWidget(gradientHeightLabel);
+  gradientHeightLayout->addStretch();
+  gradientHeightLayout->addWidget(gradientHeight);
   
   QLabel *pressureFormatLabel = new QLabel(tr("Data Format"));
   pressureFormatOptions = new QHash<QString, QString>;
@@ -2273,6 +2388,7 @@ PressurePanel::PressurePanel()
   QVBoxLayout *main = new QVBoxLayout;
   main->addLayout(dirLayout);
   main->addLayout(pressureFormatLayout);
+  main->addLayout(gradientHeightLayout);
   main->addLayout(maxObsTimeLayout);
   main->addWidget(maxObsDistBox);
   main->addWidget(intenseBox);
@@ -2282,6 +2398,8 @@ PressurePanel::PressurePanel()
   connect(dir, SIGNAL(textChanged(const QString&)),
 	  this, SLOT(valueChanged(const QString&)));
   connect(pressureFormat, SIGNAL(activated(const QString&)), 
+	  this, SLOT(valueChanged(const QString&)));
+  connect(gradientHeight, SIGNAL(valueChanged(const QString&)),
 	  this, SLOT(valueChanged(const QString&)));
   connect(maxObsTime, SIGNAL(valueChanged(const QString&)),
 	  this, SLOT(valueChanged(const QString&)));
@@ -2343,6 +2461,9 @@ void PressurePanel::updatePanel(const QDomElement panelElement)
     if(name == "maxobsdist") {
       if(parameter.toFloat()!=maxObsDist->value())
 	maxObsDist->setValue(parameter.toFloat()); }
+    if(name == "height") {
+      if(parameter.toFloat()!=gradientHeight->value())
+	gradientHeight->setValue(parameter.toFloat()); }
     if(name == "maxobsmethod"){
       if(parameter == "center"){
 	maxObsDistCenter->setChecked(true);
@@ -2381,6 +2502,10 @@ bool PressurePanel::updateConfig()
 	  emit changeDom(element, QString("format"), 
 	    pressureFormatOptions->value(pressureFormat->currentText()));
 	}
+      if(getFromElement("height").toFloat()!=gradientHeight->value()) {
+	emit changeDom(element, QString("height"), 
+		       QString().setNum(gradientHeight->value()));
+      }
       if(getFromElement("maxobstime").toInt()!=maxObsTime->value()) {
 	emit changeDom(element, QString("maxobstime"), 
 		       QString().setNum(maxObsTime->value()));

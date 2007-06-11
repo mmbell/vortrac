@@ -443,6 +443,7 @@ void Configuration::removeDom(const QDomElement &element,
       QDomNode testNode(rootNode.removeChild(oldElement));
       if (testNode.isNull())
 	emit log(Message(QString("Unable to delete the element "+paramName+" from root"),0,this->objectName()));
+      indexForTagName.remove(oldElement.tagName());
     }
     QString message("Config Changed: ");
     message+=(element.tagName()+": "+paramName+" was removed");
@@ -589,6 +590,7 @@ const QDomElement Configuration::getElement(const QDomElement &element,
     QString errMessage = "Could Not Find Config Element: "+element.tagName();
     errMessage +=(": " + paramName);
     emit log(Message(errMessage,0,this->objectName()));
+    Message::toScreen(errMessage);
     
     desiredElement = QDomElement();
     desiredElement.clear();

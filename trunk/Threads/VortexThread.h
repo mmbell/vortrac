@@ -66,6 +66,7 @@ class VortexThread : public QThread
      QString refField;
      QString velField;
      QString closure;
+     float gradientHeight;
      float firstLevel;
      float lastLevel;
      float firstRing;

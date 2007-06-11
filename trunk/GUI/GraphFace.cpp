@@ -189,7 +189,7 @@ bool GraphFace::event(QEvent *event)
 	}
 	else {
 	  // RMW Point
-	  measurement.setNum(VortexDataList->value(index).getRMW());
+	  measurement.setNum(VortexDataList->value(index).getAveRMW());
 	  time = VortexDataList->value(index).getTime().toString("dd-hh:mm");
 	  QString message("Radius of Maximum Wind Estimate\nRMW = "
 			  +measurement+" km\n"+time);
@@ -650,25 +650,8 @@ void GraphFace::checkRmw(VortexData* point)
   
   // We want to get statistics on all the rmws and then take the average
 
-  float rmwSum = 0;
-  float rmwUnSum = 0;
-  int count = 0;
-  int numLev = point->getNumLevels();
-  for(int ii = 0; ii < numLev; ii++) {
-    float newRMW = point->getRMW(ii);
-    if((newRMW!=0)&&(newRMW!=-999)) {
-      if(point->getRMWUncertainty(ii) > 10)
-	continue;
-      rmwSum += newRMW;
-      rmwUnSum += point->getRMWUncertainty(ii);
-      count++;
-    }
-  }
-  if(count == 0)
-    return;
-
-  float aveRmw = rmwSum/(float)count;	
-  float aveRmwUn = rmwUnSum/(float)count;  
+  float aveRmw = point->getAveRMW();
+  float aveRmwUn = point->getAveRMWUncertainty();
 
   if ((aveRmw + aveRmwUn) > autoRmwMax) {
     // Update the Max and Min for rmw
@@ -689,28 +672,6 @@ void GraphFace::checkRmw(VortexData* point)
     rGMin = autoRGMin;
   }
 
-  /*
-    We used this before I switched to averaging the rmw from all level
-    to avoid bad data 2/24/07 -LM
-
-  if ((point->getRMW() + point->getRMWUncertainty()) > autoRmwMax) {
-    // Update the Max and Min for rmw
-    
-    autoRmwMax = (point->getRMW() + point->getRMWUncertainty());
-    autoRGMax = point->getRMW() + 2*point->getRMWUncertainty() +.5;                   // And add on a half meter so nothing hits the sides of graph
-  }
-  
-  if ((point->getRMW() - point->getRMWUncertainty())< autoRmwMin) {
-    autoRmwMin = point->getRMW() - point->getRMWUncertainty();
-    autoRGMin = point->getRMW() -1*2*point->getRMWUncertainty() -.5;
-  }
-  if (autoAxes) {
-    rmwMax = autoRmwMax;
-    rmwMin = autoRmwMin;
-    rGMax = autoRGMax;
-    rGMin = autoRGMin;
-  }
-  */
 }
 
 QPointF GraphFace::makePressurePoint(VortexData d)
@@ -733,8 +694,8 @@ QPointF GraphFace::makeRmwPoint(VortexData d)
   // ready for graphing (meters -> QPointF)
 
   QPointF temp;  
-  if((d.getRMW()< rGMax)&&(d.getRMW()>rGMin))
-    temp = QPointF(scaleTime(d.getTime()),scaleRmw(d.getRMW()));
+  if((d.getAveRMW()< rGMax)&&(d.getAveRMW()>rGMin))
+    temp = QPointF(scaleTime(d.getTime()),scaleRmw(d.getAveRMW()));
   return(temp);
 }
 
@@ -876,8 +837,8 @@ int GraphFace::pointAt(const QPointF & position, bool& ONDropSonde)
 	   && (VortexDataList->at(i).getPressure() >= pmin)) {
 	  return i;
 	}
-	if((VortexDataList->at(i).getRMW() <= rmax) 
-	   && (VortexDataList->at(i).getRMW() >= rmin)) {
+	if((VortexDataList->at(i).getAveRMW() <= rmax) 
+	   && (VortexDataList->at(i).getAveRMW() >= rmin)) {
 	  return i;
 	}
       }
@@ -1265,30 +1226,9 @@ QPainter* GraphFace::updateImage(QPainter* painter)
 	
 	// uses the loop to move through all data points
 
-	// Get statistics on all the RMW's from all the levels and then take
-	// an average
+	float aveRmw = VortexDataList->at(i).getAveRMW();
+	float aveRmwUn = VortexDataList->at(i).getAveRMWUncertainty();
 
-	float rmwSum = 0;
-	float rmwUnSum = 0;
-	int count = 0;
-	int numLev = VortexDataList->at(i).getNumLevels();
-	for(int ii = 0; ii < numLev; ii++) {
-	  float newRMW = VortexDataList->at(i).getRMW(ii);
-	  if((newRMW!=0)&&(newRMW!=-999)) {
-	    if(VortexDataList->at(i).getRMWUncertainty(ii) > 10)
-	      continue;
-	    rmwSum += newRMW;
-	    rmwUnSum += VortexDataList->at(i).getRMWUncertainty(ii);
-	    count++;
-	  }
-	}
-	if(count == 0)
-	  continue;
-
-	float aveRmw = rmwSum/(float)count;	
-	float aveRmwUn = rmwUnSum/(float)count;
-
-	//float rawErrorBarHeight = VortexDataList->at(i).getRMWUncertainty();
 	float rawErrorBarHeight = aveRmwUn;
 
 	QPointF xypoint = makeRmwPoint(VortexDataList->at(i), aveRmw);
@@ -1818,8 +1758,8 @@ void GraphFace::altUpdateImage()
 	  QPointF xypoint = makeRmwPoint(VortexDataList->value(i));
 	  
 	  if(!xypoint.isNull()) {
-	    if (VortexDataList->at(i).getRMWUncertainty()>0) {                           // if uncertainty = 0 there are no bars
-	      float errorBarHeight = scaleDRmw(VortexDataList->at(i).getRMWUncertainty());
+	    if (VortexDataList->at(i).getAveRMWUncertainty()>0) {                           // if uncertainty = 0 there are no bars
+	      float errorBarHeight = scaleDRmw(VortexDataList->at(i).getAveRMWUncertainty());
 	      
 	      float upper2, upper1, lower1, lower2;
 	      bool upperBar2, upperBar1, lowerBar1, lowerBar2;

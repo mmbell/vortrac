@@ -5,7 +5,7 @@
         <lat>25.2</lat>
         <lon>-82.8</lon>
         <direction>25</direction>
-        <speed>8.3</speed>
+        <speed>9.6</speed>
         <obsdate>2004-08-13</obsdate>
         <obstime>15:00:00</obstime>
         <dir>/scr/science40/mauger/Working/trunk/testVel</dir>
@@ -87,7 +87,11 @@
         <maxdatagap wavenum="0" >180</maxdatagap>
         <maxdatagap wavenum="1" >120</maxdatagap>
     </vtd>
-    <hvvp/>
+    <hvvp>
+        <levels>10</levels>
+        <hgt_start>0.5</hgt_start>
+        <hinc>0.1</hinc>
+    </hvvp>
     <pressure>
         <dir>/scr/science40/mauger/Working/trunk/workingDirs</dir>
         <format>AWIPS</format>

@@ -148,10 +148,10 @@ void GriddedData::setReferencePoint(int ii, int jj, int kk)
   // Sets the reference point based on the index rather than the 
   // assigned position relative to the storm
 
-  Message::toScreen("GriddedData: Using the Index Based Reference Assignment");
+  //Message::toScreen("GriddedData: Using the Index Based Reference Assignment");
 
   if((ii > iDim)||(ii < 0)||(jj > jDim)||(jj < 0)||(kk > kDim)||(kk < 0))
-    Message::toScreen("GriddedData: trying to examine point outside cappi for setReferencePoint: i = "+QString().setNum(ii)+" j = "+QString().setNum(jj)+" k = "+QString().setNum(kk));
+    //Message::toScreen("GriddedData: trying to examine point outside cappi for setReferencePoint: i = "+QString().setNum(ii)+" j = "+QString().setNum(jj)+" k = "+QString().setNum(kk));
   refPointI = ii;
   refPointJ = jj;
   refPointK = kk;
@@ -167,10 +167,11 @@ void GriddedData::setCartesianReferencePoint(float ii, float jj, float kk)
   //  Message::toScreen("idim = "+QString().setNum(iDim)+" jdim "+QString().setNum(jDim)+" kdim "+QString().setNum(kDim));
   //  Message::toScreen("refPointI = "+QString().setNum(refPointI)+" refPointJ = "+QString().setNum(refPointJ)+" refPointK = "+QString().setNum(refPointK));
   //  Message::toScreen("iGridsp = "+QString().setNum(iGridsp)+" jGridsp = "+QString().setNum(jGridsp)+" kGridSp = "+QString().setNum(kGridsp));
-  if((refPointI > iDim)||(refPointI < 0) || 
+  /* if((refPointI > iDim)||(refPointI < 0) || 
      (refPointJ > jDim)||(refPointJ < 0) ||
      (refPointK > kDim)||(refPointK < 0))
     Message::toScreen("GriddedData: trying to examine point outside cappi for setCartesianReferencePoint: i = "+QString().setNum(ii)+" j = "+QString().setNum(jj)+" k = "+QString().setNum(kk)+" iRef = "+QString().setNum(refPointI)+" jRef = "+QString().setNum(refPointJ)+" kRef = "+QString().setNum(refPointK));
+  */
   /*
    * Why is this giving errors here? I thought we set this up so that we 
    * attached the radar position with the radar lat lon which is typically 

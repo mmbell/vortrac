@@ -165,6 +165,12 @@ bool VortexList::openNodeFile(const QDomNode &newNode)
 	float newPressureDeficit = newConfig->getParam(childElement,
 						 "pressure_deficit").toFloat();
 	newData.setPressureDeficit(newPressureDeficit);
+	float newAveRMW = newConfig->getParam(childElement,
+					      "ave_rmw").toFloat();
+	newData.setAveRMW(newAveRMW);
+	float newAveRMWUncertainty = newConfig->getParam(childElement,
+							 "ave_rmw_uncertainty").toFloat();
+	newData.setAveRMWUncertainty(newAveRMWUncertainty);
 
 	int highestLevel = 0;
 
@@ -364,8 +370,13 @@ void VortexList::createDomVortexDataEntry(const VortexData &newData)
 		   QString().setNum(newData.getPressureUncertainty())); }
   if(newData.getPressureDeficit()!=-999) {
     newConfig->addDom(volParent, QString("pressure_deficit"), 
-		      QString().setNum(newData.getPressureDeficit()));
-  }
+		      QString().setNum(newData.getPressureDeficit())); }
+  if(newData.getAveRMW()!=-999) {
+    newConfig->addDom(volParent, QString("ave_rmw"),
+		      QString().setNum(newData.getAveRMW())); }
+  if(newData.getAveRMWUncertainty()!=-999) { 
+    newConfig->addDom(volParent, QString("ave_rmw_uncertainty"),
+		      QString().setNum(newData.getAveRMWUncertainty())); }
 
   for(int i = 0; i < newData.getNumLevels(); i++) {
     QString ii = QString().setNum(i);
@@ -377,7 +388,7 @@ void VortexList::createDomVortexDataEntry(const VortexData &newData)
       newConfig->addDom(volParent, QString("longitude"),
 		     QString().setNum(newData.getLon(i)), level, ii); }
     if(newData.getHeight(i)!=-999) {
-      newConfig->addDom(volParent, QString("height"),
+      newConfig->addDom(volParent, QString("altitude"),
 		     QString().setNum(newData.getHeight(i)), level, ii); }
     if(newData.getRMW(i)!=-999)  {
       newConfig->addDom(volParent, QString("rmw"),

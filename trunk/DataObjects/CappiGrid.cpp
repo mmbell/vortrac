@@ -64,18 +64,20 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   // Get the relative center and expand the grid around it
   // relDist = new float[2];
   
-  //Message::toScreen("vortexLat = "+QString().setNum(*vortexLat)+" vortexLon = "+QString().setNum(*vortexLon));
+  //Message::toScreen("In cappi vortexLat = "+QString().setNum(*vortexLat)+" vortexLon = "+QString().setNum(*vortexLon));
 
   //Message::toScreen("radarLat = "+QString().setNum(*radarData->getRadarLat())+" radarLon = "+QString().setNum(*radarData->getRadarLon()));
-
+  
+  // Should this be get cartesian point? Don't we use the grid spacing
+  // in that calculation? -LM 6/11/07
   relDist = getCartesianPoint(radarData->getRadarLat(), 
-			     radarData->getRadarLon(),
-			     vortexLat, vortexLon);
+			      radarData->getRadarLon(),
+			      vortexLat, vortexLon);
   //Message::toScreen("Difference in x = "+QString().setNum(relDist[0])+" Difference in y = "+QString().setNum(relDist[1]));
- 
+  
   /*
     The old way of doing things....
-
+    
     float vXDistance =  iDim/2*iGridsp;
     float vYDistance =  jDim/2*jGridsp;
     setZeroLocation(vortexLat, vortexLon,&vXDistance,&vYDistance);
@@ -88,49 +90,49 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 
   // connects the (0,0) point on the cappi grid, to the latitude and
   // longitude of the radar.
-
+  
   setLatLonOrigin(radarData->getRadarLat(), radarData->getRadarLon(),
 		  &rXDistance,&rYDistance);
-
+  
   // Defines iteration indexes for cappi grid
-
+  
   xmin = nearbyintf(relDist[0] - (iDim/2)*iGridsp);
   xmax = nearbyintf(relDist[0] + (iDim/2)*iGridsp);
   ymin = nearbyintf(relDist[1] - (jDim/2)*jGridsp);
   ymax = nearbyintf(relDist[1] + (jDim/2)*jGridsp);
   
   //  Message::toScreen("Xmin = "+QString().setNum(xmin)+" Xmax = "+QString().setNum(xmax)+" Ymin = "+QString().setNum(ymin)+" Ymax = "+QString().setNum(ymax));
-
+  
   // Adjust the cappi so that it doesn't waste space on areas without velocity data
   if (xmin < -180) {
-	  float adjust = -xmin - 180;
-	  xmin += adjust;
-	  xmax += adjust;
+    float adjust = -xmin - 180;
+    xmin += adjust;
+    xmax += adjust;
   } else if (xmax > 180) {
-	  float adjust = -xmax + 180;
-	  xmin += adjust;
-	  xmax += adjust;
+    float adjust = -xmax + 180;
+    xmin += adjust;
+    xmax += adjust;
   }
   if (ymin < -180) {
-	  float adjust = -ymin - 180;
-	  ymin += adjust;
-	  ymax += adjust;
+    float adjust = -ymin - 180;
+    ymin += adjust;
+    ymax += adjust;
   } else if (ymax > 180) {
-	  float adjust = -ymax + 180;
-	  ymin += adjust;
-	  ymax += adjust;
+    float adjust = -ymax + 180;
+    ymin += adjust;
+    ymax += adjust;
   }
   
   latReference = *radarData->getRadarLat();
   lonReference = *radarData->getRadarLon();
-
+  
   // Message::toScreen("Xmin = "+QString().setNum(xmin)+" Xmax = "+QString().setNum(xmax)+" Ymin = "+QString().setNum(ymin)+" Ymax = "+QString().setNum(ymax));
   
   /* Changed to be hardcoded absolute minimum zmin at 1 km for array purposes M. Bell
-  float distance = sqrt(relDist[0] * relDist[0] + relDist[1] * relDist[1]);
-  float beamHeight = radarData->radarBeamHeight(distance, radarData->getSweep(0)->getElevation());
-  zmin = (float(int(beamHeight/kGridsp)))*kGridsp;
-  zmax = zmin + kDim*kGridsp;
+     float distance = sqrt(relDist[0] * relDist[0] + relDist[1] * relDist[1]);
+     float beamHeight = radarData->radarBeamHeight(distance, radarData->getSweep(0)->getElevation());
+     zmin = (float(int(beamHeight/kGridsp)))*kGridsp;
+     zmax = zmin + kDim*kGridsp;
   */
   zmin = 1.0;
   zmax = zmin + kDim*kGridsp;
@@ -140,7 +142,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   // Find good values
   long r = 0;
   long v = 0;
-  
+
   for (int n = 0; n < radarData->getNumRays(); n++) {
     Ray* currentRay = radarData->getRay(n);
     float theta = deg2rad * fmodf((450. - currentRay->getAzimuth()),360.);
@@ -188,10 +190,8 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
       }
       
     }
-
     if ((currentRay->getVel_numgates() > 0) and
 	(currentRay->getUnambig_range() > 170)) {
-      
       float* velData = currentRay->getVelData();
       float* swData = currentRay->getSwData();
       for (int g = 0; g <= (currentRay->getVel_numgates()-1); g++) {
@@ -257,7 +257,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   
   // Interpolate the data depending on method chosen
   QString interpolation = cappiConfig.firstChildElement("interpolation").text();
-  Message::toScreen("Using "+interpolation+" interpolation ");
+  //Message::toScreen("Using "+interpolation+" interpolation ");
   if (interpolation == "barnes") {
     BarnesInterpolation();
   } else if (interpolation == "cressman") {
@@ -267,7 +267,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   // Set the initial field names
   fieldNames << "DZ" << "VE" << "SW";
   
-  Message::toScreen("Completed Cappi Process");
+  //Message::toScreen("Completed Cappi Process");
   
 }
 
@@ -309,9 +309,11 @@ void CappiGrid::CressmanInterpolation()
 	  float dy = refValues[n].y - (ymin + j*jGridsp);
 	  float dz = refValues[n].z - (zmin + k*kGridsp);
 	  float rSquare = (dx*dx) + (dy*dy) + (dz*dz);
-	  if (rSquare > RSquare) { continue; }
+	  float RSquareLinear = RSquare* refValues[n].rg * refValues[n].rg / 30276.0;
 	  
-	  float weight = (RSquare - rSquare) / (RSquare + rSquare);
+	  if (rSquare > RSquareLinear) { continue; }
+	  
+	  float weight = (RSquareLinear - rSquare) / (RSquareLinear + rSquare);
 	  
 	  refWeight += weight;
 	  sumRef += weight*refValues[n].refValue;
@@ -323,9 +325,10 @@ void CappiGrid::CressmanInterpolation()
 	  float dy = velValues[n].y - (ymin + j*jGridsp);
 	  float dz = velValues[n].z - (zmin + k*kGridsp);
 	  float rSquare = (dx*dx) + (dy*dy) + (dz*dz);
-	  if (rSquare > RSquare) { continue; }
+	  float RSquareLinear =  RSquare* velValues[n].rg * velValues[n].rg / 30276.0;
+	  if (rSquare > RSquareLinear) { continue; }
 	  
-	  float weight = (RSquare - rSquare) / (RSquare + rSquare);
+	  float weight = (RSquareLinear - rSquare) / (RSquareLinear + rSquare);
 
 	  velWeight += weight;
 	  sumVel += weight*velValues[n].velValue;

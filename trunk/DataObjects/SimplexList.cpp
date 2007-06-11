@@ -103,7 +103,6 @@ bool SimplexList::open()
     }
     else {
       // Has information about a simplexData
-      //Message::toScreen("found data node");
       if(openNodeFile(node)) {
 	numConfigsOpened++;
       }
@@ -471,7 +470,7 @@ void SimplexList::append(const SimplexData &value)
 void SimplexList::removeAt(int i)
 {
   int initialCount = simplexDataConfigs->count();
-    configFileNames->removeAt(i);
+  configFileNames->removeAt(i);
   simplexDataConfigs->removeAt(i);
   if(simplexDataConfigs->count() >= initialCount)
     Message::toScreen("SimplexList: Remove At didn't get smaller");

@@ -49,7 +49,7 @@ AnalysisThread::AnalysisThread(QObject *parent)
 
 AnalysisThread::~AnalysisThread()
 {
-  Message::toScreen("AnalysisThread Destructor IN");
+  //Message::toScreen("AnalysisThread Destructor IN");
   abort = true;
 
   if(this->isRunning())
@@ -72,7 +72,7 @@ AnalysisThread::~AnalysisThread()
   dropSondeList = NULL;
   delete dropSondeList;
 
-  Message::toScreen("AnalysisThread Destructor OUT");
+  //Message::toScreen("AnalysisThread Destructor OUT");
 }
 
 void AnalysisThread::setConfig(Configuration *configPtr)
@@ -112,7 +112,7 @@ void AnalysisThread::setDropSondeList(PressureList *archivePtr)
 
 void AnalysisThread::abortThread()
 {
-  Message::toScreen("In AnalysisThread Abort");
+  //Message::toScreen("In AnalysisThread Abort");
 
   delete simplexThread; // This goes first so it can break the cycle which will
   // allow us a change to lock if we are in simplexThread
@@ -125,14 +125,14 @@ void AnalysisThread::abortThread()
   
   // Wait for the thread to finish running if it is still processing
   if(this->isRunning()) {
-    Message::toScreen("This is running - analysisThread");
+    //Message::toScreen("This is running - analysisThread");
     waitForData.wakeOne();
     // Message::toScreen("WaitForData.wakeAll() - passed");
     wait();
-    Message::toScreen("Got past wait - AnalysisThread");
+    //Message::toScreen("Got past wait - AnalysisThread");
     // Got rid of wait because it was getting stuck when aborted in simplex cycle
   }
-  Message::toScreen("Leaving AnalysisThread Abort");
+  //Message::toScreen("Leaving AnalysisThread Abort");
 }
 
 void AnalysisThread::analyze(RadarData *dataVolume, Configuration *configPtr)
@@ -143,6 +143,7 @@ void AnalysisThread::analyze(RadarData *dataVolume, Configuration *configPtr)
 	this->radarVolume = dataVolume;
 	configData = configPtr;
 	radarVolume->setAltitude(configData->getParam(configData->getConfig("radar"),"alt").toFloat()/1000.0);
+	//Message::toScreen("AnalysisThread: Getting New RadarVolume: # Rays = "+radarVolume->getDateTimeString());
 	// Sets altitude of radar to radarData (km) from ConfigData (meters)
 
 	// Start or wake the thread
@@ -174,6 +175,7 @@ void AnalysisThread::run()
 		
 		// Read in the radar data
 		radarVolume->readVolume();
+		//Message::toScreen("Finished reading - # Rays: "+QString().setNum(radarVolume->getNumRays()));
 		
 		emit log(Message(QString(),2,this->objectName()));
 
@@ -303,8 +305,8 @@ void AnalysisThread::run()
 		    float distanceMoved = elapsedSeconds*stormSpeed/1000.0;
 		    float changeInX = distanceMoved*cos(stormDirection);
 		    float changeInY = distanceMoved*sin(stormDirection);
-		    //QString message("changeInX = "+QString().setNum(changeInX)+" changeInY = "+QString().setNum(changeInY));
-		    //  emit(log(Message(message,0,this->objectName())));
+		    QString message("changeInX = "+QString().setNum(changeInX)+" changeInY = "+QString().setNum(changeInY));
+		    //emit(log(Message(message,0,this->objectName())));
 		    float *newLatLon = GriddedData::getAdjustedLatLon(vortexLat,vortexLon, changeInX, changeInY);
 
 
@@ -333,9 +335,9 @@ void AnalysisThread::run()
 		    
 		    beyondRadar = false;
 		  }
-		  if((relDist > radarVolume->getSweep(i)->getUnambig_range()-20)&&(relDist < radarVolume->getSweep(i)->getUnambig_range()+20)) {
-		    closeToEdge = true;
-		  }
+		  //  if((relDist > radarVolume->getSweep(i)->getUnambig_range()-20)&&(relDist < radarVolume->getSweep(i)->getUnambig_range()+20)) {
+		  //closeToEdge = true;
+		  //}
 		}
 		
 		if(analyticRun)
@@ -355,7 +357,7 @@ void AnalysisThread::run()
 					       "speed").toFloat()/1000.0;
 		  float stormDirection = configData->getParam(vortex, 
 				 "direction").toFloat()*acos(-1)/180.;
-		  //Message::toScreen("Storm Direction .."+QString().setNum(stormDirection));
+		  // Message::toScreen("Storm Direction .."+QString().setNum(stormDirection));
 		  //Message::toScreen("cca = "+QString().setNum(cca));
 		  float palpha = (relDist*sin(stormDirection-cca)/174.);
 		  //Message::toScreen(" palpha = "+QString().setNum(palpha));
@@ -363,7 +365,7 @@ void AnalysisThread::run()
 		  float alpha = acos(-1)-asin(palpha);
 		  //Message::toScreen(" alpha = "+QString().setNum(alpha));
 		  float dist2go = 0;
-		  if((stormDirection-cca)==0) {
+		  if(fabs(stormDirection-cca)<=1) {
 		    dist2go = relDist-174;
 		  }
 		  else {
@@ -373,8 +375,7 @@ void AnalysisThread::run()
 		  float eta = (dist2go/stormSpeed)/60;
 		  //Message::toScreen("minutes till radar"+QString().setNum(eta));
 		  
-		  if((stormSpeed == 0)||(dist2go < 10)||
-		     (eta < 0)||(isnan(eta))) {
+		  if((stormSpeed == 0)||(eta < 0)||(isnan(eta))) {
 
 		    // These is something wrong with our calculation of time
 		    // until storm is in range, continue processing with
@@ -382,30 +383,37 @@ void AnalysisThread::run()
 		    if((stormSpeed == 0)||(eta < 0)||(isnan(eta))) {
 		    emit log(Message(QString("Difficulties Processing Time Until Radar is in Range, Please check observation parameters"),0,this->objectName(),Yellow, QString("Check Observation Parameter is Vortex Panel")));
 		    if(stormSpeed == 0)
-		      Message::toScreen("StromSpeed Problema");
+		      Message::toScreen("StromSpeed Problem");
 		    if(eta < 0)
 		      Message::toScreen("ETA < 0");
 		    if(isnan(eta))
 		      Message::toScreen("ETA is NAN");
 		    }
 
-		    // Let program continue if the storm is this close
-
 		  }
-		  else {
-		    emit log(Message(
-			    QString(),
-			    -1,this->objectName(),AllOff,QString(),OutOfRange, 
-			    QString("Storm in range in "+QString().setNum(eta, 
-						    'f', 0)+" min")));
-		    //Message::toScreen("Estimated center is out of Doppler range!");
-		    delete radarVolume;
-		    emit doneProcessing();
-		    waitForData.wait(&mutex);
-		    mutex.unlock();
-		    emit finishedInitialization();
-		    continue;
-		  }
+		  //		  else {
+		  emit log(Message(
+			  QString(),
+			  -1,this->objectName(),AllOff,QString(),OutOfRange, 
+			  QString("Storm in range in "+QString().setNum(eta, 
+			  'f', 0)+" min")));
+		  //Message::toScreen("Estimated center is out of Doppler range!");
+		  //delete radarVolume;
+		  radarVolume = NULL;
+		  /*
+		    RadarData *temp = radarVolume;
+		    radarVolume = NULL;
+		    delete temp;
+		  */
+		  emit doneProcessing();
+		  //Message::toScreen("AnalysisThread sent doneProcessing");
+		  waitForData.wait(&mutex);
+		  //Message::toScreen("AnalysisThread Finished Waiting on Mutex");
+		  mutex.unlock();
+		  //emit finishedInitialization();
+		  //Message::toScreen("AnalysisThread sent Finished Initialization");
+		  continue;
+		  //      }
 		}
 		//Message::toScreen("gets to create vortexData analysisThread");
 		emit finishedInitialization();
@@ -417,7 +425,7 @@ void AnalysisThread::run()
 		  vortexData->setLat(i,vortexLat);
 		  vortexData->setLon(i,vortexLon);
 		}		
-
+		
 		mutex.unlock();
 		if(abort)
 		  return;
@@ -516,11 +524,11 @@ void AnalysisThread::run()
 			 
 			 return;
 			 */
- 
+		
 		mutex.unlock();
 		if(abort)
 		  return;
-
+		  
 		/* mutex.lock(); 
 		 *
 		 * We have to leave this section unlocked so that a change 
@@ -550,6 +558,8 @@ void AnalysisThread::run()
 					   &radarLat, &radarLon);
 		}
 		else {
+		  //Message::toScreen("Before Making Cappi vLat = "+QString().setNum(vortexLat)+" vLon = "+QString().setNum(vortexLon));
+
 		  gridData = gridFactory.makeCappi(radarVolume, configData,
 						   &vortexLat, &vortexLon);
 		  //Message::toScreen("AnalysisThread: outside makeCappi");
@@ -562,7 +572,7 @@ void AnalysisThread::run()
 		// Pass Cappi to display
 		emit newCappi(gridData);
 		
-		//mutex.unlock();
+	
 		if(abort)
 		  return;
 		mutex.lock();
@@ -574,7 +584,7 @@ void AnalysisThread::run()
 		// Output Radar data to check if dealias worked
 
 		gridData->writeAsi();
-		emit log(Message("Done with Cappi",30));
+		emit log(Message("Done with Cappi",30,this->objectName()));
 		QString cappiTime;
 		cappiTime.setNum((float)analysisTime.elapsed() / 60000);
 		cappiTime.append(" minutes elapsed");
@@ -682,6 +692,10 @@ void AnalysisThread::run()
 		
 		// Delete CAPPI and RadarData objects
 		delete radarVolume;
+		/* RadarData *temp = radarVolume;
+		   radarVolume = NULL;
+		   delete temp;
+		*/
 		delete gridData;
 		delete vortexData;
 		

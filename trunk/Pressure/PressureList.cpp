@@ -15,7 +15,7 @@
 PressureList::PressureList(const QString &newFileName)
 {
   fileName = newFileName;
-  Message::toScreen("Constructor filename = "+fileName);
+  //Message::toScreen("Constructor filename = "+fileName);
   workingDir = QString("");
   if(fileName.isEmpty()) {
     fileName = QString("vortrac_defaultPressureListStorage.xml");
@@ -30,7 +30,7 @@ PressureList::PressureList(Configuration* newConfig)
 {
 
   config = newConfig;
-  Message::toScreen("Constructor from Config, root is "+newConfig->getRoot().toElement().tagName());
+  //Message::toScreen("Constructor from Config, root is "+newConfig->getRoot().toElement().tagName());
 	
 }
 
@@ -54,9 +54,9 @@ bool PressureList::save()
 
 bool PressureList::open()
 {
-  Message::toScreen("Pressure Root "+config->getRoot().toElement().tagName());
+  //Message::toScreen("Pressure Root "+config->getRoot().toElement().tagName());
   int numPressureObs = 0;
-  Message::toScreen("Opening PressureList count = "+QString().setNum(config->getGroupList()->count()));
+  //Message::toScreen("Opening PressureList count = "+QString().setNum(config->getGroupList()->count()));
   
   for(int i = 0; i < config->getGroupList()->count(); i++) {
     QDomNode node = config->getGroupList()->item(i);
@@ -70,50 +70,52 @@ bool PressureList::open()
     else {
       
       // Has information about a pressureData
-      PressureData newPressure;
+      PressureData *newPressure = new PressureData;
       // Station Name
       QString stName = config->getParam(currElement,
 					QString("station"));
       if(stName != QString())
-	newPressure.setStationName(stName);
+	newPressure->setStationName(stName);
       // Latitude
       float newLat = config->getParam(currElement, 
 				      QString("latitude")).toFloat();
       if(newLat!=-999)
-	newPressure.setLat(newLat);
+	newPressure->setLat(newLat);
       // Longitude 
       float newLon = config->getParam(currElement, 
 				      QString("longitude")).toFloat();
       if(newLon!=-999)
-	newPressure.setLon(newLon);
+	newPressure->setLon(newLon);
       // Altitude 
       float newAlt = config->getParam(currElement, 
 				      QString("altitude")).toFloat();
       if(newAlt!=-999)
-	newPressure.setAltitude(newAlt);
+	newPressure->setAltitude(newAlt);
       // DateTime
       QString dateTimeString = config->getParam(currElement, 
 						QString("time"));
       QDateTime newTime = QDateTime::fromString(dateTimeString, Qt::ISODate);
-      if(newTime.isValid())
-	newPressure.setTime(newTime);
+      if(newTime.isValid()) {
+	newPressure->setTime(newTime);
+      }
+      
       // Pressure
       float pressureOb = config->getParam(currElement, 
 					  QString("pressure")).toFloat();
       if(pressureOb != -999)
-	newPressure.setPressure(pressureOb);
+	newPressure->setPressure(pressureOb);
       // Wind Speed
       float newWindSpeed = config->getParam(currElement, 
 					    QString("windspeed")).toFloat();
       if(newWindSpeed!=-999)
-	newPressure.setWindSpeed(newWindSpeed);
+	newPressure->setWindSpeed(newWindSpeed);
       // Wind Direction
       float newWindDir = config->getParam(currElement, 
 					  QString("winddir")).toFloat();
       if(newWindDir!=-999)
-	newPressure.setWindDirection(newWindDir);
+	newPressure->setWindDirection(newWindDir);
       
-      QList<PressureData>::append(newPressure);
+      QList<PressureData>::append(*newPressure);
       numPressureObs++;
     }
   }

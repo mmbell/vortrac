@@ -13,6 +13,7 @@
 
 #include "RadarData.h"
 #include "Message.h"
+#include "Configuration.h"
 
 
 class Hvvp : public QObject
@@ -27,6 +28,7 @@ public:
 
    void setRadarData(RadarData *newVolume, float range, float angle, 
 		     float vortexRmw);
+   void setConfig(Configuration* newConfig);
 
    bool findHVVPWinds(bool both);
 
@@ -43,8 +45,10 @@ public slots:
 
 private:
    RadarData *volume;
-
+   Configuration* configData;
    int levels;
+   float hgtStart;
+   float hInc;
    
    /*
     * levels: The number of elevation tilts available including the 2
@@ -70,7 +74,7 @@ private:
 
    float** xls;
    int xlsDimension;
-   int maxpoints;
+   long maxpoints;
    float* yls;
    float* wgt;
 
@@ -139,10 +143,10 @@ private:
      
    void smoothHvvp(float* data);
    void smoothHvvpVmSin(float* data1, float* data2);
-   void writeToFile(QString& nameOfFile, int aRows, int aCols,
-		    int bRows, int bCols, float** a, float* b);
-   void writeToFileWithAltitude(QString& nameOfFile, int aRows, int aCols,
-		    int bRows, int bCols, float** a, float* b);
+   void writeToFile(QString& nameOfFile, long aRows, long aCols,
+		    long bRows, long bCols, float** a, float* b);
+   void writeToFileWithAltitude(QString& nameOfFile, long aRows, long aCols,
+		    long bRows, long bCols, float** a, float* b);
 
 signals:
    void log(const Message& message);

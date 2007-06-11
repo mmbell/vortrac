@@ -85,10 +85,15 @@
      <maxdatagap wavenum="0">180</maxdatagap>
      <maxdatagap wavenum="1">120</maxdatagap>
    </vtd>
-   <hvvp></hvvp>
+   <hvvp>
+     <levels>10</levels>
+     <hgt_start>0.5</hgt_start>
+     <hinc>0.1</hinc>
+   </hvvp>
    <pressure>
      <dir>default</dir>
      <format>AWIPS</format>
+     <height>1</height>
      <maxobstime>59</maxobstime>
      <maxobsdist>50</maxobsdist>
      <maxobsmethod>ring</maxobsmethod>

@@ -63,8 +63,8 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   //QPushButton *lightButton = new QPushButton("Next Signal Pattern");
   //connect(lightButton, SIGNAL(pressed()), this, SLOT(testLight()));
 
-  QPushButton *stormButton = new QPushButton("Next Storm Signal");
-  connect(stormButton, SIGNAL(pressed()), this, SLOT(testStormSignal()));
+  //QPushButton *stormButton = new QPushButton("Next Storm Signal");
+  //connect(stormButton, SIGNAL(pressed()), this, SLOT(testStormSignal()));
   
   // StormSignal is used to alert user to 
   // noticable changes in vortex properties
@@ -124,7 +124,7 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   //main->addWidget(color); // I use this when I need to select colors
                             // for coding throw away in finished product -LM
   //  main->addWidget(lightButton);
-  main->addWidget(stormButton);
+  // main->addWidget(stormButton);
 
   setLayout(main);
   

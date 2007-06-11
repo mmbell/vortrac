@@ -24,7 +24,7 @@
 #include "DiagnosticPanel.h"
 #include "CappiDisplay.h"
 
-#include "TestGraph.h"
+//#include "TestGraph.h"
 
 class AnalysisPage : public QWidget
 {
@@ -110,7 +110,7 @@ class AnalysisPage : public QWidget
   QLCDNumber *appMaxWind;
   QLCDNumber *recMaxWind;
   QLabel* deficitLabel;
-  TestGraph *tester;
+  //  TestGraph *tester;
 
   bool analyticModel();
 

@@ -50,6 +50,11 @@ class VortexData
   float getRMWUncertainty(const int& i) const;
   void setRMWUncertainty(const int& index, const float& dRMW);
   void setRMWUncertainty(const float a[], const int& howMany);
+  
+  float getAveRMW() const;
+  void setAveRMW(const float& newRMW);
+  float getAveRMWUncertainty() const;
+  void setAveRMWUncertainty(const float& newUncertainty);
 
   float getPressure() const;
   void setPressure(const float& pressure);
@@ -95,9 +100,9 @@ class VortexData
   int getMaxWaveNum() const {return maxWaveNum; }
 
  private:
-  static const int maxLevels = 10;
-  static const int maxRadii = 100;
-  static const int maxWaveNum = 20;
+  static const int maxLevels = 15;
+  static const int maxRadii = 150;
+  static const int maxWaveNum = 5;
 
   int numLevels;
   int numRadii;
@@ -108,7 +113,9 @@ class VortexData
   float centerAltitude[maxLevels];
   
   QDateTime time;
-
+  
+  float aveRMW;
+  float aveRMWUncertainty;
   float RMW[maxLevels];
   float RMWUncertainty[maxLevels];
 

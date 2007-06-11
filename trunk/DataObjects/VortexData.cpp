@@ -40,6 +40,8 @@ VortexData::VortexData()
   centralPressure = -999;
   centralPressureUncertainty = -999;
   pressureDeficit = -999;
+  aveRMW = -999.0;
+  aveRMWUncertainty = -999.0;
 
 }
 
@@ -70,7 +72,8 @@ VortexData::VortexData(int availLevels, int availRadii, int availWaveNum)
   centralPressure = -999;
   centralPressureUncertainty = -999;
   pressureDeficit = -999;
-  
+  aveRMW = -999.0;
+  aveRMWUncertainty = -999.0;
 }
 
 
@@ -231,6 +234,26 @@ void VortexData::setRMWUncertainty(const float a[], const int& howMany)
 }
 
 
+float VortexData::getAveRMW() const
+{
+  return aveRMW;
+}
+
+void VortexData::setAveRMW(const float& newRMW)
+{
+  aveRMW = newRMW;
+}
+
+float VortexData::getAveRMWUncertainty() const
+{
+  return aveRMWUncertainty;
+}
+
+void VortexData::setAveRMWUncertainty(const float& newUncertainty)
+{
+  aveRMWUncertainty = newUncertainty;
+}
+
 float VortexData::getPressure() const
 {
   return centralPressure;
@@ -329,6 +352,8 @@ Coefficient VortexData::getCoefficient(const float& height, const float& rad,
 {
   int level = getHeightIndex(height);
   float minRad = getCoefficient(level,0,parameter).getRadius();
+  if(minRad == -999)
+    minRad = 0;
   int radIndex = int(rad - minRad);
   if((level == -1)||(radIndex < 0 )||(radIndex > numRadii)) {
     Message::toScreen("VortexData: GetCoefficient(4): Can't Get Needed Indices: Level = "+QString().setNum(level)+" radIndex = "+QString().setNum(radIndex));
@@ -374,6 +399,9 @@ void VortexData::printString()
   out<< "  pressure: "+QString().setNum(getPressure()) << endl;
   out<< "  pressure uncertainty: ";
   out<<              QString().setNum(getPressureUncertainty())<<endl;
+  out<< "  pressureDeficit: "<<getPressureDeficit()<<endl;
+  out<< "  aveRMW: "<<getAveRMW()<<endl;
+  out<< "  aveRMWUncertainty: "<<getAveRMWUncertainty()<<endl;
   for(int i = 0; i < 2; i++) {
     QString ii = QString().setNum(i);
     out<<"  altitude @ level:"+ii+": "+QString().setNum(getHeight(i)) <<endl;

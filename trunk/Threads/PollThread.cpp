@@ -108,6 +108,7 @@ void PollThread::analysisDoneProcessing()
 {
   waitForAnalysis.wakeOne();
   processPressureData = false;
+  waitForInitialization.wakeOne();
 }
 
 void PollThread::run()
@@ -206,30 +207,6 @@ void PollThread::run()
     simplexList = new SimplexList(simplexConfig);
     
     simplexList->open();
-    /*
-    // Testing simplex List
-    Configuration* newSimplexConfig = new Configuration(0,QString("/scr/science40/mauger/Working/trunk/vortrac_defaultSimplexListStorage.xml"));
-    SimplexList* testSimplexList = new SimplexList(newSimplexConfig);
-    QString simplexPath = configData->getParam(configData->getConfig("center"),
-					       "dir");
-    QDir simplexWorkingDirectory(simplexPath);
-    simplexWorkingDirectory.cdUp();
-    simplexWorkingDirectory.cd("centercopy");
-    outFileName = workingDirectory.path() + "/";
-    outFileName += vortexName+"_"+radarName+"_"+year+"_simplexCOPYList.xml";
-    testSimplexList->setFileName(outFileName);
-    testSimplexList->setNewWorkingDirectory(simplexWorkingDirectory.path()+"/");
-    for(int i = 0; i < simplexList->count(); i++) {
-      testSimplexList->append(simplexList->value(i));
-    }
-    testSimplexList->save();
-    QString endOfTest("FINISHED TESTING SIMPLEX");
-    Message::toScreen(endOfTest);
-    emit log(Message(endOfTest));
-    return;
-    
-    // end simplex list testing
-    */
 
     QString simplexPath = configData->getParam(configData->getConfig("center"),
 					       "dir");
@@ -256,6 +233,8 @@ void PollThread::run()
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     pressureList = new PressureList(pressureConfig);
     pressureList->open();
+    emit log(Message(QString("Number of pressure obs loaded: "+QString().setNum(pressureList->count()))));
+    Message::toScreen("Number of pressure obs loaded "+QString().setNum(pressureList->count()));
     
     outFileName = workingDirectory.path()+"/";
     outFileName+= vortexName+"_"+radarName+"_"+year+"_pressureList.xml";
@@ -286,6 +265,8 @@ void PollThread::run()
     checkListConsistency();
 
     emit vortexListUpdate(vortexList);
+    
+    checkIntensification();
 
   }  
 
@@ -381,7 +362,7 @@ void PollThread::run()
 
 	// Begin polling loop
 	forever {
-
+	  //Message::toScreen("PollThread: Begining Again");
      	  // Check for new data
 	  if (dataSource->hasUnprocessedData()) {
 	    mutex.lock();
@@ -390,9 +371,11 @@ void PollThread::run()
 	    
 	    // Fire up the analysis thread to process it
 	    RadarData *newVolume = dataSource->getUnprocessedData();
-	    if(newVolume == NULL)
+	    if(newVolume == NULL) {
+	      delete newVolume;
+	      mutex.unlock();
 	      continue;
-	    
+	    }
 	    //emit log(Message(QString(),2,this->objectName()));
 
 	    // Check to makes sure that the file still exists and is readable
@@ -409,7 +392,17 @@ void PollThread::run()
 	    mutex.lock();
 
 	    // Insure that the list are initialized
+	    //Message::toScreen("PollThread waiting for initialization");
 	    waitForInitialization.wait(&mutex);
+	    //Message::toScreen("PollThread receieved go ahead");
+	    
+	    if(newVolume == NULL) {
+	      // Should occur when volume is out of range
+	      // out of range volumes are not processed
+	      mutex.unlock();
+	      continue;
+	    }
+
 	    QString radarFileName = newVolume->getFileName();
 
 	    if (!abort) {
@@ -459,7 +452,6 @@ void PollThread::run()
 	    }
 	    mutex.unlock();  
 	  }
-	  
 	  checkIntensification();
 	  
 	  // Check to see if we should quit
@@ -519,9 +511,9 @@ void PollThread::checkIntensification()
   
   QDomElement pressure = configData->getConfig("pressure");
 
-  // Make this an input parameter
-  //float rapidRate = 3; // Units of mb per hr
+  // Units of mb / sec
   float rapidRate = configData->getParam(pressure, QString("rapidlimit")).toFloat();
+
   if(isnan(rapidRate)) {
     emit log(Message(QString("Could Not Find Rapid Intensification Rate, Using 3 mb/sec"),
 		     0,this->objectName()));
@@ -531,7 +523,7 @@ void PollThread::checkIntensification()
   // So we don't report falsely there must be a rapid increase trend which 
   // spans several measurements
 
-  //  int volSpan = 8;  // Number of volumes which are averaged.
+  // Number of volumes which are averaged.
   int volSpan = configData->getParam(pressure, QString("av_interval")).toInt();
   if(isnan(volSpan)) {
     emit log(Message(QString("Could Not Find Pressure Averaging Interval for Rapid Intensification, Using 8 volumes"),0,this->objectName()));
@@ -547,7 +539,7 @@ void PollThread::checkIntensification()
       int recentCount = 0;
       int pastCenter = 0;
       int pastCount = 0;
-      for(int k = lastVol; k >= lastVol-volSpan; k--) {
+      for(int k = lastVol; k > lastVol-volSpan; k--) {
 	if(vortexList->at(k).getPressure()==-999)
 	  continue;
 	recentAv+=vortexList->at(k).getPressure();
@@ -559,7 +551,7 @@ void PollThread::checkIntensification()
       for(int k = 0; k < lastVol; k++) {
 	if(vortexList->at(k).getPressure()==-999)
 	  continue;
-	if(vortexList->at(k).getTime() > pastTime)
+	if(vortexList->at(k).getTime() <= pastTime)
 	  pastCenter = k;
       }      
       for(int j = pastCenter-int(volSpan/2.); 
@@ -571,14 +563,13 @@ void PollThread::checkIntensification()
       }
       pastAv /= (pastCount*1.);
       if(recentAv - pastAv > rapidRate) {
-	emit(log(Message(QString("Rapid Intensification Reported @ Rate of "+QString().setNum(recentAv-pastAv)+" mb/hour"), 0,this->objectName(), Green, QString(), RapidIncrease, QString("Storm Pressure Rising"))));
+	emit(log(Message(QString("Rapid Increase in Storm Central Pressure Reported @ Rate of "+QString().setNum(recentAv-pastAv)+" mb/hour"), 0,this->objectName(), Green, QString(), RapidIncrease, QString("Storm Pressure Rising"))));
       } else {
-	if(recentAv - pastAv < -1*rapidRate) {
-	  emit(log(Message(QString("Rapid Decline in Storm Central Pressure Reporting @ Rate of "+QString().setNum(recentAv-pastAv)+" mb/hour"), 0, this->objectName(), Green, QString(), RapidDecrease, QString("Storm Pressure Dropping"))));
+	if(recentAv - pastAv < -1.0*rapidRate) {
+	  emit(log(Message(QString("Rapid Decline in Storm Central Pressure Reporting @ Rate of "+QString().setNum(recentAv-pastAv)+" mb/hour"), 0, this->objectName(), Green, QString(), RapidDecrease, QString("Storm Pressure Falling"))));
 	}
 	else {
-	  emit(log(Message(QString("Storm Central Pressure Stablized"), 0, this->objectName(),Green, 
-			   QString(), Ok, QString())));
+	  emit(log(Message(QString("Storm Central Pressure Stablized"), 0, this->objectName(),Green,QString(), Ok, QString())));
 	}
       }
     }
@@ -621,6 +612,8 @@ void PollThread::checkListConsistency()
   // Removing the last ones for safety, any partially formed file could do serious damage
   // to data integrity
   simplexList->removeAt(simplexList->count()-1);
+  simplexList->save();
   vortexList->removeAt(vortexList->count()-1);
+  vortexList->save();
 }
   
