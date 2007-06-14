@@ -138,131 +138,20 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   zmax = zmin + kDim*kGridsp;
   
   delete[] relDist;
-  
-  // Find good values
-  long r = 0;
-  long v = 0;
-
-  for (int n = 0; n < radarData->getNumRays(); n++) {
-    Ray* currentRay = radarData->getRay(n);
-    float theta = deg2rad * fmodf((450. - currentRay->getAzimuth()),360.);
-    float phi = deg2rad * (90. - (currentRay->getElevation()));
     
-    if ((currentRay->getRef_numgates() > 0) and 
-		(gridReflectivity)) {
-      
-      float* refData = currentRay->getRefData();
-      for (int g = 0; g <= (currentRay->getRef_numgates()-1); g++) {
-		if (refData[g] == -999.) { continue; }
-		float range = float(currentRay->getFirst_ref_gate() +
-				    (g * currentRay->getRef_gatesp()))/1000.;
-
-		float x = range*sin(phi)*cos(theta);
-		if ((x < (xmin - iGridsp)) or x > (xmax + iGridsp)) { continue; }
-		float y = range*sin(phi)*sin(theta);
-		if ((y < (ymin - jGridsp)) or y > (ymax + jGridsp)) { continue; }
-		float z = radarData->radarBeamHeight(range,
-					     currentRay->getElevation() );
-		if ((z < (zmin - kGridsp)) or z > (zmax + kGridsp)) { continue; }
-
-		// Looks like a good point
-		refValues[r].refValue = refData[g];
-		refValues[r].x = x;
-		refValues[r].y = y;
-		refValues[r].z = z;
-		refValues[r].rg = range;
-		refValues[r].az = currentRay->getAzimuth();
-		refValues[r].el = currentRay->getElevation();
-		/*
-		if(r == 888){
-		  QString print("r = "+QString().setNum(r));
-		  print+=" Range= "+QString().setNum(range);
-		  print+=" x= "+QString().setNum(x);
-		  print+=" y= "+QString().setNum(y);
-		  print+=" z= "+QString().setNum(z);
-		  print+=" ref= "+QString().setNum(refData[g]);
-		  Message::toScreen(print);
-		}
-		*/
-		r++;
-		if (r > 199999)
-		  Message::toScreen("Gone out of array bounds in CappiGrid.ccp refValues");
-      }
-      
-    }
-    if ((currentRay->getVel_numgates() > 0) and
-	(currentRay->getUnambig_range() > 170)) {
-      float* velData = currentRay->getVelData();
-      float* swData = currentRay->getSwData();
-      for (int g = 0; g <= (currentRay->getVel_numgates()-1); g++) {
-		if (velData[g] == -999.) { continue; }
-		
-		float range = float(currentRay->getFirst_vel_gate() +
-				    (g * currentRay->getVel_gatesp()))/1000.;
-		float x = range*sin(phi)*cos(theta);
-		if ((x < (xmin - iGridsp)) or x > (xmax + iGridsp)) { continue; }
-		float y = range*sin(phi)*sin(theta);
-		if ((y < (ymin - jGridsp)) or y > (ymax + jGridsp)) { continue; }
-		float z = radarData->radarBeamHeight(range,
-						     currentRay->getElevation() );
-		if ((z < (zmin - kGridsp)) or z > (zmax + kGridsp)) { continue; }
-		
-		
-		// Looks like a good point
-		velValues[v].velValue = velData[g];
-		velValues[v].swValue = swData[g];
-		velValues[v].x = x;
-		velValues[v].y = y;
-		velValues[v].z = z;
-		velValues[v].rg = range;
-		velValues[v].az = currentRay->getAzimuth();
-		velValues[v].el = currentRay->getElevation();
-		/*
-		if(v == 888){
-		  QString print("v = "+QString().setNum(v));
-		  print+=" Range= "+QString().setNum(range);
-		  print+=" x= "+QString().setNum(x);
-		  print+=" y= "+QString().setNum(y);
-		  print+=" z= "+QString().setNum(z);
-		  print+=" vel= "+QString().setNum(velData[g]);
-		  Message::toScreen(print);
-		}
-		*/
-		v++;
-		if(v >999999)
-		  Message::toScreen("Gone out of array bounds in CappiGrid.ccp velValues");
-      }
-      velData = NULL;
-      swData = NULL;
-      delete velData;
-      delete swData;
-    }
-    currentRay = NULL;
-    delete currentRay;
-    abort = returnExitNow();
-    if(abort){
-      //Message::toScreen("exitNow in GridRadarData in CappiGrid");
-      return;
-    }
-  }
-  Message::toScreen("# of Reflectivity gates used in CAPPI = "+QString().setNum(r));
-  Message::toScreen("# of Velocity gates used in CAPPI = "+QString().setNum(v));
-  
-  // Subtract off one from the count for iterative purposes
-  maxRefIndex = r - 1;
-  maxVelIndex = v - 1;
-
-  if((maxRefIndex > 199999)||(maxVelIndex >999999))
-    Message::toScreen("Gone out of array bounds in CappiGrid.ccp velValues or refValues");
-  
   // Interpolate the data depending on method chosen
   QString interpolation = cappiConfig.firstChildElement("interpolation").text();
   //Message::toScreen("Using "+interpolation+" interpolation ");
-  if (interpolation == "barnes") {
-    BarnesInterpolation();
-  } else if (interpolation == "cressman") {
-    CressmanInterpolation();
+  if (interpolation == "cressman") {
+    CressmanInterpolation(radarData);
   }
+   /* else if (interpolation == "barnes") {
+    BarnesInterpolation();
+  }  else if (interpolation == "closestpoint") {
+	  ClosestPointInterpolation();
+  } else if (interpolation == "bilinear") {
+	  BilinearInterpolation(radarData);
+  } */
   
   // Set the initial field names
   fieldNames << "DZ" << "VE" << "SW";
@@ -271,7 +160,27 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   
 }
 
-void CappiGrid::CressmanInterpolation()
+/*
+void sift_down(goodVel &sortarray, const int l, const int r)
+{
+	int j, jold;
+	float a;
+	
+	a = sortarray[l];
+	jold = l;
+	j=2*l+1;
+	while (j <= r) {
+		if (j < r && sortarray[j] < sortarray[j+1]) j++;
+		if (a >= sortarray[j]) break;
+		sortarray[jold] = sortarray[j];
+		jold = j;
+		j = 2*j+1;
+	}
+	sortarray[jold] = a;
+}
+*/
+
+void CappiGrid::CressmanInterpolation(RadarData *radarData)
 {
 
   // Cressman Interpolation
@@ -279,12 +188,179 @@ void CappiGrid::CressmanInterpolation()
   // Create local abort variable
   bool abort = returnExitNow();
   
-  // Calculate radius of influence 
-  float xRadius = (iGridsp * iGridsp) * 2.25;
-  float yRadius = (jGridsp * jGridsp) * 2.25;
-  float zRadius = (kGridsp * kGridsp) * 2.25;
+  // Calculate radius of influence
+  float ROI = 1.5;
+  float xRadius = (iGridsp * iGridsp) * (ROI*ROI);
+  float yRadius = (jGridsp * jGridsp) * (ROI*ROI);
+  float zRadius = (kGridsp * kGridsp) * (ROI*ROI);
   float RSquare = xRadius + yRadius + zRadius;
+  int maxIplus = (int)(RSquare/iGridsp);
+  int maxJplus = (int)(RSquare/jGridsp);
+  int maxKplus = (int)(RSquare/kGridsp);
+  
+  // Initialize weights
+  for (int k = 0; k < int(kDim); k++) { 
+	  for (int j = 0; j < int(jDim); j++) {
+		  abort = returnExitNow();
+		  if(abort){
+			  //Message::toScreen("ExitNow in Cressmand Interpolation in CappiGrid");
+			  return;
+		  }
+		  for (int i = 0; i < int(iDim); i++) {
+			  refValues[i][j][k].sumRef = 0;
+			  refValues[i][j][k].weight = 0;
+			  velValues[i][j][k].sumVel = 0;
+			  velValues[i][j][k].sumSw = 0;
+			  velValues[i][j][k].weight = 0;
+		  }
+	  }
+  }
+  
+  // Find good values
+  for (int n = 0; n < radarData->getNumRays(); n++) {
+	  Ray* currentRay = radarData->getRay(n);
+	  float theta = deg2rad * fmodf((450. - currentRay->getAzimuth()),360.);
+	  float phi = deg2rad * (90. - (currentRay->getElevation()));
+	  
+	  if ((currentRay->getRef_numgates() > 0) and 
+		  (gridReflectivity)) {
+		  
+		  float* refData = currentRay->getRefData();
+		  for (int g = 0; g <= (currentRay->getRef_numgates()-1); g++) {
+			  if (refData[g] == -999.) { continue; }
+			  float range = float(currentRay->getFirst_ref_gate() +
+								  (g * currentRay->getRef_gatesp()))/1000.;
+			  
+			  float x = range*sin(phi)*cos(theta);
+			  if ((x < (xmin - iGridsp)) or x > (xmax + iGridsp)) { continue; }
+			  float y = range*sin(phi)*sin(theta);
+			  if ((y < (ymin - jGridsp)) or y > (ymax + jGridsp)) { continue; }
+			  float z = radarData->radarBeamHeight(range,
+												   currentRay->getElevation() );
+			  if ((z < (zmin - kGridsp)) or z > (zmax + kGridsp)) { continue; }
 
+			  // Looks like a good point, find its closest Cartesian index 
+			  float i = (x - xmin)/iGridsp;
+			  float j = (y - ymin)/jGridsp;
+			  float k = (z - zmin)/kGridsp;
+			  for (int kplus = -maxKplus; kplus <= maxKplus; kplus++) { 
+				  for (int jplus = -maxJplus; jplus <= maxJplus; jplus++) {
+					  for (int iplus = -maxIplus; iplus <= maxIplus; iplus++) {
+						  int iIndex = (int)(i+iplus);
+						  int jIndex = (int)(j+jplus);
+						  int kIndex = (int)(k+kplus);
+						  if ((iIndex < 0) or (iIndex > (int)iDim)) { continue; }
+						  if ((jIndex < 0) or (jIndex > (int)jDim)) { continue; }
+						  if ((kIndex < 0) or (kIndex > (int)kDim)) { continue; }
+							  
+						  float dx = (i - (int)(i+iplus))*iGridsp;
+						  float dy = (j - (int)(j+jplus))*jGridsp;
+						  float dz = (k - (int)(k+kplus))*kGridsp;
+						  float rSquare = (dx*dx) + (dy*dy) + (dz*dz);
+						  if (rSquare > RSquare) { continue; }
+						  float weight = (RSquare - rSquare) / (RSquare + rSquare);
+						  refValues[iIndex][jIndex][kIndex].weight += weight;
+						  refValues[iIndex][jIndex][kIndex].sumRef += weight*refData[g];
+					  }
+				  }
+			  }
+
+			  /*
+			   if(r == 888){
+				   QString print("r = "+QString().setNum(r));
+				   print+=" Range= "+QString().setNum(range);
+				   print+=" x= "+QString().setNum(x);
+				   print+=" y= "+QString().setNum(y);
+				   print+=" z= "+QString().setNum(z);
+				   print+=" ref= "+QString().setNum(refData[g]);
+				   Message::toScreen(print);
+			   }
+			   */
+		  }
+		  
+	  }
+	  if ((currentRay->getVel_numgates() > 0) and
+		  (currentRay->getUnambig_range() > 170)) {
+		  float* velData = currentRay->getVelData();
+		  float* swData = currentRay->getSwData();
+		  for (int g = 0; g <= (currentRay->getVel_numgates()-1); g++) {
+			  if (velData[g] == -999.) { continue; }
+			  
+			  float range = float(currentRay->getFirst_vel_gate() +
+								  (g * currentRay->getVel_gatesp()))/1000.;
+			  float x = range*sin(phi)*cos(theta);
+			  if ((x < (xmin - iGridsp)) or x > (xmax + iGridsp)) { continue; }
+			  float y = range*sin(phi)*sin(theta);
+			  if ((y < (ymin - jGridsp)) or y > (ymax + jGridsp)) { continue; }
+			  float z = radarData->radarBeamHeight(range,
+												   currentRay->getElevation() );
+			  if ((z < (zmin - kGridsp)) or z > (zmax + kGridsp)) { continue; }
+			  
+			  // Looks like a good point, find its closest Cartesian index 
+			  float i = (x - xmin)/iGridsp;
+			  float j = (y - ymin)/jGridsp;
+			  float k = (z - zmin)/kGridsp;
+			  for (int kplus = -maxKplus; kplus <= maxKplus; kplus++) { 
+				  for (int jplus = -maxJplus; jplus <= maxJplus; jplus++) {
+					  for (int iplus = -maxIplus; iplus <= maxIplus; iplus++) {
+						  int iIndex = (int)(i+iplus);
+						  int jIndex = (int)(j+jplus);
+						  int kIndex = (int)(k+kplus);
+						  if ((iIndex < 0) or (iIndex > (int)iDim)) { continue; }
+						  if ((jIndex < 0) or (jIndex > (int)jDim)) { continue; }
+						  if ((kIndex < 0) or (kIndex > (int)kDim)) { continue; }
+						  
+						  float dx = (i - (int)(i+iplus))*iGridsp;
+						  float dy = (j - (int)(j+jplus))*jGridsp;
+						  float dz = (k - (int)(k+kplus))*kGridsp;
+						  float rSquare = (dx*dx) + (dy*dy) + (dz*dz);
+						  if (rSquare > RSquare) { continue; }
+						  float weight = (RSquare - rSquare) / (RSquare + rSquare);
+						  velValues[iIndex][jIndex][kIndex].weight += weight;
+						  velValues[iIndex][jIndex][kIndex].sumVel += weight*velData[g];
+						  velValues[iIndex][jIndex][kIndex].sumSw += weight*swData[g];
+					  }
+				  }
+			  }
+
+			  /*
+			   if(v == 888){
+				   QString print("v = "+QString().setNum(v));
+				   print+=" Range= "+QString().setNum(range);
+				   print+=" x= "+QString().setNum(x);
+				   print+=" y= "+QString().setNum(y);
+				   print+=" z= "+QString().setNum(z);
+				   print+=" vel= "+QString().setNum(velData[g]);
+				   Message::toScreen(print);
+			   }
+			   */
+		  }
+		  velData = NULL;
+		  swData = NULL;
+		  delete velData;
+		  delete swData;
+	  }
+	  currentRay = NULL;
+	  delete currentRay;
+	  abort = returnExitNow();
+	  if(abort){
+		  //Message::toScreen("exitNow in GridRadarData in CappiGrid");
+		  return;
+	  }
+  }
+  
+  //Message::toScreen("# of Reflectivity gates used in CAPPI = "+QString().setNum(r));
+  //Message::toScreen("# of Velocity gates used in CAPPI = "+QString().setNum(v));
+  
+  /* Try sorting the data first
+  for (int i=(maxVelIndex+1)/2-1; i>= 0; i--)
+	  sift_down(velValues,i,maxVelIndex);
+  for (int i=maxVelIndex; i> 0; i--) {
+	  float tempZ = velValues[i].
+	  sift_down(velValues,i,maxVelIndex);
+  } */
+  
+  
   for (int k = 0; k < int(kDim); k++) { 
     for (int j = 0; j < int(jDim); j++) {
       abort = returnExitNow();
@@ -294,58 +370,144 @@ void CappiGrid::CressmanInterpolation()
       }
       for (int i = 0; i < int(iDim); i++) {
 
-	dataGrid[0][i][j][k] = -999.;
-	dataGrid[1][i][j][k] = -999.;
-	dataGrid[2][i][j][k] = -999.;
-
-	float sumRef = 0;
-	float sumVel = 0;
-	float sumSw = 0;
-	float refWeight = 0;
-	float velWeight = 0;
-
-	for (long n = 0; n <= maxRefIndex; n++) {
-	  float dx = refValues[n].x - (xmin + i*iGridsp);
-	  float dy = refValues[n].y - (ymin + j*jGridsp);
-	  float dz = refValues[n].z - (zmin + k*kGridsp);
-	  float rSquare = (dx*dx) + (dy*dy) + (dz*dz);
-	  float RSquareLinear = RSquare* refValues[n].rg * refValues[n].rg / 30276.0;
-	  
-	  if (rSquare > RSquareLinear) { continue; }
-	  
-	  float weight = (RSquareLinear - rSquare) / (RSquareLinear + rSquare);
-	  
-	  refWeight += weight;
-	  sumRef += weight*refValues[n].refValue;
-	  
-	}
+		  dataGrid[0][i][j][k] = -999.;
+		  dataGrid[1][i][j][k] = -999.;
+		  dataGrid[2][i][j][k] = -999.;
 	
-	for (long n = 0; n <= maxVelIndex; n++) {
-	  float dx = velValues[n].x - (xmin + i*iGridsp);
-	  float dy = velValues[n].y - (ymin + j*jGridsp);
-	  float dz = velValues[n].z - (zmin + k*kGridsp);
-	  float rSquare = (dx*dx) + (dy*dy) + (dz*dz);
-	  float RSquareLinear =  RSquare* velValues[n].rg * velValues[n].rg / 30276.0;
-	  if (rSquare > RSquareLinear) { continue; }
-	  
-	  float weight = (RSquareLinear - rSquare) / (RSquareLinear + rSquare);
-
-	  velWeight += weight;
-	  sumVel += weight*velValues[n].velValue;
-	  sumSw += weight*velValues[n].swValue;
-
-	}
-	
-	if (refWeight > 0) {
-	  dataGrid[0][i][j][k] = sumRef/refWeight;
-	}
-	if (velWeight > 0) {
-	  dataGrid[1][i][j][k] = sumVel/velWeight;
-	  dataGrid[2][i][j][k] = sumSw/velWeight;
-	}
+		  if (refValues[i][j][k].weight > 0) {
+			  dataGrid[0][i][j][k] = refValues[i][j][k].sumRef/refValues[i][j][k].weight;
+		  }
+		  if (velValues[i][j][k].weight > 0) {
+			  dataGrid[1][i][j][k] = velValues[i][j][k].sumVel/velValues[i][j][k].weight;
+			  dataGrid[2][i][j][k] = velValues[i][j][k].sumSw/velValues[i][j][k].weight;
+		  }
       }
     }
   }
+}
+/*
+void CappiGrid::ClosestPointInterpolation()
+{
+	
+	// Closest Point Interpolation
+	
+	// Calculate radius of influence 
+	float xRadius = (iGridsp * iGridsp);
+	float yRadius = (jGridsp * jGridsp);
+	float zRadius = (kGridsp * kGridsp);
+	float gridsp = xRadius + yRadius + zRadius;	
+	
+	// Create local abort variable
+	bool abort = returnExitNow();
+	
+	for (int k = 0; k < int(kDim); k++) { 
+		for (int j = 0; j < int(jDim); j++) {
+			abort = returnExitNow();
+			if(abort){
+				//Message::toScreen("ExitNow in Cressmand Interpolation in CappiGrid");
+				return;
+			}
+			for (int i = 0; i < int(iDim); i++) {
+				
+				dataGrid[0][i][j][k] = -999.;
+				dataGrid[1][i][j][k] = -999.;
+				dataGrid[2][i][j][k] = -999.;
+				
+				float minR = sqrt(iDim*iGridsp*iDim*iGridsp + jDim*jGridsp*jDim*jGridsp);
+
+				for (long n = 0; n <= maxRefIndex; n++) {
+					float dx = refValues[n].x - (xmin + i*iGridsp);
+					float dy = refValues[n].y - (ymin + j*jGridsp);
+					float dz = refValues[n].z - (zmin + k*kGridsp);
+					float r = sqrt((dx*dx) + (dy*dy) + (dz*dz));
+					if (r > gridsp) { continue; }
+					if (r < minR) {
+						minR = r;
+						dataGrid[0][i][j][k] = refValues[n].refValue;
+					}
+					if (minR < gridsp/10) {
+						// Close enough
+						break;
+					}
+				}
+				
+				minR = sqrt(iDim*iGridsp*iDim*iGridsp + jDim*jGridsp*jDim*jGridsp);
+				for (long n = 0; n <= maxVelIndex; n++) {
+					float dx = velValues[n].x - (xmin + i*iGridsp);
+					float dy = velValues[n].y - (ymin + j*jGridsp);
+					float dz = velValues[n].z - (zmin + k*kGridsp);
+					float r = sqrt((dx*dx) + (dy*dy) + (dz*dz));
+					if (r > gridsp) { continue; }
+					if (r < minR) {
+						minR = r;
+						dataGrid[1][i][j][k] = velValues[n].velValue;
+						dataGrid[2][i][j][k] = velValues[n].swValue;
+					}
+					if (minR < gridsp/3) {
+						// Close enough
+						break;
+					}
+					
+				}
+			}
+		}
+	}
+}
+
+void CappiGrid::BilinearInterpolation(RadarData *radarData)
+{
+	
+	// Bilinear Interpolation (see Mohr and Vaughn, 1979 for details)
+
+	// Create local abort variable
+	bool abort = returnExitNow();
+
+	for (int k = 0; k < int(kDim); k++) { 
+		for (int j = 0; j < int(jDim); j++) {
+			abort = returnExitNow();
+			if(abort){
+				//Message::toScreen("ExitNow in Cressmand Interpolation in CappiGrid");
+				return;
+			}
+			for (int i = 0; i < int(iDim); i++) {
+				
+				dataGrid[0][i][j][k] = -999.;
+				dataGrid[1][i][j][k] = -999.;
+				dataGrid[2][i][j][k] = -999.;
+				
+				float x = xmin + i*iGridsp;
+				float y = ymin + j*jGridsp;
+				float z = zmin + k*kGridsp;
+				float gRange = sqrt(x*x + y*y +z*z);
+				float gTheta = fixAngle(atan2(y,x))*rad2deg;
+				float gPhi = fixAngle(atan2(sqrt(x*x + y*y),z))*rad2deg;
+				float rPhi1, rPhi2;
+				for (int n = 0; n < radarData->getNumSweeps()-1; n++) {
+					Sweep* currentSweep = radarData->getSweep(n);
+					Sweep* nextSweep = radarData->getSweep(n+1);
+					rPhi1 = deg2rad * (90. - (currentSweep->getElevation()));
+					rPhi2 = deg2rad * (90. - (nextSweep->getElevation()));
+					if ((rPhi1 < gPhi) and (rPhi2 >= gPhi)) { break; }
+				}
+				
+				for (int n = 0; n < radarData->getNumRays(); n++) {
+					Ray* currentRay = radarData->getRay(n);
+					float rTheta = deg2rad * fmodf((450. - currentRay->getAzimuth()),360.);
+					float rPhi = deg2rad * (90. - (currentRay->getElevation()));
+					
+					
+					if ((currentRay->getRef_numgates() > 0) and 
+						(gridReflectivity)) {
+						
+						float* refData = currentRay->getRefData();
+						for (int g = 0; g <= (currentRay->getRef_numgates()-1); g++) {
+							if (refData[g] == -999.) { continue; }
+							float range = float(currentRay->getFirst_ref_gate() +
+												(g * currentRay->getRef_gatesp()))/1000.;
+							
+			}
+		}
+	}
 }
 
 void CappiGrid::BarnesInterpolation()
@@ -493,6 +655,8 @@ void CappiGrid::BarnesInterpolation()
   }
   Message::toScreen("Leaving Barnes");
 }
+
+*/
 
 float CappiGrid::trilinear(const float &x, const float &y,
 			      const float &z, const int &param)

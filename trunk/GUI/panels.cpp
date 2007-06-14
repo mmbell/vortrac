@@ -590,6 +590,10 @@ CappiPanel::CappiPanel()
 			      QString("cressman"));
   //interpolationMethod->insert(QString("Barnes Interpolation"),
   //			      QString("barnes"));
+  interpolationMethod->insert(QString("Closest Point Interpolation"),
+							  QString("closestpoint"));
+  interpolationMethod->insert(QString("Bilinear Interpolation"),
+							  QString("bilinear"));
   interpolationMethod->insert(QString("Select Interpolation Method"), 
 			      QString(""));
   // add some more of these interpolation method options as nessecary

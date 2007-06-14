@@ -24,8 +24,10 @@ class CappiGrid : public GriddedData
   ~CappiGrid();
   void gridRadarData(RadarData *radarData, QDomElement cappiConfig,
 		float *vortexLat, float *vortexLon);
-  void BarnesInterpolation();
-  void CressmanInterpolation();
+  //void BarnesInterpolation();
+  void CressmanInterpolation(RadarData *radarData);
+  //void ClosestPointInterpolation();
+  //void BilinearInterpolation(RadarData *radarData);
   float trilinear(const float &x, const float &y,
 		 const float &z, const int &param);
   void writeAsi();
@@ -41,29 +43,19 @@ class CappiGrid : public GriddedData
   
   class goodRef {
    public:
-    float refValue;
-    float x;
-    float y;
-    float z;
-	float rg;
-	float az;
-	float el;
+    float sumRef;
+    float weight;
   };
   class goodVel {
    public:
-    float velValue;
-    float swValue;
-    float x;
-    float y;
-    float z;
-	float rg;
-	float az;
-	float el;
+    float sumVel;
+    float sumSw;
+    float weight;
   };
 
   bool gridReflectivity;
-  goodRef refValues[200000];
-  goodVel velValues[1000000];
+  goodRef refValues[256][256][20];
+  goodVel velValues[256][256][20];
   long maxRefIndex;
   long maxVelIndex;
   

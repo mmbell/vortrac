@@ -308,7 +308,7 @@ void SimplexThread::run()
 		if (vtdCoeffs[0].getParameter() == "VTC0") {
 		  VT[v] = vtdCoeffs[0].getValue();
 		} else {
-		  emit log(Message("Error retrieving VTC0 in simplex!"));
+		  emit log(Message("Error retrieving VTC0 in simplex"));
 		} 
 	      } else {
 		VT[v] = -999;
@@ -359,7 +359,7 @@ void SimplexThread::run()
 	      
 	      // Check iterations
 	      if (numIterations > maxIterations) {
-		emit log(Message("Maximum iterations exceeded in Simplex!"));
+		emit log(Message("Maximum iterations exceeded in Simplex"));
 		mutex.unlock();
 		break;
 	      }
