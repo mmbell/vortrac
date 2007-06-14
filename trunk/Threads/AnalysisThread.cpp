@@ -745,7 +745,7 @@ void AnalysisThread::run()
 		  mutex.lock();
 		  // Wait until new data is available
 		  waitForData.wait(&mutex);
-		  Message::toScreen("AnalysisThread: Received the Signal To Move Ahead with New Data");
+		  //Message::toScreen("AnalysisThread: Received the Signal To Move Ahead with New Data");
 		  mutex.unlock();
 		}
 		

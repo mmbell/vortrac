@@ -292,13 +292,20 @@ void SimplexThread::run()
 		  vtd->setHVVP(0);
 		}
 	      }
-	      int numData = gridData->getCylindricalAzimuthLength(radius, 
-								  height);
+	      int numData = gridData->getCylindricalAzimuthLengthTest(radius, 
+								      height);
+	      int testNumData = gridData->getCylindricalAzimuthLength(radius,
+								      height);
+	      int testNumData2 = gridData->getCylindricalAzimuthLengthTest2(radius, height);
+	      if(numData != testNumData)
+		emit log(Message(QString(" Test Failed For radius "+QString().setNum(radius)+" and height "+QString().setNum(height)),0,this->objectName()));
+	      if(numData != testNumData2)
+		emit log(Message(QString(" Test2 Failed For radius "+QString().setNum(radius)+" and height "+QString().setNum(height)),0,this->objectName()));
 	      float* ringData = new float[numData];
 	      float* ringAzimuths = new float[numData];
-	      gridData->getCylindricalAzimuthData(velField, numData, 
+	      gridData->getCylindricalAzimuthDataTest(velField, numData, 
 						  radius, height, ringData);
-	      gridData->getCylindricalAzimuthPosition(numData, radius, 
+	      gridData->getCylindricalAzimuthPositionTest(numData, radius, 
 						      height, ringAzimuths);
 	      
 	      // Call gbvtd
@@ -385,13 +392,19 @@ void SimplexThread::run()
 		      gridData->setCartesianReferencePoint(int(vertex[v][0]),
 							   int(vertex[v][1]),
 							   int(RefK));
-		      int numData = gridData->getCylindricalAzimuthLength(radius, height);
+		      int numData = gridData->getCylindricalAzimuthLengthTest(radius, height);
+		      int testNumData = gridData->getCylindricalAzimuthLength(radius, height);
+		      int testNumData2 = gridData->getCylindricalAzimuthLengthTest2(radius, height);
+		      if(numData != testNumData)
+			emit log(Message(QString(" 2nd Test Failed For radius "+QString().setNum(radius)+" and height "+QString().setNum(height)),0,this->objectName()));
+		      if(numData != testNumData2)
+			emit log(Message(QString(" 2nd Test2 Failed For radius "+QString().setNum(radius)+" and height "+QString().setNum(height)),0,this->objectName()));
 		      float* ringData = new float[numData];
 		      float* ringAzimuths = new float[numData];
-		      gridData->getCylindricalAzimuthData(velField, numData, 
+		      gridData->getCylindricalAzimuthDataTest(velField, numData, 
 							  radius, height, 
 							  ringData);
-		      gridData->getCylindricalAzimuthPosition(numData, radius, 
+		      gridData->getCylindricalAzimuthPositionTest(numData, radius, 
 							      height, 
 							      ringAzimuths);
 		      
@@ -646,11 +659,18 @@ float SimplexThread::simplexTest(float**& vertex,float*& VT,float*& vertexSum,
 	
 	// Get the data
 	gridData->setCartesianReferencePoint(int(vertexTest[0]),int(vertexTest[1]),int(RefK));
-	int numData = gridData->getCylindricalAzimuthLength(radius, height);
+	int numData = gridData->getCylindricalAzimuthLengthTest(radius, height);
+	int testNumData = gridData->getCylindricalAzimuthLength(radius, height);
+	int testNumData2 = gridData->getCylindricalAzimuthLengthTest2(radius, height);
+	
+	if(numData != testNumData)
+	  emit log(Message(QString(" 3rd Test Failed For radius "+QString().setNum(radius)+" and height "+QString().setNum(height)),0,this->objectName()));
+	if(numData != testNumData2)
+	  emit log(Message(QString(" 3rd Test2 Failed For radius "+QString().setNum(radius)+" and height "+QString().setNum(height)),0,this->objectName()));
 	float* ringData = new float[numData];
 	float* ringAzimuths = new float[numData];
-	gridData->getCylindricalAzimuthData(velField, numData, radius, height, ringData);
-	gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);
+	gridData->getCylindricalAzimuthDataTest(velField, numData, radius, height, ringData);
+	gridData->getCylindricalAzimuthPositionTest(numData, radius, height, ringAzimuths);
 	
 	// Call gbvtd
 	if (vtd->analyzeRing(vertexTest[0], vertexTest[1], radius, height, numData, ringData,

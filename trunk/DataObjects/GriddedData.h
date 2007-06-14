@@ -145,6 +145,18 @@ class GriddedData
 				  float height);
   float* getCylindricalHeightPosition(float radius, float height);
 
+  // Cylindrical Coordinates !!!! Testing Only !!!!
+
+  int getCylindricalAzimuthLengthTest(float radius, float height);
+  void getCylindricalAzimuthDataTest(QString& fieldName,int numPoints, float radius,
+				 float height, float* values);
+  void getCylindricalAzimuthPositionTest(int numPoints, float radius, float height, float* positions);
+
+  int getCylindricalAzimuthLengthTest2(float radius, float height);
+  void getCylindricalAzimuthDataTest2(QString& fieldName,int numPoints, float radius,
+				 float height, float* values);
+  void getCylindricalAzimuthPositionTest2(int numPoints, float radius, float height, float* positions);
+
   /* All of these functions go through all points in the grid to check for
      points within the requested radius. Somewhat inefficient. -LM
   */
