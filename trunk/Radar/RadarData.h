@@ -52,7 +52,8 @@ class RadarData
   float radarLat;
   float radarLon;
   QDateTime radarDateTime;
-  QFile radarFile;
+  QString radarFileName;
+  QFile* radarFile;
   Sweep* Sweeps;
   Ray* Rays;
   int numSweeps;

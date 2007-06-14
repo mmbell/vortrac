@@ -90,10 +90,10 @@ RadarData* RadarFactory::getUnprocessedData()
   case ncdclevelII :
     {
       NcdcLevelII *radarData = new NcdcLevelII(radarName, radarLat, 
-											   radarLon, fileName);
+					       radarLon, fileName);
       radarData->setAltitude(radarAlt);
       return radarData;
-      break;
+      //break;
     }
   case ldmlevelII :
   {
@@ -101,7 +101,7 @@ RadarData* RadarFactory::getUnprocessedData()
 											 radarLon, fileName);
       radarData->setAltitude(radarAlt);
       return radarData;
-      break;
+      // break;
   }  
   case model:
     {
@@ -111,7 +111,7 @@ RadarData* RadarFactory::getUnprocessedData()
       radarData->setAltitude(radarAlt);
       radarData->setConfigElement(mainConfig);
       return radarData;
-      break;
+      //break;
     }
   case dorade:
     {
@@ -126,8 +126,8 @@ RadarData* RadarFactory::getUnprocessedData()
   }
 
   // If we get here theres a problem, return a null pointer
-  emit log(Message("Problem with radar data Factory"));
-  return 0;
+  emit log(Message(QString("Problem with radar data Factory"),0,this->objectName(),Yellow));
+  return NULL;
 
 }
 

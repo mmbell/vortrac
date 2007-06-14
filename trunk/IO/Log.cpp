@@ -170,8 +170,7 @@ bool Log::saveLogFile(const QString& fileName)
     QFile::remove(newFileName);
 
   usingFile.lock();
-  if(check.isAbsolute())
-    
+  if(check.isAbsolute()) {
     if(logFile->copy(fileName)) {
       usingFile.unlock();
       return true;
@@ -181,6 +180,7 @@ bool Log::saveLogFile(const QString& fileName)
       usingFile.unlock();
       return false;
     }
+  }
   else {
     if(logFile->copy(workingDirectory.filePath(fileName))) {
       usingFile.unlock();
@@ -240,20 +240,25 @@ void Log::catchLog(const Message& logEntry)
 bool Log::writeToFile()
 {
   if(usingFile.tryLock()) {
-      if(logFile->open(QIODevice::Append)) {
-	while((messagesWaiting.count() > 0)) {
-	  logFile->write(messagesWaiting.first().toAscii());
-	  QString message = messagesWaiting.takeFirst();
+    if(logFile->isOpen()) {
+      logFile->close();
+      //Message::toScreen("LOG: WRITETOFILE: LogFile "+logFile->fileName()+" was open and then I closed it");
 	}
-	logFile->close();
-	if(logFile->isOpen()) {
-	  Message::toScreen("When logging messags logFile did not close but did not fail");
-	  usingFile.unlock();
-	  return false;
-	}
+    //Message::toScreen("LOG: WRITETOFILE: Trying To Open "+logFile->fileName());
+    if(logFile->open(QIODevice::Append)) {
+      while((messagesWaiting.count() > 0)) {
+	logFile->write(messagesWaiting.first().toAscii());
+	QString message = messagesWaiting.takeFirst();
       }
-      usingFile.unlock();
-      return true;
+      logFile->close();
+      if(logFile->isOpen()) {
+	Message::toScreen("When logging messags logFile did not close but did not fail");
+	usingFile.unlock();
+	return false;
+      }
+    }
+    usingFile.unlock();
+    return true;
   }
   return false;
 }

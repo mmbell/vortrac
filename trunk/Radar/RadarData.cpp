@@ -22,7 +22,10 @@ RadarData::RadarData(QString radarname, float lat, float lon, QString filename)
   radarName = radarname;
   radarLat = lat;
   radarLon = lon;
-  radarFile.setFileName(filename);
+  radarFileName = filename;
+  radarFile = new QFile(filename);
+  if(!radarFile->exists())
+    Message::toScreen("Radar File: "+filename+" does NOT exist");
   Sweeps = NULL;
   Rays = NULL;
 }
@@ -31,6 +34,7 @@ RadarData::~RadarData()
 {
   delete [] Sweeps;
   delete [] Rays;
+  delete radarFile;
 }
 
 bool RadarData::readVolume()
@@ -209,18 +213,31 @@ bool RadarData::writeToFile(const QString fileName)
  
 bool RadarData::fileIsReadable()
 {
-  if(radarFile.fileName()==QString())
+  if(!radarFile->exists())
     return false;
-  if(!radarFile.exists())
+  if(radarFile->fileName()==QString())
     return false;
-  if(!radarFile.open(QIODevice::ReadOnly))
+  if(!radarFile->open(QIODevice::ReadOnly))
     return false;
   
-  radarFile.close();
+  radarFile->close();
   return true;  
 }
   
 QString RadarData::getFileName()
 {
-  return radarFile.fileName();
+  return radarFileName;
+  //radarFile->fileName();
+  /*
+  if(radarFile!=NULL){
+    if(radarFile->exists())
+      return radarFile->fileName();
+    else {
+      Message::toScreen("RadarFile Does Not Exist");
+      return QString();
+    }
+  }
+  Message::toScreen("RadarFile is NULL");
+  return QString();
+  */
 }

@@ -7,6 +7,8 @@
         <speed>3.6</speed>
         <lon>-81.6</lon>
         <dir>/scr/science40/mauger/Working/trunk/workingDirs/Irene</dir>
+        <obsdate>1999-10-15</obsdate>
+        <obstime>15:00:00</obstime>
     </vortex>
     <radar>
         <name>KAMX</name>
@@ -107,11 +109,11 @@
     </graphics>
     <qc>
         <wind_method>vad</wind_method>
-        <vel_min>1.0</vel_min>
+        <vel_min>1.5</vel_min>
         <vel_max>100</vel_max>
         <ref_max>65</ref_max>
         <ref_min>-15</ref_min>
-        <sw_threshold>10.0</sw_threshold>
+        <sw_threshold>12</sw_threshold>
         <bbcount>30</bbcount>
         <maxfold>4</maxfold>
         <windspeed>30</windspeed>

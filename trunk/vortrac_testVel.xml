@@ -8,7 +8,7 @@
         <speed>9.6</speed>
         <obsdate>2004-08-13</obsdate>
         <obstime>15:00:00</obstime>
-        <dir>/scr/science40/mauger/Working/trunk/testVel</dir>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs/testVel</dir>
     </vortex>
     <radar>
         <name>KTBW</name>
@@ -23,7 +23,7 @@
         <endtime>23:59:59</endtime>
     </radar>
     <cappi>
-        <dir>/scr/science40/mauger/Working/trunk/testVel/cappi</dir>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs/testVel/cappi</dir>
         <xdim>100</xdim>
         <ydim>100</ydim>
         <zdim>3</zdim>
@@ -35,7 +35,7 @@
         <interpolation>cressman</interpolation>
     </cappi>
     <center>
-        <dir>/scr/science40/mauger/Working/trunk/testVel/center</dir>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs/testVel/center</dir>
         <geometry>GBVTD</geometry>
         <closure>original</closure>
         <reflectivity>DZ</reflectivity>
@@ -56,7 +56,7 @@
         <maxdatagap wavenum="1" >120</maxdatagap>
     </center>
     <choosecenter>
-        <dir>/scr/science40/mauger/Working/trunk/testVel/choosecenter</dir>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs/testVel/choosecenter</dir>
         <filename>nameOfCenterListFile</filename>
         <startdate>2004-01-01</startdate>
         <enddate>2005-01-02</enddate>
@@ -73,9 +73,9 @@
         <stats>99</stats>
     </choosecenter>
     <vtd>
-        <dir>/scr/science40/mauger/Working/trunk/testVel/vtd</dir>
+        <dir>/scr/science40/mauger/Working/trunk/workingDirs/testVel/vtd</dir>
         <geometry>GBVTD</geometry>
-        <closure>original</closure>
+        <closure>original-hvvp</closure>
         <reflectivity>DZ</reflectivity>
         <velocity>VE</velocity>
         <bottomlevel>1</bottomlevel>
@@ -93,7 +93,7 @@
         <hinc>0.1</hinc>
     </hvvp>
     <pressure>
-        <dir>/scr/science40/mauger/Working/trunk/workingDirs</dir>
+        <dir>/scr/science40/mauger/charley/pressure/</dir>
         <format>AWIPS</format>
         <maxobstime>59</maxobstime>
         <maxobsdist>50</maxobsdist>

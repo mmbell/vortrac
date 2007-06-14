@@ -22,7 +22,7 @@ PollThread::PollThread(QObject *parent)
   abort = false;
   runOnce = false;
   processPressureData = true;
-  analysisThread = NULL;
+   analysisThread = NULL;
 
   dataSource= NULL;
   pressureSource= NULL;
@@ -42,6 +42,7 @@ PollThread::~PollThread()
   emit log(Message(QString("INTO Destructor"),0,this->objectName()));
   mutex.lock();
   abort = true;
+  processPressureData = false;
   mutex.unlock();
   //  if(this->isRunning())
   this->abortThread();
@@ -78,14 +79,15 @@ void PollThread::abortThread()
   emit log(Message(QString("Enter ABORT"),0,this->objectName()));
   mutex.lock();
   abort = true;
+  processPressureData = false;
   mutex.unlock();
  
   delete analysisThread;
 
   //this->exit();
   if(this->isRunning()) {
+    //Message::toScreen("PollThread: Wait For Analysis Wake All");
     waitForAnalysis.wakeAll();  // What does this do ? -LM
-    waitForInitialization.wakeAll();
   }
   wait();
 
@@ -106,9 +108,9 @@ void PollThread::abortThread()
 
 void PollThread::analysisDoneProcessing()
 {
-  waitForAnalysis.wakeOne();
+  //Message::toScreen("PollThread: Wait For Analysis Wake One");
   processPressureData = false;
-  waitForInitialization.wakeOne();
+  waitForAnalysis.wakeOne();
 }
 
 void PollThread::run()
@@ -234,7 +236,7 @@ void PollThread::run()
     pressureList = new PressureList(pressureConfig);
     pressureList->open();
     emit log(Message(QString("Number of pressure obs loaded: "+QString().setNum(pressureList->count()))));
-    Message::toScreen("Number of pressure obs loaded "+QString().setNum(pressureList->count()));
+    //Message::toScreen("Number of pressure obs loaded "+QString().setNum(pressureList->count()));
     
     outFileName = workingDirectory.path()+"/";
     outFileName+= vortexName+"_"+radarName+"_"+year+"_pressureList.xml";
@@ -351,8 +353,7 @@ void PollThread::run()
 	  this, SLOT(catchVCP(const int)), Qt::DirectConnection);
   connect(analysisThread, SIGNAL(newCappi(const GriddedData*)),
 	  this, SLOT(catchCappi(const GriddedData*)), Qt::DirectConnection);
-  connect(analysisThread, SIGNAL(finishedInitialization()), this, SLOT(initializationComplete()), 
-	  Qt::DirectConnection);
+  
   analysisThread->setVortexList(vortexList);
   analysisThread->setSimplexList(simplexList);
   analysisThread->setPressureList(pressureList);
@@ -362,86 +363,118 @@ void PollThread::run()
 
 	// Begin polling loop
 	forever {
-	  //Message::toScreen("PollThread: Begining Again");
+	  //Message::toScreen("PollThread: Begining Again In Forever");
+	  
      	  // Check for new data
 	  if (dataSource->hasUnprocessedData()) {
+	    emit log(Message("Data found, starting analysis...", -1, 
+			     this->objectName()));	       
+
 	    mutex.lock();
+	    // Update the data queue with any knowledge of any volumes that
+	    // might have already been processed
+
 	    dataSource->updateDataQueue(vortexList);
 	    analysisThread->setNumVolProcessed(dataSource->getNumProcessed());
 	    
-	    // Fire up the analysis thread to process it
+	    // Select a volume off the queue
 	    RadarData *newVolume = dataSource->getUnprocessedData();
+	    
 	    if(newVolume == NULL) {
 	      delete newVolume;
 	      mutex.unlock();
 	      continue;
 	    }
-	    //emit log(Message(QString(),2,this->objectName()));
-
+	    emit log(Message(QString(),2,this->objectName()));
+	    
 	    // Check to makes sure that the file still exists and is readable
 	    
 	    if(!newVolume->fileIsReadable()) {
 	      emit log(Message(QString("The radar data file "+newVolume->getFileName()+" is not readable"), -1,this->objectName()));
+	      delete newVolume;
 	      mutex.unlock();
 	      continue;
 	    }
+
+	    // Read the volume from file into the RadarData format
+	    newVolume->readVolume();
+	    QString radarFileName(newVolume->getFileName());
+
 	    mutex.unlock();
-	 
+	    // Send the file to AnalysisThread for processing
 	    analysisThread->analyze(newVolume,configData);
-	    
 	    mutex.lock();
-
-	    // Insure that the list are initialized
-	    //Message::toScreen("PollThread waiting for initialization");
-	    waitForInitialization.wait(&mutex);
-	    //Message::toScreen("PollThread receieved go ahead");
-	    
-	    if(newVolume == NULL) {
-	      // Should occur when volume is out of range
-	      // out of range volumes are not processed
-	      mutex.unlock();
-	      continue;
-	    }
-
-	    QString radarFileName = newVolume->getFileName();
 
 	    if (!abort) {
 	      
-	      // Check for new pressure measurements every minute while we are waiting
-	      while (pressureSource->hasUnprocessedData()
-		     && processPressureData) {
-			
-		QList<PressureData>* newObs = pressureSource->getUnprocessedData();
-		for (int i = newObs->size()-1;i>=0; i--) {
-		  bool match = false;
-		  for(int j = 0; (!match)&&(j < pressureList->size()); j++) {
-		    if(pressureList->value(j)==newObs->value(i)) {
-		      match = true;
+	      // Check for new pressure data to process while we are
+	      //    analyzing the current volume
+
+	      if(processPressureData) {
+		//Message::toScreen("Decided to search for pressure data");
+		while (pressureSource->hasUnprocessedData()
+		       && processPressureData) {
+		  
+		  // Create a list of new pressure observations that 
+		  //    have not yet been processed
+		  
+		  QList<PressureData>* newObs = pressureSource->getUnprocessedData();
+		  // Add any new observations to the list of observations
+		  //    which are used to calculate the current pressure
+		  
+		  for (int i = newObs->size()-1;i>=0; i--) {
+		    bool match = false;
+		    for(int j = 0; (!match)&&(j < pressureList->size()); j++) {
+		      if(pressureList->value(j)==newObs->value(i)) {
+			match = true;
+		      }
+		    }
+		    if(!match) {
+		      pressureList->append(newObs->at(i));
 		    }
 		  }
-		  if(!match) {
-		    pressureList->append(newObs->at(i));
-		  }
-		}
-		delete newObs;
-		/*
+		  delete newObs;
+		  
+		  // If processPressureData is still true
+		  // wait for 30 sec and check again
+		  // make sure to exit loop in the analysisThread
+		  // returns with the data.
 
-		// Moving this step to later so we know that analysisThread is done
-		// This should only present a problem if we crash mid run, then the pressure obs
-		// Will not be in the list, but if we crash I think this is the least of our problems -LM
-		
-		// Hopefully, the filename has been set by the analysisThread by this point
-		// have to be careful about synchronization here, this may not be the best way to do this
-		if (!pressureList->getFileName().isNull()) 	
-		pressureList->save();
-		*/
-		
+		  if(processPressureData)
+		    //Message::toScreen("PollThread: Finished Set Of Pressure Data - Waiting For Mutex Or 1 Min");
+		    waitForAnalysis.wait(&mutex, 30000);
+		  //Message::toScreen("PollThread: Finished Waiting After Finished Set");
+		    		  
+		  // Otherwise bail out of the loop because we are done 
+		  // done in analysisThread
+		}
+		if(processPressureData) {
+		  // If this is still true it means that there is no data
+		  // to process but AnalysisThread is still working.
+		  // So we must wait
+		  //Message::toScreen("PollThread: Waiting For Mutex Only");
+		  waitForAnalysis.wait(&mutex);
+		  //Message::toScreen("PollThread: Done Waiting For Mutex Only");
+		  
+		}
 	      }
+	      else {
+		//Message::toScreen("Decided NOT to search for pressure data");
+		// If we don't need to process pressure data
+		// then we will just wait for analysisThread
+		waitForAnalysis.wait(&mutex);
+	      }
+
+	      //Message::toScreen("PollThread: Stopped Stalling In Pressure Loop");
 	      
-	      if(!processPressureData || waitForAnalysis.wait(&mutex))
-		processPressureData = true;
-	           
+	      // Process pressure data next time
+	      processPressureData = true;
+	                   
 	      // Saving the new data entries
+	      // PressureList will not save if no volumes complete analysis
+	      // Moving the pressureList save step further up in processing
+	      // could result in serious synchronization issues.
+	      
 	      if (!pressureList->getFileName().isNull()) 	
 		pressureList->save();
 	      
@@ -452,6 +485,9 @@ void PollThread::run()
 	    }
 	    mutex.unlock();  
 	  }
+
+	  // Check to see if the new volume affects the storm trend
+	  
 	  checkIntensification();
 	  
 	  // Check to see if we should quit
@@ -575,11 +611,7 @@ void PollThread::checkIntensification()
     }
   }
 }
-
-void PollThread::initializationComplete()
-{
-  waitForInitialization.wakeAll();
-}
+			 
 
 void PollThread::checkListConsistency()
 {

@@ -507,20 +507,17 @@ bool Hvvp::findHVVPWinds(bool both)
 		  
 		  // Set realistic limit on magnitude of results.
 		  if((xt < 0)||(fabs(ue)>30.0)||(fabs(ve)>30)) {
-		    //Message::toScreen("First Crappy Fail Option");
 		    //z[m] = h0;               
 		    u[m] = velNull;
 		    v[m] = velNull;
 		    vm_sin[m] = velNull;
 		  } else {
-		    //Message::toScreen("Only Good Option");
 		    //z[m] = hgtStart+hInc*float(m);
 		    u[m] = ue;
 		    v[m] = ve;
 		    vm_sin[m] = vm_s;
 		  }
       } else {
-	// Message::toScreen("Second Crappy Fail Option");
 	//z[m] = h0;
 	u[m] = velNull;
 	v[m] = velNull;
@@ -529,7 +526,6 @@ bool Hvvp::findHVVPWinds(bool both)
       delete [] stand_err;
       delete [] cc;
     } else {
-      //Message::toScreen("Third Crappy Fail Option");
       //z[m] = h0;
       u[m] = velNull;
       v[m] = velNull;
@@ -689,46 +685,25 @@ bool Hvvp::findHVVPWinds(bool both)
       shortMessage +="\t   "+QString().setNum(sqrt(var[i]))+"\n";
     }
   }
-  /*
-    shortMessage += "Smoothing width is 3 levels, so at least smooth somewhat";
-    shortMessage += " beyond 3 levels\n";
-    if(count > 4) {
-    smoothHvvp(u);
-    smoothHvvp(v);
-    smoothHvvpVmSin(vm_sin, var);
-    
-    shortMessage += "Vm_Sin value closest to 2 km altitude is ";
-    shortMessage += QString().setNum(vm_sin[ifoundit])+" +-";
-    shortMessage += QString().setNum(sqrt(var[ifoundit]))+" m/s at ";
-    shortMessage += QString().setNum(z[ifoundit])+" km altitude.\n\n";
-    shortMessage += "Z (km)  Ue (m/s)  Ve (m/s)  Vm_Sin (m/s)";
-    shortMessage += "   Stderr_Vm_Sin (m/s)\n\n";
-    for(int i = 0; i < levels; i++) {
-    if((u[i]!=velNull) && (v[i]!=velNull)) {
-    shortMessage +=QString().setNum(z[i])+"\t   "+QString().setNum(u[i]);
-    shortMessage +="\t   "+QString().setNum(v[i])+"\t   "+QString().setNum(vm_sin[i]);
-    shortMessage +="\t   "+QString().setNum(sqrt(var[i]))+"\n";
-    }
-    } 
-    }
-  */
   
   if(ifoundit>0) {
     if(printOutput) {
-      emit log(Message(shortMessage,0,this->objectName(),Green));
+      emit log(Message(shortMessage,0,this->objectName()));
       //Message::toScreen(message);
     }
     emit log(Message(QString(),0,this->objectName(),Green)); 
+    return true;
   }
   else {
     if(printOutput) {
       message = "No Hvvp Results Found";
-      emit log(Message(message));
+      emit log(Message(message,0,this->objectName()));
       //Message::toScreen(message);
     }
     emit log(Message(QString("Failed to Find HVVP Output"),0,this->objectName(),Yellow)); 
     return false;
   }
+  return false;
 }
 
 

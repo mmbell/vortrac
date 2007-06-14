@@ -25,7 +25,8 @@ class ChooseCenter : public QObject
  public:
      ChooseCenter(Configuration* newConfig = new Configuration(), 
 		  const SimplexList* newList = new SimplexList(),
-		  VortexData* vortexPtr = new VortexData());
+		  VortexData* vortexPtr = new VortexData(),
+		  QObject *parent = 0);
     ~ChooseCenter();
   
     void setConfig(Configuration* newConfig);

@@ -43,8 +43,7 @@ class PollThread : public QThread
 	void abortThread();
 	void setOnlyRunOnce(const bool newRunOnce = true);
 	void setContinuePreviousRun(const bool &decision);
-	void initializationComplete();
-
+       
   signals:
 	void log(const Message& message);
 	void newVCP(const int);
@@ -60,8 +59,7 @@ class PollThread : public QThread
 	bool runOnce;
 	bool processPressureData;
 	QWaitCondition waitForAnalysis;
-	QWaitCondition waitForInitialization;
-	bool abort;
+       	bool abort;
 	bool continuePreviousRun;
 	RadarFactory *dataSource;
 	PressureFactory *pressureSource;
@@ -75,7 +73,7 @@ class PollThread : public QThread
 	Configuration *simplexConfig;
 	Configuration *pressureConfig;
 	Configuration *dropSondeConfig;
-
+	
 	void checkIntensification();
 	void checkListConsistency();
 	

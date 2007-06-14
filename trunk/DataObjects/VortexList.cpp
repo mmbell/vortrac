@@ -37,10 +37,9 @@ VortexList::VortexList(Configuration* newConfig)
 VortexList::~VortexList()
 {
   configFileNames->clear();
+  vortexDataConfigs->clear();
+  QList<VortexData>::clear();
   delete configFileNames;
-  for(int i = vortexDataConfigs->count()-1; i >=0; i--) {
-    delete vortexDataConfigs->value(i);
-  }
   delete vortexDataConfigs;
   delete config;
 }

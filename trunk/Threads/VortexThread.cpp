@@ -62,9 +62,6 @@ VortexThread::~VortexThread()
   vortexData = NULL;
   pressureList = NULL;
   configData = NULL;
-  // dataGaps = NULL; - This will not release all the memory
-  // vtd = NULL;      // Don't need these two completely handled in 
-  // vtdCoeffs = NULL;// loop
   
   delete gridData;
   delete vortexData;
@@ -253,12 +250,20 @@ void VortexThread::run()
 		  return;
 		mutex.lock();
 
-		// Get the central pressure uncertainty
-		//calcPressureUncertainty(0, QString("CenterStdPresErr"));
-		//calcPressureUncertainty(1, QString("FlatPresErr"));
-		//calcPressureUncertainty(1.5, QString("FlatPresErr"));
-		calcPressureUncertainty(1,QString());
-
+		// Get the central pressure uncertainty 
+		/*
+		 * For Gathering Stats
+		 * calcPressureUncertainty(0, QString("CenterStdPresErr"));
+		 * calcPressureUncertainty(1, QString("FlatPresErr"));
+		 * calcPressureUncertainty(1.5, QString("FlatPresErr"));
+		 */
+		calcPressureUncertainty(1,QString());  
+		//This is the one we are using?
+		
+		delete [] pressureDeficit;
+		float *temp = dataGaps;
+		dataGaps = NULL;
+		delete [] temp;
 		
 		if(!foundWinds)
 		{
@@ -645,6 +650,7 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
     errorVertex->setLon(0,newLatLon[1]);
     errorVertex->setHeight(0,height);
     gridData->setAbsoluteReferencePoint(newLatLon[0], newLatLon[1], height);
+    delete  [] newLatLon;
 
     if ((gridData->getRefPointI() < 0) || 
 	(gridData->getRefPointJ() < 0) ||
@@ -692,6 +698,7 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
       delete[] ringData;
       delete[] ringAzimuths;
     }
+
     // Now calculate central pressure for each of these
     float* errorPressureDeficit = new float[(int)lastRing+1];
     getPressureDeficit(errorVertex,errorPressureDeficit, height);
@@ -739,12 +746,14 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
 	errorVertices->setIndividualProductType(errorVertices->count()-1,
 						obsStamp);
 	//Message::toScreen("Adding uncertainty calib pressure "+QString().setNum(errorVertex->getPressure()));
-
+	
 	if(nameAddition!=QString())
 	  errorVertices->save();
       }
     }
+    delete [] errorPressureDeficit;
   }
+  
   delete [] vtdCoeffs;
   delete vtd;
 
@@ -884,7 +893,7 @@ bool VortexThread::calcHVVP(bool printOutput)
 					 &vortexLat, &vortexLon);
   float rt = sqrt(distance[0]*distance[0]+distance[1]*distance[1]);
   float cca = atan2(distance[0], distance[1])*180/acos(-1);
-  delete[] distance;
+  delete [] distance;
   
   if(printOutput) {
     //Message::toScreen("Vortex (Lat,Lon): ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")");
@@ -917,6 +926,7 @@ bool VortexThread::calcHVVP(bool printOutput)
     finalHVVP = QString("Hvvp finds mean wind "+QString().setNum(hvvpResult)+" +/- "+QString().setNum(fabs(hvvpUncertainty)));
   
   emit log(Message(finalHVVP, 1,this->objectName()));
+  delete envWindFinder;
   
   return hasHVVP;
 }

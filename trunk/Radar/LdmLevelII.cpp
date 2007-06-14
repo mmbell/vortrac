@@ -29,11 +29,11 @@ bool LdmLevelII::readVolume()
   }
 
   // Open the QFile object from the header
-  if(!radarFile.open(QIODevice::ReadOnly)) {
+  if(!radarFile->open(QIODevice::ReadOnly)) {
     Message::report("Can't open radar volume");
   }
 
-  QDataStream dataIn(&radarFile);
+  QDataStream dataIn(radarFile);
   
   // Get volume header
   dataIn.readRawData((char *)volHeader, sizeof(nexrad_vol_scan_title));
@@ -161,7 +161,7 @@ bool LdmLevelII::readVolume()
   Sweeps[numSweeps-1].setLastRay(numRays-1);
 
   // Should have all the data stored into memory now
-  radarFile.close();
+  radarFile->close();
 
   isDealiased(false);
 

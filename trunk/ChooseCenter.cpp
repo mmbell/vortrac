@@ -14,8 +14,9 @@
 #include <QDomElement>
 
 ChooseCenter::ChooseCenter(Configuration* newConfig, 
-			   const SimplexList* newList, VortexData* vortexPtr)
-  :QObject()
+			   const SimplexList* newList, VortexData* vortexPtr,
+			   QObject *parent)
+  :QObject(parent)
 {
   velNull = -999.;
   config = newConfig;
