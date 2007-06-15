@@ -147,11 +147,6 @@ class GriddedData
 
   // Cylindrical Coordinates !!!! Testing Only !!!!
 
-  int getCylindricalAzimuthLengthTest(float radius, float height);
-  void getCylindricalAzimuthDataTest(QString& fieldName,int numPoints, float radius,
-				 float height, float* values);
-  void getCylindricalAzimuthPositionTest(int numPoints, float radius, float height, float* positions);
-
   int getCylindricalAzimuthLengthTest2(float radius, float height);
   void getCylindricalAzimuthDataTest2(QString& fieldName,int numPoints, float radius,
 				 float height, float* values);

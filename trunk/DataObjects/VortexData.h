@@ -95,9 +95,9 @@ class VortexData
   void setNumRadii(const int& num);
   void setNumWaveNum(const int& num);
 
-  int getMaxLevels() const { return maxLevels; }
-  int getMaxRadii() const { return maxRadii; }
-  int getMaxWaveNum() const {return maxWaveNum; }
+  static int getMaxLevels() { return maxLevels; }
+  static int getMaxRadii() { return maxRadii; }
+  static int getMaxWaveNum() {return maxWaveNum; }
 
  private:
   static const int maxLevels = 15;

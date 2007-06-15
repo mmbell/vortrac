@@ -11,6 +11,8 @@
 
 #include "panels.h"
 #include "Message.h"
+#include "DataObjects/SimplexData.h"
+#include "DataObjects/VortexData.h"
 #include <math.h>
 
 #include <QtGui>
@@ -187,19 +189,20 @@ bool VortexPanel::updateConfig()
       if(getFromElement("name")!=vortexName->text()) {
 	emit changeDom(element, "name", vortexName->text());
       }
-      if(getFromElement("lat").toDouble()!=latBox->value()) {
+      if(fabs(getFromElement("lat").toDouble()-latBox->value())>=0.01) {
 	emit changeDom(element, QString("lat"), 
 		       QString().setNum(latBox->value()));
       }
-      if(getFromElement("lon").toDouble()!=longBox->value()) {
+      if(fabs(getFromElement("lon").toDouble()-longBox->value())>=0.01) {
 	emit changeDom(element, QString("lon"), 
 		       QString().setNum(longBox->value()));
       }
-      if(getFromElement("direction").toDouble()!=directionBox->value()) {
+      if(fabs(getFromElement("direction").toDouble()-directionBox->value())
+	 >=0.01) {
 	emit changeDom(element, QString("direction"), 
 		       QString().setNum(directionBox->value()));
       }
-      if(getFromElement("speed").toDouble()!=speedBox->value()) {
+      if(fabs(getFromElement("speed").toDouble()-speedBox->value())>=0.01) {
 	emit changeDom(element, QString("speed"), 
 		       QString().setNum(speedBox->value()));
       }
@@ -431,8 +434,10 @@ bool RadarPanel::updateConfig()
   if (checkPanelChanged())
     {
       if(getFromElement("name")!= radarName->currentText().left(4)) {
-	emit changeDom(element, "name", 
-		       radarName->currentText().left(4));
+	if(radarName->currentText().left(4)!=QString("Plea")) {
+	  emit changeDom(element, "name", 
+			 radarName->currentText().left(4));
+	}
       }
       if(getFromElement("lat").toDouble() !=radarLatBox->value()) {
 	emit changeDom(element, QString("lat"), 
@@ -502,11 +507,20 @@ bool RadarPanel::checkValues()
 {
   // Returning False means that one of the values has not been set correctly
   // Returning True means that all the values check out...
+
+  QString temp(radarName->currentText().left(4));
+  int index = radarName->findText(temp, Qt::MatchStartsWith);
+  if (index <= 0) {
+    emit log(Message(QString(),0,this->objectName(),Red,
+		     QString(tr("Please select a radar"))));
+    return false;
+  }
+      
   
-  QString temp(radarFormat->currentText());
+  temp = QString(radarFormat->currentText());
   if(radarFormatOptions->value(temp)==QString("")) {
     emit log(Message(QString(), 0, this->objectName(), Red, 
-	    QString(tr("Please select a radar type in the configuration"))));
+	    QString(tr("Please select a radar file type"))));
     return false;
   }
   
@@ -530,28 +544,37 @@ CappiPanel::CappiPanel()
   QLabel *zdim = new QLabel(tr("Grid Dimension in Z Direction"));
   xDimBox = new QDoubleSpinBox;
   xDimBox->setDecimals(1);
-  xDimBox->setRange(0,1000000);
+  xDimBox->setRange(0,256);
+  xDimBox->setValue(150);
   yDimBox = new QDoubleSpinBox;
   yDimBox->setDecimals(1);
-  yDimBox->setRange(0,1000000);
+  yDimBox->setRange(0,256);
+  yDimBox->setValue(150);
   zDimBox = new QDoubleSpinBox;
   zDimBox->setDecimals(1);
-  zDimBox->setRange(0,1000000);
+  zDimBox->setRange(0,20);
+  zDimBox->setValue(3);
 
   QLabel *xGrid = new QLabel(tr("X Grid Spacing (km)"));
   xGridBox = new QDoubleSpinBox;
   xGridBox->setDecimals(1);
-  xGridBox->setRange(0,10000);
+  //xGridBox->setRange(0,10000);
+  xGridBox->setRange(1,1);
+  xGridBox->setValue(1);
 
   QLabel *yGrid = new QLabel(tr("Y Grid Spacing (km)"));
   yGridBox = new QDoubleSpinBox;
   yGridBox->setDecimals(1);
-  yGridBox->setRange(0,10000);
+  //yGridBox->setRange(0,10000);
+  yGridBox->setRange(1,1);
+  yGridBox->setValue(1);
 
   QLabel *zGrid = new QLabel(tr("Z Grid Spacing (km)"));
   zGridBox = new QDoubleSpinBox;
   zGridBox->setDecimals(1);
-  zGridBox->setRange(0,10000);
+  //zGridBox->setRange(0,10000);
+  zGridBox->setRange(1,1);
+  zGridBox->setValue(1);
 
   QGridLayout *gridLayout = new QGridLayout;
   gridLayout->addWidget(xdim, 0, 0);
@@ -718,35 +741,35 @@ bool CappiPanel::updateConfig()
 	emit changeDom(element, QString("dir"), dir->text());
 	emit workingDirectoryChanged();
       }
-      if(getFromElement("xdim").toDouble() !=xDimBox->value()) {
+      if(fabs(getFromElement("xdim").toDouble()-xDimBox->value())>=0.1) {
 	emit changeDom(element, QString("xdim"), 
 		       QString().setNum(xDimBox->value()));
       }
-      if(getFromElement("ydim").toDouble() !=yDimBox->value()) {
+      if(fabs(getFromElement("ydim").toDouble()-yDimBox->value())>=0.1) {
 	emit changeDom(element, QString("ydim"), 
 		       QString().setNum(yDimBox->value()));
       }
-      if(getFromElement("zdim").toDouble() !=zDimBox->value()) {
-    emit changeDom(element, QString("zdim"), 
-		   QString().setNum(zDimBox->value()));
+      if(fabs(getFromElement("zdim").toDouble()-zDimBox->value())>=0.1) {
+	emit changeDom(element, QString("zdim"), 
+		       QString().setNum(zDimBox->value()));
       }
-      if(getFromElement("xgridsp").toDouble() !=xGridBox->value()) {
+      if(fabs(getFromElement("xgridsp").toDouble()-xGridBox->value())>=0.1) {
 	emit changeDom(element, QString("xgridsp"), 
 		       QString().setNum(xGridBox->value()));
       }
-      if(getFromElement("ygridsp").toDouble() !=yGridBox->value()) {
+      if(fabs(getFromElement("ygridsp").toDouble()-yGridBox->value())>=0.1) {
 	emit changeDom(element, QString("ygridsp"), 
 		       QString().setNum(yGridBox->value()));
       }
-      if(getFromElement("zgridsp").toDouble() !=zGridBox->value()) {
+      if(fabs(getFromElement("zgridsp").toDouble()-zGridBox->value())>=0.1) {
 	emit changeDom(element, QString("zgridsp"), 
 		       QString().setNum(zGridBox->value()));
       }
-      if(getFromElement("adv_u").toDouble() !=advUWindBox->value()) {
+      if(fabs(getFromElement("adv_u").toDouble()-advUWindBox->value())>=0.1) {
 	emit changeDom(element, QString("adv_u"), 
 		       QString().setNum(advUWindBox->value()));
       }
-      if(getFromElement("adv_v").toDouble() !=advVWindBox->value()) {
+      if(fabs(getFromElement("adv_v").toDouble()-advVWindBox->value())>=0.1) {
 	emit changeDom(element, QString("adv_v"), 
 		       QString().setNum(advVWindBox->value()));
       }
@@ -945,7 +968,7 @@ CenterPanel::CenterPanel()
   tLBox = new QDoubleSpinBox;
   tLBox->setRange(2,20);
   tLBox->setDecimals(2);
-  tLBox->setValue(4);
+  tLBox->setValue(3);
   QLabel *innerRad = new QLabel(tr("Inner Radius (km)"));
   iRBox = new QDoubleSpinBox;
   iRBox->setDecimals(2);
@@ -1015,6 +1038,7 @@ CenterPanel::CenterPanel()
 
   QLabel *convergence = new QLabel(tr("Convergence Requirements"));
   convergenceBox = new QDoubleSpinBox;
+  // could this be an SpinBox ?
 
   QLabel *maxIterations = new QLabel(tr("Maximum Iterations for Process"));
   iterations = new QSpinBox;
@@ -1025,6 +1049,8 @@ CenterPanel::CenterPanel()
 
   QLabel *numPoints = new QLabel(tr("Number of Center Points"));
   numPointsBox = new QSpinBox;
+  numPointsBox->setRange(1,25);
+  numPointsBox->setValue(16);
 
   QGridLayout *master = new QGridLayout;
   master->addWidget(ringWidth, 0, 0);
@@ -1293,12 +1319,11 @@ bool CenterPanel::updateConfig()
       else{
 
       }
-      if(getFromElement("ringwidth").toDouble() !=ringBox->value()) {
+      if(fabs(getFromElement("ringwidth").toDouble()-ringBox->value())>=0.1) {
 	emit changeDom(element, QString("ringwidth"), 
 		       QString().setNum(ringBox->value()));
       }
-      if(getFromElement("influenceradius").toDouble()
-	 !=influenceBox->value()) {
+      if(fabs(getFromElement("influenceradius").toDouble()-influenceBox->value())>=0.1) {
 	emit changeDom(element, QString("influenceradius"), 
 		       QString().setNum(influenceBox->value()));
       }
@@ -1310,7 +1335,7 @@ bool CenterPanel::updateConfig()
 	emit changeDom(element, QString("maxiterations"), 
 		       QString().setNum(iterations->value()));
       }
-      if(getFromElement("boxdiameter").toDouble() !=diameterBox->value()) {
+      if(fabs(getFromElement("boxdiameter").toDouble()-diameterBox->value())>=0.1) {
 	emit changeDom(element, QString("boxdiameter"), 
 		       QString().setNum(diameterBox->value()));
       }
@@ -1420,25 +1445,27 @@ bool CenterPanel::checkValues()
   // cause problems if we do not limit the number of levels, radii, and 
   // centers used
 
+  // Last I checked
   // SimplexData::maxLevels = 15
   // SimplexData::maxRadii = 30
   // SimplexData::maxCenters = 25
+  // We get this directly now
 
-  if((tLBox->value()-bLBox->value())>15) {
+  if((tLBox->value()-bLBox->value()+1)>SimplexData::getMaxLevels()) {
     emit log(Message(QString(),0, this->objectName(), Red, 
-		     QString(tr("Number of search levels in simplex exceeds the maximum of 15, Please decrease the number of search levels"))));
+		     QString(tr("Number of search levels in simplex exceeds the maximum of ")+QString().setNum(SimplexData::getMaxLevels())+tr(", Please decrease the number of search levels"))));
     return false;
   }
 
-  if(((oRBox->value()-iRBox->value())/(float)ringBox->value())>30) {
+  if(((oRBox->value()-iRBox->value()+1)/(float)ringBox->value())>SimplexData::getMaxRadii()) {
     emit log(Message(QString(),0, this->objectName(), Red, 
-		     QString(tr("Number of search rings in simplex exceeds the maximum of 15, Please decrease the number of search rings"))));
+		     QString(tr("Number of search rings in simplex exceeds the maximum of ")+QString().setNum(SimplexData::getMaxRadii())+tr(", Please decrease the number of search rings"))));
     return false;
   }
 
-  if(numPointsBox->value()>25) {
+  if(numPointsBox->value()>SimplexData::getMaxCenters()) {
     emit log(Message(QString(),0, this->objectName(), Red, 
-		     QString(tr("Number initial centers in simplex exceeds the maximum of 25, Please decrease the number of initial centers"))));
+		     QString(tr("Number initial centers in simplex exceeds the maximum of ")+QString().setNum(SimplexData::getMaxCenters())+tr(", Please decrease the number of initial centers"))));
     return false;
   }
     
@@ -1872,7 +1899,7 @@ VTDPanel::VTDPanel()
   tLBox = new QDoubleSpinBox;
   tLBox->setRange(2,20);
   tLBox->setDecimals(2);
-  tLBox->setValue(4);
+  tLBox->setValue(3);
   QLabel *innerRad = new QLabel(tr("Inner Radius (km)"));
   iRBox = new QDoubleSpinBox;
   iRBox->setDecimals(2);
@@ -2127,7 +2154,7 @@ bool VTDPanel::updateConfig()
 	  }
 	}
       }
-      if(getFromElement("ringwidth").toDouble() !=ringBox->value()) {
+      if(fabs(getFromElement("ringwidth").toDouble()-ringBox->value())>=0.1) {
 	emit changeDom(element, QString("ringwidth"), 
 		       QString().setNum(ringBox->value()));
       }
@@ -2188,6 +2215,71 @@ bool VTDPanel::setDefaultDirectory(QDir* newDir)
     return false;
   }
   
+}
+
+bool VTDPanel::checkValues()
+{
+  // Returning False means that one of the values has not been set correctly
+  // Returning True means that all the values check out...
+  
+  QString temp(geometryBox->currentText());
+  if(geometryOptions->value(temp)==QString("")) {
+    emit log(Message(QString(), 0, this->objectName(), Red, 
+	    QString(tr("Please select a geometry in the configuration"))));
+    return false;
+  }
+
+  temp = closureBox->currentText();
+  if(closureOptions->value(temp)==QString("")) {
+    emit log(Message(QString(), 0, this->objectName(), Red, 
+	    QString(tr("Please select a closure assumption in the configuration"))));
+    return false;
+  }
+
+  temp = refBox->currentText();
+  if(reflectivityOptions->value(temp)==QString("")) {
+    emit log(Message(QString(), 0, this->objectName(), Red, 
+	   QString(tr("Please select a reflectivity in the configuration"))));
+    return false;
+  }
+
+  temp = velBox->currentText();
+  if(velocityOptions->value(temp)==QString("")) {
+    emit log(Message(QString(), 0, this->objectName(), Red, 
+	    QString(tr("Please select a velocity in the configuration"))));
+    return false;
+  }
+
+  // We have set minimums in the VortexData containers that will
+  // cause problems if we do not limit the number of levels, radii, and 
+  // maxWaveNum
+
+  // Last I checked
+  // VortexData::maxLevels = 15
+  // VortexData::maxRadii = 150
+  // VortexData::maxWaveNum = 5
+  // We get this directly now
+
+  if((tLBox->value()-bLBox->value()+1)>VortexData::getMaxLevels()) {
+    emit log(Message(QString(),0, this->objectName(), Red, 
+		     QString(tr("Number of search levels in vtd exceeds the maximum of ")+QString().setNum(VortexData::getMaxLevels())+tr(", Please decrease the number of search levels"))));
+    return false;
+  }
+
+  if(((oRBox->value()-iRBox->value()+1)/(float)ringBox->value())>VortexData::getMaxRadii()) {
+    emit log(Message(QString(),0, this->objectName(), Red, 
+		     QString(tr("Number of search rings in vtd exceeds the maximum of ")+QString().setNum(VortexData::getMaxRadii())+tr(", Please decrease the number of search rings"))));
+    return false;
+  }
+
+  if(maxWaveNumBox->value()+1 > VortexData::getMaxWaveNum()) {
+    emit log(Message(QString(),0, this->objectName(), Red, 
+		     QString(tr("Maximum wave number in vtd exceeds the limit of ")+QString().setNum(VortexData::getMaxWaveNum())+tr(", Please decrease the number of wave numbers used"))));
+    return false;
+  }
+    
+  emit log(Message(QString(), 0, this->objectName(), Green));
+  return true;
 }
 
 HVVPPanel::HVVPPanel()
@@ -2287,11 +2379,11 @@ bool HVVPPanel::updateConfig()
 	emit changeDom(element, QString("levels"), 
 		       QString().setNum(numLevels->value()));
       }
-      if(getFromElement("hgt_start").toFloat()!=hgtStart->value()) {
+      if(fabs(getFromElement("hgt_start").toFloat()-hgtStart->value())>=0.01){
 	emit changeDom(element, QString("hgt_start"), 
 		       QString().setNum(hgtStart->value()));
       }
-      if(getFromElement("hinc").toFloat()!=hInc->value()) {
+      if(fabs(getFromElement("hinc").toFloat()-hInc->value())>= 0.01) {
 	emit changeDom(element, QString("hinc"), 
 		       QString().setNum(hInc->value()));
       }
@@ -2506,7 +2598,7 @@ bool PressurePanel::updateConfig()
 	  emit changeDom(element, QString("format"), 
 	    pressureFormatOptions->value(pressureFormat->currentText()));
 	}
-      if(getFromElement("height").toFloat()!=gradientHeight->value()) {
+      if(fabs(getFromElement("height").toFloat()-gradientHeight->value())>=0.1) {
 	emit changeDom(element, QString("height"), 
 		       QString().setNum(gradientHeight->value()));
       }
@@ -2514,7 +2606,7 @@ bool PressurePanel::updateConfig()
 	emit changeDom(element, QString("maxobstime"), 
 		       QString().setNum(maxObsTime->value()));
       }
-      if(getFromElement("maxobsdist").toFloat()!=maxObsDist->value()) {
+      if(fabs(getFromElement("maxobsdist").toFloat()-maxObsDist->value())>=0.01) {
 	emit changeDom(element, QString("maxobsdist"), 
 		       QString().setNum(maxObsDist->value()));
       }
@@ -2530,7 +2622,7 @@ bool PressurePanel::updateConfig()
 	emit changeDom(element, QString("av_interval"), 
 		       QString().setNum(avInterval->value()));
       }
-      if(getFromElement("rapidlimit").toFloat()!=rapidLimit->value()) {
+      if(fabs(getFromElement("rapidlimit").toFloat()-rapidLimit->value())>=0.1) {
 	emit changeDom(element, QString("av_interval"), 
 		       QString().setNum(rapidLimit->value()));
       }

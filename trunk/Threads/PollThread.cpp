@@ -125,7 +125,7 @@ void PollThread::run()
   PressureFactory *pressureSource = new PressureFactory(configData);
   connect(pressureSource, SIGNAL(log(const Message&)),
 		  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
-  
+
   if(!continuePreviousRun) {
     QString file("vortrac_defaultVortexListStorage.xml");
     vortexConfig = new Configuration(0, file);
@@ -272,76 +272,6 @@ void PollThread::run()
 
   }  
 
-          //Message::toScreen("Num simplex: "+QString().setNum(list->count()));
-          /* Fake simplex list data
-	     SimplexData newData(15,6,2);
-	     newData.setTime(QDateTime::currentDateTime());
-	     for(int i = 0; i < 2; i++) {
-	     newData.setX(i,0,7);
-	     newData.setY(i,0,7);
-	     newData.setHeight(i,7);
-	     newData.setCenterStdDev(i,0,7);
-	     newData.setMaxVT(i,0,7);
-	     newData.setVTUncertainty(i,0,7);
-	     newData.setNumConvergingCenters(i,0,7);
-	     Center newCenter(8,8,8,i,0);
-	     newData.setCenter(i,0,0,newCenter);
-	     Center otherCenter(9,9,9,i,0);
-	     newData.setCenter(i,0,1,otherCenter);
-	     }
-	     //newData.printString();
-	     // list->append(newData);
-	     Message::toScreen("Num simplex: "+QString().setNum(list->count()));
-	     list->value(0).printString();
-	     list->value(1).printString();
-	     file = QString("/scr/science40/mauger/Working/trunk/LisaSimplex.xml");
-	     list->setFileName(file);
-	     list->save();
-	  */
-  
-  //-------------------------------------------------------------------------
-  
-          /*
-	  // Testing VortexList ---------------------------------------
-	  //vortexList->value(0).printString();
-	  
-	  
-	  VortexData test(15,2,2);
-	  test.setPressure(7);
-	  test.setPressureUncertainty(7);  if(pollThread->isNull())
-	  return false;
-	  test.setTime(QDateTime::currentDateTime());
-	  for(int i = 0; i < 3; i++ ){
-	  test.setLat(i,7.0);
-	  test.setLon(i,7.0);
-	  test.setAltitude(i,7.0);
-	  test.setRMW(i, 7.0);
-	  test.setRMWUncertainty(i, 7.0);
-	  test.setNumConvergingCenters(i, 7);
-	  test.setCenterStdDev(i,7.0);
-	  Coefficient coeff(6,6,6,"VTCO");
-	  Coefficient coeff2(5,5,5,"VRCO");
-	  test.setCoefficient(i,0,0,coeff);
-	  test.setCoefficient(i,1,0,coeff2);
-	  }
-	  
-	  test.printString();
-	  
-	  vortexList->append(test);
-	  
-	  Message::toScreen("next Count: "+QString().setNum(vortexList->count()));
-	  
-	  // vortexList->timeSort();
-	  //vortexList->value(0).printString();
-	  
-	  QString saveFile("/scr/science40/mauger/Working/trunk/LisaList.xml");
-	  
-	  vortexList->setFileName(saveFile);
-	  
-	  vortexList->save();
-	  */
-  //--------------------------------------------------------------------------
-  
   analysisThread = new AnalysisThread;
   connect(analysisThread, SIGNAL(doneProcessing()), 
   	  this, SLOT(analysisDoneProcessing()));
@@ -376,7 +306,7 @@ void PollThread::run()
 
 	    dataSource->updateDataQueue(vortexList);
 	    analysisThread->setNumVolProcessed(dataSource->getNumProcessed());
-	    
+	        
 	    // Select a volume off the queue
 	    RadarData *newVolume = dataSource->getUnprocessedData();
 	    
@@ -484,11 +414,11 @@ void PollThread::run()
 			       this->objectName(),Green));
 	    }
 	    mutex.unlock();  
-	  }
 
 	  // Check to see if the new volume affects the storm trend
-	  
 	  checkIntensification();
+	  
+	  }
 	  
 	  // Check to see if we should quit
 	  if (abort) {

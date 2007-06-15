@@ -276,6 +276,7 @@ class VTDPanel:public AbstractPanel
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
   bool setDefaultDirectory(QDir* newDir);
+  bool checkValues();
  
  private:
   /*

@@ -727,7 +727,7 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
 	float* relDist = gridData->getCartesianPoint(&vortexLat, &vortexLon,
 						     &obLat, &obLon);
 	float obRadius = sqrt(relDist[0]*relDist[0] + relDist[1]*relDist[1]);
-	delete relDist;
+	delete [] relDist;
 	float pPrimeOuter;
 	if (obRadius >= lastRing) {
 	  pPrimeOuter = errorPressureDeficit[(int)lastRing];
@@ -780,7 +780,7 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
       else
 	vortexData->setRMWUncertainty(jj,gridData->getJGridsp()/2);
     }
-    if(vortexData->getRMWUncertainty(jj)<10 
+    if(fabs(vortexData->getRMWUncertainty(jj))<10 
        && vortexData->getRMW()!=-999 && vortexData->getRMW()>0) {
       goodrmw++;
       aveRMWUncertainty += vortexData->getRMWUncertainty();

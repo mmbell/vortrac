@@ -76,9 +76,9 @@ class SimplexData
   int getNumRadii() const { return numRadii; }
   int getNumCenters() const { return numCenters; }
 
-  int getMaxLevels() const { return maxLevels; }
-  int getMaxRadii() const { return maxRadii; }
-  int getMaxCenters() const { return maxCenters; }
+  static int getMaxLevels() { return maxLevels; }
+  static int getMaxRadii() { return maxRadii; }
+  static int getMaxCenters() { return maxCenters; }
 
   void setNumLevels(int newNumLevels);
   void setNumRadii(int newNumRadii);

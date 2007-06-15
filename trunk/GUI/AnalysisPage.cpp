@@ -539,7 +539,7 @@ void AnalysisPage::runThread()
   // Start a processing thread using the current configuration
 
   if(!configDialog->checkPanels()) {
-    Message::toScreen("Didn't clear all diagnostic hoops");
+    //Message::toScreen("Didn't clear all diagnostic hoops");
     emit log(Message(QString("Please check errors: One or more entries in configuration cannot be used"), -1, this->objectName()));
     return;
   }
@@ -617,7 +617,7 @@ void AnalysisPage::runThread()
 
 void AnalysisPage::abortThread()
 {
-  Message::toScreen("In AnalysisPage Abort");
+  //Message::toScreen("In AnalysisPage Abort");
  
   // Try to kill the threads
   if((pollThread!=NULL)&&(pollThread->isRunning())) {
@@ -630,7 +630,7 @@ void AnalysisPage::abortThread()
     cappiDisplay->clearImage();
     emit log(Message("Analysis Aborted!", -1));
   }
-  Message::toScreen("Leaving AnalysisPage Abort");
+  //Message::toScreen("Leaving AnalysisPage Abort");
 }
 
 

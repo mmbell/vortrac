@@ -24,9 +24,9 @@
   </radar>
   <cappi>
      <dir>default</dir>
-     <xdim>200.0</xdim>
-     <ydim>200.0</ydim>
-     <zdim>4.0</zdim>
+     <xdim>150.0</xdim>
+     <ydim>150.0</ydim>
+     <zdim>3.0</zdim>
      <xgridsp>1.0</xgridsp>
      <ygridsp>1.0</ygridsp>
      <zgridsp>1.0</zgridsp>
@@ -41,9 +41,9 @@
      <reflectivity>DZ</reflectivity>
      <velocity>VE</velocity>
      <bottomlevel>1</bottomlevel>
-     <toplevel>5</toplevel>
-     <innerradius>5</innerradius>
-     <outerradius>50</outerradius>
+     <toplevel>3</toplevel>
+     <innerradius>10</innerradius>
+     <outerradius>35</outerradius>
      <ringwidth>1.0</ringwidth>
      <search>MAXVT0</search>
      <influenceradius>4.0</influenceradius>
@@ -77,7 +77,7 @@
      <reflectivity>DZ</reflectivity>
      <velocity>VE</velocity>
      <bottomlevel>1</bottomlevel>
-     <toplevel>4</toplevel>
+     <toplevel>3</toplevel>
      <innerradius>1</innerradius>
      <outerradius>60</outerradius>
      <ringwidth>1.0</ringwidth>

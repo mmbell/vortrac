@@ -384,6 +384,16 @@ bool ConfigurationDialog::checkPanels()
   if(!chooseCenter->checkDates()) {
     noErrors = false;
   }
+  if(!vortex->checkValues())
+    noErrors = false;
+  if(!radar->checkValues())
+    noErrors = false;
+  if(!cappi->checkValues())
+    noErrors = false;
+  if(!center->checkValues())
+    noErrors = false;
+  if(!vtd->checkValues())
+    noErrors = false;
 
   return noErrors;
 }

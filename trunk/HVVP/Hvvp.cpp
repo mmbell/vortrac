@@ -700,7 +700,7 @@ bool Hvvp::findHVVPWinds(bool both)
       emit log(Message(message,0,this->objectName()));
       //Message::toScreen(message);
     }
-    emit log(Message(QString("Failed to Find HVVP Output"),0,this->objectName(),Yellow)); 
+    emit log(Message(QString(),0,this->objectName(),Yellow,QString("Failed to Find HVVP Output"))); 
     return false;
   }
   return false;

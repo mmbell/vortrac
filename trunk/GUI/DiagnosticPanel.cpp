@@ -269,39 +269,14 @@ void DiagnosticPanel::changeStopLight(StopLightColor newColor,
 				      const QString newMessage)
 {
   lights->changeColor(newColor);
-
-  //if(newMessage!=QString()) {
-    /*if(stopLightWarning->toPlainText()==QString())
-      stopLightWarning->insertPlainText(newMessage);
-    else {
-      QString totalMessage = stopLightWarning->toPlainText()+newMessage;
-      stopLightWarning->insertPlainText(totalMessage); 
-    }
-    */
-    stopLightWarning->clear();
-    stopLightWarning->insert(newMessage);
-    //}
+  stopLightWarning->clear();
+  stopLightWarning->insert(newMessage);
 }
 
 void DiagnosticPanel::changeStormSignal(StormSignalStatus status, 
 					const QString newMessage)
 {
   stormSignal->changeStatus(status);
-  //if(newMessage!=QString()) {
-    /*
-    if(stormSignalWarning->toPlainText()==QString())
-      stormSignalWarning->insertPlainText(newMessage);
-    else {
-      QTextDocument *oldDoc = stormSignalWarning->document();
-      QString totalMessage = oldDoc->toPlainText()+newMessage;
-      oldDoc->setPlainText(totalMessage);
-      //QString totalMessage = stormSignalWarning->toPlainText()+"\n"+newMessage;
-      Message::toScreen("DiagPanel: "+newMessage);
-      //stormSignalWarning->clear();
-      //stormSignalWarning->insertPlainText(totalMessage); 
-    }
-    */
-    stormSignalWarning->clear();
-    stormSignalWarning->insert(newMessage);
-    //}
+  stormSignalWarning->clear();
+  stormSignalWarning->insert(newMessage);
 }

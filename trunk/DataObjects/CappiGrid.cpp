@@ -243,6 +243,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 			  float i = (x - xmin)/iGridsp;
 			  float j = (y - ymin)/jGridsp;
 			  float k = (z - zmin)/kGridsp;
+			  float RSquareLinear = RSquare*range*range / 30276.0;
 			  for (int kplus = -maxKplus; kplus <= maxKplus; kplus++) { 
 				  for (int jplus = -maxJplus; jplus <= maxJplus; jplus++) {
 					  for (int iplus = -maxIplus; iplus <= maxIplus; iplus++) {
@@ -257,8 +258,8 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 						  float dy = (j - (int)(j+jplus))*jGridsp;
 						  float dz = (k - (int)(k+kplus))*kGridsp;
 						  float rSquare = (dx*dx) + (dy*dy) + (dz*dz);
-						  if (rSquare > RSquare) { continue; }
-						  float weight = (RSquare - rSquare) / (RSquare + rSquare);
+						  if (rSquare > RSquareLinear) { continue; }
+						  float weight = (RSquareLinear - rSquare) / (RSquareLinear + rSquare);
 						  refValues[iIndex][jIndex][kIndex].weight += weight;
 						  refValues[iIndex][jIndex][kIndex].sumRef += weight*refData[g];
 					  }
@@ -300,6 +301,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 			  float i = (x - xmin)/iGridsp;
 			  float j = (y - ymin)/jGridsp;
 			  float k = (z - zmin)/kGridsp;
+			  float RSquareLinear = RSquare* range*range / 30276.0;
 			  for (int kplus = -maxKplus; kplus <= maxKplus; kplus++) { 
 				  for (int jplus = -maxJplus; jplus <= maxJplus; jplus++) {
 					  for (int iplus = -maxIplus; iplus <= maxIplus; iplus++) {
@@ -314,8 +316,8 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 						  float dy = (j - (int)(j+jplus))*jGridsp;
 						  float dz = (k - (int)(k+kplus))*kGridsp;
 						  float rSquare = (dx*dx) + (dy*dy) + (dz*dz);
-						  if (rSquare > RSquare) { continue; }
-						  float weight = (RSquare - rSquare) / (RSquare + rSquare);
+						  if (rSquare > RSquareLinear) { continue; }
+						  float weight = (RSquareLinear - rSquare) / (RSquareLinear + rSquare);
 						  velValues[iIndex][jIndex][kIndex].weight += weight;
 						  velValues[iIndex][jIndex][kIndex].sumVel += weight*velData[g];
 						  velValues[iIndex][jIndex][kIndex].sumSw += weight*swData[g];

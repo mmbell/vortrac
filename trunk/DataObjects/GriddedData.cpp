@@ -838,8 +838,6 @@ float* GriddedData::getSphericalElevationPosition(float range, float azimuth)
 }
 
 
-
-
 int GriddedData::getCylindricalRadiusLength(float azimuth, float height)
 {
   int count = 0;
@@ -912,6 +910,8 @@ float* GriddedData::getCylindricalRadiusPosition(float azimuth, float height)
   return positions;
 }
 
+/*
+// original function replaced on 6/14/07 -LM
 int GriddedData::getCylindricalAzimuthLength(float radius, float height)
 {
   int count = 0;
@@ -932,10 +932,10 @@ int GriddedData::getCylindricalAzimuthLength(float radius, float height)
     }    
   }
   return count;
-  
 }
+*/
 
-int GriddedData::getCylindricalAzimuthLengthTest(float radius, float height)
+int GriddedData::getCylindricalAzimuthLength(float radius, float height)
 {
   int count = 0;
   float r = 0;
@@ -986,9 +986,11 @@ int GriddedData::getCylindricalAzimuthLengthTest2(float radius, float height)
   if(iHigh > iDim)
     iHigh = int(iDim);
   if(iInLow < iLow)
-    Message::toScreen("Something is not working with ILow and IInLow");
+    iInLow = iLow;
+  //Message::toScreen("ILOWCOMPERROR: Radius: "+QString().setNum(radius)+" height: "+QString().setNum(height)+" iLow: "+QString().setNum(iLow)+" InLow: "+QString().setNum(iInLow));
   if(iHigh < iInHigh)
-    Message::toScreen("Something is not working with IHigh and IInHigh");
+    iInHigh = iHigh;
+  //Message::toScreen("IHIGHCOMPERROR: Radius: "+QString().setNum(radius)+" height: "+QString().setNum(height)+" iHigh: "+QString().setNum(iHigh)+" iInHigh: "+QString().setNum(iInHigh));
   if(iInLow >= iInHigh) {
     iInLow = int(refPointI);
     iInHigh = int(refPointI);
@@ -1001,10 +1003,12 @@ int GriddedData::getCylindricalAzimuthLengthTest2(float radius, float height)
     jLow = 0;
   if(jHigh > jDim)
     jHigh = int(jDim);
-  if(jInLow < jLow)
-    Message::toScreen("Something is not working with JLow and JInLow");
+  if(jInLow < jLow) 
+    jInLow = jLow;
+  //Message::toScreen("JLOWCOMPERROR: Radius: "+QString().setNum(radius)+" height: "+QString().setNum(height)+" jLow: "+QString().setNum(jLow)+" jInLow: "+QString().setNum(jInLow));
   if(jHigh < jInHigh)
-    Message::toScreen("Something is not working with JHigh and JInHigh");
+    jInHigh = jHigh;
+  //Message::toScreen("JHIGHCOMPERROR: Radius: "+QString().setNum(radius)+" height: "+QString().setNum(height)+" jHigh: "+QString().setNum(jHigh)+" jInHigh: "+QString().setNum(jInHigh));
   if(jInLow >= jInHigh) {
     jInLow = int(refPointJ);
     jInHigh = int(refPointJ);
@@ -1070,6 +1074,8 @@ int GriddedData::getCylindricalAzimuthLengthTest2(float radius, float height)
   
 }
 
+/*
+// original function replaced on 6/14/07 -LM
 void GriddedData::getCylindricalAzimuthData(QString& fieldName, int numPoints,
 				     float radius, float height, float* values)
 {
@@ -1101,10 +1107,11 @@ void GriddedData::getCylindricalAzimuthData(QString& fieldName, int numPoints,
   }
   //return values;
 }
+*/
 
-void GriddedData::getCylindricalAzimuthDataTest(QString& fieldName, 
-						int numPoints,float radius, 
-						float height, float* values)
+void GriddedData::getCylindricalAzimuthData(QString& fieldName, 
+					    int numPoints,float radius, 
+					    float height, float* values)
 {
   //  int numPoints = getCylindricalAzimuthLength(radius, height);
   int field = getFieldIndex(fieldName);
@@ -1173,9 +1180,11 @@ void GriddedData::getCylindricalAzimuthDataTest2(QString& fieldName,
   if(iHigh > iDim)
     iHigh = int(iDim);
   if(iInLow < iLow)
-    Message::toScreen("Something is not working with ILow and IInLow");
+    iInLow = iLow;
+  //Message::toScreen("ILOWCOMPERROR: Radius: "+QString().setNum(radius)+" height: "+QString().setNum(height)+" iLow: "+QString().setNum(iLow)+" InLow: "+QString().setNum(iInLow));
   if(iHigh < iInHigh)
-    Message::toScreen("Something is not working with IHigh and IInHigh");
+    iInHigh = iHigh;
+  //Message::toScreen("IHIGHCOMPERROR: Radius: "+QString().setNum(radius)+" height: "+QString().setNum(height)+" iHigh: "+QString().setNum(iHigh)+" iInHigh: "+QString().setNum(iInHigh));
   if(iInLow >= iInHigh) {
     iInLow = int(refPointI);
     iInHigh = int(refPointI);
@@ -1188,10 +1197,12 @@ void GriddedData::getCylindricalAzimuthDataTest2(QString& fieldName,
     jLow = 0;
   if(jHigh > jDim)
     jHigh = int(jDim);
-  if(jInLow < jLow)
-    Message::toScreen("Something is not working with JLow and JInLow");
+  if(jInLow < jLow) 
+    jInLow = jLow;
+  //Message::toScreen("JLOWCOMPERROR: Radius: "+QString().setNum(radius)+" height: "+QString().setNum(height)+" jLow: "+QString().setNum(jLow)+" jInLow: "+QString().setNum(jInLow));
   if(jHigh < jInHigh)
-    Message::toScreen("Something is not working with JHigh and JInHigh");
+    jInHigh = jHigh;
+  //Message::toScreen("JHIGHCOMPERROR: Radius: "+QString().setNum(radius)+" height: "+QString().setNum(height)+" jHigh: "+QString().setNum(jHigh)+" jInHigh: "+QString().setNum(jInHigh));
   if(jInLow >= jInHigh) {
     jInLow = int(refPointJ);
     jInHigh = int(refPointJ);
@@ -1276,6 +1287,8 @@ void GriddedData::getCylindricalAzimuthDataTest2(QString& fieldName,
   //return values;
 }
 
+/*
+// original function replaced on 6/14/07 -LM
 void GriddedData::getCylindricalAzimuthPosition(int numPoints, float radius, float height, float* positions) 
 {
 //  int numPoints = getCylindricalAzimuthLength(radius, height);
@@ -1307,8 +1320,9 @@ void GriddedData::getCylindricalAzimuthPosition(int numPoints, float radius, flo
 	}
   }
 }
+*/
 
-void GriddedData::getCylindricalAzimuthPositionTest(int numPoints, float radius, float height, float* positions) 
+void GriddedData::getCylindricalAzimuthPosition(int numPoints, float radius, float height, float* positions) 
 {
 //  int numPoints = getCylindricalAzimuthLength(radius, height);
 
@@ -1376,9 +1390,11 @@ void GriddedData::getCylindricalAzimuthPositionTest2(int numPoints, float radius
   if(iHigh > iDim)
     iHigh = int(iDim);
   if(iInLow < iLow)
-    Message::toScreen("Something is not working with ILow and IInLow");
+    iInLow = iLow;
+  //Message::toScreen("ILOWCOMPERROR: Radius: "+QString().setNum(radius)+" height: "+QString().setNum(height)+" iLow: "+QString().setNum(iLow)+" InLow: "+QString().setNum(iInLow));
   if(iHigh < iInHigh)
-    Message::toScreen("Something is not working with IHigh and IInHigh");
+    iInHigh = iHigh;
+  //Message::toScreen("IHIGHCOMPERROR: Radius: "+QString().setNum(radius)+" height: "+QString().setNum(height)+" iHigh: "+QString().setNum(iHigh)+" iInHigh: "+QString().setNum(iInHigh));
   if(iInLow >= iInHigh) {
     iInLow = int(refPointI);
     iInHigh = int(refPointI);
@@ -1391,10 +1407,12 @@ void GriddedData::getCylindricalAzimuthPositionTest2(int numPoints, float radius
     jLow = 0;
   if(jHigh > jDim)
     jHigh = int(jDim);
-  if(jInLow < jLow)
-    Message::toScreen("Something is not working with JLow and JInLow");
+  if(jInLow < jLow) 
+    jInLow = jLow;
+  //Message::toScreen("JLOWCOMPERROR: Radius: "+QString().setNum(radius)+" height: "+QString().setNum(height)+" jLow: "+QString().setNum(jLow)+" jInLow: "+QString().setNum(jInLow));
   if(jHigh < jInHigh)
-    Message::toScreen("Something is not working with JHigh and JInHigh");
+    jInHigh = jHigh;
+  //Message::toScreen("JHIGHCOMPERROR: Radius: "+QString().setNum(radius)+" height: "+QString().setNum(height)+" jHigh: "+QString().setNum(jHigh)+" jInHigh: "+QString().setNum(jInHigh));
   if(jInLow >= jInHigh) {
     jInLow = int(refPointJ);
     jInHigh = int(refPointJ);

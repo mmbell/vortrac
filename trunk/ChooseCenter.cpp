@@ -994,10 +994,11 @@ bool ChooseCenter::fixCenters()
 	vortexData->setHeight(k, simplexResults->at(i).getHeight(k));
 	vortexData->setRMW(k, rad);
 	vortexData->setRMWUncertainty(k, radError);
+	//Message::toScreen("Rad error for level "+QString().setNum(k)+" is "+QString().setNum(radError));
 	vortexData->setCenterStdDev(k, sqrt(xError*xError+yError*yError));
 	vortexData->setNumConvergingCenters(k, simplexResults->at(i).getNumConvergingCenters(j,k));
-      } 
-      
+      }
+
     }
     
     // newVariance is the variance related to the fit of the line?

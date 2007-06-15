@@ -440,7 +440,7 @@ void AnalysisThread::run()
 	   waitForData.wait(&mutex);
 	   //Message::toScreen("AnalysisThread: Got Mutex Back For Data - Continuing");
 	   mutex.unlock();
-	   delete distance;
+	   delete [] distance;
 	   continue;
 	 }
 
@@ -449,7 +449,22 @@ void AnalysisThread::run()
 	 
 	 //Message::toScreen("gets to create vortexData analysisThread");
 	 // Create data instance to hold the analysis results
-	 VortexData *vortexData = new VortexData(); 
+	 
+	 // Use size hints from vtd panel
+	 QDomElement vtd = configData->getConfig("vtd");
+	 QDomElement cappi = configData->getConfig("cappi");
+	 float top = configData->getParam(vtd, "toplevel").toFloat();
+	 float bottom = configData->getParam(vtd, "bottomlevel").toFloat();
+	 float zSpacing = configData->getParam(cappi, "zgridsp").toFloat();
+	 int numLevels = floor((top-bottom+1)/zSpacing + 1);
+	 float inner = configData->getParam(vtd, "innerradius").toFloat();
+	 float outer = configData->getParam(vtd, "outerradius").toFloat();
+	 float ringwidth = configData->getParam(vtd, "ringwidth").toFloat();
+	 int numRings = floor((outer-inner+1)/ringwidth + 1);
+	 int numWaveNum = configData->getParam(vtd, "maxwavenumber").toInt()+1;
+	 VortexData *vortexData = new VortexData(numLevels,numRings,
+						 numWaveNum);
+	 //VortexData *vortexData = new VortexData(); 
 	 vortexData->setTime(radarVolume->getDateTime());
 	 for(int i = 0; i < vortexData->getNumLevels(); i++) {
 	   vortexData->setLat(i,vortexLat);

@@ -136,9 +136,9 @@ bool SimplexList::openNodeFile(const QDomNode &newNode)
     }
     Configuration *newConfig = new Configuration(0, nodeFileName);
     SimplexData newData;
-    int centIndex[15][30];
-    for(int i = 0; i < 15; i++) {
-      for(int j = 0; j < 30; j++) {
+    int centIndex[SimplexData::getMaxLevels()][SimplexData::getMaxRadii()];
+    for(int i = 0; i < SimplexData::getMaxLevels(); i++) {
+      for(int j = 0; j < SimplexData::getMaxRadii(); j++) {
 	centIndex[i][j] = 0;
       }
     }

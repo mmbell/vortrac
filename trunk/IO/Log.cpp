@@ -196,14 +196,14 @@ bool Log::saveLogFile(const QString& fileName)
 
 void Log::catchLog(const Message& logEntry)
 {
-  Message* log = new Message(logEntry);
-  QString message = log->getLogMessage();
-  int progress = log->getProgress();
-  QString location = log->getLocation();
-  StopLightColor stopLightColor = log->getColor();
-  QString stopLightMessage = log->getStopLightMessage();
-  StormSignalStatus stormSignalStatus = log->getStatus();
-  QString stormSignalMessage = log->getStormSignalMessage();
+  Message* logg = new Message(logEntry);
+  QString message = logg->getLogMessage();
+  int progress = logg->getProgress();
+  QString location = logg->getLocation();
+  StopLightColor stopLightColor = logg->getColor();
+  QString stopLightMessage = logg->getStopLightMessage();
+  StormSignalStatus stormSignalStatus = logg->getStatus();
+  QString stormSignalMessage = logg->getStormSignalMessage();
   
   if(message!=QString()) {
     if(displayLocation && (location!=QString())) {
@@ -225,17 +225,21 @@ void Log::catchLog(const Message& logEntry)
   }
 
   if((stopLightColor!=AllOff) || (stopLightMessage!=QString())) {
-    if(!handleStopLightUpdate(stopLightColor,stopLightMessage,location))
+    if(!handleStopLightUpdate(stopLightColor,stopLightMessage,location)) {
       Message::toScreen("Log:Trouble Logging StopLight Change! "+location+" : "+stopLightMessage);
+      emit log(Message(QString("Trouble Logging StopLight Change! "+location+" : "+stopLightMessage),0,this->objectName()));
+    }
   }
   if((stormSignalStatus!=Nothing) || (stormSignalMessage!=QString())) {
     if(!handleStormSignalUpdate(stormSignalStatus,stormSignalMessage,location))
-      Message::toScreen("Log:Trouble Logging StormStatus Change! "+location+" : "+stormSignalMessage);
+      {
+	Message::toScreen("Log:Trouble Logging StormStatus Change! "+location+" : "+stormSignalMessage);
+	emit log(Message(QString("Trouble Logging StormStatus Change! "+location+" : "+stormSignalMessage),0,this->objectName()));
+    }
   }
 
-  delete log;
+  delete logg;
 }
-
 
 bool Log::writeToFile()
 {
@@ -274,7 +278,6 @@ bool Log::handleStopLightUpdate(StopLightColor newColor, QString message,
   int originalCount = StopLightQueue.count();
   
   if((newColor == Green)||(newColor == BlinkGreen)) {
-    // Message::toScreen("The Good "+location+" : "+message);
     if(StopLightQueue.count()==0)
       return true;
     for(int i = StopLightQueue.count()-1; i >= 0; i--) {
@@ -299,13 +302,14 @@ bool Log::handleStopLightUpdate(StopLightColor newColor, QString message,
     mostRecent->color = newColor;
     mostRecent->message = message;
     mostRecent->location = location;
+    emit newLogEntry(location+": "+message+"\n");
     if(StopLightQueue.count()==0) {
       StopLightQueue.append(mostRecent);
       //      Message::toScreen("Inside "+mostRecent->location+": "+mostRecent->message+" @ i = zero");
     }
     else {
       int initialCount = StopLightQueue.count();
-      emit newLogEntry(location+": "+message+"\n");
+      //emit newLogEntry(location+": "+message+"\n");
       
       // Make sure we don't already have this signal
       for(int i = 0; i < initialCount; i++) {
@@ -391,17 +395,21 @@ bool Log::handleStormSignalUpdate(StormSignalStatus newStatus, QString message,
 	delete corrected;
       }
     }
+    if(originalCount==StormStatusQueue.count()) {
+      // Couldn't match this good signal with a bad one
+      // not a problem for me!
+      return true;
+    }
   }
   else {
-    //    Message::toScreen("The Bad "+location+" : "+message);
     // Add bad signals to the stack based on status....
     SSChange *mostRecent = new SSChange;
     mostRecent->status = newStatus;
     mostRecent->message = message;
     mostRecent->location = location;
     if(StormStatusQueue.count()==0) {
+      emit newLogEntry(location+": "+message+"\n");
       StormStatusQueue.append(mostRecent);
-      //      Message::toScreen("Inside "+mostRecent->location+": "+mostRecent->message+" @ i = zero");
     }
     else {
       int initialCount = StormStatusQueue.count();
@@ -442,7 +450,9 @@ bool Log::handleStormSignalUpdate(StormSignalStatus newStatus, QString message,
     emit newStormSignalStatus(Ok, QString());
     return true;
   }
-  if((originalCount!=StormStatusQueue.count())||(originalCount==0)) {
+  if((originalCount!=StormStatusQueue.count())||(originalCount==0)||
+     (StormStatusQueue.at(0)->status==SimplexError)||
+     (StormStatusQueue.at(0)->status==OutOfRange)) {
     emit newStormSignalStatus(StormStatusQueue.at(0)->status,
 			      StormStatusQueue.at(0)->message);
     return true;
@@ -451,6 +461,6 @@ bool Log::handleStormSignalUpdate(StormSignalStatus newStatus, QString message,
     emit newLogEntry(QString("StormStatusChange Was Not Handled Properly @"+location+"  "+message+"\n"));
     return false;
   }
-
+  // Do we need this it is not getting called
   emit newStormSignalStatus(newStatus, message);
 }
