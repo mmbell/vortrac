@@ -18,7 +18,7 @@ KeyPicture::KeyPicture(const int& i, QBrush brush, QPen pen,
 		       QSize hint, QWidget *parent)
   :QWidget(parent), paintFlag(i), brush(brush), pen(pen), hint(hint)
 {  
-  this->setObjectName("keyPicture");
+  this->setObjectName("Key Picture");
   resize(hint);
   setBackgroundRole(QPalette::Base);
   setAttribute(Qt::WA_StaticContents);

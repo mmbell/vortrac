@@ -21,7 +21,7 @@
 AnalysisThread::AnalysisThread(QObject *parent)
   : QThread(parent)
 {
-  this->setObjectName("analysisThread");
+  this->setObjectName("Analysis");
   //Message::toScreen("AnalysisThread Constructor");
   abort = false;
   simplexThread = new SimplexThread;
@@ -456,11 +456,11 @@ void AnalysisThread::run()
 	 float top = configData->getParam(vtd, "toplevel").toFloat();
 	 float bottom = configData->getParam(vtd, "bottomlevel").toFloat();
 	 float zSpacing = configData->getParam(cappi, "zgridsp").toFloat();
-	 int numLevels = floor((top-bottom+1)/zSpacing + 1);
+	 int numLevels = (int)floor((top-bottom+1)/zSpacing + 1);
 	 float inner = configData->getParam(vtd, "innerradius").toFloat();
 	 float outer = configData->getParam(vtd, "outerradius").toFloat();
 	 float ringwidth = configData->getParam(vtd, "ringwidth").toFloat();
-	 int numRings = floor((outer-inner+1)/ringwidth + 1);
+	 int numRings = (int)floor((outer-inner+1)/ringwidth + 1);
 	 int numWaveNum = configData->getParam(vtd, "maxwavenumber").toInt()+1;
 	 VortexData *vortexData = new VortexData(numLevels,numRings,
 						 numWaveNum);

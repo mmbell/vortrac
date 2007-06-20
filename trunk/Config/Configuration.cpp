@@ -16,7 +16,7 @@
 Configuration::Configuration(QObject *parent, const QString &filename)
   :QObject(parent)
 {
-  this->setObjectName("configuration");
+  this->setObjectName("Configuration");
   logChanges = true;
   if(filename.isEmpty()) 
     {
@@ -97,7 +97,7 @@ bool Configuration::read(const QString &filename)
   isModified = false;
   return true;
   
-  emit log(Message(QString(), 0, this->objectName(),Green));
+  // emit log(Message(QString(), 0, this->objectName(),Green));
 
 }
 

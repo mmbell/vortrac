@@ -138,7 +138,12 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   zmax = zmin + kDim*kGridsp;
   
   delete[] relDist;
-    
+  
+  if(abort){
+	  //Message::toScreen("ExitNow in Cressmand Interpolation in CappiGrid");
+	  return;
+  }
+  
   // Interpolate the data depending on method chosen
   QString interpolation = cappiConfig.firstChildElement("interpolation").text();
   //Message::toScreen("Using "+interpolation+" interpolation ");

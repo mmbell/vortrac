@@ -22,7 +22,7 @@ ConfigurationDialog::ConfigurationDialog(QWidget* parent,
 					 Configuration *initialConfig)
   :QDialog(parent)
 {
-  this->setObjectName("configurationDialog");
+  this->setObjectName("Configuration Dialog");
   configData = initialConfig;
   setWindowTitle(tr("VORTRAC CONFIGURATION"));
   panels = new QStackedWidget(this);

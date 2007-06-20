@@ -16,7 +16,7 @@
 ConfigTree::ConfigTree(QWidget *parent, Configuration *initialConfig)
   : QTreeWidget(parent)
 {
-  this->setObjectName("configTree");
+  this->setObjectName("Configuration Tree");
   // Set the current configuration
   configData = initialConfig;
 

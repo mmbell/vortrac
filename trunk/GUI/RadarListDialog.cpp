@@ -30,7 +30,7 @@ RadarListDialog::RadarListDialog(QWidget *parent, Configuration *initialConfig)
    * from SoloII and are contained in the file vortrac_radarList.xml
    */
 
-  this->setObjectName("radarListDialog");
+  this->setObjectName("Radar List Dialog");
 
   xmlFileName = QString("vortrac_radarList.xml");
  

@@ -34,7 +34,7 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
    */
 
 {
-  this->setObjectName("diagnosticPanel");
+  this->setObjectName("Diagnostic Panel");
 
   // timer is used to create updates for the display clock
 

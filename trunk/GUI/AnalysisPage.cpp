@@ -16,7 +16,7 @@
 AnalysisPage::AnalysisPage(QWidget *parent)
   : QWidget(parent)
 {
-  this->setObjectName("analysisPage");
+  this->setObjectName("Analysis Display Page");
   QFont f("Helvetica", 12, QFont::Bold);
   setFont(f);
   lastMax = -999;

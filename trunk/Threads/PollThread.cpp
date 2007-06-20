@@ -17,7 +17,7 @@
 PollThread::PollThread(QObject *parent)
   : QThread(parent)
 {
-  this->setObjectName("pollThread");
+  this->setObjectName("Poller");
   //  emit log(Message(QString("Constructor"),0,this->objectName()));
   abort = false;
   runOnce = false;
@@ -129,7 +129,7 @@ void PollThread::run()
   if(!continuePreviousRun) {
     QString file("vortrac_defaultVortexListStorage.xml");
     vortexConfig = new Configuration(0, file);
-    vortexConfig->setObjectName("vortexConfig");
+    vortexConfig->setObjectName("Vortex Configuration");
     vortexConfig->setLogChanges(false);
     connect(vortexConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
@@ -139,7 +139,7 @@ void PollThread::run()
     file = QString("vortrac_defaultSimplexListStorage.xml");
     //simplexConfig = new Configuration(0,QString());
     simplexConfig = new Configuration(0, file);
-    simplexConfig->setObjectName("simplexConfig");
+    simplexConfig->setObjectName("Simplex Configuration");
     simplexConfig->setLogChanges(false);
     connect(simplexConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
@@ -149,7 +149,7 @@ void PollThread::run()
     file = QString("vortrac_defaultPressureListStorage.xml");
     //pressureConfig = new Configuration(0,QString());
     pressureConfig = new Configuration(0, file);
-    pressureConfig->setObjectName("pressureConfig");
+    pressureConfig->setObjectName("Pressure Configuration");
     pressureConfig->setLogChanges(false);
     connect(pressureConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
@@ -157,7 +157,7 @@ void PollThread::run()
     pressureList->open();
 
     dropSondeConfig = new Configuration(0, file);
-    dropSondeConfig->setObjectName("dropSondeConfig");
+    dropSondeConfig->setObjectName("Dropsonde Configuration");
     dropSondeConfig->setLogChanges(false);
     connect(dropSondeConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);

@@ -20,7 +20,7 @@
 VortexThread::VortexThread(QObject *parent)
   : QThread(parent)
 {
-    this->setObjectName("vortexThread");
+    this->setObjectName("Vortex");
 
 	  // Initialize RhoBar for pressure calculations (units are Pascal/m)
 	  rhoBar[0] = 10.672;

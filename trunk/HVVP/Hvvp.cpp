@@ -27,7 +27,7 @@
 
 Hvvp::Hvvp()
 {
-  setObjectName("hvvp");
+  setObjectName("HVVP");
   // Generic constructor, initializes some variables..
   velNull = -999.0;
   deg2rad = acos(-1)/180.0;

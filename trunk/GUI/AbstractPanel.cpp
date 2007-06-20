@@ -26,7 +26,7 @@
 AbstractPanel::AbstractPanel(QWidget *parent)
   :QWidget(parent)
 {
-  this->setObjectName("abstractPanel");
+  this->setObjectName("Abstract Panel");
   //Message::toScreen("Using Abstract Panel Constructor");
   defaultDirectory = new QDir(QDir::currentPath());
   dir = new QLineEdit;

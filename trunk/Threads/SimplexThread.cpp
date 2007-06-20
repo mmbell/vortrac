@@ -20,7 +20,7 @@
 SimplexThread::SimplexThread(QObject *parent)
   : QThread(parent)
 {
-  this->setObjectName("simplexThread");
+  this->setObjectName("Simplex");
   velNull = -999.;
   abort = false;
   gridData = NULL;

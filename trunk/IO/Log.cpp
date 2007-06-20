@@ -15,7 +15,7 @@
 Log::Log(QWidget *parent) 
   : QWidget(parent)
 {
-  this->setObjectName("log");
+  this->setObjectName("Log");
   connect(this, SIGNAL(log(const Message&)),
 	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
   

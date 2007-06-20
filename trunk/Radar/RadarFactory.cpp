@@ -15,7 +15,7 @@
 RadarFactory::RadarFactory(Configuration* radarConfig, QObject *parent)
   : QObject(parent)
 {
-  this->setObjectName("radarFactory");
+  this->setObjectName("Radar Factory");
   mainConfig = radarConfig;
 
   // Will poll for data and return radar objects in a queue
@@ -349,6 +349,22 @@ void RadarFactory::updateDataQueue(const VortexList* list)
 	  }
 	  break;
 	}
+	  case model:
+	  {
+		  // Not yet implemented
+		  break;
+	  }			  
+	  case dorade:
+	  {
+		  // Not yet implemented
+		  break;
+	  }
+	  case netcdf:
+	  {
+		  // Not yet implemented
+		  break;
+	  }
+		  
       }
     }
 }

@@ -19,7 +19,7 @@
 StormSignal::StormSignal(QSize hint, QWidget *parent)
   :QWidget(parent), hint(hint)
 {  
-  this->setObjectName("stormSignal");
+  this->setObjectName("Storm Signal");
   resize(hint);
   setBackgroundRole(QPalette::Base);
   // setAttribute(Qt::WA_StaticContents);
