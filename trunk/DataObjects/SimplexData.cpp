@@ -354,14 +354,14 @@ bool SimplexData::isNull()
 bool SimplexData::emptyLevelRadius(const int& l, const int& r) const 
 {
   if((l < numLevels)&&(r < numRadii)){
-    if((meanX[l][r]!=velNull)||(meanY[l][r]!=velNull)
-       ||(centerStdDeviation[l][r]!=velNull)
-       ||(numConvergingCenters[l][r]!=(int)velNull)||(meanVT[l][r]!=velNull)
-       ||(meanVTUncertainty[l][r]!=velNull))
-      return false;
-    return true;
+    if((meanX[l][r]==velNull)||(meanY[l][r]==velNull)
+       ||(centerStdDeviation[l][r]==velNull)
+       ||(numConvergingCenters[l][r]==(int)velNull)||(meanVT[l][r]==velNull)
+       ||(meanVTUncertainty[l][r]==velNull))
+      return true;
+    return false;
   }
-  return false;
+  return true;
 }
 
 void SimplexData::printString()

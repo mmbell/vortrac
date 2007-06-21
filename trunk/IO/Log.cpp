@@ -152,7 +152,7 @@ bool Log::saveLogFile()
 
 bool Log::saveLogFile(const QString& fileName)
 {
-  Message::toScreen("Log: SaveLogFile : at location "+fileName);
+  //Message::toScreen("Log: SaveLogFile : at location "+fileName);
   QString checkFileName(fileName);
   int lastSlash = checkFileName.lastIndexOf(QString("/"));
   if(lastSlash > 0) {

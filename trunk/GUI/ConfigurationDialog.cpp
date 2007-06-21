@@ -376,6 +376,8 @@ bool ConfigurationDialog::checkPanels()
   for(int p = 0; p < panels.count(); p++) {
     if(!panels[p]->checkDirectory())
       noErrors = false;
+    if(!panels[p]->checkValues())
+      noErrors = false;
   }
   
   if(!radar->checkDates()){
@@ -384,16 +386,6 @@ bool ConfigurationDialog::checkPanels()
   if(!chooseCenter->checkDates()) {
     noErrors = false;
   }
-  if(!vortex->checkValues())
-    noErrors = false;
-  if(!radar->checkValues())
-    noErrors = false;
-  if(!cappi->checkValues())
-    noErrors = false;
-  if(!center->checkValues())
-    noErrors = false;
-  if(!vtd->checkValues())
-    noErrors = false;
-
+  
   return noErrors;
 }

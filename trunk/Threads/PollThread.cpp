@@ -39,7 +39,7 @@ PollThread::PollThread(QObject *parent)
 
 PollThread::~PollThread()
 {
-  emit log(Message(QString("INTO Destructor"),0,this->objectName()));
+  //emit log(Message(QString("INTO Destructor"),0,this->objectName()));
   mutex.lock();
   abort = true;
   processPressureData = false;
@@ -64,7 +64,7 @@ PollThread::~PollThread()
     delete dropSondeConfig;   // This should be deleted do we need to save?
     }
   */
-  emit log(Message(QString("OUT OF Destructor"),0,this->objectName()));
+  //emit log(Message(QString("OUT OF Destructor"),0,this->objectName()));
 }
 
 void PollThread::setConfig(Configuration *configPtr)
@@ -76,7 +76,7 @@ void PollThread::setConfig(Configuration *configPtr)
 
 void PollThread::abortThread()
 {
-  emit log(Message(QString("Enter ABORT"),0,this->objectName()));
+  //emit log(Message(QString("Enter ABORT"),0,this->objectName()));
   mutex.lock();
   abort = true;
   processPressureData = false;
@@ -102,7 +102,7 @@ void PollThread::abortThread()
   // delete simplexConfig;  // This should be deleted do we need to save?
   // delete pressureConfig;   // This should be deleted do we need to save?
   // delete dropSondeConfig;   // This should be deleted do we need to save?
-  emit log(Message(QString("Leaving Abort"),0,this->objectName()));
+  //emit log(Message(QString("Leaving Abort"),0,this->objectName()));
  
 }
 
@@ -251,7 +251,7 @@ void PollThread::run()
       file = QString("vortrac_defaultPressureListStorage.xml");
       dropSondeConfig = new Configuration(0, QDir::current().filePath(file));
     }
-    emit log(Message(file));
+    emit log(Message(file,0,this->objectName()));
     dropSondeConfig->setObjectName("dropSondeConfig");
     dropSondeConfig->setLogChanges(false);
     connect(dropSondeConfig, SIGNAL(log(const Message&)), 
@@ -315,7 +315,7 @@ void PollThread::run()
 	      mutex.unlock();
 	      continue;
 	    }
-	    emit log(Message(QString(),2,this->objectName()));
+	    emit log(Message(QString(),1,this->objectName()));
 	    
 	    // Check to makes sure that the file still exists and is readable
 	    
@@ -329,7 +329,8 @@ void PollThread::run()
 	    // Read the volume from file into the RadarData format
 	    newVolume->readVolume();
 	    QString radarFileName(newVolume->getFileName());
-
+	    
+	    emit log(Message(QString(),3,this->objectName()));
 	    mutex.unlock();
 	    // Send the file to AnalysisThread for processing
 	    analysisThread->analyze(newVolume,configData);
@@ -388,6 +389,7 @@ void PollThread::run()
 		  
 		}
 	      }
+	      
 	      else {
 		//Message::toScreen("Decided NOT to search for pressure data");
 		// If we don't need to process pressure data
@@ -417,7 +419,7 @@ void PollThread::run()
 
 	  // Check to see if the new volume affects the storm trend
 	  checkIntensification();
-	  
+	  emit log(Message(QString(),100,this->objectName()));  // 100 % 
 	  }
 	  
 	  // Check to see if we should quit
@@ -435,7 +437,7 @@ void PollThread::run()
 	  }
 	}
 	
-	emit log(Message("PollThread Finished"));	
+	emit log(Message(QString("PollThread Finished"),-1,this->objectName()));	
 	delete dataSource;
 	delete pressureSource;
 }
@@ -546,7 +548,7 @@ void PollThread::checkIntensification()
 void PollThread::checkListConsistency()
 {
   if(vortexList->count()!=simplexList->count()) {
-    emit log(Message(QString("Storage Lists Reloaded With Mismatching Volume Entries")));
+    emit log(Message(QString("Storage Lists Reloaded With Mismatching Volume Entries"),0,this->objectName()));
   }
   for(int vv = 0; vv < vortexList->count(); vv++) {
     bool foundMatch = false;

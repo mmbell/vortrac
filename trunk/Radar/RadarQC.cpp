@@ -313,7 +313,7 @@ void RadarQC::getConfig(QDomElement qcConfig)
 	   * method is not specified
 	   */
 	  
-	  emit log(Message("Environmental Wind Method Not Specified for VAD"));
+	  emit log(Message(QString("Environmental Wind Method Not Specified for VAD"),0,this->objectName()));
 	  velMin = 1;
 	  velMax = 100;
 	  refMin = -15;
@@ -332,7 +332,7 @@ void RadarQC::getConfig(QDomElement qcConfig)
   }
   // Set default parameters if configuration data is not available
   else {
-    emit log(Message("RadarQC: Quality Control Element is Not Valid, Using Default Parameters"));
+    emit log(Message(QString("RadarQC: Quality Control Element is Not Valid, Using Default Parameters"),0,this->objectName()));
     velMin = 1;
     velMax = 100;
     refMin = -15;
@@ -785,8 +785,7 @@ bool RadarQC::findVADStart(bool useGVAD)
 	  }
   }
   
-  //ADD some sort of checking and repeat logic, once all Pauls
-  //Boolean indicators are in place.
+  // ADD some sort of checking and repeat logic
   // What should we check against? What adjustments need to be made
   // to get better results from a second analysis?
   
@@ -1026,7 +1025,7 @@ bool RadarQC::VAD(float* &vel, Sweep* &currentSweep,
   // I saw, so it is set for number comparisons - LM
  
   if((nyqVel == 0)||(fabs(nyqVel)>90)) {
-    emit log(Message("Nyquist Velocity Not Defined - Dealiasing Not Possible"));
+    emit log(Message(QString("Nyquist Velocity Not Defined - Dealiasing Not Possible"),0,this->objectName()));
     return false;
   }
 
@@ -1071,7 +1070,7 @@ bool RadarQC::VAD(float* &vel, Sweep* &currentSweep,
   stError = new float[vadNumCoEff];
 
   if(! Matrix::lls(vadNumCoEff, numData, X, Y, stDeviation, coEff, stError)) {
-    emit log(Message("VAD failed in lls"));
+    emit log(Message(QString("VAD failed in lls"),0,this->objectName()));
     return false;
   }
 
@@ -1132,7 +1131,7 @@ bool RadarQC::GVAD(float* &vel, Sweep* &currentSweep,
   int width = n_filter/2; 
 
   if((nyqVel == 0)||(fabs(nyqVel)>90)) {
-    emit log(Message("Nyquist Velocity Not Defined - Dealiasing Not Possible"));
+    emit log(Message(QString("Nyquist Velocity Not Defined - Dealiasing Not Possible"),0,this->objectName()));
     return false;
   }
   // Used to be fill_vad routine
@@ -1484,7 +1483,7 @@ void RadarQC::crazyCheck()
       for (int v = 0; v < numBins; v++)
 	{
 	  if(isnan(vbins[v])) {
-	    emit log(Message(QString("!!WTF!! ")
+	    emit log(Message(QString("!!ISSUE!! ")
 			   +QString("Dealias Ray #")
 			   +QString().setNum(i)
 			   +QString(" Gate# ")

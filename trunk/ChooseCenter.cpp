@@ -135,6 +135,18 @@ bool ChooseCenter::findCenter()
 			   QString("Data Issues Could Not Find Mean Center")));
      return false;
    }
+
+   // Check to see if there are an adequate number of volumes within
+   // the specified time range
+
+   int goodVolumes = 0;
+   for(int ii = 0; ii < simplexResults->count(); ii++) {
+     if((simplexResults->at(ii).getTime() >= startTime) &&
+	(simplexResults->at(ii).getTime() <= endTime))
+       goodVolumes++;
+   }
+   // Comparison problems :(
+   //Message::toScreen("Counted "+QString().setNum(goodVolumes)+" of "+QString().setNum(simplexResults->count())+" total, in chooseCenter based on start & end time parameters");
   
    if(simplexResults->count() > minVolumes) {
      emit errorlog(Message(QString("Using Polynomial Fit to Determine Best Center"),0,this->objectName()));

@@ -200,7 +200,7 @@ class ChooseCenterPanel:public AbstractPanel
   bool updateConfig();
   bool setDefaultDirectory(QDir* newDir);
   bool checkDates();
-  //bool checkValues();
+  bool checkValues();
 
  private:
   /*
@@ -312,6 +312,7 @@ class HVVPPanel:public AbstractPanel
   ~HVVPPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
+  bool checkValues();
  private:
   QSpinBox *numLevels;
   // numLevels changes the number of levels used in HVVP
@@ -331,6 +332,7 @@ class PressurePanel:public AbstractPanel
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
   bool setDefaultDirectory(QDir* newDir);
+  bool checkValues();
   
  private:
   /*
@@ -375,6 +377,7 @@ class GraphicsPanel:public AbstractPanel
   ~GraphicsPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
+  bool checkValues();
  private:
   QDoubleSpinBox *pMaxBox, *pMinBox, *rmwMaxBox, *rmwMinBox;
   QDateTimeEdit *startDateTime, *endDateTime;
@@ -403,6 +406,7 @@ class QCPanel:public AbstractPanel
   ~QCPanel();
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
+  bool checkValues();
  private:
   /*
    * This panel uses the dir and browse members declared in AbstractPanel

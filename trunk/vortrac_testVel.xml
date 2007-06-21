@@ -65,7 +65,7 @@
         <min_volumes>13</min_volumes>
         <dist_weight>0.0</dist_weight>
         <wind_weight>0.2</wind_weight>
-        <stddev_weight>0</stddev_weight>
+        <stddev_weight>0.6</stddev_weight>
         <pts_weight>0.2</pts_weight>
         <position_weight>0.4</position_weight>
         <rmw_weight>0.4</rmw_weight>

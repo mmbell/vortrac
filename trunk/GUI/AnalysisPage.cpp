@@ -374,7 +374,7 @@ bool AnalysisPage::loadFile(const QString &fileName)
 {
   // Load up a configuration file in the ConfigurationDialog
   if (!configData->read(fileName)) {
-    emit log(Message("Couldn't load configuration file"));
+    emit log(Message(QString("Couldn't load configuration file"),0,this->objectName()));
     return false;
   }
  
@@ -392,7 +392,7 @@ bool AnalysisPage::loadFile(const QString &fileName)
   // Check to make sure the workingDirectory exists
   if(!workingDirectory.exists())
     if(!workingDirectory.mkpath(directoryString)) {
-      emit log(Message("failed to find or create working directory path: "+directoryString));
+      emit log(Message(QString("Failed to find or create working directory path: "+directoryString),0,this->objectName()));
       return false;
     }
   //Message::toScreen("2"+workingDirectory.path());
@@ -628,7 +628,7 @@ void AnalysisPage::abortThread()
     //pollThread = new PollThread;
     pollVortexUpdate(NULL);
     cappiDisplay->clearImage();
-    emit log(Message("Analysis Aborted!", -1));
+    emit log(Message(QString("Analysis Aborted!"), -1, this->objectName()));
   }
   //Message::toScreen("Leaving AnalysisPage Abort");
 }
@@ -737,7 +737,8 @@ bool AnalysisPage::analyticModel()
 	  modelConfig, SLOT(removeDom(const QDomElement&,const QString&)));
   
   if(!configTreeModel->read())
-    emit log(Message("Error Reading Analytic Storm Configuration"));
+    emit log(Message(QString("Error Reading Analytic Storm Configuration"),0,
+		     this->objectName()));
   
   connect(run, SIGNAL(pressed()), modelDialog, SLOT(accept()));
   connect(cancel, SIGNAL(pressed()), modelDialog, SLOT(reject()));

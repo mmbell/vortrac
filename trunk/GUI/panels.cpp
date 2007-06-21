@@ -1450,14 +1450,17 @@ bool CenterPanel::checkValues()
   // SimplexData::maxRadii = 30
   // SimplexData::maxCenters = 25
   // We get this directly now
+  
+  // When this is calculated it should be divided by zGridSp
+  // See AnalysisThread.cpp: line 458
 
-  if((tLBox->value()-bLBox->value()+1)>SimplexData::getMaxLevels()) {
+  if((int)floor((tLBox->value()-bLBox->value())+1.5)>SimplexData::getMaxLevels()) {
     emit log(Message(QString(),0, this->objectName(), Red, 
 		     QString(tr("Number of search levels in simplex exceeds the maximum of ")+QString().setNum(SimplexData::getMaxLevels())+tr(", Please decrease the number of search levels"))));
     return false;
   }
 
-  if(((oRBox->value()-iRBox->value()+1)/(float)ringBox->value())>SimplexData::getMaxRadii()) {
+  if((int)floor((oRBox->value()-iRBox->value())/(float)ringBox->value()+1.5)>SimplexData::getMaxRadii()) {
     emit log(Message(QString(),0, this->objectName(), Red, 
 		     QString(tr("Number of search rings in simplex exceeds the maximum of ")+QString().setNum(SimplexData::getMaxRadii())+tr(", Please decrease the number of search rings"))));
     return false;
@@ -1812,6 +1815,35 @@ bool ChooseCenterPanel::checkDates()
     emit log(Message(message, 0, this->objectName(),Red));
     return false;
   }
+  return true;
+}
+
+bool ChooseCenterPanel::checkValues()
+{
+  // Returning False means that one of the values has not been set correctly
+  // Returning True means that all the values check out...
+
+  // The values of windWeightBox & stdWeightBox and ptsWeightBox should add
+  // should add up to 1.00, if not we should give an error.
+
+  float weightSum = windWeightBox->value()+stdDevWeightBox->value();
+  weightSum += ptsWeightBox->value();
+  if(fabs(weightSum-1.00) >= 0.01) {
+    emit log(Message(QString("Values in Mean Weighting Scheme Must Add to 1.00"),0,this->objectName(),Red,QString("Mean Weight Values Incorrect")));
+    return false;
+  }
+
+  // The values of positionWeightBox & rmwWeightBox & velWeightBox should
+  // add up to 1.00, if not we should give an error.
+
+  weightSum = positionWeightBox->value()+rmwWeightBox->value();
+  weightSum += velWeightBox->value();
+  if(fabs(weightSum-1.00) >= 0.01) {
+    emit log(Message(QString("Values in Center Weighting Scheme Must Add to 1.00"), 0, this->objectName(), Red, QString("Center Weight Values Incorrect")));
+    return false;
+  }
+  
+  emit log(Message(QString(), 0, this->objectName(), Green));
   return true;
 }
 
@@ -2260,13 +2292,15 @@ bool VTDPanel::checkValues()
   // VortexData::maxWaveNum = 5
   // We get this directly now
 
-  if((tLBox->value()-bLBox->value()+1)>VortexData::getMaxLevels()) {
+  // Should be divided by gridspacing see AnalysisPage.cpp: 458ish
+
+  if((int)floor((tLBox->value()-bLBox->value()) + 1.5) > VortexData::getMaxLevels()) {
     emit log(Message(QString(),0, this->objectName(), Red, 
 		     QString(tr("Number of search levels in vtd exceeds the maximum of ")+QString().setNum(VortexData::getMaxLevels())+tr(", Please decrease the number of search levels"))));
     return false;
   }
 
-  if(((oRBox->value()-iRBox->value()+1)/(float)ringBox->value())>VortexData::getMaxRadii()) {
+  if((int)floor((oRBox->value()-iRBox->value())/(float)ringBox->value() + 1.5) > VortexData::getMaxRadii()) {
     emit log(Message(QString(),0, this->objectName(), Red, 
 		     QString(tr("Number of search rings in vtd exceeds the maximum of ")+QString().setNum(VortexData::getMaxRadii())+tr(", Please decrease the number of search rings"))));
     return false;
@@ -2392,6 +2426,17 @@ bool HVVPPanel::updateConfig()
   return true;
 }
 
+bool HVVPPanel::checkValues()
+{
+  // Returning False means that one of the values has not been set correctly
+  // Returning True means that all the values check out...
+  
+  // Parameters for HVVP should be adequately handled by range settings
+  // in the GUI construction, limits are already build in.
+
+  emit log(Message(QString(), 0, this->objectName(), Green));
+  return true;
+}
 
 PressurePanel::PressurePanel()
   :AbstractPanel()
@@ -2684,6 +2729,23 @@ bool PressurePanel::setDefaultDirectory(QDir* newDir)
   }
 }
 
+bool PressurePanel::checkValues()
+{
+  // Returning False means that one of the values has not been set correctly
+  // Returning True means that all the values check out...
+  
+  // Make sure that we have selected a type of pressure reading
+  QString temp(pressureFormat->currentText());
+  if(pressureFormatOptions->value(temp)==QString("")) {
+    emit log(Message(QString(), 0, this->objectName(), Red, 
+	    QString(tr("Please select a pressure file type"))));
+    return false;
+  }
+
+  emit log(Message(QString(), 0, this->objectName(), Green));
+  return true;
+}
+
 
 GraphicsPanel::GraphicsPanel()
   :AbstractPanel()
@@ -2846,6 +2908,18 @@ bool GraphicsPanel::updateConfig()
       }
     }
   setPanelChanged(false);
+  return true;
+}
+
+bool GraphicsPanel::checkValues()
+{
+  // Returning False means that one of the values has not been set correctly
+  // Returning True means that all the values check out...
+
+  // All the values used are sufficiently specified within the 
+  // construction of their GUI components, no need here yet.
+
+  emit log(Message(QString(), 0, this->objectName(), Green));
   return true;
 }
 
@@ -3216,6 +3290,19 @@ bool QCPanel::updateConfig()
       */
       setPanelChanged(false);
     }
+  return true;
+}
+
+bool QCPanel::checkValues()
+{
+  // Returning False means that one of the values has not been set correctly
+  // Returning True means that all the values check out...
+
+  // All of the values used in this panel are adequately constrained by
+  // the limits in constructing their GUI counterparts, nothing to check
+  // right now.
+
+  emit log(Message(QString(), 0, this->objectName(), Green));
   return true;
 }
 

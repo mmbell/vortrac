@@ -179,8 +179,7 @@ void AnalysisThread::run()
 	 bool analysisGood = true;
 	 QTime analysisTime;
 	 analysisTime.start();    // Timer used for user info only
-	 emit log(Message(QString(),2,this->objectName()));
-
+	 
 	 bool beyondRadar;
 	 
 	 // Check the vortexList for a current center to use
@@ -310,7 +309,7 @@ void AnalysisThread::run()
 	     int elapsedSeconds =obsDateTime.secsTo(volDateTime);
 	     //Message::toScreen("Seconds since start "+QString().setNum(elapsedSeconds)+" in AnalysisThread");
 	     if(isnan(elapsedSeconds)) {
-	       emit log(Message(QString("Cannont calculate time until strom is in range of radar, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Yellow,QString("Can not calculate time until storm in range")));
+	       emit log(Message(QString("Cannot calculate time until storm is in range of radar, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Yellow,QString("Can not calculate time until storm in range")));
 	       beyondRadar = false;
 		    }
 	     float distanceMoved = elapsedSeconds*stormSpeed/1000.0;
@@ -329,7 +328,7 @@ void AnalysisThread::run()
 	 
 	 QString currentCenter("Using ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+") for storm center estimate");
 
-	 emit log(Message(currentCenter,2,this->objectName()));
+	 emit log(Message(currentCenter,1,this->objectName())); // 5 %
 	 
 	 // Check to see if the center is beyond 174 km
 	 // If so, tell the user to wait!
@@ -381,7 +380,7 @@ void AnalysisThread::run()
 	   //Message::toScreen(" alpha = "+QString().setNum(alpha));
 	   float dist2go = 0;
 	   if(fabs(stormDirection-cca)<=1) {
-	     dist2go = relDist-174;
+	     dist2go = fabs(relDist)-174;
 	   }
 	   else {
 	     dist2go = 174*sin(acos(-1)+cca-stormDirection-alpha)/sin(stormDirection-cca);
@@ -456,11 +455,11 @@ void AnalysisThread::run()
 	 float top = configData->getParam(vtd, "toplevel").toFloat();
 	 float bottom = configData->getParam(vtd, "bottomlevel").toFloat();
 	 float zSpacing = configData->getParam(cappi, "zgridsp").toFloat();
-	 int numLevels = (int)floor((top-bottom+1)/zSpacing + 1);
+	 int numLevels = (int)floor((top-bottom)/zSpacing + 1.5);
 	 float inner = configData->getParam(vtd, "innerradius").toFloat();
 	 float outer = configData->getParam(vtd, "outerradius").toFloat();
 	 float ringwidth = configData->getParam(vtd, "ringwidth").toFloat();
-	 int numRings = (int)floor((outer-inner+1)/ringwidth + 1);
+	 int numRings = (int)floor((outer-inner)/ringwidth + 1.5);
 	 int numWaveNum = configData->getParam(vtd, "maxwavenumber").toInt()+1;
 	 VortexData *vortexData = new VortexData(numLevels,numRings,
 						 numWaveNum);
@@ -486,21 +485,22 @@ void AnalysisThread::run()
 
 		  connect(dealiaser, SIGNAL(log(const Message&)), this, 
 			  SLOT(catchLog(const Message&)), Qt::DirectConnection);
-		  emit log(Message(QString(),1,this->objectName()));  //6%
 		  dealiaser->getConfig(configData->getConfig("qc"));
 		  
 		  if(dealiaser->dealias()) {
-		    emit log(Message("Finished QC and Dealiasing", 2, this->objectName()));
+		    emit log(Message("Finished QC and Dealiasing", 
+				     1, this->objectName()));  // 10 %
 		    radarVolume->isDealiased(true);
 		  } else {
-		    emit log(Message("Finished Dealias Method with Failures"));
+		    emit log(Message(QString("Finished Dealias Method with Failures"),0,this->objectName()));
 		    analysisGood = false;
 		    // Something went wrong
+		    // We should probably add a return here of some sort...
 		  }
 		  delete dealiaser;
 		}
 		else
-		  emit log(Message("RadarVolume is Dealiased"));
+		  emit log(Message(QString("RadarVolume is Dealiased"),0,this->objectName()));
 		/*
 		 
 			 // Using this for running FORTRAN version
@@ -611,6 +611,8 @@ void AnalysisThread::run()
 		  
 		}
 		
+		emit log(Message("Done with Cappi",15,this->objectName()));
+
 		if(abort)
 		  return;
 		
@@ -629,12 +631,12 @@ void AnalysisThread::run()
 		// Output Radar data to check if dealias worked
 
 		gridData->writeAsi();
-		emit log(Message("Done with Cappi",30,this->objectName()));
+		emit log(Message("Wrote Cappi To File",5,this->objectName()));
 		QString cappiTime;
 		cappiTime.setNum((float)analysisTime.elapsed() / 60000);
 		cappiTime.append(" minutes elapsed");
 		emit log(Message(cappiTime));
-			 
+		
 		
 		// Set the initial guess in the data object as a temporary center
 		vortexData->setLat(0,vortexLat);
@@ -658,7 +660,7 @@ void AnalysisThread::run()
 		  
 		  mutex.lock();
 		  // Get the GBVTD winds
-		  emit log(Message(QString(), 1,this->objectName()));
+		  emit log(Message(QString(), 2,this->objectName()));
 		  vortexThread->getWinds(configData, gridData, radarVolume, 
 					 vortexData, pressureList);
 		  waitForWinds.wait(&mutex); 
@@ -691,6 +693,8 @@ void AnalysisThread::run()
 		  if(vortexData->getNumConvergingCenters(l)>0)
 		    hasConvergingCenters = true;
 		}
+
+		emit log(Message(QString(),2,this->objectName())); // 97 %
 		
 		if(hasConvergingCenters) {
 		  vortexList->append(*vortexData);	
@@ -701,20 +705,9 @@ void AnalysisThread::run()
 		}
 		  
 		if(!hasConvergingCenters && (vortexList->count() > 0)){
-		  //vortexList->removeAt(vortexList->count()-1);
-		  //vortexList->save();		
-		  //simplexList->removeAt(simplexList->count()-1);
-		  //simplexList->save();
 		  emit log(Message(QString("Simplex Analysis Found No Converging Centers in this volume"),0,this->objectName(),Green, QString("No Center Found!"),OutOfRange, QString("No Converging Centers")));
 		  analysisGood = false;
 		}
-		
-		//Message::toScreen("The number of vortexData in the List is "+QString().setNum(vortexList->count()));
-
-		  // Moved this to above last if
-
-		//vortexList->append(*vortexData);	
-		//vortexList->save();
 		
 		// Delete CAPPI and RadarData objects
 		
@@ -732,7 +725,7 @@ void AnalysisThread::run()
 			// Some error occurred, notify the user
 			emit log(Message("Radar volume processing error!"));
 			emit log(Message(
-			   QString("Radar volume processing error!!"), 0,
+			   QString("Radar volume processing error!!"), 2,
 			   this->objectName()));
 			//Message::toScreen("AnalysisThread: Analysis BAD, Done Processing");
 			emit(doneProcessing());
@@ -745,7 +738,7 @@ void AnalysisThread::run()
 			archiveAnalysis();
 			
 			// Complete the progress bar and log that we're done
-			emit log(Message(QString("Analysis complete!"),8,
+			emit log(Message(QString("Analysis complete!"),2,
 					 this->objectName(), AllOff, 
 					 QString(),Ok, QString()));
 

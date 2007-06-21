@@ -116,7 +116,7 @@ void SimplexThread::run()
     mutex.lock();
     
     bool foundCenter = true;
-    emit log(Message("Simplex search started"));
+    emit log(Message(QString("Simplex search started"),0,this->objectName()));
     
     // Initialize variables
     QString simplexPath = configData->getParam(simplexConfig, 
@@ -169,6 +169,8 @@ void SimplexThread::run()
 					 QString().setNum(i)).toFloat();
     }
     
+    emit log(Message(QString(),2,this->objectName()));
+
     // Create a GBVTD object to process the rings
 
     if(closure.contains(QString("hvvp"),Qt::CaseInsensitive)) {
@@ -186,22 +188,26 @@ void SimplexThread::run()
     }
     vtdCoeffs = new Coefficient[20];
 
+    emit log(Message(QString(),3,this->objectName()));
+
     mutex.unlock();
     if(abort)
       return;
     mutex.lock();
     
+    QDomElement cappi = configData->getConfig("cappi");
+    float zgridsp = configData->getParam(cappi, "zgridsp").toFloat();
+    
+    int newNumLevels = (int)floor((lastLevel - firstLevel)/zgridsp +1.5);
+    int newNumRings = (int)floor((lastRing - firstRing)/ringWidth + 1.5);
+
     // Create a simplexData object to hold the results;
-    simplexData = new SimplexData(int(lastLevel - firstLevel + 1), 
-				  int((lastRing - firstRing + 1)/ringWidth), 
-				  (int)numPoints);
+    simplexData = new SimplexData(newNumLevels, newNumRings,(int)numPoints);
     
     // the number of levels should be divided by the zgridsp (cappi) because
     // those are measurements in km
     // the ring count should be divided by the ring width
-    // I don't know if adding one is necessary, I have been rounded up 
-    // everywhere else in this situation
-   
+      
     simplexData->setTime(vortexData->getTime());
     simplexData->setNumPointsUsed((int)numPoints);
     
@@ -216,10 +222,11 @@ void SimplexThread::run()
     mutex.unlock();
     
     int numLevels = int(lastLevel-firstLevel+1);
-    int loopPercent = int(40.0/float(numLevels+1));
-    int endPercent = 40-(numLevels*loopPercent);
+    int loopPercent = int(20.0/float(numLevels));
+    int endPercent = 20-(numLevels*loopPercent);
     
     // Loop through the levels and rings
+    // Should this have some reference to grid spacing?
     for (float height = firstLevel; height <= lastLevel; height++) {
       emit log(Message(QString(), loopPercent, this->objectName()));
 
@@ -244,7 +251,7 @@ void SimplexThread::run()
 	      (gridData->getRefPointJ() < 0) ||
 	      (gridData->getRefPointK() < 0))  {
 	    // Out of bounds problem
-	    emit log(Message("Initial simplex guess is outside CAPPI"));
+	    emit log(Message(QString("Initial simplex guess is outside CAPPI"),0,this->objectName()));
 	    archiveNull(radius, height, numPoints);
 	    mutex.unlock();
 	    continue;
@@ -320,7 +327,7 @@ void SimplexThread::run()
 		if (vtdCoeffs[0].getParameter() == "VTC0") {
 		  VT[v] = vtdCoeffs[0].getValue();
 		} else {
-		  emit log(Message("Error retrieving VTC0 in simplex"));
+		  emit log(Message(QString("Error retrieving VTC0 in simplex"),0,this->objectName()));
 		} 
 	      } else {
 		VT[v] = -999;
@@ -371,7 +378,7 @@ void SimplexThread::run()
 	      
 	      // Check iterations
 	      if (numIterations > maxIterations) {
-		emit log(Message("Maximum iterations exceeded in Simplex"));
+		emit log(Message(QString("Maximum iterations exceeded in Simplex"),0,this->objectName()));
 		mutex.unlock();
 		break;
 	      }
@@ -421,7 +428,7 @@ void SimplexThread::run()
 			if (vtdCoeffs[0].getParameter() == "VTC0") {
 			  VT[v] = vtdCoeffs[0].getValue();
 			} else {
-			  emit log(Message("Error retrieving VTC0 in simplex!"));
+			  emit log(Message(QString("Error retrieving VTC0 in simplex!"),0,this->objectName()));
 			} 
 		      } else {
 			VT[v] = -999;
@@ -535,6 +542,8 @@ void SimplexThread::run()
     simplexData = NULL;
     delete oldData;
     
+    emit log(Message(QString(),1+endPercent,this->objectName()));
+    
     //Now pick the best center
     simplexResults->timeSort();
     ChooseCenter *centerFinder = new ChooseCenter(configData,simplexResults,vortexData);
@@ -545,7 +554,8 @@ void SimplexThread::run()
     // Save again to keep mean values found in chooseCenter
     simplexResults->save();
     
-    
+    emit log(Message(QString(),4,this->objectName()));
+
     // Clean up
     //delete centerFinder;
     delete[] dataGaps;
@@ -560,11 +570,11 @@ void SimplexThread::run()
     if(!foundCenter)
       {
 	// Some error occurred, notify the user
-	emit log(Message("Simplex Error!"));
+	emit log(Message(QString("Failed to Indentify Center!"),0,this->objectName(),AllOff,QString(),SimplexError,QString("Simplex Failed")));
 	return;
       } else {
 	// Update the vortex list
-	emit log(Message(QString("Done with Simplex"),endPercent, this->objectName()));
+	emit log(Message(QString("Done with Simplex"),0, this->objectName()));
 	
 	// Let the poller know we're done
 	emit(centerFound());
@@ -622,8 +632,8 @@ void SimplexThread::archiveNull(float& radius, float& height, float& numPoints)
 	simplexData->setX(level, ring, -999);
 	simplexData->setY(level, ring, -999);
 	simplexData->setMaxVT(level, ring, -999);
-	simplexData->setCenterStdDev(level, ring, 999);
-	simplexData->setVTUncertainty(level, ring, 999);
+	simplexData->setCenterStdDev(level, ring, -999);
+	simplexData->setVTUncertainty(level, ring, -999);
 	simplexData->setNumConvergingCenters(level, ring, (int)0);
 	for (int point = 0; point < (int)numPoints; point++) {
 		Center indCenter(-999, -999, -999, level, ring);
@@ -763,7 +773,6 @@ bool SimplexThread::calcHVVP(float& lat, float& lon)
 	  this, SLOT(catchLog(const Message)), 
 	  Qt::DirectConnection);
   envWindFinder->setRadarData(radarData, rt, cca, rmw);
-  emit log(Message(QString(), 1,this->objectName()));
   //envWindFinder->findHVVPWinds(false); for first fit only
   bool hasHVVP = envWindFinder->findHVVPWinds(true);
   hvvpResult = envWindFinder->getAvAcrossBeamWinds();
