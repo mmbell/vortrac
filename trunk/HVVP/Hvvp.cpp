@@ -125,17 +125,19 @@ long Hvvp::hvvpPrep(int m) {
   float curmw = (rt - rmw)/rt;          // Unitless
   float cuthr;                          // Unitless
   float ae = 4.0*6371.0/3.0;                // km
-  Sweep* currentSweep;
-  Ray* currentRay;
+  Sweep* currentSweep = NULL;
+  Ray* currentRay = NULL;
   float* vel = NULL; 
 
   if(cuspec < curmw)
     cuthr = cuspec; 
   else 
     cuthr = curmw;
-  /*
 
+  /*
   // For Printing the results to file for Fortran Comparisons
+ 
+  Message::toScreen("hgtStart = "+QString().setNum(hgtStart)+" hInc = "+QString().setNum(hInc));
   
   QString fileName("PointsSelected_BigLevel"+QString().setNum(m)+".csv");
   QFile* outputFile = new QFile(fileName);
@@ -149,7 +151,8 @@ long Hvvp::hvvpPrep(int m) {
     out << "CUMIN, "<< cumin << endl;
     out << " alt(km), cu, Vd(m/s), elvn(adjusted for range in rad), ray index, az(after rotation in rad)" << endl;
   }
-  */
+  */ // End Comments
+  
   rot = cca*deg2rad;               // ** 
   // float rot = (cca-4.22)*deg2rad; **
   // ** Special case scenerio for KBRO Data of Bret (1999)
@@ -167,7 +170,7 @@ long Hvvp::hvvpPrep(int m) {
   float hLow = h0-hInc;
   float hHigh = h0+hInc;
 
-  //out << " num sweeps = " << volume->getNumSweeps();
+  //  out << " num sweeps = " << volume->getNumSweeps();
   
   for(int s = 0; s < volume->getNumSweeps(); s++) {
     currentSweep = volume->getSweep(s);
@@ -215,11 +218,13 @@ long Hvvp::hvvpPrep(int m) {
 		  out << " elev# " << s << " = " << elevation << endl;
 		out << count << "= srange: " << srange << " cu " << cu << " alt " << alt << " zz " << zz << endl;
 	      }
-	      
+	        // Comments End For Paul's Test      
 	      if(m == 0) {
 		// What Paul would like to receive for comparisons
 		out << alt << ", " << cu << ", " << vel[v] << ", " << ee << ", "<< r << ", " << aa << endl;
-		
+	      }
+	      // Comments Begin For Paul's Test
+	      
 		//What I was using for test comparisons
 	      out << vel[v] << ", " << v << ", " << r-startRay <<", " << currentRay->getAzimuth() << ", " << s << ",  " << elevation << ", " << srange << ", " << cu << ", " << alt << ", " << zz << endl;
 		
@@ -261,6 +266,7 @@ long Hvvp::hvvpPrep(int m) {
   delete vel;
 
   //out << "Level " << m << " count = " << count << endl;
+  //Message::toScreen("Level "+QString().setNum(m)+" count = "+QString().setNum(count));
   
   //outputFile->close();
 
@@ -324,12 +330,12 @@ bool Hvvp::findHVVPWinds(bool both)
       bool flag, outlier;
       
       // Only for comparisons in Mathematica
-      /*
+      /* // Comment start here
       QString fileName("/scr/science40/mauger/Working/trunk/hvvp1824CharBigRepeat"+QString().setNum(m)+".dat");
       writeToFile(fileName,xlsDimension,count,count,1,xls,yls);
       QString midFileName = fileName+QString(".printA");
       flag = Matrix::oldlls(xlsDimension, count, xls, yls, sse, cc, stand_err, midFileName);
-      //Message::toScreen(QString(" count = ")+QString().setNum(count));
+      Message::toScreen(QString(" count = ")+QString().setNum(count));
       QFile* outputFile = new QFile(fileName+QString(".cpplls"));
       outputFile->open(QIODevice::WriteOnly);
       QTextStream out(outputFile);
@@ -355,7 +361,7 @@ bool Hvvp::findHVVPWinds(bool both)
       }
       
       outputFile->close();
-      */
+      */ // comments end here
       
       flag = Matrix::lls(xlsDimension, count, xls, yls, sse, cc, stand_err);
 

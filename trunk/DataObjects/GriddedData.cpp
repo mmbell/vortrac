@@ -65,47 +65,47 @@ bool GriddedData::writeAsi(const QString& fileName)
 void GriddedData::setIdim(const int& dim)
 {
   iDim = dim;
-  if(dim > 256)
-    Message::toScreen("GriddedData: WARNING! Idim is greater than 256 limit");
-  if(float(dim)/getIGridsp() > 256) 
-    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in IDim exceeds 256 point array capacity");
+  if(dim > maxIDim)
+  Message::toScreen("GriddedData: WARNING! Idim is greater than "+QString().setNum(maxIDim)+" limit");
+  if(float(dim)/getIGridsp() > maxIDim) 
+  Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in IDim exceeds +QString().setNum(maxIDim)+" point array capacity");
 }
 
 void GriddedData::setJdim(const int& dim)
 {
   jDim = dim;
-  if(dim > 256)
-    Message::toScreen("GriddedData: WARNING! Jdim is greater than 256 limit");
-  if(float(dim)/getJGridsp() > 256) 
-    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in JDim exceeds 256 point array capacity");
+  if(dim > maxJDim)
+    Message::toScreen("GriddedData: WARNING! Jdim is greater than "+QString().setNum(maxJDim)+" limit");
+  if(float(dim)/getJGridsp() > maxJDim) 
+    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in JDim exceeds "+QString().setNum(maxJDim)+" point array capacity");
 }
 
 void GriddedData::setKdim(const int& dim)
 { 
   kDim = dim;
-  if(dim > 20)
-    Message::toScreen("GriddedData: WARNING! Kdim is greater than 20 limit");
-  if(float(dim)/getKGridsp() > 20) 
-    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in KDim exceeds 20 point array capacity");
+  if(dim > maxKDim)
+    Message::toScreen("GriddedData: WARNING! Kdim is greater than "+QString().setNum(maxKDim)+" limit");
+  if(float(dim)/getKGridsp() > maxKDim) 
+    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in kDim exceeds "+QString().setNum(maxKDim)+" point array capacity");
 }
 
 void GriddedData::setIGridsp(const float& iSpacing)
 {
   iGridsp = iSpacing;
-  if(getIdim()/iSpacing > 256)
-    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in ISpacing exceeds 256 point array capacity");
+  if(getIdim()/iSpacing > maxIDim)
+    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in ISpacing exceeds "+QString().setNum(maxIDim)+" point array capacity");
 }
 void GriddedData::setJGridsp(const float& jSpacing)
 {
   jGridsp = jSpacing;
-  if(getJdim()/jSpacing > 256)
-    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in JSpacing exceeds 256 point array capacity");
+  if(getJdim()/jSpacing > maxJDim)
+    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in JSpacing exceeds "+QString().setNum(maxJDim)+" point array capacity");
 }
 void GriddedData::setKGridsp(const float& kSpacing)
 {
   kGridsp = kSpacing;
-  if(getKdim()/kSpacing > 20)
-    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in KSpacing exceeds 20 point array capacity");
+  if(getKdim()/kSpacing > maxKDim)
+    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in KSpacing exceeds "+QString().setNum(maxKDim)+" point array capacity");
 }
 */
 void GriddedData::setLatLonOrigin(float *knownLat, float *knownLon,
@@ -414,14 +414,15 @@ int GriddedData::getIndexFromCartesianPointK (const float& cartK)
 
 int GriddedData::getFieldIndex(const QString& fieldName) const
 {
-  int field;
+  int field = -1;
   if((fieldName == "dz")||(fieldName == "DZ"))
     field = 0;
   if((fieldName == "ve")||(fieldName == "VE"))
     field = 1;
   if((fieldName == "sw")||(fieldName == "SW"))
     field = 2;
-  
+  if(field == -1)
+    Message::toScreen("GriddedData::GetFieldIndex: Failed to Select From Available Fields");
   return field;
 }
 
@@ -1867,3 +1868,7 @@ void GriddedData::setExit(volatile bool *exit)
   exitNow = exit;
 }
 
+void GriddedData::setCylindricalAzimuthSpacing(const float& newSpacing)
+{
+  cylindricalAzimuthSpacing = newSpacing;
+}

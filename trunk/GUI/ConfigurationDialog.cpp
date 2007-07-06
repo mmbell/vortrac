@@ -86,6 +86,7 @@ bool ConfigurationDialog::read()
     return false; }
 
   applyChanges();
+  
   return true;
 }
 
@@ -112,6 +113,7 @@ bool ConfigurationDialog::readConfig()
   vortex->setDefaultDirectory(newMaster);
   vortex->setPanelChanged(true);
   vortex->updateConfig();
+  graphics->checkDisplayType();
   setPanelDirectories();
   return true;
   //find way to check fail!!
@@ -131,8 +133,6 @@ void ConfigurationDialog::applyChanges()
 			 0,panels.at(i)->objectName()));
 	return;
       }
-      //if(!panels.at(i)->checkDirectory())
-      //return;
     }
   emit configChanged();
   close();
@@ -324,8 +324,15 @@ void ConfigurationDialog::graphicsParameter(const QDomElement& element,
 					    const QString& name, 
 					    const QString& parameter)
 {
-  float num = parameter.toFloat();
-  emit changeGraphicsParameter(name,num);
+  if(element.tagName()!=QString("graphics"))
+    emit log(Message(QString("Trying to Adjust Graphics Parameters With Incorrect Values from "+element.tagName()),0,this->objectName()));
+  if(name.contains("date")||name.contains("time")) {
+    emit changeGraphicsParameter(name, parameter);
+  }
+  else {
+    float num = parameter.toFloat();
+    emit changeGraphicsParameter(name,num);
+  }
 } 
 
 void ConfigurationDialog::catchLog(const Message& message)
@@ -372,11 +379,11 @@ void ConfigurationDialog::setPanelDirectories()
 bool ConfigurationDialog::checkPanels()
 {
   bool noErrors = true;
-  QList<AbstractPanel*> panels = panelForString.values();
-  for(int p = 0; p < panels.count(); p++) {
-    if(!panels[p]->checkDirectory())
+  QList<AbstractPanel*> panelWidgets = panelForString.values();
+  for(int p = 0; p < panelWidgets.count(); p++) {
+    if(!panelWidgets[p]->checkDirectory())
       noErrors = false;
-    if(!panels[p]->checkValues())
+    if(!panelWidgets[p]->checkValues())
       noErrors = false;
   }
   
@@ -388,4 +395,12 @@ bool ConfigurationDialog::checkPanels()
   }
   
   return noErrors;
+}
+
+void ConfigurationDialog::turnOffMembers(const bool& off)
+{
+  QList<AbstractPanel*> panelWidgets = panelForString.values();
+  for(int p = 0; p < panelWidgets.count(); p++) {
+    panelWidgets[p]->turnOffMembers(off);
+  }
 }

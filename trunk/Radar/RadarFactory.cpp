@@ -147,7 +147,7 @@ bool RadarFactory::hasUnprocessedData()
       // Should have filenames starting with radar ID
       dataPath.setNameFilters(QStringList(radarName + "*"));
       dataPath.setFilter(QDir::Files);
-      dataPath.setSorting(QDir::Time | QDir::Reversed);
+      dataPath.setSorting(QDir::Name);
       QStringList filenames = dataPath.entryList();
 
       // Remove any files with extensions

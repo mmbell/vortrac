@@ -20,6 +20,8 @@
 #include <QBrush>
 #include <QSize>
 #include <QTimer>
+#include <QEvent>
+#include <QPaintEvent>
 #include "Message.h"
 
 class StormSignal:public QWidget

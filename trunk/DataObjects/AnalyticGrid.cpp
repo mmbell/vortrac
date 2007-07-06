@@ -500,12 +500,10 @@ void AnalyticGrid::gridLambData()
 	  vy+=vrl*(delY/r);
 	}
 	else {
-	  if(r!=0) {
-	    vrl = .5*r*(vorDisturbance/rmw)*sin(2*(mathAz+lambAngle)); 
-	    ref += vrl;
-	    vx+=vrl*(-delX/r);
-	    vy+=vrl*(delY/r);
-	  }
+	  vrl = .5*r*(vorDisturbance/rmw)*sin(2*(mathAz+lambAngle)); 
+	  ref += vrl;
+	  vx+=vrl*(-delX/r);
+	  vy+=vrl*(delY/r);
 	}
 
 	// tangential winds

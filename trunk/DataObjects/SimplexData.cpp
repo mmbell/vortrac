@@ -112,6 +112,7 @@ float SimplexData::getX(const int& lev, const int& rad) const
 {
   if ((lev < numLevels)&&(rad<numRadii))
     return meanX[lev][rad];
+  Message::toScreen("SimplexData: getX: Outside Bounds");
   return meanX[0][0];
 }
 
@@ -119,6 +120,8 @@ void SimplexData::setX(const int& lev, const int& rad, const float& newX)
 {
   if ((lev < numLevels)&&(rad < numRadii))
     meanX[lev][rad] = newX;
+  else
+    Message::toScreen("SimplexData: setX: Outside Bounds");
 }
 
 void SimplexData::setX(const float** a, const int& numLev, const int& numRad)
@@ -132,6 +135,7 @@ float SimplexData::getY(const int& lev, const int& rad) const
 {
   if ((lev < numLevels)&&(rad < numRadii))
     return meanY[lev][rad];
+  Message::toScreen("SimplexData: getY: Outside Bounds: Level = "+QString().setNum(lev)+" Radius = "+QString().setNum(rad));
   return meanY[0][0];
 }
 
@@ -139,6 +143,8 @@ void SimplexData::setY(const int& lev, const int& rad, const float& newY)
 {
   if ((lev < numLevels)&&(rad < numRadii))
     meanY[lev][rad] = newY;
+  else
+    Message::toScreen("SimplexData: setX: Outside Bounds");
 }
 
 void SimplexData::setY(const float** a, const int& numLev, const int& numRad)
@@ -152,6 +158,7 @@ float SimplexData::getCenterStdDev(const int& lev, const int& rad) const
 {
   if((lev < numLevels)&&(rad < numRadii))
     return centerStdDeviation[lev][rad];
+  Message::toScreen("SimplexData: getCenterStdDev: Outside Bounds");
   return centerStdDeviation[0][0];
 }
 
@@ -160,6 +167,8 @@ void SimplexData::setCenterStdDev(const int& lev, const int& rad,
 {
   if((lev < numLevels)&&(rad < numRadii))
     centerStdDeviation[lev][rad] = number;
+  else
+    Message::toScreen("SimplexData: setCenterStdDev: Outside Bounds");
 }
 
 void SimplexData::setCenterStdDev(const float** a, const int& numLev, 
@@ -174,6 +183,7 @@ float SimplexData::getHeight(const int& i) const
 {
   if (i < numLevels)
     return height[i];
+  Message::toScreen("SimplexData: getHeight: Outside Bounds");
   return height[0];
 }
 
@@ -182,6 +192,8 @@ void SimplexData::setHeight(const int& index, const float& newHeight)
 {
   if (index < numLevels)
     height[index] = newHeight;
+  else
+    Message::toScreen("SimplexData: setHeight: Outside Bounds");
 }
 
 void SimplexData::setHeight(const float* a, const int& numLev)
@@ -194,6 +206,7 @@ float SimplexData::getRadius(const int& i) const
 {
   if (i < numRadii)
     return radius[i];
+  Message::toScreen("SimplexData: getRadius: Outside Bounds");
   return radius[0];
 }
 
@@ -202,6 +215,8 @@ void SimplexData::setRadius(const int& index, const float& newRadius)
 {
   if (index < numRadii)
     radius[index] = newRadius;
+  else
+    Message::toScreen("SimplexData: setRadius: Outside Bounds");
 }
 
 void SimplexData::setRadius(const float* a, const int& numRad)
@@ -224,6 +239,7 @@ float SimplexData::getMaxVT(const int& lev, const int& rad) const
 {
   if ((lev < numLevels)&&(rad < numRadii))
     return meanVT[lev][rad];
+  Message::toScreen("SimplexData: getMaxVT: Outside Bounds");
   return meanVT[0][0];
 }
 
@@ -231,6 +247,8 @@ void SimplexData::setMaxVT(const int& lev, const int& rad, const float& vel)
 {
   if ((lev < numLevels)&&(rad < numRadii))
     meanVT[lev][rad] = vel;
+  else
+    Message::toScreen("SimplexData: setMaxVT: Outside Bounds");
 }
 
 void SimplexData::setMaxVT(const float** a, const int& numLev, 
@@ -245,6 +263,7 @@ float SimplexData::getVTUncertainty(const int& lev, const int& rad) const
 {
   if((lev < numLevels)&&(rad < numRadii))
     return meanVTUncertainty[lev][rad];
+  Message::toScreen("SimplexData: getVTUncertainty: Outside Bounds");
   return meanVTUncertainty[0][0];
 }
 
@@ -253,6 +272,8 @@ void SimplexData::setVTUncertainty(const int& lev, const int& rad,
 {
   if ((lev < numLevels)&&(rad < numRadii))
     meanVTUncertainty[lev][rad] = dMaxVT;
+  else
+    Message::toScreen("SimplexData: setVTUncertainty: Outside Bounds");
 }
 
 void SimplexData::setVTUncertainty(const float** a, const int& numLev, 
@@ -267,6 +288,7 @@ int SimplexData::getNumConvergingCenters(const int& lev, const int& rad) const
 {
   if((lev < numLevels)&&(rad < numRadii))
     return numConvergingCenters[lev][rad];
+  Message::toScreen("SimplexData: getNumConvergingCenters: Outside Bounds Level = "+QString().setNum(lev)+" radius = "+QString().setNum(rad));
   return numConvergingCenters[0][0];
 }
 
@@ -296,6 +318,7 @@ Center SimplexData::getCenter(const int& lev, const int& rad,
 {
   if((lev < numLevels)&&(rad < numRadii)&&(waveNum < numCenters))
     return centers[lev][rad][waveNum];
+  Message::toScreen("SimplexData: getCenter: Outside Bounds");
   return Center();
 }
 

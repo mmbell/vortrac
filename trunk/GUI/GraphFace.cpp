@@ -32,12 +32,17 @@ GraphFace::GraphFace(QWidget *parent, const QString& title)
   rGMax = 0; autoRGMax = 0;
   pressureMax = 0; autoPressureMax = 0;
   pGMax = 0; autoPGMax = 0;
+  deficitMax = -1000; autoDeficitMax = -1000;
+  dGMax = -1000; autoDGMax = -1000;
   rmwMin = 1000000; autoRmwMin = 100000;
   rGMin = 1000000; autoRGMin = 1000000;
   pressureMin = 1000000; autoPressureMin = 1000000;
   pGMin = 1000000; autoPGMin = 1000000;
+  deficitMin = 100; autoDeficitMin = 100;
+  dGMin = 100; autoDGMin = 100;
   rmwRange = 0;
   pressureRange = 0;
+  deficitRange = 0;
   timeRange = -1;
 
   //sets the widgets's size to be the combined size of all the
@@ -56,9 +61,12 @@ GraphFace::GraphFace(QWidget *parent, const QString& title)
   VortexDataList = NULL;
   dropList = NULL;
   setColors();
-  QDateTime first();
-
+  first = QDateTime();
+  last = QDateTime();
+  
   imageAltered = true;
+  showPressure = true;
+
   image = new QImage(graph_width+LEFT_MARGIN_WIDTH+RIGHT_MARGIN_WIDTH,graph_height+TOP_MARGIN_HEIGHT+BOTTOM_MARGIN_HEIGHT,QImage::Format_ARGB32_Premultiplied);
 
   workingDirectory = QDir(QDir::currentPath());
@@ -125,17 +133,14 @@ void GraphFace::paintEvent(QPaintEvent *event)
     imagePainter->fillRect(QRectF(QPointF(0,0),image->size()),
 			 myBackground);
     updateImage(imagePainter);
-  
+    
     if (imagePainter->isActive())
       imagePainter->end();
-  
+    
     delete imagePainter;
-  
-  // This should go back in once is stops turning things white...
+    
   }
   else {
-    //painter->setBackgroundMode(Qt::TransparentMode);
-    //painter->setRenderHint(QPainter::Antialiasing);
     painter->drawImage(QPoint(0,0), *image);
     resize(this->size());
       
@@ -147,9 +152,6 @@ void GraphFace::paintEvent(QPaintEvent *event)
     delete painter;
   }
 
-  // QPainter *painter = new QPainter(this);
-  //  painter->drawImage(QRect(QPoint(0,0),size()), displayImage);
-  
   event->accept();
 
 }
@@ -178,22 +180,33 @@ bool GraphFace::event(QEvent *event)
 	QToolTip::showText(find->globalPos(), message, this);
       }
       else {
-	if (unScalePressure(find->y()) > (pGMin)) {
+	if ((unScalePressure(find->y()) > (pGMin)) && showPressure) {
 	  // Pressure Point
 	  measurement.setNum(VortexDataList->value(index).getPressure());
 	  time = VortexDataList->value(index).getTime().toString("dd-hh:mm");
 	  QString message("Pressure Estimate\nPressure = "
-					  + measurement + " mb\n"+ time);
+			  + measurement + " mb\n"+ time);
 	  //			  +"\nClick For More Info...");
 	  QToolTip::showText(find->globalPos(), message, this);
 	}
 	else {
-	  // RMW Point
-	  measurement.setNum(VortexDataList->value(index).getAveRMW());
-	  time = VortexDataList->value(index).getTime().toString("dd-hh:mm");
-	  QString message("Radius of Maximum Wind Estimate\nRMW = "
-			  +measurement+" km\n"+time);
-	  QToolTip::showText(find->globalPos(), message , this);
+	  if((unScaleDeficit(find->y()) > (dGMin)) && !showPressure) {
+	    // Deficit Point
+	    measurement.setNum(VortexDataList->value(index).getPressureDeficit());
+	    time = VortexDataList->value(index).getTime().toString("dd-hh:mm");
+	    QString message("Pressure Deficit Estimate\nPressure Deficit = "
+			    + measurement +" mb\n"+ time);
+	    //              + "\nClick For More Info...");
+	    QToolTip::showText(find->globalPos(), message, this);
+	  }
+	  else {
+	    // RMW Point
+	    measurement.setNum(VortexDataList->value(index).getAveRMW());
+	    time = VortexDataList->value(index).getTime().toString("dd-hh:mm");
+	    QString message("Radius of Maximum Wind Estimate\nRMW = "
+			    +measurement+" km\n"+time);
+	    QToolTip::showText(find->globalPos(), message , this);
+	  }
 	}
       }
     }
@@ -287,25 +300,6 @@ void GraphFace::saveImage(QString fileName)
 
 void GraphFace::newInfo(VortexList* gList)
 { 
-  /*
-  if (first.isNull()) {
-    // Find the earilier vortexData in the new list
-    QDateTime initialTime = gList->at(0).getTime(); 
-    int initialTimeIndex = 0;
-    for(int i = 1; i < gList->count(); i++) {
-      if(gList->value(i).getTime() < initialTime) {
-	initialTime = gList->value(i).getTime();
-	initialTimeIndex = i;
-      }	
-      if(gList->value(i).getTime().date() < initialTime.date()) {
-	initialTime = gList->value(i).getTime();
-	initialTimeIndex = i;
-      }
-    }
-    first = QDateTime(initialTime);
-  }
-  */
-  
   if(gList==NULL){
     VortexDataList = NULL;
     
@@ -314,12 +308,17 @@ void GraphFace::newInfo(VortexList* gList)
     rGMax = 0; autoRGMax = 0;
     pressureMax = 0; autoPressureMax = 0;
     pGMax = 0; autoPGMax = 0;
+    deficitMax = -1000; autoDeficitMax = -1000;
+    dGMax = -1000; autoDGMax = -1000;
     rmwMin = 1000000; autoRmwMin = 100000;
     rGMin = 1000000; autoRGMin = 1000000;
     pressureMin = 1000000; autoPressureMin = 1000000;
     pGMin = 1000000; autoPGMin = 1000000;
+    deficitMin = 100; autoDeficitMin = 100;
+    dGMin = 100; autoDGMin = 100;
     rmwRange = 0;
     pressureRange = 0;
+    deficitRange = 0;
     timeRange = -1;
     imageAltered = true;
     emit update();
@@ -327,23 +326,28 @@ void GraphFace::newInfo(VortexList* gList)
   }
   
   gList->timeSort();
-  if(first.isNull())
-    first = gList->at(0).getTime();;
-
+  if(first.isNull()) 
+    first = gList->at(0).getTime();
+   
   for(int i = 0; i < gList->count(); i++) {
-    
     VortexData new_point = gList->value(i);
  
     checkPressure(&new_point);
+    checkDeficit(&new_point);
     checkRmw(&new_point);
     checkRanges();
     
     // set time range as the number of seconds between the time of the first 
     // point and the time of this point
-    
-    if(first.secsTo(new_point.getTime())> timeRange){
-      timeRange = first.secsTo(new_point.getTime());
+    if(last == QDateTime()) {
+      if(first.secsTo(new_point.getTime())> timeRange){
+	timeRange = first.secsTo(new_point.getTime());
+      }
     }
+    else {
+      timeRange = first.secsTo(last);
+    }
+  
     if (timeRange == 0)
       timeRange = 60;
   }
@@ -351,8 +355,7 @@ void GraphFace::newInfo(VortexList* gList)
   VortexDataList = gList;
   imageAltered = true;
   emit update(); 
-  //  Message::toScreen("Should have loaded everything");
-  // puts out signal that starts paintEvent to repaint;
+  
   return;
 }
 
@@ -365,10 +368,17 @@ void GraphFace::newDropSonde(VortexList* dropPointer)
 {
   VortexData new_drop = dropPointer->last(); 
   checkPressure(&new_drop);
+  checkDeficit(&new_drop);
   checkRanges();
-  
-  if (first.secsTo(new_drop.getTime())> timeRange)
-    timeRange = first.secsTo(new_drop.getTime());
+
+  if(last == QDateTime()) {
+    if(first.secsTo(new_drop.getTime())> timeRange){
+      timeRange = first.secsTo(new_drop.getTime());
+    }
+  }
+  else {
+    timeRange = first.secsTo(last);
+  }
   
   dropList = NULL;
   dropList = dropPointer;  
@@ -393,11 +403,25 @@ void GraphFace::manualAxes(const QString& name, const bool change)
       rmwMin = autoRmwMin;
       rGMax = autoRGMax;
       rGMin = autoRGMin;
+      dGMin = autoDGMin;
+      deficitMin = autoDeficitMin;
+      dGMax = autoDGMax;
+      deficitMax = autoDeficitMax;
+      if((VortexDataList!=NULL)&&(VortexDataList->count() > 0)) 
+	first = VortexDataList->at(0).getTime();
+      else
+	first = QDateTime();
+      last = QDateTime();
       checkRanges();
       imageAltered = true;
       emit update();
     }
     autoAxes = !change;
+  }
+  if(name == QString("show_pressure")) {
+    showPressure = change;
+    imageAltered = true;
+    emit update();
   }
 }
 
@@ -423,12 +447,54 @@ void GraphFace::manualParameter(const QString& name, const float num)
       rGMax = num;
       rmwMax = num;
     }
+    if (name == QString("defmin")) {
+      dGMin = -1*num;
+      deficitMin = -1*num;
+    }
+    if (name == QString("defmax")) {
+      dGMax = -1*num;
+      deficitMax = -1*num;
+    }
     checkRanges();
     imageAltered = true;
     emit update();
   }
 }
 
+//***********************--manualParameter--**********************************
+void GraphFace::manualParameter(const QString& name, const QString& time)
+{
+  // This should be used if there is a change in one of the time
+  // parameters in the Graphics section of the XML config
+
+  if (!autoAxes) {
+    if (name == QString("startdate")) {
+      first.setDate(QDate::fromString(time, Qt::ISODate));
+      first.setTimeSpec(Qt::UTC);
+    }
+    if (name == QString("starttime")) {
+      first.setTime(QTime::fromString(time, Qt::ISODate));
+      first.setTimeSpec(Qt::UTC);
+    }
+    if (name == QString("enddate")) {
+      last.setDate(QDate::fromString(time, Qt::ISODate));
+      last.setTimeSpec(Qt::UTC);
+    }
+    if (name == QString("endtime")) {
+      last.setTime(QTime::fromString(time, Qt::ISODate));
+      last.setTimeSpec(Qt::UTC);
+    }
+    /*
+    if(last.isNull)
+      timeRange = 60;
+    else
+      timeRange = first.secsTo(last);
+    */
+    checkRanges();  // ?
+    imageAltered = true;  
+    emit update();
+  }
+}
 
 //************************--makeKey--(SLOT)--**********************************
 
@@ -547,6 +613,10 @@ void GraphFace::makeKey()
  void GraphFace::updateTitle(QWidget* labelWidget, 
 			     const QString& new_Label)
 {
+  // Why do we need labelWidget
+  //Message::toScreen("GraphFace: Update Title Parent Widget Was "+labelWidget->objectName());
+  // For compatibility with one of the Qt set signals :)
+ 
   graphTitle = new_Label;
   imageAltered = true;
   update();
@@ -615,6 +685,26 @@ void GraphFace::checkRanges()
       pressureRange = pGMax - pGMin;
       //call the function that will remake all the pressure points
   }
+  if (deficitRange != (dGMax - dGMin)) {
+    deficitRange = dGMax-dGMin;
+  }
+  if (!last.isNull() && !first.isNull()) {
+    if (timeRange != first.secsTo(last)) {
+      timeRange = first.secsTo(last);
+    }
+  }
+  else {
+    if((!first.isNull())&&(VortexDataList!=NULL)&&(VortexDataList->count()>0)){
+      QDateTime tempLast = VortexDataList->at(VortexDataList->count()-1).getTime();
+      for(int i = 0; i < VortexDataList->count()-1; i++) {
+	if(VortexDataList->at(i).getTime() > tempLast)
+	  tempLast = VortexDataList->at(i).getTime();
+      }
+      timeRange = first.secsTo(tempLast);
+    }
+    else
+      timeRange = -1;
+  }
 }
 
 void GraphFace::checkPressure(VortexData* point)
@@ -642,6 +732,33 @@ void GraphFace::checkPressure(VortexData* point)
     pressureMin = autoPressureMin;
     pGMax = autoPGMax;
     pGMin = autoPGMin;
+  } 
+}
+
+void GraphFace::checkDeficit(VortexData* point)
+{
+	
+  if ((-1*point->getPressureDeficit() + 
+       point->getDeficitUncertainty())> autoDeficitMax) {
+    
+    // Updates the Max and Min for pressure, 
+    autoDeficitMax = (-1*point->getPressureDeficit()
+		       + point->getDeficitUncertainty());
+    autoDGMax = (-1*point->getPressureDeficit() + 
+		 2*point->getDeficitUncertainty() + 1);       
+    // And add on an little bit so nothing hits the sides
+  }
+  if((-1*point->getPressureDeficit()-point->getDeficitUncertainty()) 
+     < autoDeficitMin) {
+    
+    autoDeficitMin = (-1*point->getPressureDeficit()-point->getDeficitUncertainty());
+    autoDGMin = -1*point->getPressureDeficit() -1* 2*point->getDeficitUncertainty() - 1;
+  }
+  if(autoAxes) {
+    deficitMax = autoDeficitMax;
+    deficitMin = autoDeficitMin;
+    dGMax = autoDGMax;
+    dGMin = autoDGMin;
   } 
 }
 
@@ -680,8 +797,25 @@ QPointF GraphFace::makePressurePoint(VortexData d)
   // (mbar -> QPointF)
 
   QPointF temp;
-  if((d.getPressure()<pGMax)&&(d.getPressure()>pGMin))
-    temp = QPointF(scaleTime(d.getTime()),scalePressure(d.getPressure()));
+  if((d.getPressure()<pGMax)&&(d.getPressure()>pGMin)) {
+    float tempTime = scaleTime(d.getTime());
+    if(tempTime != -999)
+      temp = QPointF(tempTime, scalePressure(d.getPressure()));
+  }
+  return (temp);
+}
+
+QPointF GraphFace::makeDeficitPoint(VortexData d)
+{
+  // take in data from newInfo and creates graphable point using real data 
+  // (mbar -> QPointF)
+
+  QPointF temp;
+  if((-1*d.getPressureDeficit()<dGMax)&&(-1*d.getPressureDeficit()>dGMin)) {
+    float tempTime = scaleTime(d.getTime());
+    if(tempTime != -999)
+      temp = QPointF(tempTime, scaleDeficit(-1*d.getPressureDeficit()));
+  }
   return (temp);
 }
 
@@ -694,8 +828,11 @@ QPointF GraphFace::makeRmwPoint(VortexData d)
   // ready for graphing (meters -> QPointF)
 
   QPointF temp;  
-  if((d.getAveRMW()< rGMax)&&(d.getAveRMW()>rGMin))
-    temp = QPointF(scaleTime(d.getTime()),scaleRmw(d.getAveRMW()));
+  if((d.getAveRMW()< rGMax)&&(d.getAveRMW()>rGMin)) {
+    float tempTime = scaleTime(d.getTime());
+    if(tempTime != -999)
+      temp = QPointF(tempTime, scaleRmw(d.getAveRMW()));
+  }
   return(temp);
 }
 
@@ -709,8 +846,11 @@ QPointF GraphFace::makeRmwPoint(VortexData d, int bestLevel)
   // ready for graphing (meters -> QPointF)
 
   QPointF temp;  
-  if((d.getRMW(bestLevel)< rGMax)&&(d.getRMW(bestLevel)>rGMin))
-    temp = QPointF(scaleTime(d.getTime()),scaleRmw(d.getRMW(bestLevel)));
+  if((d.getRMW(bestLevel)< rGMax)&&(d.getRMW(bestLevel)>rGMin)) {
+    float tempTime = scaleTime(d.getTime());
+    if(tempTime != -999)
+      temp = QPointF(tempTime ,scaleRmw(d.getRMW(bestLevel)));
+  }
   return(temp);
 }
 
@@ -722,16 +862,27 @@ QPointF GraphFace::makeRmwPoint(VortexData d, float rmw)
   // a certain threshold
 
   QPointF temp;  
-  if((rmw < rGMax)&&(rmw > rGMin))
-    temp = QPointF(scaleTime(d.getTime()),scaleRmw(rmw));
+  if((rmw < rGMax)&&(rmw > rGMin)) {
+    float tempTime = scaleTime(d.getTime());
+    if(tempTime != -999)
+      temp = QPointF(tempTime, scaleRmw(rmw));
+  }
   return(temp);
-
 }
 
 float GraphFace::scaleTime(QDateTime unscaled_time)
 {
   // scales time and offsets the range so that no points hit the edges
 
+  // checks to see if the point is in the time range
+  if(unscaled_time < first) {
+    return -999;
+  }
+  if(last!=QDateTime()) {
+    if(unscaled_time > last) {
+      return -999;
+    }
+  }
   float temp;
   temp = first.secsTo(unscaled_time);
   temp = temp + 60;
@@ -763,6 +914,20 @@ float GraphFace::unScalePressure(float y)
     +pGMin-pressureRange;
 }
 
+float GraphFace::scaleDeficit(float unscaled_deficit)
+  //scales a pressure value to graphable units
+{
+  return(-1*((graph_height/(2*deficitRange))*((unscaled_deficit-dGMin)
+					       +deficitRange)));
+}   
+
+float GraphFace::unScaleDeficit(float y)
+{
+  return((graph_height-(y-TOP_MARGIN_HEIGHT))*2*deficitRange/graph_height)
+    +dGMin-deficitRange;
+}
+
+
 float GraphFace::scaleRmw(float unscaled_rmw)
   // scales an rmw value to graphable units
 {
@@ -790,6 +955,13 @@ float GraphFace::scaleDRmw(float unscaled_dRmw)
   return((-1*graph_height*unscaled_dRmw)/(2*rmwRange));
 }
 
+float GraphFace::scaleDDeficit(float unscaled_dDeficit)
+  // scales a DDeficit value, this is different because it is 
+  // an absolute length to be graphed
+  // so the Min value offset and half graph values are not included
+{
+  return(-1*(graph_height/(2*deficitRange))*unscaled_dDeficit);
+}
 
 //think about overwriting quit() slot to dump QList for good form
 
@@ -828,19 +1000,26 @@ int GraphFace::pointAt(const QPointF & position, bool& ONDropSonde)
   float rmax = unScaleRmw(position.y()-5);
   float rmin = unScaleRmw(position.y()+5);
   //Message::toScreen("Rax = "+QString().setNum(rmax)+" Rmin = "+QString().setNum(rmin));
+  float dmax = unScaleDeficit(position.y()-5);
+  float dmin = unScaleDeficit(position.y()+5);
   for (int i = 0; i < VortexDataList->size(); i++) {
     //if(i==0)
     //Message::toScreen("First: T~ "+VortexDataList->at(i).getTime().toString("dd-hh:mm:ss")+" P ~ "+QString().setNum(VortexDataList->at(i).getPressure()));
     if(VortexDataList->at(i).getTime()<=tmax)
       if(VortexDataList->at(i).getTime()>=tmin) {
 	if((VortexDataList->at(i).getPressure() <= pmax)
-	   && (VortexDataList->at(i).getPressure() >= pmin)) {
+	   && (VortexDataList->at(i).getPressure() >= pmin)
+	   && showPressure) {
 	  return i;
 	}
 	if((VortexDataList->at(i).getAveRMW() <= rmax) 
 	   && (VortexDataList->at(i).getAveRMW() >= rmin)) {
 	  return i;
 	}
+	if((-1*VortexDataList->at(i).getPressureDeficit() <= dmax)
+	   &&(-1*VortexDataList->at(i).getPressureDeficit() >= dmin)
+	   && !showPressure)
+	  return i;
       }
       else;
     else break;
@@ -912,7 +1091,7 @@ QPainter* GraphFace::updateImage(QPainter* painter)
   painter->setRenderHint(QPainter::Antialiasing);
   //this option makes lines appear smoother;
 
-  //DRAW IN ALL AXISES
+  //DRAW IN ALL AXES
 
   painter->translate(LEFT_MARGIN_WIDTH,TOP_MARGIN_HEIGHT);     
   // moves painter to top corner left axis
@@ -942,10 +1121,19 @@ QPainter* GraphFace::updateImage(QPainter* painter)
   painter->save();
  
   painter->rotate(270);
+  if(showPressure) {
   painter->setPen(pressurePen);
   painter->drawText(QRectF(0, -1*LEFT_MARGIN_WIDTH, graph_height,
 			   .3*LEFT_MARGIN_WIDTH), tr("Central Pressure (mb)"), 
 		    QTextOption(Qt::AlignCenter));
+  }
+  else {
+    painter->setPen(pressurePen);
+    painter->drawText(QRectF(0, -1*LEFT_MARGIN_WIDTH, graph_height,
+			     .3*LEFT_MARGIN_WIDTH), 
+		      tr("Central Pressure Deficit (mb)"), 
+		      QTextOption(Qt::AlignCenter));
+  }
   painter->restore();
 
   painter->save();
@@ -969,35 +1157,85 @@ QPainter* GraphFace::updateImage(QPainter* painter)
   painter->setFont(tickFont);
 
   //--------Pressure Axis-----------------------------------------------------
-      
-  //creates pressure tics and labels for the pressure axis
-  
-  float pPosition = 800;          // this variable is created for incrementing 
-                                  // through the possible pressure range
- 
-  // The loop creates a tic mark and a label for every 5 mbar 
-  // multiple within the range of data given by the points
-
-  // The painter keeps its position along the line and draws 
-  // both tics and text to the left
-
-  while(pPosition <= pGMax) {
-    painter->save();
-    if (pPosition >= (pGMin-pressureRange)) {
-      painter->translate(0,scalePressure(pPosition));
-      QString iString;
-      iString.setNum(pPosition);
-      painter->drawLine(0,0,-1*(LEFT_MARGIN_WIDTH/7),0);
-      painter->drawText(QPointF(-.55*LEFT_MARGIN_WIDTH,0),iString);
-    }
-    painter->restore();
-    if(pressureRange > (1013-800)/2.)
-      pPosition +=10;
-    else
-      pPosition +=5;                            
-    // This is where the increment of 5 mbar is hard coded in 
-  } 
-  
+  if(showPressure) {
+    //creates pressure tics and labels for the pressure axis
+    
+    float pPosition = 800;          // this variable is created for incrementing 
+    // through the possible pressure range
+    
+    // The loop creates a tic mark and a label for every 5 mbar 
+    // multiple within the range of data given by the points
+    
+    // The painter keeps its position along the line and draws 
+    // both tics and text to the left
+    
+    while(pPosition <= pGMax) {
+      painter->save();
+      if (pPosition >= (pGMin-pressureRange)) {
+	painter->translate(0,scalePressure(pPosition));
+	QString iString;
+	iString.setNum(pPosition);
+	painter->drawLine(0,0,-1*(LEFT_MARGIN_WIDTH/7),0);
+	painter->drawText(QPointF(-.55*LEFT_MARGIN_WIDTH,0),iString);
+      }
+      painter->restore();
+      if(pressureRange > 150) 
+	pPosition+=20;
+      else {
+	if(pressureRange > 100)
+	  pPosition +=15;
+	else {
+	  if(pressureRange > 50)
+	    pPosition +=10;                            
+	  else {
+	    if(pressureRange > 25)
+	      pPosition +=5;
+	    else
+	      pPosition +=3;
+	  }
+	}
+      }
+    } 
+  }
+  else {
+    // For pressure deficit axis
+    float dPosition = -300;       // this variable is created for incrementing 
+                                  // through the possible deficit range
+    
+    // The loop creates a tic mark and a label for every 5 mbar 
+    // multiple within the range of data given by the points
+    
+    // The painter keeps its position along the line and draws 
+    // both tics and text to the left
+    
+    while(dPosition <= dGMax) {
+      painter->save();
+      if (dPosition >= (dGMin-deficitRange)) {
+	painter->translate(0,scaleDeficit(dPosition));
+	QString iString;
+	iString.setNum(-1.0*dPosition);
+	painter->drawLine(0,0,-1*(LEFT_MARGIN_WIDTH/7),0);
+	painter->drawText(QPointF(-.55*LEFT_MARGIN_WIDTH,0),iString);
+      }
+      painter->restore();
+      if(deficitRange >= 150)
+	dPosition +=20;
+      else {
+	if(deficitRange >= 100)
+	  dPosition +=15;
+	else {
+	  if(deficitRange >= 50)
+	    dPosition +=10;                            
+	  else {
+	    if(deficitRange >= 25)
+	      dPosition +=5;
+	    else
+	      dPosition +=3;
+	  }
+	}
+      }
+    } 
+  }
   
   //-----------TIME Axis--------------------------------------------------
 
@@ -1009,7 +1247,7 @@ QPainter* GraphFace::updateImage(QPainter* painter)
   if (timeRange >= 0) {   
     // This if else tree decides when which time incrementing 
     // system should be used
-    float timePerLabel = timeRange/(graph_width*(15.0/800.0));
+    float timePerLabel = timeRange/(graph_width*(10.0/600.0));
     
     if (timePerLabel < 60)
       t_increment = 60;
@@ -1098,9 +1336,7 @@ QPainter* GraphFace::updateImage(QPainter* painter)
       if (rmwRange > 8)
 	rPosition +=2;
       else {
-	if (rmwRange > 4)
-	  rPosition++;
-	else rPosition += .5;
+	rPosition++;
       }
     }
   }
@@ -1116,106 +1352,207 @@ QPainter* GraphFace::updateImage(QPainter* painter)
   if(!(VortexDataList == NULL) 
      &&!VortexDataList->isEmpty()) {       // Process is used provided data 
                                            // points are already available
-    painter->setPen(pressurePen);
-    painter->setBrush(pressureBrush);
-    for (int i=0;i<VortexDataList->size();i++) {
-      
-      //-------------------------------ErrorBars----------------------------
-      
-      // This draws the errorbars about the point 
-      QPointF xypoint = makePressurePoint(VortexDataList->value(i));
-      
-      if(!xypoint.isNull()) {
-	if (VortexDataList->at(i).getPressureUncertainty()>0) {                           // if uncertainty = 0 there are no bars
-	  float errorBarHeight = scaleDPressure(VortexDataList->at(i).getPressureUncertainty());
-	  
-	  float upper2, upper1, lower1, lower2;
-	  bool upperBar2, upperBar1, lowerBar1, lowerBar2;
-	  
-	  
-	  if((-1*xypoint.y()+(-2*errorBarHeight))>graph_height) { 
-	    upper2 = graph_height -(-1*xypoint.y()); 
-	    upperBar2 = false; }
-	  else {
-	    upper2 = -2*errorBarHeight;
-	    upperBar2 = true; }
-	  
-	  if ((-1*xypoint.y()-(-2*errorBarHeight))<graph_height/2) {
-	    lower2 = -1*xypoint.y()-graph_height/2;
-	    lowerBar2 = false; }
-	  else {
-	    lower2 = -2*errorBarHeight;
-	    lowerBar2 = true; }
-	  
-	  if((-1*xypoint.y()+(-1*errorBarHeight))>graph_height) {
-	    upper1 = graph_height -(-1*xypoint.y());
-	    upperBar1 = false; }
-	  else {
-	    upper1 = -1*errorBarHeight;
-	    upperBar1 = true; }
-	  
-	  if ((-1*xypoint.y()-(-1*errorBarHeight))<graph_height/2) {
-	    lower1 = -1*xypoint.y()-graph_height/2;
-	    lowerBar1 = false; }
-	  else {
-	    lower1 = -1*errorBarHeight;
-	    lowerBar1 = true; }
-	  
-	  painter->save();            // Save painter position at origin
-	  painter->translate(xypoint);
-	  
-	  // Draws the second error bars, two standard deviations 
-	  // (pressureUncertainty)
-	  
-	  painter->setPen(pstd2);
-	  painter->drawLine(QPointF(0,0),
-			    QPointF(0,-1*upper2));
-	  if(upperBar2)
-	    painter->drawLine(QPointF(-2,-1*upper2),
-			      QPointF(2,-1*upper2));
-	  painter->drawLine(QPointF(0,0),
-			    QPointF(0,lower2));
-	  if(lowerBar2)
-	    painter->drawLine(QPointF(-2,lower2),
-			      QPointF(2,lower2));
-	  
-	  // Draws the first error bars at one standard deviation 
-	  // (pressureUncertainty)
-	  painter->setPen(pstd1);
-	  painter->drawLine(QPointF(0,0),
-			    QPointF(0,-1*upper1));
-	  if(upperBar1)
-	    painter->drawLine(QPointF(-1.5,-1*upper1),
-			      QPointF(1.5,-1*upper1));
-	  painter->drawLine(QPointF(0,0),
-			    QPointF(0,lower1));
-	  if(lowerBar1)
-	    painter->drawLine(QPointF(-1.5,lower1),
-			      QPointF(1.5,lower1));
-	  
-	  painter->restore();    // restores the painters location 
-	  // to saved address
-	  
-	}		  
+    if(showPressure) {
+      painter->setPen(pressurePen);
+      painter->setBrush(pressureBrush);
+      for (int i=0;i<VortexDataList->size();i++) {
+	
+	//-------------------------------ErrorBars----------------------------
+	
+	// This draws the errorbars about the point 
+	QPointF xypoint = makePressurePoint(VortexDataList->value(i));
+	
+	if(!xypoint.isNull()) {
+	  if (VortexDataList->at(i).getPressureUncertainty()>0) {                           // if uncertainty = 0 there are no bars
+	    float errorBarHeight = scaleDPressure(VortexDataList->at(i).getPressureUncertainty());
+	    
+	    float upper2, upper1, lower1, lower2;
+	    bool upperBar2, upperBar1, lowerBar1, lowerBar2;
+	    
+	    
+	    if((-1*xypoint.y()+(-2*errorBarHeight))>graph_height) { 
+	      upper2 = graph_height -(-1*xypoint.y()); 
+	      upperBar2 = false; }
+	    else {
+	      upper2 = -2*errorBarHeight;
+	      upperBar2 = true; }
+	    
+	    if ((-1*xypoint.y()-(-2*errorBarHeight))<graph_height/2) {
+	      lower2 = -1*xypoint.y()-graph_height/2;
+	      lowerBar2 = false; }
+	    else {
+	      lower2 = -2*errorBarHeight;
+	      lowerBar2 = true; }
+	    
+	    if((-1*xypoint.y()+(-1*errorBarHeight))>graph_height) {
+	      upper1 = graph_height -(-1*xypoint.y());
+	      upperBar1 = false; }
+	    else {
+	      upper1 = -1*errorBarHeight;
+	      upperBar1 = true; }
+	    
+	    if ((-1*xypoint.y()-(-1*errorBarHeight))<graph_height/2) {
+	      lower1 = -1*xypoint.y()-graph_height/2;
+	      lowerBar1 = false; }
+	    else {
+	      lower1 = -1*errorBarHeight;
+	      lowerBar1 = true; }
+	    
+	    painter->save();            // Save painter position at origin
+	    painter->translate(xypoint);
+	    
+	    // Draws the second error bars, two standard deviations 
+	    // (pressureUncertainty)
+	    
+	    painter->setPen(pstd2);
+	    painter->drawLine(QPointF(0,0),
+			      QPointF(0,-1*upper2));
+	    if(upperBar2)
+	      painter->drawLine(QPointF(-2,-1*upper2),
+				QPointF(2,-1*upper2));
+	    painter->drawLine(QPointF(0,0),
+			      QPointF(0,lower2));
+	    if(lowerBar2)
+	      painter->drawLine(QPointF(-2,lower2),
+				QPointF(2,lower2));
+	    
+	    // Draws the first error bars at one standard deviation 
+	    // (pressureUncertainty)
+	    painter->setPen(pstd1);
+	    painter->drawLine(QPointF(0,0),
+			      QPointF(0,-1*upper1));
+	    if(upperBar1)
+	      painter->drawLine(QPointF(-1.5,-1*upper1),
+				QPointF(1.5,-1*upper1));
+	    painter->drawLine(QPointF(0,0),
+			      QPointF(0,lower1));
+	    if(lowerBar1)
+	      painter->drawLine(QPointF(-1.5,lower1),
+				QPointF(1.5,lower1));
+	    
+	    painter->restore();    // restores the painters location 
+	    // to saved address
+	    
+	  }		  
 	  // This is where the point is drawn as a circle inside an box, 
 	  // who's size is set in GraphFace.h
-	
-	square.moveCenter(xypoint);
-	painter->drawEllipse(square);
+	  
+	  square.moveCenter(xypoint);
+	  painter->drawEllipse(square);
+	}
+      }
+      
+      // This loop connects all the pressure points in the VortexDataList 
+      // to the previous one with a line
+      int j = 1;
+      while(j < VortexDataList->size())	{
+	QPointF point1 = makePressurePoint(VortexDataList->value(j-1));
+	QPointF point2 = makePressurePoint(VortexDataList->value(j));
+	if(!point1.isNull()&&!point2.isNull())
+	  painter->drawLine(point1, point2);
+	j++;
       }
     }
-    
-    // This loop connects all the pressure points in the VortexDataList 
-    // to the previous one with a line
-    int j = 1;
-    while(j < VortexDataList->size())	{
-      QPointF point1 = makePressurePoint(VortexDataList->value(j-1));
-      QPointF point2 = makePressurePoint(VortexDataList->value(j));
-      if(!point1.isNull()&&!point2.isNull())
-	painter->drawLine(point1, point2);
-      j++;
+    else {
+      painter->setPen(pressurePen);
+      painter->setBrush(pressureBrush);
+      for (int i=0;i<VortexDataList->size();i++) {
+	
+	//-------------------------------ErrorBars----------------------------
+	
+	// This draws the errorbars about the point 
+	QPointF xypoint = makeDeficitPoint(VortexDataList->value(i));
+	
+	if(!xypoint.isNull()) {
+	  if (VortexDataList->at(i).getDeficitUncertainty()>0) {                           // if uncertainty = 0 there are no bars
+	    float errorBarHeight = scaleDDeficit(VortexDataList->at(i).getDeficitUncertainty());
+	    
+	    float upper2, upper1, lower1, lower2;
+	    bool upperBar2, upperBar1, lowerBar1, lowerBar2;
+	    
+	    
+	    if((-1*xypoint.y()+(-2*errorBarHeight))>graph_height) { 
+	      upper2 = graph_height -(-1*xypoint.y()); 
+	      upperBar2 = false; }
+	    else {
+	      upper2 = -2*errorBarHeight;
+	      upperBar2 = true; }
+	    
+	    if ((-1*xypoint.y()-(-2*errorBarHeight))<graph_height/2) {
+	      lower2 = -1*xypoint.y()-graph_height/2;
+	      lowerBar2 = false; }
+	    else {
+	      lower2 = -2*errorBarHeight;
+	      lowerBar2 = true; }
+	    
+	    if((-1*xypoint.y()+(-1*errorBarHeight))>graph_height) {
+	      upper1 = graph_height -(-1*xypoint.y());
+	      upperBar1 = false; }
+	    else {
+	      upper1 = -1*errorBarHeight;
+	      upperBar1 = true; }
+	    
+	    if ((-1*xypoint.y()-(-1*errorBarHeight))<graph_height/2) {
+	      lower1 = -1*xypoint.y()-graph_height/2;
+	      lowerBar1 = false; }
+	    else {
+	      lower1 = -1*errorBarHeight;
+	      lowerBar1 = true; }
+	    
+	    painter->save();            // Save painter position at origin
+	    painter->translate(xypoint);
+	    
+	    // Draws the second error bars, two standard deviations 
+	    
+	    painter->setPen(pstd2);
+	    painter->drawLine(QPointF(0,0),
+			      QPointF(0,-1*upper2));
+	    if(upperBar2)
+	      painter->drawLine(QPointF(-2,-1*upper2),
+				QPointF(2,-1*upper2));
+	    painter->drawLine(QPointF(0,0),
+			      QPointF(0,lower2));
+	    if(lowerBar2)
+	      painter->drawLine(QPointF(-2,lower2),
+				QPointF(2,lower2));
+	    
+	  // Draws the first error bars at one standard deviation 
+	    
+	    painter->setPen(pstd1);
+	    painter->drawLine(QPointF(0,0),
+			      QPointF(0,-1*upper1));
+	    if(upperBar1)
+	      painter->drawLine(QPointF(-1.5,-1*upper1),
+				QPointF(1.5,-1*upper1));
+	    painter->drawLine(QPointF(0,0),
+			      QPointF(0,lower1));
+	    if(lowerBar1)
+	      painter->drawLine(QPointF(-1.5,lower1),
+				QPointF(1.5,lower1));
+	    
+	    painter->restore();    // restores the painters location 
+	    // to saved address
+	    
+	  }		  
+	  // This is where the point is drawn as a circle inside an box, 
+	  // who's size is set in GraphFace.h
+	  
+	  square.moveCenter(xypoint);
+	  painter->drawEllipse(square);
+	}
+      }
+      
+      // This loop connects all the deficit points in the VortexDataList 
+      // to the previous one with a line
+      int j = 1;
+      while(j < VortexDataList->size())	{
+	QPointF point1 = makeDeficitPoint(VortexDataList->value(j-1));
+	QPointF point2 = makeDeficitPoint(VortexDataList->value(j));
+	if(!point1.isNull()&&!point2.isNull())
+	  painter->drawLine(point1, point2);
+	j++;
+      }
     }
-    
     //---------------------------------------Draw RMW Points------------------
     
       painter->setPen(rmwPen);
@@ -1390,489 +1727,11 @@ void GraphFace::catchLog(const Message& message)
 
 
 //--------------------------------ALTUPDATEIMAGE--------------------------------
-void GraphFace::altUpdateImage()
-
   // QPainter object does the painting, 
   // all painting is done relative to the position of QPainter
   // The save and restore functions are used to reset the painter position 
   // to the origin of the graphable area
 
-{
-  QImage *temp = new QImage(graph_width+LEFT_MARGIN_WIDTH+RIGHT_MARGIN_WIDTH, 
-	      graph_height+TOP_MARGIN_HEIGHT+BOTTOM_MARGIN_HEIGHT,
-	      QImage::Format_ARGB32_Premultiplied);
-
-  QPainter* painter = new QPainter(temp);
-  painter->setRenderHint(QPainter::Antialiasing);
-  painter->setBackgroundMode(Qt::TransparentMode);
-  //this option makes lines appear smoother;
-
-  //DRAW IN ALL AXISES
-
-  painter->translate(LEFT_MARGIN_WIDTH,TOP_MARGIN_HEIGHT);     
-  // moves painter to top corner left axis
-  painter->drawLine(0,0,0,graph_height);                       
-  // draw left axis
-  painter->drawLine(0,0,graph_width,0);                        
-  // draw top line around graph space
-  painter->translate(graph_width, graph_height);               
-  // moves painter to bottom of right axis
-  painter->drawLine(0,0,-1*graph_width, 0);                    
-  // draw bottom axis
-  painter->drawLine(0,0,0,-1*graph_height);                    
-  // draw right axis
-
-  //BACK TO ORIGIN OF AXISES
-  painter->translate(-1*graph_width,0);
-
-  //Draw in all Titles and Axis Lables - Main Titles/Lables - 
-
-  painter->save();
-  QFont titleFont("Times", 12, QFont::Bold);
-  painter->setFont(titleFont);
-  painter->drawText(QRectF(0,(-1*(TOP_MARGIN_HEIGHT+graph_height)),
-			   graph_width,TOP_MARGIN_HEIGHT),
-		    graphTitle,QTextOption(Qt::AlignCenter));
-
-  painter->save();
- 
-  painter->rotate(270);
-  painter->drawText(QRectF(0, -1*LEFT_MARGIN_WIDTH, graph_height,
-			   .3*LEFT_MARGIN_WIDTH), tr("Central Pressure (mb)"), 
-		    QTextOption(Qt::AlignCenter));
-  painter->restore();
-
-  painter->save();
-  painter->translate(graph_width+RIGHT_MARGIN_WIDTH, -1*graph_height);
-  painter->rotate(90);
-  painter->drawText(QRectF(0,0,graph_height,.4*RIGHT_MARGIN_WIDTH), 
-		    tr("Radius of Maximum Wind (km)"), 
-		    QTextOption(Qt::AlignCenter)); 
-  painter->restore();
-
-  painter->save();
-  painter->translate(0,.45*BOTTOM_MARGIN_HEIGHT);
-  painter->drawText(QRectF(0,0,graph_width, .55*BOTTOM_MARGIN_HEIGHT), 
-		    tr("Time (Day-Hours:Minutes)"),
-		    QTextOption(Qt::AlignCenter));
-  painter->restore();
-  painter->restore();
-
-  //--------Pressure Axis-----------------------------------------------------
-      
-  //creates pressure tics and labels for the pressure axis
-  
-  float pPosition = 870;          // this variable is created for incrementing 
-                                  // through the possible pressure range
- 
-  // The loop creates a tic mark and a label for every 5 mbar 
-  // multiple within the range of data given by the points
-
-  // The painter keeps its position along the line and draws 
-  // both tics and text to the left
-
-  while(pPosition <= pGMax) {
-    painter->save();
-    if (pPosition >= (pGMin-pressureRange)) {
-      painter->translate(0,scalePressure(pPosition));
-      QString iString;
-      iString.setNum(pPosition);
-      painter->drawLine(0,0,-1*(LEFT_MARGIN_WIDTH/7),0);
-      painter->drawText(QPointF(-.55*LEFT_MARGIN_WIDTH,0),iString);
-    }
-    painter->restore();
-    pPosition +=5;                            
-    // This is where the increment of 5 mbar is hard coded in 
-  } 
-  
-  
-  //-----------TIME Axis--------------------------------------------------
-
-  //draws tics and labels for time margin
-  int t_increment = 0;              
-                        //the increment for time spacing in seconds
-  QDateTime tPosition = QDateTime();
-                       // a QDateTime for incrementing through the time range
-  if (timeRange >= 0) {   
-    // This if else tree decides when which time incrementing 
-    // system should be used
-    float timePerLabel = timeRange/(graph_width*(15.0/800.0));
-    
-    if (timePerLabel < 60)
-      t_increment = 60;
-    else{
-      if(timePerLabel < 120)
-	t_increment = 120;
-      else{
-	if(timePerLabel < 300)
-	  t_increment = 300;
-	else{
-	  if(timePerLabel < 600)
-	    t_increment = 600;
-	  else{
-	    if(timePerLabel < 900)
-	      t_increment = 900;
-	    else{
-	      if(timePerLabel < 1800)
-		t_increment = 1800;
-	      else{
-		int j = 1;
-		while(t_increment == 0) {
-		  if (timePerLabel < 3600*j) {
-		    t_increment = 3600*j;
-		  }
-		  j++;}}}}}}}
-    
-    
-    QDateTime temp = first;
-    
-    temp = temp.addSecs(-60);
-    
-    int initial = t_increment - (temp.time().second()
-				 +(temp.time().minute()%(t_increment/60))*60);
-
-                    // this allows the tic marks and lables to start
-                    // at an even time, the nearest fitting increment
-    if(initial==t_increment)  { 
-      tPosition = temp;
-    }
-    else {
-      tPosition = temp;
-      tPosition = tPosition.addSecs(initial);
-    }
-    
-    // allows for the drawing of tic marks and labels below the 
-    // time axis as the painter
-    // moves along the axis from left to right
-    
-    while (tPosition <= (first.addSecs((int)timeRange+60)))
-	{
-	  painter->save();
-	  painter->translate(scaleTime(tPosition),0);
-	  painter->drawLine(0,0,0,BOTTOM_MARGIN_HEIGHT/7);
-	  //!! The date and time format is hardcoded in here!!
-	  painter->drawText(QPointF(-25,(.45*BOTTOM_MARGIN_HEIGHT)),
-			    tPosition.toString("dd-hh:mm"));
-	  tPosition = tPosition.addSecs(t_increment);
-	  painter->restore();
-	}
-    } 
-  painter->translate(graph_width,0);
-  
-
-  //------------------------RMW AXIS-------------------------------------------
-  //creates radius of maximum wind tics and labels for the rmw  axis
-  
-  float rPosition = 0;
-              // used for incrementing through the range of values
-  while(rPosition <= (rGMax+rmwRange)) {
-    
-    painter->save();
-    if (rPosition >= (rGMin)) {
-      painter->translate(0,scaleRmw(rPosition));
-      QString iString;
-      iString.setNum(rPosition);
-      painter->drawLine(0,0,(RIGHT_MARGIN_WIDTH/7),0);
-      painter->drawText(QPointF(.2*RIGHT_MARGIN_WIDTH,0),iString);
-    }
-    painter->restore();
-    
-    // if else chain for deciding the value to increment with 
-    
-    if(rmwRange > 15)
-      rPosition +=5;
-    else {
-      if (rmwRange > 8)
-	rPosition +=2;
-      else {
-	if (rmwRange > 4)
-	  rPosition++;
-	else rPosition += .5;
-      }
-    }
-  }
-  
-  painter->translate(-1*graph_width, 0);
-
-  // this leaves the space between the axises at graph_width 
-  // by graph_height tall for now
-
-
-  //-------------------------------Draw Pressure Points--------------
-
-  if(!VortexDataList->isEmpty()) {           // Process is used provided data 
-                                             // points are already available
-    painter->setPen(pressurePen);
-    painter->setBrush(pressureBrush);
-    for (int i=0;i<VortexDataList->size();i++) {
-      
-      //-------------------------------ErrorBars----------------------------
-      
-      // This draws the errorbars about the point 
-      QPointF xypoint = makePressurePoint(VortexDataList->value(i));
-      
-      if(!xypoint.isNull()) {
-	if (VortexDataList->at(i).getPressureUncertainty()>0) {                           // if uncertainty = 0 there are no bars
-	  float errorBarHeight = scaleDPressure(VortexDataList->at(i).getPressureUncertainty());
-	  
-	  float upper2, upper1, lower1, lower2;
-	  bool upperBar2, upperBar1, lowerBar1, lowerBar2;
-	  
-	  
-	  if((-1*xypoint.y()+(-2*errorBarHeight))>graph_height) { 
-	    upper2 = graph_height -(-1*xypoint.y()); 
-	    upperBar2 = false; }
-	  else {
-	    upper2 = -2*errorBarHeight;
-	    upperBar2 = true; }
-	  
-	  if ((-1*xypoint.y()-(-2*errorBarHeight))<graph_height/2) {
-	    lower2 = -1*xypoint.y()-graph_height/2;
-	    lowerBar2 = false; }
-	  else {
-	    lower2 = -2*errorBarHeight;
-	    lowerBar2 = true; }
-	  
-	  if((-1*xypoint.y()+(-1*errorBarHeight))>graph_height) {
-	    upper1 = graph_height -(-1*xypoint.y());
-	    upperBar1 = false; }
-	  else {
-	    upper1 = -1*errorBarHeight;
-	    upperBar1 = true; }
-	  
-	  if ((-1*xypoint.y()-(-1*errorBarHeight))<graph_height/2) {
-	    lower1 = -1*xypoint.y()-graph_height/2;
-	    lowerBar1 = false; }
-	  else {
-	    lower1 = -1*errorBarHeight;
-	    lowerBar1 = true; }
-	  
-	  painter->save();            // Save painter position at origin
-	  painter->translate(xypoint);
-	  
-	  // Draws the second error bars, two standard deviations 
-	  // (pressureUncertainty)
-	  
-	  painter->setPen(pstd2);
-	  painter->drawLine(QPointF(0,0),
-			    QPointF(0,-1*upper2));
-	  if(upperBar2)
-	    painter->drawLine(QPointF(-2,-1*upper2),
-			      QPointF(2,-1*upper2));
-	  painter->drawLine(QPointF(0,0),
-			    QPointF(0,lower2));
-	  if(lowerBar2)
-	    painter->drawLine(QPointF(-2,lower2),
-			      QPointF(2,lower2));
-	  
-	  // Draws the first error bars at one standard deviation 
-	  // (pressureUncertainty)
-	  painter->setPen(pstd1);
-	  painter->drawLine(QPointF(0,0),
-			    QPointF(0,-1*upper1));
-	  if(upperBar1)
-	    painter->drawLine(QPointF(-1.5,-1*upper1),
-			      QPointF(1.5,-1*upper1));
-	  painter->drawLine(QPointF(0,0),
-			    QPointF(0,lower1));
-	  if(lowerBar1)
-	    painter->drawLine(QPointF(-1.5,lower1),
-			      QPointF(1.5,lower1));
-	  
-	  painter->restore();    // restores the painters location 
-	  // to saved address
-	  
-	}		  
-	  // This is where the point is drawn as a circle inside an box, 
-	  // who's size is set in GraphFace.h
-	
-	square.moveCenter(xypoint);
-	painter->drawEllipse(square);
-      }
-    }
-    
-    // This loop connects all the pressure points in the VortexDataList 
-    // to the previous one with a line
-    int j = 1;
-    while(j < VortexDataList->size())	{
-      QPointF point1 = makePressurePoint(VortexDataList->value(j-1));
-      QPointF point2 = makePressurePoint(VortexDataList->value(j));
-      if(!point1.isNull()&&!point2.isNull())
-	painter->drawLine(point1, point2);
-      j++;
-    }
-    
-    //---------------------------------------Draw RMW Points------------------
-    
-      painter->setPen(rmwPen);
-      painter->setBrush(rmwBrush);
-      
-      for (int i=0;i<VortexDataList->size();i++) {          
-	
-	// uses the loop to move through all data points
-	
-	QPointF xypoint = makeRmwPoint(VortexDataList->value(i));
-	if(!xypoint.isNull()) {
-	  
-	  //-------------------------------ErrorBars---------------------------
-	  // Draws errorbars about the radius of max wind points based 
-	  // on their uncertainties
-	  
-	  /*if (VortexDataList->value(i).getRMWUncertainty()>0) {               
-	  // error bars are not drawn if uncertainty is zero
-	  
-	  float errorBarHeight = scaleDRmw(VortexDataList->value(i).getRMWUncertainty());
-	  if(((-1*xypoint.y()+2*errorBarHeight)<graph_height/2)&&
-	  ((-1*xypoint.y()-2*errorBarHeight)>0)) {
-	  
-	  painter->save();
-	  painter->translate(xypoint);
-	  
-	  // Draws the second error bars, two standard deviations 
-	  // (rmwUncertainty)
-	  painter->setPen(rstd2);
-	  painter->drawLine(QPointF(0,0),
-	  QPointF(0,2*errorBarHeight));
-	  painter->drawLine(QPointF(-1.5,2*errorBarHeight),
-	  QPointF(1.5,2*errorBarHeight));
-	  painter->drawLine(QPointF(0,0),
-	  QPointF(0,-1*2*errorBarHeight));
-	  painter->drawLine(QPointF(-1.5,-1*2*errorBarHeight),
-	  QPointF(1.5,-1*2*errorBarHeight));
-	  
-	  // Draws the first error bars at one standard deviation 
-	  // (rmwUncertainty)
-	  painter->setPen(rstd1);
-	  painter->drawLine(QPointF(0,0),
-	  QPointF(0,errorBarHeight));
-	  painter->drawLine(QPointF(-1.5,errorBarHeight),
-	  QPointF(1.5,errorBarHeight));
-	  painter->drawLine(QPointF(0,0),
-	  QPointF(0,-1*errorBarHeight));
-	  painter->drawLine(QPointF(-1.5,-1*errorBarHeight),
-	  QPointF(1.5,-1*errorBarHeight));
-	  
-	  painter->restore();
-	  }
-	  }*/
-	  QPointF xypoint = makeRmwPoint(VortexDataList->value(i));
-	  
-	  if(!xypoint.isNull()) {
-	    if (VortexDataList->at(i).getAveRMWUncertainty()>0) {                           // if uncertainty = 0 there are no bars
-	      float errorBarHeight = scaleDRmw(VortexDataList->at(i).getAveRMWUncertainty());
-	      
-	      float upper2, upper1, lower1, lower2;
-	      bool upperBar2, upperBar1, lowerBar1, lowerBar2;
-	      
-	      
-	      if((-1*xypoint.y()+(-2*errorBarHeight))>graph_height/2) { 
-		upper2 = graph_height/2 -(-1*xypoint.y()); 
-		upperBar2 = false; }
-	      else {
-		upper2 = -2*errorBarHeight;
-		upperBar2 = true; }
-	      
-	      if ((-1*xypoint.y()-(-2*errorBarHeight))<0) {
-		lower2 = -1*xypoint.y();
-		lowerBar2 = false; }
-	      else {
-		lower2 = -2*errorBarHeight;
-		lowerBar2 = true; }
-	      
-	      if((-1*xypoint.y()+(-1*errorBarHeight))>graph_height/2) {
-		upper1 = graph_height/2 -(-1*xypoint.y());
-		upperBar1 = false; }
-	      else {
-		upper1 = -1*errorBarHeight;
-		upperBar1 = true; }
-	      
-	      if ((-1*xypoint.y()-(-1*errorBarHeight))<0) {
-		lower1 = -1*xypoint.y();     
-		lowerBar1 = false; }
-	      else {
-		lower1 = -1*errorBarHeight;
-		lowerBar1 = true; }
-	      
-	      painter->save();            // Save painter position at origin
-	      painter->translate(xypoint);
-	      
-	      // Draws the second error bars, two standard deviations 
-	      // (rmwUncertainty)
-	      
-	      painter->setPen(rstd2);
-	      painter->drawLine(QPointF(0,0),
-				QPointF(0,-1*upper2));
-	      if(upperBar2)
-		painter->drawLine(QPointF(-2,-1*upper2),
-				  QPointF(2,-1*upper2));
-	      painter->drawLine(QPointF(0,0),
-				QPointF(0,lower2));
-	      if(lowerBar2)
-		painter->drawLine(QPointF(-2,lower2),
-				  QPointF(2,lower2));
-	      // Draws the first error bars at one standard deviation 
-	      // (rmwUncertainty)
-	      painter->setPen(rstd1);
-	      painter->drawLine(QPointF(0,0),
-				QPointF(0,-1*upper1));
-	      if(upperBar1)
-		painter->drawLine(QPointF(-1.5,-1*upper1),
-				  QPointF(1.5,-1*upper1));
-	      painter->drawLine(QPointF(0,0),
-				QPointF(0,lower1));
-	      if(lowerBar1)
-		painter->drawLine(QPointF(-1.5,lower1),
-				  QPointF(1.5,lower1));
-	      
-	      painter->restore();    // restores the painters location 
-	      // to saved address
-	      
-	    }
-	  }
-	    
-	  // The rmw point is similar to the pressrue point, 
-	  // drawn as an ellipse in a box
-	  
-	  square.moveCenter(xypoint);
-	  painter->drawEllipse(square);
-	}
-      }
-      
-      //connects all the rmw points together with lines to the previous point
-      int i = 1;
-      while(i<VortexDataList->count()) {
-	QPointF point1 = makeRmwPoint(VortexDataList->value(i-1));
-	QPointF point2 = makeRmwPoint(VortexDataList->value(i));
-	if(!point1.isNull()&&!point2.isNull())
-	  painter->drawLine(point1,point2);
-	i++;
-      }
-    }
-  //-----------------------------------Draw Drops-------------------------------
-  
-  if(!dropList->isEmpty())                // Goes through the same process 
-                                          // of drawing drops but with
-    {                                     // a different member box to draw 
-                                          // an ellipse in 
-      painter->setPen(dropPen);
-
-      painter->setBrush(dropBrush);
-      for (int i = 0; i < dropList->size();i++) {
-	QPointF xypoint = makePressurePoint(dropList->value(i));
-	if(!xypoint.isNull()) {
-	  drop.moveCenter(xypoint);
-	  painter->drawEllipse(drop);
-	}
-      }
-    }
-  if (painter->isActive())
-    painter->end();
-  image = NULL;
-  image = temp;
-  //autoSave();
-  delete painter;
-  
-}
 
 void GraphFace::setImageFileName(QString newName)
 {

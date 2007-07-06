@@ -37,8 +37,8 @@ SimplexList::SimplexList(Configuration* newConfig)
 SimplexList::~SimplexList()
 {
   delete config;
-  for(int i = simplexDataConfigs->count()-1; i >=0; i--)
-    delete simplexDataConfigs->value(i);
+  while(simplexDataConfigs->count() > 0)
+    delete simplexDataConfigs->takeLast();
   delete simplexDataConfigs;
   configFileNames->clear();
   delete configFileNames;
@@ -477,16 +477,18 @@ void SimplexList::removeAt(int i)
   QString timeString = this->at(i).getTime().toString(Qt::ISODate);
   timeString.replace(QString("-"), QString("_"));
   timeString.replace(QString(":"), QString("_"));
- 
+  timeString.chop(2);
+  timeString = "volume_"+timeString;
+  timeString = config->findConfigNameStartsWith(timeString);
   // Remove element and children from main xml identifing specific file
 
-  QDomElement parent = config->getConfig(QString("volume_"+timeString));
-  if(parent.tagName()!=QString("volume_"+timeString))
-    Message::toScreen("The tag names are different parent: "+parent.tagName()+" what we got "+QString("volume_"+timeString));
+  QDomElement parent = config->getConfig(timeString);
+  if(parent.tagName()!=timeString)
+    Message::toScreen("The tag names are different parent: "+parent.tagName()+" what we got "+timeString);
   config->removeDom(parent, QString("time")); 
   config->removeDom(parent, QString("file"));
   QDomElement root = config->getRoot();
-  config->removeDom(root, QString("volume_"+timeString));
+  config->removeDom(root, timeString);
 
   QList<SimplexData>::removeAt(i);
 }

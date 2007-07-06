@@ -56,6 +56,7 @@ Q_OBJECT
 		   const QString &value);
     void addDom(const QDomElement &element, const QString &name, 
 		const QString &value);
+    void newEntry(const QString &newString);
 
     
 };

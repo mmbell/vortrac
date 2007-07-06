@@ -590,7 +590,7 @@ const QDomElement Configuration::getElement(const QDomElement &element,
     QString errMessage = "Could Not Find Config Element: "+element.tagName();
     errMessage +=(": " + paramName);
     emit log(Message(errMessage,0,this->objectName()));
-    Message::toScreen(errMessage);
+    //Message::toScreen(errMessage);
     
     desiredElement = QDomElement();
     desiredElement.clear();
@@ -624,4 +624,16 @@ void Configuration::setLogChanges(bool logStatus)
     message = QString(tr("Started Logging XML Item Change Messages For This Configuration"));
     emit log(Message(message, 0, this->objectName(),Green));
   }
+}
+
+QString Configuration::findConfigNameStartsWith(const QString& name)
+{
+  QList<QString> names = indexForTagName.keys();
+  QString realName;
+  for(int ll = 0; ll < names.count(); ll++) {
+    if(names[ll].startsWith(name, Qt::CaseInsensitive)) {
+      realName = names[ll];
+    }
+  }
+  return realName;
 }

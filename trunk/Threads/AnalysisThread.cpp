@@ -322,6 +322,7 @@ void AnalysisThread::run()
 	     
 	     vortexLat = newLatLon[0];
 	     vortexLon = newLatLon[1];
+	     delete [] newLatLon;
 	     //Message::toScreen("New vortexLat = "+QString().setNum(vortexLat)+" New vortexLon = "+QString().setNum(vortexLon));
 	   }
 	 }
@@ -373,22 +374,25 @@ void AnalysisThread::run()
 				       "direction").toFloat()*acos(-1)/180.;
 	   // Message::toScreen("Storm Direction .."+QString().setNum(stormDirection));
 	   //Message::toScreen("cca = "+QString().setNum(cca));
-	   float palpha = (relDist*sin(stormDirection-cca)/174.);
+	   //float palpha = (relDist*sin(stormDirection-cca)/174.);
+	   float palpha = -1*(relDist*sin(stormDirection-cca)/174.);
 	   //Message::toScreen(" palpha = "+QString().setNum(palpha));
 	   //Message::toScreen(" relDist = "+QString().setNum(relDist));
-	   float alpha = acos(-1)-asin(palpha);
+	   //float alpha = acos(-1)-asin(palpha);
+	   float alpha = asin(palpha);
 	   //Message::toScreen(" alpha = "+QString().setNum(alpha));
 	   float dist2go = 0;
 	   if(fabs(stormDirection-cca)<=1) {
 	     dist2go = fabs(relDist)-174;
 	   }
 	   else {
-	     dist2go = 174*sin(acos(-1)+cca-stormDirection-alpha)/sin(stormDirection-cca);
+	     //dist2go = 174*sin(acos(-1)+cca-stormDirection-alpha)/sin(stormDirection-cca);
+	     dist2go = sqrt(relDist*relDist*(1-2*sin(stormDirection-cca)*sin(stormDirection-cca))+174*174-2*relDist*174*cos(alpha)*cos(stormDirection-cca));
 	   }
 	   
 	   // Report distance from Doppler Radar Range
-
-	   QString distanceLeft("Circulation Center is "+QString().setNum(dist2go)+" km from the edge of Doppler range - Skipping Analysis On This Volume");
+	   
+	   QString distanceLeft("Circulation Center is "+QString().setNum(relDist)+" km from the radar - Skipping Analysis On This Volume");
 	   emit log(Message(distanceLeft,0,this->objectName()));
 	   
 	   //Message::toScreen(" dist2go = "+QString().setNum(dist2go));
@@ -460,7 +464,7 @@ void AnalysisThread::run()
 	 float outer = configData->getParam(vtd, "outerradius").toFloat();
 	 float ringwidth = configData->getParam(vtd, "ringwidth").toFloat();
 	 int numRings = (int)floor((outer-inner)/ringwidth + 1.5);
-	 int numWaveNum = configData->getParam(vtd, "maxwavenumber").toInt()+1;
+	 int numWaveNum = configData->getParam(vtd,"maxwavenumber").toInt();
 	 VortexData *vortexData = new VortexData(numLevels,numRings,
 						 numWaveNum);
 	 //VortexData *vortexData = new VortexData(); 
@@ -501,21 +505,21 @@ void AnalysisThread::run()
 		}
 		else
 		  emit log(Message(QString("RadarVolume is Dealiased"),0,this->objectName()));
+		
 		/*
-		 
 			 // Using this for running FORTRAN version
-			 QString name("fchar1824.dat");
+			 QString name("fchar1824Verify.dat");
 			 Message::toScreen("Writing Vortrac Input "+name);
 			 radarVolume->writeToFile(name);
 			 Message::toScreen("Wrote Vortrac Input "+name);
-         
+	    
 			 // Testing HVVP before Cappi to save time 
 			 // only good for Charley 1824
 			 
 			 float rt1 = 167.928;
 			 float cca1 = 177.204;
 			 float rmw1 = 11;
-			
+			 
 			 // Testing HVVP before Cappi to save time 
 			 // only good for Charley 140007
 			 
@@ -554,12 +558,18 @@ void AnalysisThread::run()
 			 float rt1 = 70.60;
 			 float cca1 = 45.19;
 			 float rmw1 = 7;
-			 
+			
 			 Message::toScreen("Vortex (Lat,Lon): ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")");
 			 Message::toScreen("Hvvp Parameters: Distance to Radar "+QString().setNum(rt1)+" angel to vortex center in degrees ccw from north "+QString().setNum(cca1)+" rmw "+QString().setNum(rmw1));
 			 
 			 Hvvp *envWindFinder1 = new Hvvp;
-			 envWindFinder1->setRadarData(radarVolume,rt1, cca1, rmw1);
+			 connect(envWindFinder1, SIGNAL(log(const Message&)),
+				 this, SLOT(catchLog(const Message&)), 
+				 Qt::DirectConnection);
+			 envWindFinder1->setConfig(configData);
+			 envWindFinder1->setPrintOutput(true);
+			 envWindFinder1->setRadarData(radarVolume,
+						      rt1, cca1, rmw1);
 			 if(!envWindFinder1->findHVVPWinds(true)){
 			   
 			 }
@@ -568,7 +578,7 @@ void AnalysisThread::run()
 			 delete envWindFinder1;
 			 
 			 return;
-			 */
+		*/ // comments end here
 		
 		mutex.unlock();
 		if(abort)
@@ -618,6 +628,7 @@ void AnalysisThread::run()
 		
 		// Pass Cappi to display
 		emit newCappi(gridData);
+		//emit newCappiInfo(.3,.3,.1,.2,.3);
 		
 	
 		if(abort)
@@ -653,6 +664,32 @@ void AnalysisThread::run()
 		simplexTime.setNum((float)analysisTime.elapsed() / 60000);
 		simplexTime.append(" minutes elapsed");
 		emit log(Message(simplexTime));
+
+		// Send info about simplex search to cappiDisplay 
+		
+		int vortexIndex = vortexData->getHeightIndex(1);
+		if(vortexIndex == -1)
+		  vortexIndex = 0;
+		float levelLat = vortexData->getLat(vortexIndex);
+		float levelLon = vortexData->getLon(vortexIndex);
+		QDomElement radar = configData->getConfig("radar");
+		QDomElement simplex = configData->getConfig("center");
+		float radarLat = configData->getParam(radar,"lat").toFloat();
+		float radarLon = configData->getParam(radar,"lon").toFloat();
+		float* xyValues = gridData->getCartesianPoint(&radarLat, &radarLon, &levelLat, &levelLon);
+		float xPercent = float(gridData->getIndexFromCartesianPointI(xyValues[0])+1)/gridData->getIdim();
+		//Message::toScreen("xPercent is "+QString().setNum(xPercent));
+		float yPercent = float(gridData->getIndexFromCartesianPointJ(xyValues[1])+1)/gridData->getJdim();
+		//Message::toScreen("yPercent is "+QString().setNum(yPercent));
+		float sMin = configData->getParam(simplex, "innerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
+		//Message::toScreen("sMin is "+QString().setNum(sMin));
+		float sMax = configData->getParam(simplex, "outerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
+		//Message::toScreen("sMax is "+QString().setNum(sMax));
+		float vMax = configData->getParam(vtd, "outerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
+		//Message::toScreen("vMax is "+QString().setNum(vMax));
+		emit newCappiInfo(xPercent, yPercent, sMin, sMax, vMax);
+		delete [] xyValues;
+		
 
 		mutex.unlock();  	
 		

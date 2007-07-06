@@ -54,6 +54,7 @@ public slots:
    void saveImage(QString fileName);
    void manualAxes(const QString& name, const bool change);
    void manualParameter(const QString& name, const float num);
+   void manualParameter(const QString& name, const QString& time);
    void catchLog(const Message& message);
 
 protected:
@@ -90,6 +91,7 @@ private:
    VortexList* VortexDataList;      
    VortexList*  dropList;         
    QDateTime first;                // Time of first data points
+   QDateTime last;
    QDialog* key;
    QString graphTitle;
    int graph_width;
@@ -97,6 +99,7 @@ private:
    float z1, z2;
    bool imageAltered;
    bool autoAxes;
+   bool showPressure;
 
    // Max and Min radius of maximum wind values
    // These are recorded as the max(min) +(-) the standard deviation in rmw
@@ -111,6 +114,13 @@ private:
    float autoPressureMax;
    float pressureMin;
    float autoPressureMin;
+
+   // Max and Min center of vortex pressure deficit values
+   
+   float deficitMax;
+   float autoDeficitMax;
+   float deficitMin;
+   float autoDeficitMin;
  
    // These are Max and Min graph values for pressure(p) and rmw(r)
    // The difference between these and the above max min is only a small  
@@ -124,18 +134,24 @@ private:
    float autoRGMax;
    float rGMin;
    float autoRGMin;
+   float dGMax;
+   float autoDGMax;
+   float dGMin;
+   float autoDGMin;
 
    // These ranges are the span of values for each variable determined by data
    // rmw and pressure go between _GMax and _GMin
    // time range has a 1 minute offset at the left and right
    float rmwRange;
    float pressureRange;
+   float deficitRange;
    float timeRange;
 
    // These functions use information within the list of data points
    // to create a point that is scaled to the current ranges that the graph covers
    // when this point is returned it is ready to graph
    QPointF makePressurePoint(VortexData d);
+   QPointF makeDeficitPoint(VortexData d);
    QPointF makeRmwPoint(VortexData d);
    QPointF makeRmwPoint(VortexData d, int bestLevel);
    QPointF makeRmwPoint(VortexData d, float rmw);
@@ -148,8 +164,11 @@ private:
    float unScalePressure(float y);
    float scaleRmw(float unscaled_rmw); 
    float unScaleRmw(float y);
+   float scaleDeficit(float unscaled_deficit);
+   float unScaleDeficit(float y);
    float scaleDPressure(float unscaled_dPressure);
    float scaleDRmw(float unscaled_dRmw);
+   float scaleDDeficit(float unscaled_dDeficit);
    float getSTDMultiplier(VortexData p, float z);
    int pointAt(const QPointF & position, bool& ONDropSonde);
    void setColors();
@@ -160,6 +179,7 @@ private:
    void checkRanges();
    void checkPressure(VortexData* point);
    void checkRmw(VortexData* point);
+   void checkDeficit(VortexData* point);
    
    // Constants related to the absolute size of the margins and face of the graph
    // These are in Qt sizes not scaled sizes

@@ -206,14 +206,25 @@ RadarListDialog::RadarListDialog(QWidget *parent, Configuration *initialConfig)
 	  this, SLOT(radarValues(const QString&)));
  
   newRadarButton->setChecked(true);
-
-  this->exec();
   
 }
 
 RadarListDialog::~RadarListDialog()
 {
-  // Not Yet Implemented
+  radars = NULL;
+  delete radars;
+  delete editRadarButton;
+  delete newRadarButton;
+  delete editRadar;
+  delete editRadarName;
+  delete newRadarName;
+  delete newRadarLocation;
+  delete editRadarLat;
+  delete editRadarLon;
+  delete editRadarAlt;
+  delete newRadarLat;
+  delete newRadarLon;
+  delete newRadarAlt;
 }
 
 void RadarListDialog::readConfig()
@@ -259,6 +270,7 @@ void RadarListDialog::savePressed()
     QString newText = editRadar->currentText().remove(0, 4).prepend(name);
     emit changeDom(oldRadar, QString("text"), newText);
     oldRadar.setTagName(name);
+    emit newEntry(newText);
   }
   if(newRadarButton->isChecked()) {
     QString name = newRadarName->text().left(4);
@@ -272,7 +284,7 @@ void RadarListDialog::savePressed()
 		QString().setNum(newRadarLat->value()));
     emit addDom(newDom, QString("altitude"), 
 		QString().setNum(newRadarAlt->value()));
- 
+    emit newEntry(name);
   }
 
   // Attempts to save changes made to the configuration perminant in the 

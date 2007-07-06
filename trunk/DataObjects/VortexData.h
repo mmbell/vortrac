@@ -62,6 +62,8 @@ class VortexData
   void setPressureUncertainty(const float& dPressure);
   float getPressureDeficit() const;
   void setPressureDeficit(const float& newPressureDeficit);
+  float getDeficitUncertainty() const;
+  void setDeficitUncertainty(const float& newDeficitUncertainty);
 
   int getNumConvergingCenters(const int& i)const;
   void setNumConvergingCenters(const int& index, const int& number);
@@ -80,7 +82,7 @@ class VortexData
   Coefficient getCoefficient(const float& height, const float& rad,
 			     const QString& parameter) const;
   void setCoefficient(const int& lev, const int& rad, 
-		      const int& waveNum, const Coefficient &coefficient);
+		      const int& coeffNum, const Coefficient &coefficient);
 
   // void operator = (const VortexData &other);
   bool operator ==(const VortexData &other);
@@ -122,11 +124,12 @@ class VortexData
   float centralPressure;
   float centralPressureUncertainty;
   float pressureDeficit;
+  float pressureDeficitUncertainty;
 
   int numConvergingCenters[maxLevels];
   float centerStdDeviation[maxLevels];
   
-  Coefficient coefficients[maxLevels][maxRadii][maxWaveNum];
+  Coefficient coefficients[maxLevels][maxRadii][maxWaveNum*2+3];
   
 };
 

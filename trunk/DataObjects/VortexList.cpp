@@ -12,6 +12,7 @@
 #include "VortexList.h"
 #include <QDomNodeList>
 #include <QDir>
+#include <math.h>
 
 VortexList::VortexList(const QString &newFileName)
 {
@@ -37,8 +38,8 @@ VortexList::VortexList(Configuration* newConfig)
 VortexList::~VortexList()
 {
   configFileNames->clear();
-  vortexDataConfigs->clear();
-  QList<VortexData>::clear();
+  while(vortexDataConfigs->count() > 0)
+    delete vortexDataConfigs->takeLast();
   delete configFileNames;
   delete vortexDataConfigs;
   delete config;
@@ -164,6 +165,9 @@ bool VortexList::openNodeFile(const QDomNode &newNode)
 	float newPressureDeficit = newConfig->getParam(childElement,
 						 "pressure_deficit").toFloat();
 	newData.setPressureDeficit(newPressureDeficit);
+	float newDeficitUncertainty = newConfig->getParam(childElement,
+							  "deficit_uncertainty").toFloat();
+	newData.setDeficitUncertainty(newDeficitUncertainty);
 	float newAveRMW = newConfig->getParam(childElement,
 					      "ave_rmw").toFloat();
 	newData.setAveRMW(newAveRMW);
@@ -235,16 +239,17 @@ bool VortexList::openNodeFile(const QDomNode &newNode)
 	  }
 	}
 	int currNumWaveNum = 0;
+	int currCoefficient = 0;
 	int currNumRadii = 0;
-	while((!coeff.isNull())&&(currNumWaveNum<=newData.getMaxWaveNum())) {
+	while((!coeff.isNull())&&(currCoefficient <= newData.getMaxWaveNum()*2+3)) {
 	  Coefficient newCoeff;
 	  int thisLevel = coeff.attribute(QString("level")).toInt();
 	  int thisRadius = coeff.attribute(QString("radius")).toInt();
 	  newCoeff.setLevel(thisLevel);
 	  newCoeff.setRadius(thisRadius);
 	  num[thisLevel][thisRadius]++;
-	  if(num[thisLevel][thisRadius] > currNumWaveNum)
-	    currNumWaveNum = num[thisLevel][thisRadius];
+	  if(num[thisLevel][thisRadius] > currCoefficient)
+	    currCoefficient = num[thisLevel][thisRadius];
 	  if(thisRadius > currNumRadii)
 	    currNumRadii = thisRadius;
 	  newCoeff.setParameter(coeff.attribute("parameter"));
@@ -256,6 +261,7 @@ bool VortexList::openNodeFile(const QDomNode &newNode)
 	  }
 	  coeff = coeff.nextSiblingElement("coefficient");
 	}
+	currNumWaveNum = floor((currCoefficient-3)/2.0+1);
 	newData.setNumWaveNum(currNumWaveNum);
 	newData.setNumWaveNum(currNumRadii+1);
 	
@@ -340,7 +346,7 @@ void VortexList::createDomVortexDataEntry(const VortexData &newData)
 		 newData.getTime().toString(Qt::ISODate)); 
   config->addDom(parent, QString("file"), workingDir+nodeFile);
 
-  vortexDataConfigs->append( newConfig);
+  vortexDataConfigs->append(newConfig);
   configFileNames->append(workingDir+nodeFile);
 
   // Add this information to the new catelog entry
@@ -370,6 +376,9 @@ void VortexList::createDomVortexDataEntry(const VortexData &newData)
   if(newData.getPressureDeficit()!=-999) {
     newConfig->addDom(volParent, QString("pressure_deficit"), 
 		      QString().setNum(newData.getPressureDeficit())); }
+  if(newData.getDeficitUncertainty()!=-999) {
+    newConfig->addDom(volParent, QString("deficit_uncertainty"),
+		      QString().setNum(newData.getDeficitUncertainty())); }
   if(newData.getAveRMW()!=-999) {
     newConfig->addDom(volParent, QString("ave_rmw"),
 		      QString().setNum(newData.getAveRMW())); }
@@ -404,7 +413,7 @@ void VortexList::createDomVortexDataEntry(const VortexData &newData)
 		     QString().setNum(newData.getCenterStdDev(i)), level, ii);}
 
     for(int r = 0; r < newData.getNumRadii(); r++) {
-      for(int w = 0; w < newData.getNumWaveNum(); w++) {
+      for(int w = 0; w < newData.getNumWaveNum()*2+3; w++) {
 	QString ff("coefficient");
 	QString rr = QString().setNum(r);
 	QString paramString("parameter");
@@ -433,22 +442,24 @@ void VortexList::removeAt(int i)
 {
   int initialCount = vortexDataConfigs->count();
   configFileNames->removeAt(i);
-  vortexDataConfigs->removeAt(i);
+  delete vortexDataConfigs->takeAt(i);
   if(vortexDataConfigs->count() >= initialCount)
     Message::toScreen(QString("RemoveAt didn't reduce the number of data points in the list"));
   QString timeString = this->at(i).getTime().toString(Qt::ISODate);
   timeString.replace(QString("-"), QString("_"));
   timeString.replace(QString(":"), QString("_"));
- 
+  timeString.chop(2);
+  timeString = "volume_"+timeString;
+  timeString = config->findConfigNameStartsWith(timeString);
   // Remove element and children from main xml identifing specific file
 
-  QDomElement parent = config->getConfig(QString("volume_"+timeString));
-  if(parent.tagName()!=QString("volume_"+timeString))
-    Message::toScreen("The tag names are different parent: "+parent.tagName()+" what we got "+QString("volume_"+timeString));
+  QDomElement parent = config->getConfig(timeString);
+  if(parent.tagName()!=timeString)
+    Message::toScreen("The tag names are different parent: "+parent.tagName()+" what we got "+timeString);
   config->removeDom(parent, QString("time")); 
   config->removeDom(parent, QString("file"));
   QDomElement root = config->getRoot();
-  config->removeDom(root, QString("volume_"+timeString));
+  config->removeDom(root, timeString);
 
   QList<VortexData>::removeAt(i);
 }

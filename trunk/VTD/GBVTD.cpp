@@ -242,14 +242,14 @@ void GBVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, flo
 		for (int i=5; i <= numCoeffs-1; i+=2) {
 			vtdCoeffs[i].setLevel(level);
 			vtdCoeffs[i].setRadius(radius);
-			QString param = "VTC" + (QString)(i/2);
+			QString param = "VTC" + QString().setNum(int(i/2));
 			vtdCoeffs[i].setParameter(param);
 			value = -2*B[i/2+1];
 			vtdCoeffs[i].setValue(value);	
 			
 			vtdCoeffs[i+1].setLevel(level);
 			vtdCoeffs[i+1].setRadius(radius);
-			param = "VTS" + (QString)(i/2);
+			param = "VTS" + QString().setNum(int(i/2));
 			vtdCoeffs[i+1].setParameter(param);
 			value = 2*A[i/2+1];
 			vtdCoeffs[i+1].setValue(value);				

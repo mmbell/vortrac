@@ -169,7 +169,7 @@ void VortexThread::run()
 		// We can't iterate through height like this and keep z spacing working -LM
 
 		int loopPercent = int(7.0/float(gridData->getKdim()));
-		int endPercent = 7-(gridData->getKdim()*loopPercent);
+		int endPercent = 7-int(gridData->getKdim()*loopPercent);
 		int storageIndex = -1;
 		for(int h = 0; h < gridData->getKdim(); h++) {
 		  emit log(Message(QString(),loopPercent,this->objectName()));
@@ -603,6 +603,7 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
   
   float refLat = vortexData->getLat(goodLevel);
   float refLon = vortexData->getLon(goodLevel);
+  float sqDeficitSum = 0;
   for(int p = 0; p < numErrorPoints; p++) {
     VortexData* errorVertex = new VortexData(1,vortexData->getNumRadii(), vortexData->getNumWaveNum());
     errorVertex->setTime(vortexData->getTime().addDays(p).addYears(2));
@@ -669,9 +670,11 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
     // Now calculate central pressure for each of these
     float* errorPressureDeficit = new float[(int)lastRing+1];
     getPressureDeficit(errorVertex,errorPressureDeficit, height);
+    errorVertex->setPressureDeficit(fabs(*errorPressureDeficit));
 
-    // Add in uncertainty within HVVP measurement
-    
+    // Sum for Deficit Uncertainty
+    sqDeficitSum += (errorVertex->getPressureDeficit()-vortexData->getPressureDeficit())*(errorVertex->getPressureDeficit()-vortexData->getPressureDeficit());
+  
     // Add in uncertainty from multiple pressure measurements
     if(numEstimates < 1){
       // No outside data available use the 1013 bit.
@@ -716,9 +719,11 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
 	
 	if(nameAddition!=QString())
 	  errorVertices->save();
+	delete errorVertex2;
       }
     }
     delete [] errorPressureDeficit;
+    delete errorVertex;
   }
   
   emit log(Message(QString(),endPercent, this->objectName()));
@@ -727,11 +732,12 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
   delete vtd;
   
   // Standard deviation from the center point
-  float sqSum = 0;
+  float sqPressureSum = 0;
   for(int i = 1; i < errorVertices->count();i++) {
-    sqSum += pow((errorVertices->at(i).getPressure()-vortexData->getPressure()),2);
+    sqPressureSum += pow((errorVertices->at(i).getPressure()-vortexData->getPressure()),2);
   }
-  float pressureUncertainty = sqrt(sqSum/(errorVertices->count()-2));
+  float pressureUncertainty = sqrt(sqPressureSum/(errorVertices->count()-2));
+  float deficitUncertainty = sqrt(sqDeficitSum/(numErrorPoints-1));
   if((numEstimates <= 1)&&(pressureUncertainty < 2.5)) {
     pressureUncertainty = 2.5;
   }
@@ -739,6 +745,7 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
     pressureUncertainty = 5.0;
 
   vortexData->setPressureUncertainty(pressureUncertainty);
+  vortexData->setDeficitUncertainty(deficitUncertainty);
   float aveRMWUncertainty = 0;
   int goodrmw = 0;
   for(int jj = 0; jj < vortexData->getNumLevels();jj++) {
@@ -803,6 +810,9 @@ void VortexThread::readInConfig()
 					QString("maxdatagap"), QString("wavenum"), 
 					QString().setNum(i)).toFloat();
    }
+
+   // Set GriddedData to use ringwidth for spacing
+   gridData->setCylindricalAzimuthSpacing(ringWidth);
 
   maxObRadius = 0;
   maxObTimeDiff = 60 * configData->getParam(pressureConfig, "maxobstime").toFloat();
@@ -873,6 +883,7 @@ bool VortexThread::calcHVVP(bool printOutput)
   }
   
   Hvvp *envWindFinder = new Hvvp;
+  envWindFinder->setConfig(configData);
   envWindFinder->setPrintOutput(printOutput);
   connect(envWindFinder, SIGNAL(log(const Message)), 
 	  this, SLOT(catchLog(const Message)), 

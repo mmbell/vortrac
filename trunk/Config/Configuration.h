@@ -66,6 +66,8 @@ class Configuration:public QObject
 
   // bool operator == (const Configuration &other);
   
+  QString findConfigNameStartsWith(const QString& name);
+  
  public slots:
    void catchLog(const Message& message);
 

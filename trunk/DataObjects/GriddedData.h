@@ -41,7 +41,6 @@ class GriddedData
   //void setIGridsp(const float& iSpacing);
   //void setJGridsp(const float& jSpacing);
   //void setKGridsp(const float& kSpacing);
-  // int getCoordSystem() { return coordSystem; }
   float fixAngle(float angle);
   void setLatLonOrigin(float *knownLat, float *knownLon, float *relX, 
 		       float *relY);
@@ -156,6 +155,14 @@ class GriddedData
      points within the requested radius. Somewhat inefficient. -LM
   */
   
+  static int getMaxFields() { return maxFields; }
+  static int getMaxIDim() { return maxIDim; }
+  static int getMaxJDim() { return maxJDim; }
+  static int getMaxKDim() { return maxKDim; }
+
+  float getCylindricalAzimuthSpacing() { return cylindricalAzimuthSpacing; }
+  void setCylindricalAzimuthSpacing(const float& newSpacing);
+  
  protected:
   float iDim;
   float jDim;
@@ -168,7 +175,13 @@ class GriddedData
   float rad2deg;
   float numFields;
   QStringList fieldNames;
-  float dataGrid[3][256][256][20];
+
+  static const int maxFields = 3;
+  static const int maxIDim = 256;
+  static const int maxJDim = 256;
+  static const int maxKDim = 20;
+
+  float dataGrid[maxFields][maxIDim][maxJDim][maxKDim];
   //dataGrid[0] = reflectivity
   //dataGrid[1] = doppler velocity magnitude
   //dataGrid[2] = spectral width

@@ -31,9 +31,11 @@ CappiDisplay::CappiDisplay(QWidget *parent)
     maxApp = 0;
     velIncr = 1;
 
-	//Set the palette
+    //Set the palette
+    imageHolder.lock(); 
+    
         image = QImage(50,50,QImage::Format_Indexed8);
-	image.setNumColors(256);
+	image.setNumColors(44);
 	image.setColor(0, qRgb(0,0,0));
 	image.setColor(1, qRgb(255, 255, 255));
 	image.setColor(2, qRgb((int)(.469*255), (int)(.020*255), (int)(.640*255)));
@@ -78,61 +80,66 @@ CappiDisplay::CappiDisplay(QWidget *parent)
 	image.setColor(41, qRgb((int)(.879*255), (int)(.211*255), (int)(.355*255)));
 	image.setColor(42, qRgb((int)(.949*255), (int)(.273*255), (int)(.355*255)));
 	image.setColor(43, qRgb((int)(1.000*255), (int)(.012*255), (int)(.000*255)));
+    
+	
+    /*
+    image = QImage(50,50,QImage::Format_RGB32);
+    //image.setNumColors(256);
+    colorMap[0] = qRgb(0,0,0);
+    colorMap[1] = qRgb(255, 255, 255);
+    colorMap[2] = qRgb((int)(.469*255), (int)(.020*255), (int)(.640*255));
+    colorMap[3] = qRgb((int)(.403*255), (int)(.227*255), (int)(.559*255));
+    colorMap[4] = qRgb((int)(.164*255), (int)(.055*255), (int)(.582*255));
+    colorMap[5] = qRgb((int)(.227*255), (int)(.055*255), (int)(.672*255));
+    colorMap[7] = qRgb((int)(.352*255), (int)(.141*255), (int)(.898*255));
+    colorMap[8] = qRgb((int)(.414*255), (int)(.375*255), (int)(.996*255));
+    colorMap[9] = qRgb((int)(.445*255), (int)(.559*255), (int)(.996*255));
+    colorMap[10] = qRgb((int)(.281*255), (int)(.590*255), (int)(.602*255));
+    colorMap[11] = qRgb((int)(.188*255), (int)(.523*255), (int)(.371*255));
+    colorMap[12] = qRgb((int)(.004*255), (int)(.445*255), (int)(.000*255));
+    colorMap[13] = qRgb((int)(.000*255), (int)(.492*255), (int)(.000*255));
+    colorMap[14] = qRgb((int)(.000*255), (int)(.539*255), (int)(.000*255));
+    colorMap[15] = qRgb((int)(.059*255), (int)(.586*255), (int)(.059*255));
+    colorMap[16] = qRgb((int)(.176*255), (int)(.633*255), (int)(.176*255));
+    colorMap[17] = qRgb((int)(.289*255), (int)(.680*255), (int)(.289*255));
+    colorMap[18] = qRgb((int)(.402*255), (int)(.723*255), (int)(.402*255));
+    colorMap[19] = qRgb((int)(.520*255), (int)(.770*255), (int)(.520*255));
+    colorMap[20] = qRgb((int)(.633*255), (int)(.816*255), (int)(.633*255));
+    colorMap[21] = qRgb((int)(.750*255), (int)(.863*255), (int)(.750*255));
+    colorMap[22] = qRgb((int)(.863*255), (int)(.910*255), (int)(.863*255));
+    colorMap[23] = qRgb((int)(.938*255), (int)(.906*255), (int)(.703*255));
+    colorMap[24] = qRgb((int)(.938*255), (int)(.859*255), (int)(.352*255));
+    colorMap[25] = qRgb((int)(.938*255), (int)(.812*255), (int)(.000*255));
+    colorMap[26] = qRgb((int)(.938*255), (int)(.766*255), (int)(.023*255));
+    colorMap[27] = qRgb((int)(.938*255), (int)(.719*255), (int)(.055*255));
+    colorMap[28] = qRgb((int)(.926*255), (int)(.672*255), (int)(.086*255));
+    colorMap[29] = qRgb((int)(.871*255), (int)(.625*255), (int)(.117*255));
+    colorMap[30] = qRgb((int)(.816*255), (int)(.578*255), (int)(.148*255));
+    colorMap[31] = qRgb((int)(.758*255), (int)(.531*255), (int)(.180*255));
+    colorMap[32] = qRgb((int)(.703*255), (int)(.484*255), (int)(.211*255));
+    colorMap[33] = qRgb((int)(.648*255), (int)(.438*255), (int)(.242*255));
+    colorMap[34] = qRgb((int)(.590*255), (int)(.391*255), (int)(.250*255));
+    colorMap[35] = qRgb((int)(.535*255), (int)(.344*255), (int)(.250*255));
+    colorMap[36] = qRgb((int)(.485*255), (int)(.328*255), (int)(.297*255));
+    colorMap[37] = qRgb((int)(.629*255), (int)(.312*255), (int)(.375*255));
+    colorMap[38] = qRgb((int)(.625*255), (int)(.003*255), (int)(.000*255));
+    colorMap[39] = qRgb((int)(.718*255), (int)(.086*255), (int)(.188*255));
+    colorMap[40] = qRgb((int)(.813*255), (int)(.148*255), (int)(.273*255));
+    colorMap[41] = qRgb((int)(.879*255), (int)(.211*255), (int)(.355*255));
+    colorMap[42] = qRgb((int)(.949*255), (int)(.273*255), (int)(.355*255));
+    colorMap[43] = qRgb((int)(1.000*255), (int)(.012*255), (int)(.000*255));
+    */					   
+    
+    	imageHolder.unlock();
+
+	exitNow = false;
+	hasGBVTDInfo = false;
 
 	this->clearImage();
 	emit hasImage(true);
 	this->repaint();
 	emit hasImage(false);
 	this->update();
-	
-	exitNow = false;
-	
-	/*
-	image = QImage(50,50,QImage::Format_RGB32);
-	//image.setNumColors(256);
-	colorMap[0] = qRgb(0,0,0);
-	colorMap[1] = qRgb(255, 255, 255);
-	colorMap[2] = qRgb((int)(.469*255, (int)(.020*255, (int)(.640*255);
-	colorMap[3] = qRgb((int)(.403*255, (int)(.227*255, (int)(.559*255);
-	colorMap[4] = qRgb((int)(.164*255, (int)(.055*255, (int)(.582*255);
-	colorMap[5] = qRgb((int)(.227*255, (int)(.055*255, (int)(.672*255);
-	colorMap[7] = qRgb((int)(.352*255, (int)(.141*255, (int)(.898*255);
-	colorMap[8] = qRgb((int)(.414*255, (int)(.375*255, (int)(.996*255);
-	colorMap[9] = qRgb((int)(.445*255, (int)(.559*255, (int)(.996*255);
-	colorMap[10] = qRgb((int)(.281*255, (int)(.590*255, (int)(.602*255);
-	colorMap[11] = qRgb((int)(.188*255, (int)(.523*255, (int)(.371*255);
-	colorMap[12] = qRgb((int)(.004*255, (int)(.445*255, (int)(.000*255);
-	colorMap[13] = qRgb((int)(.000*255, (int)(.492*255, (int)(.000*255);
-	colorMap[14] = qRgb((int)(.000*255, (int)(.539*255, (int)(.000*255);
-	colorMap[15] = qRgb((int)(.059*255, (int)(.586*255, (int)(.059*255);
-	colorMap[16] = qRgb((int)(.176*255, (int)(.633*255, (int)(.176*255);
-	colorMap[17] = qRgb((int)(.289*255, (int)(.680*255, (int)(.289*255);
-	colorMap[18] = qRgb((int)(.402*255, (int)(.723*255, (int)(.402*255);
-	colorMap[19] = qRgb((int)(.520*255, (int)(.770*255, (int)(.520*255);
-	colorMap[20] = qRgb((int)(.633*255, (int)(.816*255, (int)(.633*255);
-	colorMap[21] = qRgb((int)(.750*255, (int)(.863*255, (int)(.750*255);
-	colorMap[22] = qRgb((int)(.863*255, (int)(.910*255, (int)(.863*255);
-	colorMap[23] = qRgb((int)(.938*255, (int)(.906*255, (int)(.703*255);
-	colorMap[24] = qRgb((int)(.938*255, (int)(.859*255, (int)(.352*255);
-	colorMap[25] = qRgb((int)(.938*255, (int)(.812*255, (int)(.000*255);
-	colorMap[26] = qRgb((int)(.938*255, (int)(.766*255, (int)(.023*255);
-	colorMap[27] = qRgb((int)(.938*255, (int)(.719*255, (int)(.055*255);
-	colorMap[28] = qRgb((int)(.926*255, (int)(.672*255, (int)(.086*255);
-	colorMap[29] = qRgb((int)(.871*255, (int)(.625*255, (int)(.117*255);
-	colorMap[30] = qRgb((int)(.816*255, (int)(.578*255, (int)(.148*255);
-	colorMap[31] = qRgb((int)(.758*255, (int)(.531*255, (int)(.180*255);
-	colorMap[32] = qRgb((int)(.703*255, (int)(.484*255, (int)(.211*255);
-	colorMap[33] = qRgb((int)(.648*255, (int)(.438*255, (int)(.242*255);
-	colorMap[34] = qRgb((int)(.590*255, (int)(.391*255, (int)(.250*255);
-	colorMap[35] = qRgb((int)(.535*255, (int)(.344*255, (int)(.250*255);
-	colorMap[36] = qRgb((int)(.485*255, (int)(.328*255, (int)(.297*255);
-	colorMap[37] = qRgb((int)(.629*255, (int)(.312*255, (int)(.375*255);
-	colorMap[38] = qRgb((int)(.625*255, (int)(.003*255, (int)(.000*255);
-	colorMap[39] = qRgb((int)(.718*255, (int)(.086*255, (int)(.188*255);
-	colorMap[40] = qRgb((int)(.813*255, (int)(.148*255, (int)(.273*255);
-	colorMap[41] = qRgb((int)(.879*255, (int)(.211*255, (int)(.355*255);
-	colorMap[42] = qRgb((int)(.949*255, (int)(.273*255, (int)(.355*255);
-	colorMap[43] = qRgb((int)(1.000*255, (int)(.012*255, (int)(.000*255); */
 }
 
 bool CappiDisplay::openImage(const QString &fileName)
@@ -143,7 +150,9 @@ bool CappiDisplay::openImage(const QString &fileName)
 
     QSize newSize = loadedImage.size().expandedTo(size());
     resizeImage(&loadedImage, newSize);
+    imageHolder.lock();
     image = loadedImage;
+    imageHolder.unlock();
     update();
     return true;
 }
@@ -163,8 +172,10 @@ bool CappiDisplay::saveImage(const QString &fileName, const char *fileFormat)
 void CappiDisplay::clearImage()
 {
   emit hasImage(false);
+  imageHolder.lock();
   image.fill(qRgb(255, 255, 255));
   legendImage.fill(qRgb(255,255,255));
+  imageHolder.unlock();
   //QString message;
   //message.setNum(PaintEngineMode);
   //QTextStream out(stdout);
@@ -185,8 +196,9 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
   //Message::toScreen("Hit Paint Event in CappiDisplay");
 
   // Draw the legend image .....
+  imageHolder.lock();
+
   QPainter *imagePainter = new QPainter(&legendImage);
-  imagePainter->setBackgroundMode(Qt::OpaqueMode);
   
   float offset = 15;
   float boxHeight = (image.height()-2*offset)/(float)42;
@@ -201,35 +213,78 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
   QFont legendFont("Times",7);
   imagePainter->setFont(legendFont);
   for(int i = 0; i < 42; i+=2) {
-    imagePainter->drawText(QPoint((int)(2.5*boxHeight), (int)(offset+(i*boxHeight)+(.7*boxHeight))), QString().setNum(maxVel-i*velIncr, 'f', 2));
+    imagePainter->drawText(QPoint((int)(2.5*boxHeight), (int)(offset+(i*boxHeight)+(.7*boxHeight))), QString().setNum(maxVel-i*velIncr, 'f', 0));
   }
   
   if(imagePainter->isActive())
     imagePainter->end();
   delete imagePainter;
-
+  imageHolder.unlock();
+  
   // Paint the image and the legend onto this wigit
 
   QPainter painter(this);
   backColor = painter.background().color();
   //Message::toScreen("background Color r = "+QString().setNum(backColor.red())+" g = "+QString().setNum(backColor.green())+" b = "+QString().setNum(backColor.blue()));
-  /*
-    painter.drawText(QPoint(0, (int)image.size().height()*.35),
-    "Maximum Receeding");
-    painter.drawText(QPoint(0, (int)image.size().height()*.45),
-    " "+QString().setNum(maxRec)+" m/s");
-    painter.drawText(QPoint(0, (int)image.size().height()*.55),
-    "Maximum Approaching");
-    painter.drawText(QPoint(0, (int)image.size().height()*.65),
-    " "+QString().setNum(maxApp)+" m/s");
-  */
-  //painter.drawText(QPoint(0,0),"Max. Receeding: "+QString().setNum(maxRec)+" m/s; Max. Approaching: "+QString().setNum(maxApp));
+  imageHolder.lock();
   painter.drawImage(QPoint(image.size().width()*0,0), image);
-  painter.drawImage(QPointF(image.size().width()*1.1,0),
-    		    legendImage);
-  //painter.drawText(QPoint(0,int(image.size().height()*1.05)),"Max. Receeding: "+QString().setNum(maxRec)+" m/s; Max. Approaching: "+QString().setNum(maxApp));
-  //painter.drawText(QPoint(0, this->height()), cappiLabel);
+ 
+  if(hasGBVTDInfo) {
+    // Given the relevant GBVTD and config parameters
+    // Draw an X (small hurricane symbol?) at (x, y) to mark 
+    // GBVTD center
+    // Draw circles of one color for simplex max & simplex min
+    // Draw circles of another color for GBVTD max radius
+    // All these values should arrive scaled to percentages of cappi size
+    
+    float w = image.size().width();
+    float h = image.size().height();
+    QPen xPen(Qt::white);
+    xPen.setWidth(5);
+    QPen simplexPen(Qt::darkGray);
+    simplexPen.setWidth(3);
+    QPen vtdPen(Qt::gray);
+    vtdPen.setWidth(3);
+    painter.setPen(xPen);
+    // Draw a small X in the vortex center
+    painter.save();
+    painter.drawLine((xPercent-.01)*w,(1-(yPercent-.01))*h,
+		      (xPercent+.01)*w,(1-(yPercent+.01))*h);
+    painter.drawLine((xPercent-.01)*w,(1-(yPercent+.01))*h,
+		      (xPercent+.01)*w,(1-(yPercent-.01))*h);
+    painter.restore();
+    // Draw the circles about this center
+    painter.setPen(simplexPen);
+    painter.save();
+    QRectF sMinRect((xPercent-simplexMin)*w, (1-(yPercent+simplexMin))*h, 
+			2*simplexMin*w, 2*simplexMin*h);
+    painter.drawEllipse(sMinRect);
+    painter.restore();
+    painter.save();
+    QRectF sMaxRect((xPercent-simplexMax)*w, (1-(yPercent+simplexMax))*h, 
+			2*simplexMax*w, 2*simplexMax*h);
+    painter.drawEllipse(sMaxRect);
+    
+    painter.restore();
+    painter.setPen(vtdPen);
+    painter.save();
+    QRectF vMaxRect((xPercent-vortexMax)*w, (1-(yPercent+vortexMax))*h, 
+			2*vortexMax*w, 2*vortexMax*h);
+    painter.drawEllipse(vMaxRect);
+    
+    painter.restore();
+  }
+  
+  painter.fillRect(0,image.size().height(),this->size().width(),this->size().height()-image.size().height(), QBrush(painter.background()));
+  
+  painter.fillRect(image.size().width(),0,this->size().width()-image.size().width(),this->size().height(), QBrush(painter.background()));
 
+  painter.drawImage(QPointF(image.size().width()*1.1,0),
+		    legendImage);
+
+
+  imageHolder.unlock();
+  painter.end();
   // I don't know what this was for -LM 1/18/07
   /*
   if(painter.paintEngine()->type() == QPaintEngine::X11)
@@ -259,12 +314,6 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
 
 void CappiDisplay::resizeEvent(QResizeEvent *event)
 {
-    /* if (width() > image.width() || height() > image.height()) {
-        int newWidth = qMax(width() + 128, image.width());
-        int newHeight = qMax(height() + 128, image.height());
-        resizeImage(&image, QSize(newWidth, newHeight));
-        update();
-    } */
     QWidget::resizeEvent(event);
 }
 
@@ -273,21 +322,25 @@ void CappiDisplay::resizeImage(QImage *image, const QSize &newSize)
   Message::report("CappiDisplay: ResizeImage: Someone is using this");
     if (image->size() == newSize)
         return;
-
+    
     QImage newImage(newSize, QImage::Format_Indexed8);
     newImage.fill(qRgb(255, 255, 255));
     QPainter painter(&newImage);
     painter.drawImage(QPoint(0, 0), *image);
+    imageHolder.lock();
     *image = newImage;
+    imageHolder.unlock();
 }
 
 void CappiDisplay::constructImage(const GriddedData* cappi)
 {
 	
   // Fill the pixmap with data from the cappi
+  imageHolder.lock();
+  hasGBVTDInfo = false;
   image.fill(qRgb(255, 255, 255));	
-  float iDim = cappi->getIdim();
-  float jDim = cappi->getJdim();
+  iDim = cappi->getIdim();
+  jDim = cappi->getJdim();
   QSize cappiSize((int)iDim,(int)jDim);
   image = image.scaled(cappiSize);
   
@@ -355,6 +408,7 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
   this->setMinimumSize(QSize(int(image.size().width()*1.2), 
 			      int(image.size().height())));
   this->resize(this->minimumSize());
+  imageHolder.unlock();
   emit hasImage(true);
   
 }
@@ -362,4 +416,22 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
 void CappiDisplay::exit()
 {
   exitNow = true;
+}
+
+void CappiDisplay::setGBVTDResults(const float& xP, 
+				    const float& yP, 
+				    const float& sMin, 
+				    const float& sMax, 
+				    const float& vMax)
+{
+  imageHolder.lock();
+  xPercent = xP;
+  yPercent = yP;
+  simplexMin = sMin;
+  simplexMax = sMax;
+  vortexMax = vMax;
+  hasGBVTDInfo = true;
+  imageHolder.unlock();
+  emit hasImage(false);
+  emit hasImage(true);
 }

@@ -26,7 +26,7 @@
         <dir>/scr/science40/mauger/Working/trunk/testVel/cappi</dir>
         <xdim>100</xdim>
         <ydim>100</ydim>
-        <zdim>3</zdim>
+        <zdim>4</zdim>
         <xgridsp>1.0</xgridsp>
         <ygridsp>1.0</ygridsp>
         <zgridsp>1.0</zgridsp>
@@ -62,7 +62,7 @@
         <enddate>2005-01-02</enddate>
         <starttime>00:00:00</starttime>
         <endtime>00:00:00</endtime>
-        <min_volumes>13</min_volumes>
+        <min_volumes>5</min_volumes>
         <dist_weight>0.0</dist_weight>
         <wind_weight>0.2</wind_weight>
         <stddev_weight>0.6</stddev_weight>

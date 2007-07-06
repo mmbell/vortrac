@@ -39,11 +39,11 @@ class AbstractPanel:public QWidget
    AbstractPanel(QWidget *parent = 0);
    ~AbstractPanel();
  
-   virtual void updatePanel(QDomElement panelElement);
+   virtual void updatePanel(QDomElement panelElement) = 0;
      // Reads in values from the Configuration and writes
      // values from the corresponding section to the panel.
  
-   virtual bool  updateConfig();
+   virtual bool  updateConfig() = 0;
      // Writes current values in the panel to the corresponding section of the 
      // Configuration
 
@@ -72,10 +72,6 @@ class AbstractPanel:public QWidget
    QDomElement getPanelElement() {return elem;}
    void setElement(QDomElement newElement);
    
-   void createDataGaps();
-   // Generates the framework nessecary for automatically adjusting data 
-   // gap parameter entry boxes
-   
    QDoubleSpinBox *radarLatBox, *radarLongBox, *radarAltBox;
    QComboBox *radarName;
    Configuration *radars;
@@ -84,12 +80,16 @@ class AbstractPanel:public QWidget
     * view fields with information on radar latitude, longitude and altitude
     */
 
-   virtual bool checkValues();
+   virtual bool checkValues() = 0;
    bool checkDirectory();
 
  public slots:
-   void createDataGaps(const QString& value);
+   void createDataGaps();
+   // Generates the framework nessecary for automatically adjusting data 
+   // gap parameter entry boxes
+   //void createDataGaps(const QString& value);
    void catchLog(const Message& message);
+   virtual void turnOffMembers(const bool& isRunning);
 
  protected:
    void connectBrowse();
@@ -100,6 +100,7 @@ class AbstractPanel:public QWidget
      // Interacts with the panel element in a way that produces errors
      // if the correct child is not found. Use this rather than
      // firstChildElement for safety.
+   QList<QWidget*> turnOffWhenRunning;
 
  private:
    bool panelChanged;
@@ -111,9 +112,9 @@ class AbstractPanel:public QWidget
 
  private slots:
    void valueChanged();
-   void valueChanged(const bool signal);
-   void valueChanged(const QString& text);
-   void valueChanged(const QDateTime& dateTime);
+ //void valueChanged(const bool signal);
+ //void valueChanged(const QString& text);
+ //void valueChanged(const QDateTime& dateTime);
      // These slots receive signals when one of the panel's parameters has
      // been changed.
    

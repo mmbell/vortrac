@@ -314,7 +314,7 @@ void RadarQC::getConfig(QDomElement qcConfig)
 	   */
 	  
 	  emit log(Message(QString("Environmental Wind Method Not Specified for VAD"),0,this->objectName()));
-	  velMin = 1;
+	  velMin = 1.5;
 	  velMax = 100;
 	  refMin = -15;
 	  refMax = 100;
@@ -333,7 +333,7 @@ void RadarQC::getConfig(QDomElement qcConfig)
   // Set default parameters if configuration data is not available
   else {
     emit log(Message(QString("RadarQC: Quality Control Element is Not Valid, Using Default Parameters"),0,this->objectName()));
-    velMin = 1;
+    velMin = 1.5;
     velMax = 100;
     refMin = -15;
     refMax = 100;
@@ -410,16 +410,21 @@ void RadarQC::thresholdData()
       currentRay = radarData->getRay(i);
       int sweepIndex = currentRay->getSweepIndex();
       numVGates = currentRay->getVel_numgates();
+      float velGateSp = currentRay->getVel_gatesp();
+      float refGateSp = currentRay->getRef_gatesp();
       float *vGates = currentRay->getVelData();
       float *swGates = currentRay->getSwData();
       float *refGates = currentRay->getRefData();
       for (int j = 0; j < numVGates; j++)
 	{
-	  
+	  int jref = floor((float)j * velGateSp / refGateSp);
+	  if(jref >= currentRay->getRef_numgates())
+	    jref = int(velNull);
 	  if((swGates[j] > specWidthLimit)||
 	     (fabs(vGates[j]) < velMin) ||
 	     (fabs(vGates[j]) > velMax)) 
-	    // ||(refGates[j] < refMin) ||(refGates[j] > refMax)) 
+	    //||(jref==velNull)||(refGates[jref] < refMin) 
+	    //  ||(refGates[jref] > refMax)) 
 	    {
 	      // This was extended to threshold against min and max 
 	      // reflectivity as well but we are not currently using 
@@ -649,7 +654,6 @@ bool RadarQC::findVADStart(bool useGVAD)
       lowVelGate[m][n] = 0;
       hasVelData[m][n] = false;
     }
-    
   }
 
   //grad_vad = true; // who gets this??
@@ -1392,7 +1396,7 @@ bool RadarQC::BB()
 
 {
   //emit log(Message("In BB"));
-  Ray* currentRay;
+  Ray* currentRay = NULL;
   float numRays = radarData->getNumRays();
   for(int i = 0; i < numRays; i++) 
     {

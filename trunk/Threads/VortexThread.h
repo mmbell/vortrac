@@ -23,7 +23,6 @@
 #include "DataObjects/Coefficient.h"
 #include "DataObjects/VortexList.h"
 #include "DataObjects/VortexData.h"
-#include "ChooseCenter.h"
 #include "Pressure/PressureList.h"
 #include "Radar/RadarData.h"
 

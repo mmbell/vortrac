@@ -130,9 +130,11 @@ class CappiPanel:public AbstractPanel
   // onto (xDimBox is for length in x dimension etc). The members labeled x, 
   // y and x GridBoxes are for collecting and editing the distance between
   // data points in the cappi grid in each dimension.
-
+  
+  /*
   QDoubleSpinBox *advUWindBox, *advVWindBox;
   // Determines the speed and direction of advection flow
+  */
 
   QComboBox *intBox;
   // Allows the user to select an interpolation method from those listed
@@ -378,8 +380,10 @@ class GraphicsPanel:public AbstractPanel
   void updatePanel(const QDomElement panelElement);
   bool updateConfig();
   bool checkValues();
+  bool checkDisplayType();
  private:
   QDoubleSpinBox *pMaxBox, *pMinBox, *rmwMaxBox, *rmwMinBox;
+  QDoubleSpinBox *defMaxBox, *defMinBox;
   QDateTimeEdit *startDateTime, *endDateTime;
   /*
    * These are used to manipulate the visible limits of the pressure &
@@ -388,6 +392,8 @@ class GraphicsPanel:public AbstractPanel
    * pMinBox: minimum pressure displayed on graph
    * rmwMaxBox: maximum rmw displayed on graph
    * rmwMinBox: minimum rmw displayed on graph
+   * defMaxBox: maximum pressure deficit displayed on graph
+   * defMinBox: minimum pressure deficit displayed on graph
    * startDateTime: controls lower time limit on graph
    * endDateTime: controls upper time limit displayed on graph
    */
@@ -395,6 +401,8 @@ class GraphicsPanel:public AbstractPanel
   QGroupBox *graphParameters;
   // used to distinguish weither graph limits are adjusted automatically or
   //   manually.  
+
+  QRadioButton *pressure, *deficit;
 
 };
 

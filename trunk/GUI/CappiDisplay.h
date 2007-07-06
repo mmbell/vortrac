@@ -17,6 +17,7 @@
 #include <QPoint>
 #include <QWidget>
 #include <QBrush>
+#include <QMutex>
 #include "DataObjects/GriddedData.h"
 
 class CappiDisplay : public QWidget
@@ -35,6 +36,9 @@ public:
 public slots:
   void clearImage();
   void constructImage(const GriddedData* cappi);
+  void setGBVTDResults(const float& xP, const float& yP, 
+		       const float& sMin, const float& sMax, 
+		       const float& vMax);
   void exit();
 	
 signals:
@@ -49,6 +53,8 @@ private:
     void resizeImage(QImage *image, const QSize &newSize);
     QString cappiLabel;
     QImage image;
+    QMutex imageHolder;
+    int iDim, jDim;
     QImage legendImage;
     QPoint lastPoint;
     int PaintEngineMode;
@@ -59,6 +65,11 @@ private:
     float maxVel;
     float minVel;
     float velIncr;
+    bool hasGBVTDInfo;
+    float xPercent, yPercent;
+    float simplexMin, simplexMax;
+    float vortexMax;
+    
 
 };
 

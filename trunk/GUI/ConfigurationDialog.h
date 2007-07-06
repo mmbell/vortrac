@@ -40,6 +40,7 @@ public slots:
 			      const QString& parameter);
        void catchLog(const Message& message);
        bool checkPanels();
+       void turnOffMembers(const bool& off);
          
 private:
        QListWidget *selection;
@@ -76,6 +77,7 @@ signals:
        void configChanged();
        void stateChange(const QString& name, const bool);
        void changeGraphicsParameter(const QString& name, const float);
+       void changeGraphicsParameter(const QString& name, const QString& time);
 
 };
 

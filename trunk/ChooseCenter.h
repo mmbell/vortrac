@@ -32,14 +32,6 @@ class ChooseCenter : public QObject
     void setConfig(Configuration* newConfig);
     void setSimplexList(const SimplexList* newList);
     bool findCenter();
-    void initialize();
-    bool chooseMeanCenters();
-    bool constructPolynomial();
-    bool fixCenters();
-    //bool fixCentersNoFit();
-    void useLastMean();
-    // void checkHeights();
-    float getMinutesTo(const QDateTime &volTime);
 
  public slots:
     void catchLog(const Message& message);
@@ -53,7 +45,6 @@ class ChooseCenter : public QObject
 	SimplexData* simplexData;
     VortexData* vortexData;
     float velNull;
-    int numLevels;
   
     float windWeight, stdWeight, ptsWeight;
     float positionWeight, rmwWeight, velWeight;
@@ -168,7 +159,17 @@ class ChooseCenter : public QObject
     
     int minVolumes;
 
+    void initialize();
+    bool chooseMeanCenters();
+    bool constructPolynomial();
+    bool fixCenters();
+    void useLastMean();
+    float getMinutesTo(const QDateTime &volTime);
+    void findHeights();
 
+    QHash<int, int> *numHeights;
+    QHash<int, int*> *indexOfHeights;
+    
 
 };
 

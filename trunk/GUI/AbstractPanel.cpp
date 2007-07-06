@@ -125,7 +125,7 @@ void AbstractPanel::valueChanged()
   // updates the internal state of the panel when modifications were
   // made to it's members
 }
-
+/*
 void AbstractPanel::valueChanged(const bool signal)
 {
   panelChanged = true;
@@ -143,7 +143,7 @@ void AbstractPanel::valueChanged(const QDateTime& dateTime)
   panelChanged = true;
   // overloaded function provided to accommodate member signals
 }
-
+*/
 void AbstractPanel::createDataGaps()
 {
   if(dataGapBoxes.isEmpty())
@@ -162,7 +162,7 @@ void AbstractPanel::createDataGaps()
 	  dataGapBox->setMinimumSize(dataGapBox->sizeHint());
 	  dataGapBoxes.append(dataGapBox);
 	  connect(dataGapBox, SIGNAL(valueChanged(const QString&)), 
-		  this, SLOT(valueChanged(const QString&)));
+		  this, SLOT(valueChanged()));
       
 	  dataGapLayout->addWidget(dataGapLabels[i], row, column);
 	  dataGapLayout->addWidget(dataGapBoxes[i], row, column+1);
@@ -185,13 +185,13 @@ void AbstractPanel::createDataGaps()
 
   dataGap->setMinimumSize(dataGapLayout->minimumSize());
 }
-
+/*
 void AbstractPanel::createDataGaps(const QString& value)
 {
-  // Overloaded function
+  // Overloaded function to work with string
   createDataGaps();
 }
-
+*/
 void AbstractPanel::catchLog(const Message& message)
 {
   emit log(message);
@@ -214,7 +214,11 @@ void AbstractPanel::radarChanged(const QString& text)
     // If the other option is selected a panel appears for editing and adding
     // new radars to the existing radar list
 
-    RadarListDialog *editRadar = new RadarListDialog(this, radars);
+    RadarListDialog *editRadarDialog = new RadarListDialog(this, radars);
+    connect(editRadarDialog, SIGNAL(newEntry(const QString&)),
+	    radarName, SLOT(setCurrentIndex(radarName->findText(const QString&))));
+    editRadarDialog->exec();
+    delete editRadarDialog;
     
     updatePanel(elem);
 
@@ -354,4 +358,15 @@ void AbstractPanel::createDirectory()
   if(!temp->isReadable())
     emit log(Message(QString("Unable to create directory: "+temp->path()+" in file system"), 0, this->objectName()));
   delete temp;	     
+}
+
+void AbstractPanel::turnOffMembers(const bool& isRunning)
+{
+  // if isRunning is true then all the members in the list are disabled
+  // if isRunning is false then all the members in the list are enabled
+  if(turnOffWhenRunning.count() > 0) {
+    for(int i = 0; i < turnOffWhenRunning.count(); i++) {
+      turnOffWhenRunning[i]->setDisabled(isRunning);
+    }
+  }
 }

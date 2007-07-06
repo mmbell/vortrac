@@ -67,16 +67,7 @@ void StormSignal::paintEvent(QPaintEvent *event)
   painter->scale(width()/100, height()/100);
   painter->setPen(pen);
   painter->setBrush(QColor(255,255,255));
-  /*
-  if(red && on)
-    painter->setBrush(QBrush(QColor(120,0,0)));
 
-  if(yellow && on)
-    painter->setBrush(QBrush(QColor(150, 150, 0)));
-
-  if(green && on)
-    painter->setBrush(QBrush(QColor(0,100,0)));
-  */
   painter->drawPath(*hurrSymbol);
 
   QTextOption textHint(Qt::AlignCenter);
@@ -126,7 +117,7 @@ void StormSignal::paintEvent(QPaintEvent *event)
     painter->end();
   delete painter;
 
-  //event->accept();
+  event->accept();
 }
 
 void StormSignal::catchLog(const Message& message)

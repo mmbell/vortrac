@@ -40,6 +40,7 @@ VortexData::VortexData()
   centralPressure = -999;
   centralPressureUncertainty = -999;
   pressureDeficit = -999;
+  pressureDeficitUncertainty = -999;
   aveRMW = -999.0;
   aveRMWUncertainty = -999.0;
 
@@ -72,6 +73,7 @@ VortexData::VortexData(int availLevels, int availRadii, int availWaveNum)
   centralPressure = -999;
   centralPressureUncertainty = -999;
   pressureDeficit = -999;
+  pressureDeficitUncertainty = -999;
   aveRMW = -999.0;
   aveRMWUncertainty = -999.0;
 }
@@ -284,6 +286,16 @@ void VortexData::setPressureDeficit(const float& newPressureDeficit)
   pressureDeficit = newPressureDeficit;
 }
 
+float VortexData::getDeficitUncertainty() const
+{
+  return pressureDeficitUncertainty;
+}
+
+void VortexData::setDeficitUncertainty(const float& newDeficitUncertainty)
+{
+  pressureDeficitUncertainty = newDeficitUncertainty;
+}
+
 int VortexData::getNumConvergingCenters(const int& i) const
 {
   if(i < numLevels)
@@ -363,9 +375,9 @@ Coefficient VortexData::getCoefficient(const float& height, const float& rad,
 }
 
 void VortexData::setCoefficient(const int& lev, const int& rad, 
-	       const int& waveNum, const Coefficient &coefficient)
+	       const int& coeffNum, const Coefficient &coefficient)
 {
-  coefficients[lev][rad][waveNum] = coefficient;
+  coefficients[lev][rad][coeffNum] = coefficient;
 }
 
 bool VortexData::operator ==(const VortexData &other)

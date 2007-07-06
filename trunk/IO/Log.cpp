@@ -59,14 +59,17 @@ void Log::setWorkingDirectory(QDir& newDir)
     // Don't need to do anything
     return;
   }
-  if(!newDir.exists()) {
-    newDir.mkpath(newDir.path());
-    if(!newDir.exists()) {
-      emit log(Message(QString("Could not create directory "+newDir.path()+" check permissions"), 0, this->objectName()));
-    }
-  }
   if(!newDir.isAbsolute())
     newDir.makeAbsolute();
+  QString dirName(newDir.dirName());
+  if(!newDir.exists()) {
+    if(newDir.cdUp()) {
+      newDir.mkdir(dirName);
+      newDir.cd(dirName);
+    }
+    else
+      newDir.mkpath(newDir.path());
+  }
 
   QString newFileName("autoLog");
   QFile newLogFile(newDir.filePath(newFileName+".log"));

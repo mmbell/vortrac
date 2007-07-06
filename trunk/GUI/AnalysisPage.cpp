@@ -40,23 +40,6 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   					    const QString)),
   	  Qt::DirectConnection);
   
-  /*
-    Didn't solve the crash related to timer in TextEdit
-  connect(statusLog, SIGNAL(newStopLightColor(StopLightColor, const QString)),
-	  this, SLOT(changeStopLight(StopLightColor, const QString)),
-	  Qt::DirectConnection);
-  connect(statusLog, SIGNAL(newStormSignalStatus(StormSignalStatus, 
-						 const QString)),
-	  this, SLOT(changeStormSignal(StormSignalStatus, const QString)),
-	  Qt::DirectConnection);
-  connect(this, SIGNAL(newStopLightColor(StopLightColor, const QString)),
-	  diagPanel, SLOT(changeStopLight(StopLightColor, const QString)),
-	  Qt::DirectConnection);
-  connect(this, SIGNAL(newStormSignalStatus(StormSignalStatus, const QString)),
-	  diagPanel, SLOT(changeStormSignal(StormSignalStatus, const QString)),
-	  Qt::DirectConnection);
-  */
-  
   // Create a new configuration instance
   configData = new Configuration;
   connect(configData, SIGNAL(log(const Message&)), 
@@ -72,10 +55,10 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   visuals->setTabPosition(QTabWidget::West);
 
   GraphFace *graph = new GraphFace();
-  graph->updateTitle(this,vortexLabel);
+  graph->updateTitle(this, vortexLabel);
   connect(graph, SIGNAL(log(const Message&)), 
 	  this, SLOT(catchLog(const Message&)));
-
+ 
   cappiDisplay = new CappiDisplay();
   cappiDisplay->clearImage();
 
@@ -128,19 +111,23 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 
   connect(this, SIGNAL(vortexListChanged(VortexList*)), 
   	  graph, SLOT(newInfo(VortexList*)));
-
-  subLayout->addWidget(legend);
-  //subLayout->addWidget(example);
-  subLayout->addWidget(saveGraph);
-  //--For Demo
-
-  connect(saveGraph, SIGNAL(clicked()),
-	  graph, SLOT(saveImage()));
   connect(configDialog, SIGNAL(stateChange(const QString&,const bool)),
 	  graph, SLOT(manualAxes(const QString&, const bool)));
   connect(configDialog, 
 	  SIGNAL(changeGraphicsParameter(const QString&, const float)),
 	  graph,SLOT(manualParameter(const QString&,const float)));
+  connect(configDialog, 
+	  SIGNAL(changeGraphicsParameter(const QString&, const QString&)),
+	  graph, SLOT(manualParameter(const QString&, const QString&)), 
+	  Qt::DirectConnection);
+ 
+  subLayout->addWidget(legend);
+  //subLayout->addWidget(example);
+  subLayout->addWidget(saveGraph);
+  //--For Demo
+  
+  connect(saveGraph, SIGNAL(clicked()),
+	  graph, SLOT(saveImage()));
 
   QVBoxLayout *layout = new QVBoxLayout(pressureGraph);
   layout->addWidget(graph, 100);
@@ -254,7 +241,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   statusLog->catchLog(Message("VORTRAC Status Log for "+
 			    QDateTime::currentDateTime().toUTC().toString()
 			    + " UTC"));
-
+  
   // Do I need this?
   //pollThread = new PollThread;
   pollThread = NULL;
@@ -543,6 +530,8 @@ void AnalysisPage::runThread()
     emit log(Message(QString("Please check errors: One or more entries in configuration cannot be used"), -1, this->objectName()));
     return;
   }
+
+  configDialog->turnOffMembers(true);
   
   emit log(Message(QString(),0,this->objectName(),AllOff,QString(),
 		   Ok, QString()));
@@ -559,6 +548,18 @@ void AnalysisPage::runThread()
 	  this, SLOT(updateCappi(const GriddedData*)), Qt::DirectConnection);
   connect(this, SIGNAL(newCappi(const GriddedData*)), 
 	  cappiDisplay, SLOT(constructImage(const GriddedData*)));
+  connect(pollThread, SIGNAL(newCappiInfo(const float&, const float&, 
+					  const float&, const float&, 
+					  const float&)), 
+	  this, SLOT(updateCappiInfo(const float&, const float&, const float&,
+				     const float&, const float&)),
+	  Qt::DirectConnection);
+  connect(this, SIGNAL(newCappiInfo(const float&, const float&, const float&,
+				    const float&, const float&)),
+	  cappiDisplay, SLOT(setGBVTDResults(const float&,const float&, 
+					     const float&, const float&, 
+					     const float&)),
+	  Qt::DirectConnection);
 
   // Check to see if there are old list files that we want to start from in
   // the working directory. We have to do this here because we cannot create 
@@ -605,31 +606,29 @@ void AnalysisPage::runThread()
   else {
     pollThread->setConfig(configData);
     pollThread->start();
-    //connect(pollThread, SIGNAL(vortexListChanged(VortexList*)), 
-    //	  graph, SLOT(newInfo(VortexList*)));
     connect(pollThread, SIGNAL(vortexListUpdate(VortexList*)), 
 	    this, SLOT(pollVortexUpdate(VortexList*)));
-    //connect(pollThread, SIGNAL(dropListChanged(VortexList*)), 
-    //		  graph, SLOT(newDropSonde(VortexList*)));
   
   }
 }
 
 void AnalysisPage::abortThread()
 {
-  //Message::toScreen("In AnalysisPage Abort");
- 
+
   // Try to kill the threads
   if((pollThread!=NULL)&&(pollThread->isRunning())) {
     disconnect(pollThread, SIGNAL(vortexListUpdate(VortexList*)), 
 	       this, SLOT(pollVortexUpdate(VortexList*)));
-    pollThread->abortThread();//Deletes everything but doesn't realocate memory
+    pollThread->abortThread();
+    PollThread *dummy = pollThread;
     pollThread = NULL;
-    //pollThread = new PollThread;
+    delete dummy;
     pollVortexUpdate(NULL);
     cappiDisplay->clearImage();
     emit log(Message(QString("Analysis Aborted!"), -1, this->objectName()));
   }
+  configDialog->turnOffMembers(false);
+  emit log(Message(QString(),-1,this->objectName()));
   //Message::toScreen("Leaving AnalysisPage Abort");
 }
 
@@ -666,6 +665,13 @@ void AnalysisPage::updateCappi(const GriddedData* cappi)
   // Got a cappi now, create a new image
 
   emit newCappi(cappi);
+}
+
+void AnalysisPage::updateCappiInfo(const float& x, const float& y, 
+				   const float& sMin, const float& sMax, 
+				   const float& vMax)
+{
+  emit newCappiInfo(x, y, sMin, sMax, vMax);
 }
 
 void AnalysisPage::updateCappiDisplay(bool hasImage)

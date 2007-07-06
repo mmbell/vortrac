@@ -13,6 +13,7 @@
 #include "Message.h"
 #include "DataObjects/SimplexData.h"
 #include "DataObjects/VortexData.h"
+#include "DataObjects/GriddedData.h"
 #include <math.h>
 
 #include <QtGui>
@@ -26,18 +27,21 @@ VortexPanel::VortexPanel()
   QHBoxLayout *name = new QHBoxLayout;
   name->addWidget(vortexNameLabel);
   name->addWidget(vortexName);
-  
-  QGroupBox *stormType = new QGroupBox(tr("Cyclone Magnitude"));
-  
-  QRadioButton *hurricane = new QRadioButton(tr("Hurricane"), stormType);
-  QRadioButton *tStorm = new QRadioButton(tr("Tropical Storm"), stormType);
-  QRadioButton *tDepression = new QRadioButton(tr("Tropical Depression"), 
-					       stormType);
-  QVBoxLayout *stormTypeLayout = new QVBoxLayout;
-  stormTypeLayout->addWidget(hurricane);
-  stormTypeLayout->addWidget(tStorm);
-  stormTypeLayout->addWidget(tDepression);
-  stormType->setLayout(stormTypeLayout);
+  /*
+    QGroupBox *stormType = new QGroupBox(tr("Cyclone Magnitude"));
+    
+    QRadioButton *hurricane = new QRadioButton(tr("Hurricane"), 
+    stormType);
+    QRadioButton *tStorm = new QRadioButton(tr("Tropical Storm"), 
+    stormType);
+    QRadioButton *tDepression = new QRadioButton(tr("Tropical Depression"), 
+    stormType);
+    QVBoxLayout *stormTypeLayout = new QVBoxLayout;
+    stormTypeLayout->addWidget(hurricane);
+    stormTypeLayout->addWidget(tStorm);
+    stormTypeLayout->addWidget(tDepression);
+    stormType->setLayout(stormTypeLayout);
+  */
 
   QLabel *latLabel = new QLabel(tr("Vortex Latitude:"));
   latBox = new QDoubleSpinBox();
@@ -96,7 +100,7 @@ VortexPanel::VortexPanel()
   
   QVBoxLayout *layout = new QVBoxLayout();
   layout->addLayout(name);
-  layout->addWidget(stormType);
+  //layout->addWidget(stormType);
   layout->addLayout(lat);
   layout->addLayout(longitude);
   layout->addLayout(direction);
@@ -105,21 +109,27 @@ VortexPanel::VortexPanel()
   layout->addLayout(dirLayout);
   layout->addStretch(1);
   setLayout(layout);
+
+  // Add the widgets that should not be adjustable at runtime to 
+  // the turnOffWhenRunning QList
+  turnOffWhenRunning.append(dir);
+  turnOffWhenRunning.append(workingDirLabel);
+  turnOffWhenRunning.append(browse);
   
   connect(vortexName, SIGNAL(textChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(latBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(longBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(directionBox, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(speedBox, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(dir, SIGNAL(textChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(obsDateTime, SIGNAL(dateTimeChanged(const QDateTime&)),
-	  this, SLOT(valueChanged(const QDateTime&)));
+	  this, SLOT(valueChanged()));
   connect(this, SIGNAL(workingDirectoryChanged()),
 	  this, SLOT(createDirectory()));
 
@@ -128,6 +138,7 @@ VortexPanel::VortexPanel()
 
 VortexPanel::~VortexPanel()
  {
+   turnOffWhenRunning.clear(); 
   delete vortexName;
   delete latBox;
   delete longBox;
@@ -338,20 +349,30 @@ RadarPanel::RadarPanel()
   mainLayout->addStretch(1);
   setLayout(mainLayout);
 
+  // Add the widgets that should not be adjustable at runtime to 
+  // the turnOffWhenRunning QList
+  turnOffWhenRunning.append(dir);
+  turnOffWhenRunning.append(browse);
+  turnOffWhenRunning.append(radarDirLabel);
+  turnOffWhenRunning.append(radarFormat);
+  turnOffWhenRunning.append(radarFormatLabel);
+  turnOffWhenRunning.append(radarName);
+  turnOffWhenRunning.append(radarNameLabel);
+
   connect(radarName, SIGNAL(activated(const QString&)), 
 	  this, SLOT(valueChanged()));
   connect(radarLatBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(radarLongBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&))); 
+	  this, SLOT(valueChanged())); 
   connect(dir, SIGNAL(textChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(radarFormat, SIGNAL(activated(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(startDateTime, SIGNAL(dateTimeChanged(const QDateTime&)), 
-	  this, SLOT(valueChanged(const QDateTime&)));
+	  this, SLOT(valueChanged()));
   connect(endDateTime, SIGNAL(dateTimeChanged(const QDateTime&)), 
-	  this, SLOT(valueChanged(const QDateTime&)));
+	  this, SLOT(valueChanged()));
   connect(radarFormat, SIGNAL(activated(const QString&)),
 	  this, SLOT(checkForAnalytic(const QString&)));
 
@@ -363,6 +384,7 @@ RadarPanel::RadarPanel()
 
 RadarPanel::~RadarPanel()
 {
+  turnOffWhenRunning.clear(); 
   delete radarFormat;
   delete radarFormatOptions;
   delete startDateTime;
@@ -544,15 +566,15 @@ CappiPanel::CappiPanel()
   QLabel *zdim = new QLabel(tr("Grid Dimension in Z Direction"));
   xDimBox = new QDoubleSpinBox;
   xDimBox->setDecimals(1);
-  xDimBox->setRange(0,256);
+  xDimBox->setRange(0,GriddedData::getMaxIDim());
   xDimBox->setValue(150);
   yDimBox = new QDoubleSpinBox;
   yDimBox->setDecimals(1);
-  yDimBox->setRange(0,256);
+  yDimBox->setRange(0,GriddedData::getMaxJDim());
   yDimBox->setValue(150);
   zDimBox = new QDoubleSpinBox;
   zDimBox->setDecimals(1);
-  zDimBox->setRange(0,20);
+  zDimBox->setRange(0,GriddedData::getMaxKDim());
   zDimBox->setValue(3);
 
   QLabel *xGrid = new QLabel(tr("X Grid Spacing (km)"));
@@ -591,6 +613,7 @@ CappiPanel::CappiPanel()
   gridLayout->addWidget(zGridBox, 3, 2);
   grid->setLayout(gridLayout);
 
+  /*
   // These need to be changed to U & V parameters !!!
   QLabel *advUWindLabel = new QLabel(tr("Zonal Advection Wind (m/s)"));
   advUWindBox = new QDoubleSpinBox;
@@ -600,12 +623,13 @@ CappiPanel::CappiPanel()
   advVWindBox = new QDoubleSpinBox;
   advVWindBox->setDecimals(1);
   advVWindBox->setRange(0,359.99);
-
+  
   QHBoxLayout *adv = new QHBoxLayout;
   adv->addWidget(advUWindLabel);
   adv->addWidget(advUWindBox);
   adv->addWidget(advVWindLabel);
   adv->addWidget(advVWindBox);
+  */
 
   QLabel *interpolation = new QLabel(tr("Interpolation"));
   interpolationMethod = new QHash<QString, QString>;
@@ -634,31 +658,39 @@ CappiPanel::CappiPanel()
   QVBoxLayout *layout = new QVBoxLayout;
   layout->addLayout(cappiDir);
   layout->addWidget(grid);
-  layout->addLayout(adv);
+  //layout->addLayout(adv);
   layout->addLayout(interpolationLayout);
   layout->addStretch(1);
   setLayout(layout);
 
+  // Add the widgets that should not be adjustable at runtime to 
+  // the turnOffWhenRunning QList
+  turnOffWhenRunning.append(dir);
+  turnOffWhenRunning.append(browse);
+  turnOffWhenRunning.append(cappiDirLabel);
+
   connect(dir, SIGNAL(textChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(xDimBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(yDimBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(zDimBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&))); 
+	  this, SLOT(valueChanged())); 
   connect(xGridBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(yGridBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(zGridBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
+  /*
   connect(advUWindBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&))); 
+	  this, SLOT(valueChanged())); 
   connect(advVWindBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
+  */
   connect(intBox, SIGNAL(activated(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(this, SIGNAL(workingDirectoryChanged()),
 	  this, SLOT(createDirectory()));
 
@@ -670,14 +702,17 @@ CappiPanel::CappiPanel()
 
 CappiPanel::~CappiPanel()
 {
+  turnOffWhenRunning.clear(); 
   delete xDimBox;
   delete yDimBox;
   delete zDimBox;
   delete xGridBox;
   delete yGridBox;
   delete zGridBox;
-  delete advUWindBox;
-  delete advVWindBox;
+  /*
+    delete advUWindBox;
+    delete advVWindBox;
+  */
   delete intBox;
   delete interpolationMethod;
 }
@@ -714,10 +749,12 @@ void CappiPanel::updatePanel(const QDomElement panelElement)
       yGridBox->setValue(parameter.toDouble()); }
     if (name == "zgridsp") {
       zGridBox->setValue(parameter.toDouble()); }
+    /*
     if (name == "adv_u") {
       advUWindBox->setValue(parameter.toDouble()); }
     if( name == "adv_v") {
       advVWindBox->setValue(parameter.toDouble()); }
+    */
     if (name == "interpolation") {
       int index = intBox->findText(interpolationMethod->key(parameter),
 				   Qt::MatchStartsWith);
@@ -765,6 +802,7 @@ bool CappiPanel::updateConfig()
 	emit changeDom(element, QString("zgridsp"), 
 		       QString().setNum(zGridBox->value()));
       }
+      /*
       if(fabs(getFromElement("adv_u").toDouble()-advUWindBox->value())>=0.1) {
 	emit changeDom(element, QString("adv_u"), 
 		       QString().setNum(advUWindBox->value()));
@@ -773,6 +811,7 @@ bool CappiPanel::updateConfig()
 	emit changeDom(element, QString("adv_v"), 
 		       QString().setNum(advVWindBox->value()));
       }
+      */
       if(getFromElement("interpolation") !=interpolationMethod->value(intBox->currentText())) 
 	{
 	  emit changeDom(element, QString("interpolation"),
@@ -858,25 +897,27 @@ bool CappiPanel::checkValues()
     return false;
   }
 
-  // Gridded Data has a maximum number of points at
-  // 256 in x
+  // Gridded Data has a maximum number of points at (last I checked)
+  // 256 in x 
   // 256 in y
   // 20 in z
   // We must make sure that is how many we have selected
 
-  if((xDimBox->value()/(float)xGridBox->value()) > 256) {
+  // We should be using zgridsp here like in AnalysisThread 459
+
+  if(xDimBox->value() > GriddedData::getMaxIDim()) {
     emit log(Message(QString(),0, this->objectName(), Red, 
-		     QString(tr("Cappi X dimension has exceeded 256 points, Please decrease the dimension of cappi in x or increase the spacing"))));
+		     QString(tr("Cappi X dimension has exceeded ")+QString().setNum(GriddedData::getMaxIDim())+tr(" points, Please decrease the dimension of cappi in x"))));
     return false;
   }
-  if((yDimBox->value()/(float)yGridBox->value()) > 256) {
+  if(yDimBox->value() > GriddedData::getMaxJDim()) {
     emit log(Message(QString(),0, this->objectName(), Red, 
-		     QString(tr("Cappi Y dimension has exceeded 256 points, Please decrease the dimension of cappi in y or increase the spacing"))));
+		     QString(tr("Cappi Y dimension has exceeded ")+QString().setNum(GriddedData::getMaxJDim())+tr(" points, Please decrease the dimension of cappi in y"))));
     return false;
   }
-  if((zDimBox->value()/(float)zGridBox->value()) > 20) {
+  if(zDimBox->value() > GriddedData::getMaxKDim()) {
     emit log(Message(QString(),0, this->objectName(), Red, 
-		     QString(tr("Cappi Z dimension has exceeded 256 points, Please decrease the dimension of cappi in z or increase the spacing"))));
+		     QString(tr("Cappi Z dimension has exceeded ")+QString().setNum(GriddedData::getMaxIDim())+tr(" points, Please decrease the dimension of cappi in z"))));
     return false;
   }
 
@@ -1003,7 +1044,7 @@ CenterPanel::CenterPanel()
   dataGapBoxes = QList<QDoubleSpinBox*>();
   QLabel *maxWaveNum = new QLabel(tr("Maximum Wave Number"));
   // maxWaveNumBox = new QSpinBox;
-  maxWaveNumBox->setRange(0, 10);
+  maxWaveNumBox->setRange(0, 4);
   maxWaveNumBox->setValue(0);
   QHBoxLayout *maxWaveLayout = new QHBoxLayout;
   maxWaveLayout->addWidget(maxWaveNum);
@@ -1077,42 +1118,48 @@ CenterPanel::CenterPanel()
   main->addStretch(1);
   setLayout(main);
 
+  // Add the widgets that should not be adjustable at runtime to 
+  // the turnOffWhenRunning QList
+  turnOffWhenRunning.append(dir);
+  turnOffWhenRunning.append(dirLabel);
+  turnOffWhenRunning.append(browse);
+
   connect(dir, SIGNAL(textChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(geometryBox, SIGNAL(activated(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(closureBox, SIGNAL(activated(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(refBox, SIGNAL(activated(const QString&)), 
-	  this, SLOT(valueChanged(const QString&))); 
+	  this, SLOT(valueChanged())); 
   connect(velBox, SIGNAL(activated(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(critBox, SIGNAL(activated(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(bLBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(tLBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&))); 
+	  this, SLOT(valueChanged())); 
   connect(iRBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(oRBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(maxWaveNumBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(numPointsBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&))); 
+	  this, SLOT(valueChanged())); 
   connect(iterations, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(ringBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(influenceBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(convergenceBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(diameterBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&))); 
+	  this, SLOT(valueChanged())); 
   connect(maxWaveNumBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(createDataGaps(const QString&)));
+	  this, SLOT(createDataGaps()));
   connect(this, SIGNAL(workingDirectoryChanged()),
 	  this, SLOT(createDirectory()));
 
@@ -1121,6 +1168,7 @@ CenterPanel::CenterPanel()
 
 CenterPanel::~CenterPanel()
 {
+   turnOffWhenRunning.clear(); 
   delete geometryBox;
   delete closureBox;
   delete refBox;
@@ -1450,17 +1498,14 @@ bool CenterPanel::checkValues()
   // SimplexData::maxRadii = 30
   // SimplexData::maxCenters = 25
   // We get this directly now
-  
-  // When this is calculated it should be divided by zGridSp
-  // See AnalysisThread.cpp: line 458
 
-  if((int)floor((tLBox->value()-bLBox->value())+1.5)>SimplexData::getMaxLevels()) {
+  if((int)floor(tLBox->value()-bLBox->value()+1.5)>SimplexData::getMaxLevels()) {
     emit log(Message(QString(),0, this->objectName(), Red, 
 		     QString(tr("Number of search levels in simplex exceeds the maximum of ")+QString().setNum(SimplexData::getMaxLevels())+tr(", Please decrease the number of search levels"))));
     return false;
   }
 
-  if((int)floor((oRBox->value()-iRBox->value())/(float)ringBox->value()+1.5)>SimplexData::getMaxRadii()) {
+  if((int)floor(oRBox->value()-iRBox->value()+1.5)>SimplexData::getMaxRadii()) {
     emit log(Message(QString(),0, this->objectName(), Red, 
 		     QString(tr("Number of search rings in simplex exceeds the maximum of ")+QString().setNum(SimplexData::getMaxRadii())+tr(", Please decrease the number of search rings"))));
     return false;
@@ -1584,30 +1629,36 @@ ChooseCenterPanel::ChooseCenterPanel()
   main->addStretch(1);
   setLayout(main);
 
+  // Add the widgets that should not be adjustable at runtime to 
+  // the turnOffWhenRunning QList
+  turnOffWhenRunning.append(dir);
+  turnOffWhenRunning.append(dirLabel);
+  turnOffWhenRunning.append(browse);
+
   connect(dir, SIGNAL(textChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(startDateTime, SIGNAL(dateTimeChanged(const QDateTime&)), 
-	  this, SLOT(valueChanged(const QDateTime&)));
+	  this, SLOT(valueChanged()));
   connect(endDateTime, SIGNAL(dateTimeChanged(const QDateTime&)), 
-	  this, SLOT(valueChanged(const QDateTime&)));
+	  this, SLOT(valueChanged()));
   connect(windWeightBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(stdDevWeightBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&))); 
+	  this, SLOT(valueChanged())); 
   connect(ptsWeightBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(positionWeightBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(rmwWeightBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(velWeightBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&))); 
+	  this, SLOT(valueChanged())); 
   connect(fTest95Button, SIGNAL(clicked(const bool)),
-	  this, SLOT(valueChanged(const bool)));
+	  this, SLOT(valueChanged()));
   connect(fTest95Button, SIGNAL(clicked(const bool)),
-	  this, SLOT(valueChanged(const bool)));
+	  this, SLOT(valueChanged()));
   connect(minVolumes, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(this, SIGNAL(workingDirectoryChanged()),
 	  this, SLOT(createDirectory()));
 
@@ -1616,6 +1667,7 @@ ChooseCenterPanel::ChooseCenterPanel()
 
 ChooseCenterPanel::~ChooseCenterPanel()
 {
+   turnOffWhenRunning.clear(); 
   delete startDateTime;
   delete endDateTime;
   delete windWeightBox;
@@ -1965,7 +2017,7 @@ VTDPanel::VTDPanel()
   dataGapBoxes = QList<QDoubleSpinBox*>();
   QLabel *maxWaveNum = new QLabel(tr("Maximum Wave Number"));
   // maxWaveNumBox = new QSpinBox;
-  maxWaveNumBox->setRange(0, 10);
+  maxWaveNumBox->setRange(0, 4);
   maxWaveNumBox->setValue(0);
   QHBoxLayout *maxWaveLayout = new QHBoxLayout;
   maxWaveLayout->addWidget(maxWaveNum);
@@ -1989,30 +2041,37 @@ VTDPanel::VTDPanel()
   main->addStretch(1);
   setLayout(main);
 
+  // Add the widgets that should not be adjustable at runtime to 
+  // the turnOffWhenRunning QList
+  turnOffWhenRunning.append(dir);
+  turnOffWhenRunning.append(dirLabel);
+  turnOffWhenRunning.append(browse);
+
+
   connect(dir, SIGNAL(textChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(geometryBox, SIGNAL(activated(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(closureBox, SIGNAL(activated(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(refBox, SIGNAL(activated(const QString&)), 
-	  this, SLOT(valueChanged(const QString&))); 
+	  this, SLOT(valueChanged())); 
   connect(velBox, SIGNAL(activated(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(bLBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(tLBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&))); 
+	  this, SLOT(valueChanged())); 
   connect(iRBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(oRBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(maxWaveNumBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(ringBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(maxWaveNumBox, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(createDataGaps(const QString&)));
+	  this, SLOT(createDataGaps()));
   connect(this, SIGNAL(workingDirectoryChanged()),
 	  this, SLOT(createDirectory()));
 
@@ -2021,6 +2080,7 @@ VTDPanel::VTDPanel()
 
 VTDPanel::~VTDPanel()
 {
+   turnOffWhenRunning.clear(); 
   delete geometryBox;
   delete closureBox;
   delete refBox;
@@ -2300,7 +2360,7 @@ bool VTDPanel::checkValues()
     return false;
   }
 
-  if((int)floor((oRBox->value()-iRBox->value())/(float)ringBox->value() + 1.5) > VortexData::getMaxRadii()) {
+  if((int)floor((oRBox->value()-iRBox->value()) + 1.5) > VortexData::getMaxRadii()) {
     emit log(Message(QString(),0, this->objectName(), Red, 
 		     QString(tr("Number of search rings in vtd exceeds the maximum of ")+QString().setNum(VortexData::getMaxRadii())+tr(", Please decrease the number of search rings"))));
     return false;
@@ -2362,17 +2422,18 @@ HVVPPanel::HVVPPanel()
   setLayout(main);
 
   connect(numLevels, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(hgtStart, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(hInc, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
 
   setPanelChanged(false);
 }
 
 HVVPPanel::~HVVPPanel()
 {
+  turnOffWhenRunning.clear(); 
   delete numLevels;
   delete hgtStart;
   delete hInc;
@@ -2536,38 +2597,47 @@ PressurePanel::PressurePanel()
   main->addStretch(1);
   setLayout(main);
 
+  // Add the widgets that should not be adjustable at runtime to 
+  // the turnOffWhenRunning QList
+  turnOffWhenRunning.append(dir);
+  turnOffWhenRunning.append(dirLabel);
+  turnOffWhenRunning.append(browse);
+  turnOffWhenRunning.append(pressureFormat);
+  turnOffWhenRunning.append(pressureFormatLabel);
+
   connect(dir, SIGNAL(textChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(pressureFormat, SIGNAL(activated(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(gradientHeight, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(maxObsTime, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(maxObsDist, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(maxObsDistCenter, SIGNAL(toggled(const bool)),
-	  this, SLOT(valueChanged(const bool)));
+	  this, SLOT(valueChanged()));
   connect(maxObsDistRing, SIGNAL(toggled(const bool)),
-	  this, SLOT(valueChanged(const bool)));
+	  this, SLOT(valueChanged()));
   connect(avInterval, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(rapidLimit, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
 
   setPanelChanged(false);
 }
 
 PressurePanel::~PressurePanel()
 {
-    delete pressureFormat;
-    delete pressureFormatOptions;
-    delete maxObsTime;
-    delete maxObsDist;
-    delete maxObsDistCenter;
-    delete maxObsDistRing;
-    delete avInterval;
-    delete rapidLimit;
+  turnOffWhenRunning.clear(); 
+  delete pressureFormat;
+  delete pressureFormatOptions;
+  delete maxObsTime;
+  delete maxObsDist;
+  delete maxObsDistCenter;
+  delete maxObsDistRing;
+  delete avInterval;
+  delete rapidLimit;
 }
 
 void PressurePanel::updatePanel(const QDomElement panelElement)
@@ -2750,30 +2820,88 @@ bool PressurePanel::checkValues()
 GraphicsPanel::GraphicsPanel()
   :AbstractPanel()
 {
+  
+  QGroupBox *pressureType = new QGroupBox(tr("Type of Pressure Displayed"));
+
+  QLabel *pressureLabel = new QLabel(tr("Display Absolute Pressure Estimate"));
+  pressure = new QRadioButton(pressureType);
+  QHBoxLayout *pressureLayout = new QHBoxLayout();
+  pressureLayout->addWidget(pressure);
+  pressureLayout->addWidget(pressureLabel);
+  pressureLayout->addStretch();
+
+  QLabel *deficitLabel = new QLabel(tr("Display Pressure Deficit Estimate"));
+  deficit = new QRadioButton(pressureType);
+  QHBoxLayout *deficitLayout = new QHBoxLayout();
+  deficitLayout->addWidget(deficit);
+  deficitLayout->addWidget(deficitLabel);
+  deficitLayout->addStretch();
+
+  QVBoxLayout *typeLayout = new QVBoxLayout();
+  typeLayout->addLayout(pressureLayout);
+  typeLayout->addLayout(deficitLayout);
+  pressureType->setLayout(typeLayout);
+  pressure->setChecked(true);
 
   graphParameters = new QGroupBox(tr("Parameters for Graph Display"));
   graphParameters->setCheckable(true);
-  QGridLayout *graph = new QGridLayout;
+  QVBoxLayout *graph = new QVBoxLayout;
   
   QLabel *pMax = new QLabel(tr("Maximum Pressure (mb)"));
   pMaxBox = new QDoubleSpinBox;
-  pMaxBox->setRange(0,2000);
-  pMaxBox->setDecimals(1);
+  pMaxBox->setRange(700,1100);
+  pMaxBox->setDecimals(0);
+  QHBoxLayout *pMaxLayout = new QHBoxLayout();
+  pMaxLayout->addWidget(pMax);
+  pMaxLayout->addStretch();
+  pMaxLayout->addWidget(pMaxBox);
   
   QLabel *pMin = new QLabel(tr("Minimum Pressure (mb)"));
   pMinBox = new QDoubleSpinBox;
-  pMinBox->setRange(0, 2000);
-  pMinBox->setDecimals(1);
+  pMinBox->setRange(0, 1000);
+  pMinBox->setDecimals(0);
+  QHBoxLayout *pMinLayout = new QHBoxLayout();
+  pMinLayout->addWidget(pMin);
+  pMinLayout->addStretch();
+  pMinLayout->addWidget(pMinBox);
   
   QLabel *rmwMax = new QLabel(tr("Maximum RMW (km)"));
   rmwMaxBox = new QDoubleSpinBox;
-  rmwMaxBox->setDecimals(1);
+  rmwMaxBox->setDecimals(0);
+  rmwMaxBox->setRange(0,200);
+  QHBoxLayout *rmwMaxLayout = new QHBoxLayout();
+  rmwMaxLayout->addWidget(rmwMax);
+  rmwMaxLayout->addStretch();
+  rmwMaxLayout->addWidget(rmwMaxBox);
   
   QLabel *rmwMin = new QLabel(tr("Minimum RMW (km)"));
   rmwMinBox = new QDoubleSpinBox;
-  rmwMinBox->setDecimals(1);
+  rmwMinBox->setDecimals(0);
+  rmwMinBox->setRange(0,200);
+  QHBoxLayout *rmwMinLayout = new QHBoxLayout();
+  rmwMinLayout->addWidget(rmwMin);
+  rmwMinLayout->addStretch();
+  rmwMinLayout->addWidget(rmwMinBox);
   
-  QLabel *beginTimeLabel = new QLabel(tr("Beginning Time"));
+  QLabel *defMax = new QLabel(tr("Maximum Pressure Deficit (mb)"));
+  defMaxBox = new QDoubleSpinBox();
+  defMaxBox->setDecimals(0);
+  defMaxBox->setRange(-20,200);
+  QHBoxLayout *defMaxLayout = new QHBoxLayout();
+  defMaxLayout->addWidget(defMax);
+  defMaxLayout->addStretch();
+  defMaxLayout->addWidget(defMaxBox);
+
+  QLabel *defMin = new QLabel(tr("Minimum Pressure Deficit (mb)"));
+  defMinBox = new QDoubleSpinBox();
+  defMinBox->setDecimals(0);
+  defMinBox->setRange(-20,200);
+  QHBoxLayout *defMinLayout = new QHBoxLayout();
+  defMinLayout->addWidget(defMin);
+  defMinLayout->addStretch();
+  defMinLayout->addWidget(defMinBox);
+  
+  QLabel *beginTimeLabel = new QLabel(tr("First Graph Display Time"));
   startDateTime = new QDateTimeEdit();
   startDateTime->setDisplayFormat("MMM-dd-yyyy hh:mm:ss");
   QDate minDate(QDate::fromString(QString("1900-01-01"),"yyyy-MM-dd"));
@@ -2781,61 +2909,79 @@ GraphicsPanel::GraphicsPanel()
   startDateTime->setMinimumTime(minTime);
   startDateTime->setMinimumDate(minDate);
   startDateTime->setDateTime(QDateTime::currentDateTime());
+  QHBoxLayout *startLayout = new QHBoxLayout();
+  startLayout->addWidget(beginTimeLabel);
+  startLayout->addStretch();
+  startLayout->addWidget(startDateTime);
   
-  QLabel *endTimeLabel = new QLabel (tr("Endding Time"));
+  QLabel *endTimeLabel = new QLabel (tr("Final Graph Display Time"));
   endDateTime = new QDateTimeEdit();
   endDateTime->setDisplayFormat("MMM-dd-yyyy hh:mm:ss");
   endDateTime->setMinimumTime(minTime);
   endDateTime->setMinimumDate(minDate);
   endDateTime->setDateTime(QDateTime::currentDateTime().addSecs(3*3600));
+  QHBoxLayout *endLayout = new QHBoxLayout();
+  endLayout->addWidget(endTimeLabel);
+  endLayout->addStretch();
+  endLayout->addWidget(endDateTime);
 
   
-  graph->addWidget(pMax, 0,0);
-  graph->addWidget(pMaxBox, 0, 1);
-  graph->addWidget(pMin, 1, 0);
-  graph->addWidget(pMinBox, 1, 1);
-  graph->addWidget(rmwMax, 0, 2);
-  graph->addWidget(rmwMaxBox, 0, 3);
-  graph->addWidget(rmwMin, 1, 2);
-  graph->addWidget(rmwMinBox, 1, 3);
-  graph->addWidget(beginTimeLabel, 2, 0);
-  graph->addWidget(startDateTime, 2,1);
-  graph->addWidget(endTimeLabel, 3, 0);
-  graph->addWidget(endDateTime, 3,1);
+  graph->addLayout(pMaxLayout);
+  graph->addLayout(pMinLayout);
+  graph->addLayout(rmwMaxLayout);
+  graph->addLayout(rmwMinLayout);
+  graph->addLayout(defMaxLayout);
+  graph->addLayout(defMinLayout);
+  graph->addLayout(startLayout);
+  graph->addLayout(endLayout);
   graphParameters->setLayout(graph);
   graphParameters->setChecked(false);
   QVBoxLayout *main = new QVBoxLayout;
+  main->addWidget(pressureType);
   main->addWidget(graphParameters);
   main->addStretch(1);
   setLayout(main);
 
+  connect(pressure, SIGNAL(toggled(bool)),
+	  this, SLOT(valueChanged()));
+  connect(deficit, SIGNAL(toggled(bool)),
+	  this, SLOT(valueChanged()));
   connect(graphParameters, SIGNAL(toggled(bool)), 
-	  this, SLOT(valueChanged(bool))); 
+	  this, SLOT(valueChanged())); 
   connect(pMaxBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(pMinBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(rmwMaxBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&))); 
+	  this, SLOT(valueChanged())); 
   connect(rmwMinBox, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
+  connect(defMaxBox, SIGNAL(valueChanged(const QString&)), 
+	  this, SLOT(valueChanged())); 
+  connect(defMinBox, SIGNAL(valueChanged(const QString&)), 
+	  this, SLOT(valueChanged()));
   connect(startDateTime, SIGNAL(dateTimeChanged(const QDateTime&)),
-	  this, SLOT(valueChanged(const QDateTime&)));
+	  this, SLOT(valueChanged()));
   connect(endDateTime, SIGNAL(dateTimeChanged(const QDateTime&)), 
-	  this, SLOT(valueChanged(const QDateTime&)));
+	  this, SLOT(valueChanged()));
 
   setPanelChanged(false);
 }
 
 GraphicsPanel::~GraphicsPanel()
 {
+  turnOffWhenRunning.clear(); 
   delete pMaxBox;
   delete pMinBox;
   delete rmwMaxBox;
   delete rmwMinBox;
+  delete defMaxBox;
+  delete defMinBox;
   delete startDateTime;
   delete endDateTime;
   delete graphParameters;
+  delete pressure;
+  delete deficit;
 }
 
 void GraphicsPanel::updatePanel(const QDomElement panelElement)
@@ -2858,6 +3004,10 @@ void GraphicsPanel::updatePanel(const QDomElement panelElement)
       rmwMinBox->setValue(parameter.toDouble()); }
     if (name == "rmwmax") {
       rmwMaxBox->setValue(parameter.toDouble()); }
+    if (name == "defmin") {
+      defMinBox->setValue(parameter.toDouble()); }
+    if (name == "defmax") {
+      defMaxBox->setValue(parameter.toDouble()); }
     if (name == "startdate") {
       startDateTime->setDate(QDate::fromString(parameter, "yyyy-MM-dd")); }
     if (name == "enddate") {
@@ -2866,6 +3016,12 @@ void GraphicsPanel::updatePanel(const QDomElement panelElement)
       startDateTime->setTime(QTime::fromString(parameter, "hh:mm:ss")); }
     if (name == "endtime") {
       endDateTime->setTime(QTime::fromString(parameter, "hh:mm:ss")); }
+    if (name == "display_type") {
+      if(parameter == "deficit") 
+	deficit->setChecked(true);
+      else 
+	pressure->setChecked(true);
+    }
     child = child.nextSiblingElement();
   }
   setPanelChanged(false);
@@ -2878,13 +3034,13 @@ bool GraphicsPanel::updateConfig()
 
   QDomElement element = getPanelElement();
   if (checkPanelChanged())
-    {
-      emit stateChange(QString("manualAxes"),graphParameters->isChecked()); 
-      
+    { 
+      emit stateChange(QString("manualAxes"),graphParameters->isChecked());
+      emit stateChange(QString("show_pressure"), pressure->isChecked());
       if(graphParameters->isChecked()) {
 	emit changeDom(element, QString("pressmin"), 
 		       QString().setNum(pMinBox->value()));
-
+	
 	emit changeDom(element, QString("pressmax"), 
 		       QString().setNum(pMaxBox->value()));
 
@@ -2893,6 +3049,12 @@ bool GraphicsPanel::updateConfig()
 
 	emit changeDom(element, QString("rmwmax"), 
 		       QString().setNum(rmwMaxBox->value()));
+	
+	emit changeDom(element, QString("defmin"), 
+		       QString().setNum(defMinBox->value()));
+
+	emit changeDom(element, QString("defmax"), 
+		       QString().setNum(defMaxBox->value()));
 
 	emit changeDom(element, QString("startdate"), 
 		       startDateTime->date().toString("yyyy-MM-dd"));
@@ -2905,6 +3067,16 @@ bool GraphicsPanel::updateConfig()
   
 	emit changeDom(element, QString("endtime"), 
 		       endDateTime->time().toString("hh:mm:ss"));
+	emit changeDom(element, QString("autolimits"),QString("on"));
+      }
+      else {
+	emit changeDom(element, QString("autolimits"),QString("off"));
+      }
+      if(pressure->isChecked()) {
+	emit changeDom(element, QString("display_type"), QString("pressure"));
+      }
+      else {
+	emit changeDom(element, QString("display_type"), QString("deficit"));
       }
     }
   setPanelChanged(false);
@@ -2923,49 +3095,58 @@ bool GraphicsPanel::checkValues()
   return true;
 }
 
+bool GraphicsPanel::checkDisplayType()
+{
+  emit stateChange(QString("show_pressure"), pressure->isChecked());
+  if(pressure->isChecked())
+    return true;
+  else 
+    return false;
+}
+
 QCPanel::QCPanel()
   :AbstractPanel()
 {
   QGroupBox *qcParameters = new QGroupBox(tr("Quality Control Parameters"));
   
-  QLabel *velMinThresLabel = new QLabel(tr("Ignore Velocities With Magnitude Less Than (km/s)"));
+  QLabel *velMinThresLabel = new QLabel(tr("Ignore Gates with Velocity Magnitudes Less Than (km/s)"));
   velocityMinimum = new QDoubleSpinBox;
   velocityMinimum->setDecimals(3);
   velocityMinimum->setRange(0,10);
-  velocityMinimum->setValue(1);
+  velocityMinimum->setValue(1.5);
 
-  QLabel *velMaxThresLabel = new QLabel(tr("Ignore Velocities With Magnitude Greater Than (km/s)"));
+  QLabel *velMaxThresLabel = new QLabel(tr("Ignore Gates with Velocity Magnitudes Greater Than (km/s)"));
   velocityMaximum = new QDoubleSpinBox;
   velocityMaximum->setDecimals(3);
-  velocityMaximum->setRange(0,999);
+  velocityMaximum->setRange(1,999);
   velocityMaximum->setValue(100);
 
-  QLabel *refMinThresLabel = new QLabel(tr("Ignore Gates With Reflectivity Less Than (dBz)"));
+  QLabel *refMinThresLabel = new QLabel(tr("Ignore Gates with Reflectivity Values Less Than (dBZ)"));
   reflectivityMinimum = new QDoubleSpinBox;
   reflectivityMinimum->setDecimals(3);
   reflectivityMinimum->setRange(-500,500);
   reflectivityMinimum->setValue(-15);
  
-  QLabel *refMaxThresLabel = new QLabel(tr("Ignore Gates With Reflectivity Greater Than (dBz)"));
+  QLabel *refMaxThresLabel = new QLabel(tr("Ignore Gates with Reflectivity Values Greater Than (dBZ)"));
   reflectivityMaximum = new QDoubleSpinBox;
   reflectivityMaximum->setDecimals(3);
   reflectivityMaximum->setRange(-500,500);
   reflectivityMaximum->setValue(65);
 
-  QLabel *specThresLabel = new QLabel(tr("Ignore Gates With Spectral Width Greater Than"));
+  QLabel *specThresLabel = new QLabel(tr("Ignore Gates with Spectrum Width Greater Than (km/s)"));
   spectralThreshold = new QDoubleSpinBox;
   spectralThreshold->setDecimals(2);
   spectralThreshold->setRange(0,50);
-  spectralThreshold->setValue(10);
+  spectralThreshold->setValue(12);
   
   QLabel *bbLabel = new QLabel(tr("Number of Gates Averaged for Velocity Dealiasing"));
   bbSegmentSize = new QSpinBox;
   bbSegmentSize->setRange(1,150);
-  bbSegmentSize->setValue(50);
+  bbSegmentSize->setValue(30);
 
-  QLabel *maxFoldLabel = new QLabel(tr("Maximum Number of Folds in Velocity Dealiasing"));
+  QLabel *maxFoldLabel = new QLabel(tr("Maximum Number of Folds Possible in Velocity Dealiasing"));
   maxFoldCount = new QSpinBox;
-  maxFoldCount->setRange(0,100);
+  maxFoldCount->setRange(0,20);
   maxFoldCount->setValue(4);
 
   QGridLayout *paramLayout = new QGridLayout;
@@ -3010,19 +3191,19 @@ QCPanel::QCPanel()
   numCoLayout->addWidget(numCoLabel,1);
   numCoLayout->addWidget(numCoefficients);
 
-  QLabel *vadthrLabel = new QLabel(tr("Minimum number of points for VAD processing"));
+  QLabel *vadthrLabel = new QLabel(tr("Minimum Number of Points for VAD Processing"));
   vadthr = new QSpinBox;
-  vadthr->setRange(0,360);
+  vadthr->setRange(1,360);
   vadthr->setValue(30);
   QHBoxLayout *vadthrLayout = new QHBoxLayout;
   vadthrLayout->addSpacing(20);
   vadthrLayout->addWidget(vadthrLabel);
   vadthrLayout->addWidget(vadthr);
 
-QLabel *gvadthrLabel = new QLabel(tr("Minimum number of points for GVAD processing"));
+QLabel *gvadthrLabel = new QLabel(tr("Minimum Number of Points for GVAD Processing"));
   gvadthr = new QSpinBox;
-  gvadthr->setRange(0,360);
-  gvadthr->setValue(30);
+  gvadthr->setRange(1,360);
+  gvadthr->setValue(180);
   QHBoxLayout *gvadthrLayout = new QHBoxLayout;
   gvadthrLayout->addSpacing(20);
   gvadthrLayout->addWidget(gvadthrLabel);
@@ -3038,7 +3219,7 @@ QLabel *gvadthrLabel = new QLabel(tr("Minimum number of points for GVAD processi
 
   QFrame *userParameters = new QFrame;
  
-  QLabel *windSpeedLabel = new QLabel(tr("Wind Speed (km/s)"));
+  QLabel *windSpeedLabel = new QLabel(tr("Reference Wind Speed (km/s)"));
   windSpeed = new QDoubleSpinBox;
   windSpeed->setDecimals(2);
   windSpeed->setRange(0, 200);
@@ -3047,7 +3228,7 @@ QLabel *gvadthrLabel = new QLabel(tr("Minimum number of points for GVAD processi
   windSpeedLayout->addWidget(windSpeedLabel);
   windSpeedLayout->addWidget(windSpeed);
 
-  QLabel *windDirectionLabel = new QLabel(tr("Wind Direction (degrees from North)"));
+  QLabel *windDirectionLabel = new QLabel(tr("Reference Wind Direction (degrees from North)"));
   windDirection = new QDoubleSpinBox;
   windDirection->setDecimals(1);
   windDirection->setRange(0, 359.9);
@@ -3092,49 +3273,49 @@ QLabel *gvadthrLabel = new QLabel(tr("Minimum number of points for GVAD processi
   setLayout(main);
 
   connect(bbSegmentSize, SIGNAL(valueChanged(const QString&)), 
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(maxFoldCount, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(velocityMinimum, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(velocityMaximum, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(reflectivityMinimum, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(reflectivityMaximum, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(spectralThreshold, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
 
   connect(vad, SIGNAL(toggled(const bool)), 
-	  this, SLOT(valueChanged(const bool)));
+	  this, SLOT(valueChanged()));
   connect(vad, SIGNAL(toggled(bool)),
 	  vadParameters, SLOT(setVisible(bool)));
   connect(vadLevels, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(numCoefficients, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(vadthr, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(gvadthr, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
 
   connect(user, SIGNAL(toggled(const bool)), 
-	  this, SLOT(valueChanged(const bool)));
+	  this, SLOT(valueChanged()));
   connect(user, SIGNAL(toggled(bool)), 
 	  userParameters, SLOT(setVisible(bool)));
   connect(windSpeed, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
   connect(windDirection, SIGNAL(valueChanged(const QString&)),
-	  this, SLOT(valueChanged(const QString&)));
+	  this, SLOT(valueChanged()));
 
   /*
    * connect(known, SIGNAL(toggled(const bool)), 
-   *	  this, SLOT(valueChanged(const bool)));
+   *	  this, SLOT(valueChanged()));
    * connect(known, SIGNAL(toggled(bool)),
    *	  knownParameters, SLOT(setVisible(bool)));
    * connect(dir, SIGNAL(textChanged(const QString&)),
-   *  this, SLOT(valueChanged(const QString&)));
+   *  this, SLOT(valueChanged()));
    */
   
   setPanelChanged(false);
@@ -3143,6 +3324,7 @@ QLabel *gvadthrLabel = new QLabel(tr("Minimum number of points for GVAD processi
 
 QCPanel::~QCPanel()
 {
+  turnOffWhenRunning.clear(); 
   delete vad;
   delete user;
   //delete known;

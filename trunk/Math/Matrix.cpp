@@ -592,6 +592,8 @@ bool Matrix::gaussJordan(float **a, float **b, int n, int m)
   
   for (i = 0; i < n; i++) {
     big = 0.0;
+    icol = 0; 
+    irow = 0;
     for (j = 0;j < n; j++) {
       if(ipiv[j]!=1) {
 	for (k = 0; k < n; k++) {

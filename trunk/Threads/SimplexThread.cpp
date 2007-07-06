@@ -168,6 +168,9 @@ void SimplexThread::run()
 			       QString("maxdatagap"), QString("wavenum"), 
 					 QString().setNum(i)).toFloat();
     }
+
+    // Set ring width in cappi so that griddedData access function use this
+    gridData->setCylindricalAzimuthSpacing(ringWidth);
     
     emit log(Message(QString(),2,this->objectName()));
 
@@ -199,7 +202,9 @@ void SimplexThread::run()
     float zgridsp = configData->getParam(cappi, "zgridsp").toFloat();
     
     int newNumLevels = (int)floor((lastLevel - firstLevel)/zgridsp +1.5);
-    int newNumRings = (int)floor((lastRing - firstRing)/ringWidth + 1.5);
+
+    // We want 1 km spaced rings regardless of ring width
+    int newNumRings = (int)floor((lastRing - firstRing) + 1.5);
 
     // Create a simplexData object to hold the results;
     simplexData = new SimplexData(newNumLevels, newNumRings,(int)numPoints);
@@ -238,7 +243,7 @@ void SimplexThread::run()
       mutex.unlock();
       
       if(!abort) {
-	for (float radius = firstRing; radius <= lastRing; radius+=ringWidth) {
+	for (float radius = firstRing; radius <= lastRing; radius++) {
 	  mutex.lock();
 	  
 	  // Set the corner of the box
@@ -546,7 +551,9 @@ void SimplexThread::run()
     
     //Now pick the best center
     simplexResults->timeSort();
-    ChooseCenter *centerFinder = new ChooseCenter(configData,simplexResults,vortexData);
+    ChooseCenter *centerFinder = new ChooseCenter(configData,simplexResults,
+						  vortexData);
+    
     connect(centerFinder, SIGNAL(errorlog(const Message&)),
 	    this, SLOT(catchLog(const Message&)),Qt::DirectConnection);
     foundCenter = centerFinder->findCenter();
@@ -557,7 +564,7 @@ void SimplexThread::run()
     emit log(Message(QString(),4,this->objectName()));
 
     // Clean up
-    //delete centerFinder;
+    delete centerFinder;
     delete[] dataGaps;
     for(int i = 2; i >=0; i--)
       delete [] vertex[i];
@@ -665,7 +672,7 @@ float SimplexThread::simplexTest(float**& vertex,float*& VT,float*& vertexSum,
 {
 	
 	// Test a simplex vertex
-	float VTtest;
+	float VTtest = -999;
 	float* vertexTest = new float[2];
 	float factor1 = (1.0 - factor)/2;
 	float factor2 = factor1 - factor;
@@ -769,6 +776,8 @@ bool SimplexThread::calcHVVP(float& lat, float& lon)
   //emit log(Message(QString("Hvvp Parameters: Distance to Radar "+QString().setNum(rt)+" angle to vortex center in degrees ccw from north "+QString().setNum(cca)+" rmw "+QString().setNum(rmw))));
   
   Hvvp *envWindFinder = new Hvvp;
+  envWindFinder->setConfig(configData);
+  envWindFinder->setPrintOutput(false);
   connect(envWindFinder, SIGNAL(log(const Message)), 
 	  this, SLOT(catchLog(const Message)), 
 	  Qt::DirectConnection);

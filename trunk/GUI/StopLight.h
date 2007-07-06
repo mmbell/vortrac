@@ -20,6 +20,8 @@
 #include <QSize>
 #include <QRadialGradient>
 #include <QTimer>
+#include <QEvent>
+#include <QPaintEvent>
 #include "Message.h"
 
 class StopLight:public QWidget

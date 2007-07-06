@@ -57,7 +57,7 @@ PollThread::~PollThread()
     delete vortexList;
     delete simplexList;
     delete pressureList;
-    delete dropSondeList;
+    delete dropSondeList
     delete vortexConfig;  // This should be deleted do we need to save?
     delete simplexConfig;  // This should be deleted do we need to save?
     delete pressureConfig;   // This should be deleted do we need to save?
@@ -251,7 +251,7 @@ void PollThread::run()
       file = QString("vortrac_defaultPressureListStorage.xml");
       dropSondeConfig = new Configuration(0, QDir::current().filePath(file));
     }
-    emit log(Message(file,0,this->objectName()));
+    //emit log(Message(file,0,this->objectName()));
     dropSondeConfig->setObjectName("dropSondeConfig");
     dropSondeConfig->setLogChanges(false);
     connect(dropSondeConfig, SIGNAL(log(const Message&)), 
@@ -283,6 +283,12 @@ void PollThread::run()
 	  this, SLOT(catchVCP(const int)), Qt::DirectConnection);
   connect(analysisThread, SIGNAL(newCappi(const GriddedData*)),
 	  this, SLOT(catchCappi(const GriddedData*)), Qt::DirectConnection);
+  connect(analysisThread, SIGNAL(newCappiInfo(const float&, const float&, 
+					      const float&, const float&, 
+					      const float&)),
+	  this, SLOT(catchCappiInfo(const float&, const float&, const float&,
+				    const float&, const float&)),
+	  Qt::DirectConnection);
   
   analysisThread->setVortexList(vortexList);
   analysisThread->setSimplexList(simplexList);
@@ -329,7 +335,28 @@ void PollThread::run()
 	    // Read the volume from file into the RadarData format
 	    newVolume->readVolume();
 	    QString radarFileName(newVolume->getFileName());
+	    QDateTime volTime = newVolume->getDateTime();
 	    
+	    // Check to make sure that radar volume is still within the
+	    // start and stop dates specified in the configuration.
+	    QDomElement radar = configData->getConfig("radar");
+	    QString startDate = configData->getParam(radar,"startdate");
+	    QString startTime = configData->getParam(radar,"starttime");
+	    QString stopDate = configData->getParam(radar, "enddate");
+	    QString stopTime = configData->getParam(radar, "endtime");
+	    QDateTime radarStart(QDate::fromString(startDate, Qt::ISODate), 
+				 QTime::fromString(startTime, Qt::ISODate), 
+				 Qt::UTC);
+
+	    QDateTime radarStop(QDate::fromString(stopDate,Qt::ISODate),
+				QTime::fromString(stopTime, Qt::ISODate),
+				Qt::UTC);
+	    if((volTime < radarStart)||(volTime > radarStop)) {
+	      delete newVolume;
+	      mutex.unlock();
+	      continue;
+	    }
+
 	    emit log(Message(QString(),3,this->objectName()));
 	    mutex.unlock();
 	    // Send the file to AnalysisThread for processing
@@ -550,19 +577,20 @@ void PollThread::checkListConsistency()
   if(vortexList->count()!=simplexList->count()) {
     emit log(Message(QString("Storage Lists Reloaded With Mismatching Volume Entries"),0,this->objectName()));
   }
-  for(int vv = 0; vv < vortexList->count(); vv++) {
+  
+  for(int vv = vortexList->count()-1; vv >= 0; vv--) {
     bool foundMatch = false;
     for(int ss = 0; ss < simplexList->count(); ss++) {
       if(vortexList->at(vv).getTime()==simplexList->at(ss).getTime())
 	foundMatch = true;
     }
-      if(!foundMatch) {
-	emit log(Message(QString("Removing Vortex Entry @ "+vortexList->at(vv).getTime().toString(Qt::ISODate)+" because no matching simplex was found"),0,this->objectName()));
-	vortexList->removeAt(vv);
-      }
+    if(!foundMatch) {
+      emit log(Message(QString("Removing Vortex Entry @ "+vortexList->at(vv).getTime().toString(Qt::ISODate)+" because no matching simplex was found"),0,this->objectName()));
+      vortexList->removeAt(vv);
+    }
   }
 
-  for(int ss = 0; ss < simplexList->count(); ss++) {
+  for(int ss = simplexList->count()-1; ss >= 0; ss--) {
     bool foundMatch = false;
     for(int vv = 0; vv < vortexList->count(); vv++) {
       if(simplexList->at(ss).getTime() == vortexList->at(vv).getTime())
@@ -581,3 +609,9 @@ void PollThread::checkListConsistency()
   vortexList->save();
 }
   
+void PollThread::catchCappiInfo(const float& x, const float& y, 
+				const float& sMin, const float& sMax, 
+				const float& vMax)
+{
+  emit newCappiInfo(x,y,sMin,sMax,vMax);
+}
