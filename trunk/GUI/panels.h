@@ -319,9 +319,12 @@ class HVVPPanel:public AbstractPanel
   QSpinBox *numLevels;
   // numLevels changes the number of levels used in HVVP
   
-  QDoubleSpinBox *hgtStart, *hInc;
+  QDoubleSpinBox *hgtStart, *hInc, *xtBox;
   // hgtStart contains the starting level for HVVP
   // hInc contains the level thickness for HVVP
+  // xtBox contains the xt standard deviation multiplier for thresholding
+
+  
   
 };
 

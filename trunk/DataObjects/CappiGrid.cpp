@@ -663,7 +663,7 @@ void CappiGrid::BarnesInterpolation()
   Message::toScreen("Leaving Barnes");
 }
 
-*/
+
 
 float CappiGrid::trilinear(const float &x, const float &y,
 			      const float &z, const int &param)
@@ -742,6 +742,7 @@ float CappiGrid::trilinear(const float &x, const float &y,
 
   return interpValue;
 }
+*/
 
 void CappiGrid::writeAsi()
 {

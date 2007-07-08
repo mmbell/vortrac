@@ -248,10 +248,10 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
     painter.setPen(xPen);
     // Draw a small X in the vortex center
     painter.save();
-    painter.drawLine((xPercent-.01)*w,(1-(yPercent-.01))*h,
-		      (xPercent+.01)*w,(1-(yPercent+.01))*h);
-    painter.drawLine((xPercent-.01)*w,(1-(yPercent+.01))*h,
-		      (xPercent+.01)*w,(1-(yPercent-.01))*h);
+    painter.drawLine(QPointF((xPercent-.01)*w,(1-(yPercent-.01))*h),
+		      QPointF((xPercent+.01)*w,(1-(yPercent+.01))*h));
+    painter.drawLine(QPointF((xPercent-.01)*w,(1-(yPercent+.01))*h),
+		     QPointF((xPercent+.01)*w,(1-(yPercent-.01))*h));
     painter.restore();
     // Draw the circles about this center
     painter.setPen(simplexPen);
@@ -339,8 +339,8 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
   imageHolder.lock();
   hasGBVTDInfo = false;
   image.fill(qRgb(255, 255, 255));	
-  iDim = cappi->getIdim();
-  jDim = cappi->getJdim();
+  iDim = (int)cappi->getIdim();
+  jDim = (int)cappi->getJdim();
   QSize cappiSize((int)iDim,(int)jDim);
   image = image.scaled(cappiSize);
   

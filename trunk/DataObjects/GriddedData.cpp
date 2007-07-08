@@ -67,8 +67,6 @@ void GriddedData::setIdim(const int& dim)
   iDim = dim;
   if(dim > maxIDim)
   Message::toScreen("GriddedData: WARNING! Idim is greater than "+QString().setNum(maxIDim)+" limit");
-  if(float(dim)/getIGridsp() > maxIDim) 
-  Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in IDim exceeds +QString().setNum(maxIDim)+" point array capacity");
 }
 
 void GriddedData::setJdim(const int& dim)
@@ -76,8 +74,6 @@ void GriddedData::setJdim(const int& dim)
   jDim = dim;
   if(dim > maxJDim)
     Message::toScreen("GriddedData: WARNING! Jdim is greater than "+QString().setNum(maxJDim)+" limit");
-  if(float(dim)/getJGridsp() > maxJDim) 
-    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in JDim exceeds "+QString().setNum(maxJDim)+" point array capacity");
 }
 
 void GriddedData::setKdim(const int& dim)
@@ -85,27 +81,19 @@ void GriddedData::setKdim(const int& dim)
   kDim = dim;
   if(dim > maxKDim)
     Message::toScreen("GriddedData: WARNING! Kdim is greater than "+QString().setNum(maxKDim)+" limit");
-  if(float(dim)/getKGridsp() > maxKDim) 
-    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in kDim exceeds "+QString().setNum(maxKDim)+" point array capacity");
 }
 
 void GriddedData::setIGridsp(const float& iSpacing)
 {
   iGridsp = iSpacing;
-  if(getIdim()/iSpacing > maxIDim)
-    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in ISpacing exceeds "+QString().setNum(maxIDim)+" point array capacity");
 }
 void GriddedData::setJGridsp(const float& jSpacing)
 {
   jGridsp = jSpacing;
-  if(getJdim()/jSpacing > maxJDim)
-    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in JSpacing exceeds "+QString().setNum(maxJDim)+" point array capacity");
 }
 void GriddedData::setKGridsp(const float& kSpacing)
 {
   kGridsp = kSpacing;
-  if(getKdim()/kSpacing > maxKDim)
-    Message::toScreen("GriddedData: Error! Grid Spacing and Dimension in KSpacing exceeds "+QString().setNum(maxKDim)+" point array capacity");
 }
 */
 void GriddedData::setLatLonOrigin(float *knownLat, float *knownLon,
@@ -188,12 +176,7 @@ void GriddedData::setAbsoluteReferencePoint(float Lat, float Lon, float Height)
 
   float *locations = getCartesianPoint(&originLat, &originLon, &Lat, &Lon);
   // Floor is used to round to the nearest integer
-  /*
-   * removed 2/24/07 -LM xmin & ymin & zmin have units of meters
-  refPointI = int(floor(locations[0]/iGridsp - xmin +.5));
-  refPointJ = int(floor(locations[1]/jGridsp - ymin +.5));
-  refPointK = int(floor(Height/kGridsp - zmin +.5));
-  */
+  
   refPointI = int(floor((locations[0]-xmin)/iGridsp +.5));
   refPointJ = int(floor((locations[1]-ymin)/jGridsp +.5));
   refPointK = int(floor((Height-zmin)/kGridsp +.5));
@@ -252,7 +235,7 @@ float* GriddedData::getAdjustedLatLon(const float& startLat,
 {
   // This function acts like the inverse of the one above.
   // If it is given an initial latitude and longitude
-  // and the cartesian distance change in each direction
+  // and the cartesian distance change (km) in each direction
   // it will return a new pair of points {newLat, newLon}
 
   float LatRadians = startLat * acos(-1.0)/180.0;
@@ -285,20 +268,20 @@ float GriddedData::getRefPointK ()
 }
 
 // These functions return cartesian points
-// mins are all in km .... so I changed these to that -LM 2/24/07
+// mins are all in km 
 float GriddedData::getCartesianRefPointI ()
 {
-	return refPointI*iGridsp+xmin;
+  return refPointI*iGridsp+xmin;
 }
 
 float GriddedData::getCartesianRefPointJ ()
 {
-	return refPointJ*jGridsp+ymin;
+  return refPointJ*jGridsp+ymin;
 }
 
 float GriddedData::getCartesianRefPointK ()
 {
-	return refPointK*kGridsp+zmin;
+  return refPointK*kGridsp+zmin;
 }
 
 // These functions convert between indices and cartesian points

@@ -87,6 +87,7 @@
      <levels>10</levels>
      <hgt_start>0.5</hgt_start>
      <hinc>0.1</hinc>
+     <xt>2</xt>
    </hvvp>
    <pressure>
      <dir>default</dir>

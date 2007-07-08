@@ -261,7 +261,7 @@ bool VortexList::openNodeFile(const QDomNode &newNode)
 	  }
 	  coeff = coeff.nextSiblingElement("coefficient");
 	}
-	currNumWaveNum = floor((currCoefficient-3)/2.0+1);
+	currNumWaveNum = int((currCoefficient-3)/2.0+1);
 	newData.setNumWaveNum(currNumWaveNum);
 	newData.setNumWaveNum(currNumRadii+1);
 	

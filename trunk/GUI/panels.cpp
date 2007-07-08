@@ -61,7 +61,7 @@ VortexPanel::VortexPanel()
   longitude->addStretch();
   longitude->addWidget(longBox);
 
-  QLabel *directionLabel = new QLabel(tr("Direction of vortex movement (degrees cw from north)"));
+  QLabel *directionLabel = new QLabel(tr("Direction of Vortex Movement (Degrees CW from North)"));
   directionBox = new QDoubleSpinBox();
   directionBox->setRange(0, 360);
   directionBox->setDecimals(2);
@@ -70,7 +70,7 @@ VortexPanel::VortexPanel()
   direction->addStretch();
   direction->addWidget(directionBox);
 
-  QLabel *speedLabel = new QLabel(tr("Speed of vortex movement (m/s)"));
+  QLabel *speedLabel = new QLabel(tr("Speed of Vortex Movement (m/s)"));
   speedBox = new QDoubleSpinBox();
   speedBox->setRange(0,100);
   speedBox->setDecimals(2);
@@ -266,18 +266,18 @@ RadarPanel::RadarPanel()
   name->addWidget(radarNameLabel);
   name->addWidget(radarName);
 
-  QLabel *latLabel = new QLabel(tr("Radar Latitude:"));
+  QLabel *latLabel = new QLabel(tr("Radar Latitude (deg):"));
   //radarLatBox = new QDoubleSpinBox;
-  radarLatBox->setRange(-999,999);
+  radarLatBox->setRange(-90,90);
   radarLatBox->setDecimals(3);
   QHBoxLayout *lat = new QHBoxLayout;
   lat->addWidget(latLabel);
   lat->addWidget(radarLatBox);
 
-  QLabel *longLabel = new QLabel(tr("Radar Longitude:"));
+  QLabel *longLabel = new QLabel(tr("Radar Longitude (deg):"));
   //radarLongBox = new QDoubleSpinBox();
   radarLongBox->setDecimals(3);
-  radarLongBox->setRange(-999, 999);
+  radarLongBox->setRange(-180, 180);
   QHBoxLayout *longitude = new QHBoxLayout;
   longitude->addWidget(longLabel);
   longitude->addWidget(radarLongBox);
@@ -1051,7 +1051,7 @@ CenterPanel::CenterPanel()
   maxWaveLayout->addWidget(maxWaveNumBox);
   createDataGaps();
 
-  QLabel *searchCrit = new QLabel(tr("Center finding Criteria"));
+  QLabel *searchCrit = new QLabel(tr("Center Finding Criteria"));
   criteriaOptions = new QHash<QString,QString>;
   criteriaOptions->insert(QString("Maximum Tangential Velocity"),
 			  QString("MAXVT0"));
@@ -1072,21 +1072,30 @@ CenterPanel::CenterPanel()
   QLabel *ringWidth = new QLabel(tr("Width of Search Rings (km)"));
   ringBox = new QDoubleSpinBox;
   ringBox->setDecimals(1);
+  ringBox->setRange(0.1,10);
 
   QLabel *influenceRadius = new QLabel(tr("Radius of Influence (km)"));
   influenceBox = new QDoubleSpinBox;
   influenceBox->setDecimals(1);
+  influenceBox->setRange(2,10);
+  influenceBox->setValue(4);
 
   QLabel *convergence = new QLabel(tr("Convergence Requirements"));
   convergenceBox = new QDoubleSpinBox;
-  // could this be an SpinBox ?
-
+  convergenceBox->setDecimals(3);
+  convergenceBox->setRange(0.001,2);
+  convergenceBox->setValue(0.05);
+  
   QLabel *maxIterations = new QLabel(tr("Maximum Iterations for Process"));
   iterations = new QSpinBox;
+  iterations->setRange(10,100);
+  iterations->setValue(60);
 
   QLabel *boxDiameter = new QLabel(tr("Width of Search Zone"));
   diameterBox = new QDoubleSpinBox;
   diameterBox->setDecimals(1);
+  diameterBox->setRange(9,25);
+  diameterBox->setValue(12);
 
   QLabel *numPoints = new QLabel(tr("Number of Center Points"));
   numPointsBox = new QSpinBox;
@@ -1933,7 +1942,7 @@ VTDPanel::VTDPanel()
 
   // Add addtional options here
 
-  closureOptions->insert(QString("Select closure assumption"),
+  closureOptions->insert(QString("Select Closure Assumption"),
 			 QString(""));
   
   closureBox = new QComboBox;
@@ -1947,7 +1956,7 @@ VTDPanel::VTDPanel()
   reflectivityOptions = new QHash<QString, QString>;
   reflectivityOptions->insert(QString("DZ"),
 			      QString("DZ"));
-  reflectivityOptions->insert(QString("Select reflectivity"),
+  reflectivityOptions->insert(QString("Select Reflectivity"),
 			      QString(""));
   // Add additional options here
   
@@ -1972,7 +1981,7 @@ VTDPanel::VTDPanel()
       velBox->addItem(options[i]);
     }  
 
-  QGroupBox *searchRegion = new QGroupBox(tr("VTD Grid Region"));
+  QGroupBox *searchRegion = new QGroupBox(tr("VTD Analysis Region"));
   QGridLayout *search = new QGridLayout;
   QLabel *bottomLevel = new QLabel(tr("Bottom Level (km)"));
   bLBox = new QDoubleSpinBox;
@@ -2390,7 +2399,7 @@ HVVPPanel::HVVPPanel()
   numLevelsLayout->addStretch();
   numLevelsLayout->addWidget(numLevels);
   
-  QLabel *hgtStartLabel = new QLabel(tr("Height of First Level (km)"));
+  QLabel *hgtStartLabel = new QLabel(tr("Height of the First Level (km)"));
   hgtStart = new QDoubleSpinBox;
   hgtStart->setDecimals(2);
   hgtStart->setRange(.5,50.0);
@@ -2400,7 +2409,7 @@ HVVPPanel::HVVPPanel()
   hgtStartLayout->addStretch();
   hgtStartLayout->addWidget(hgtStart);
 
-  QLabel *hIncLabel = new QLabel(tr("Thickness of Layers (km)"));
+  QLabel *hIncLabel = new QLabel(tr("Thickness of the Levels (km)"));
   hInc = new QDoubleSpinBox;
   hInc->setDecimals(2);
   hInc->setRange(.01,2.0);
@@ -2409,11 +2418,22 @@ HVVPPanel::HVVPPanel()
   hIncLayout->addWidget(hIncLabel);
   hIncLayout->addStretch();
   hIncLayout->addWidget(hInc);
+
+  QLabel *xtLabel = new QLabel(tr("Xt Multiplier for Thresholding"));
+  xtBox = new QDoubleSpinBox();
+  xtBox->setDecimals(1);
+  xtBox->setRange(0,10);
+  xtBox->setValue(2);
+  QHBoxLayout *xtLayout = new QHBoxLayout;
+  xtLayout->addWidget(xtLabel);
+  xtLayout->addStretch();
+  xtLayout->addWidget(xtBox);
   
   QVBoxLayout *hvvpLayout = new QVBoxLayout;
   hvvpLayout->addLayout(numLevelsLayout);
   hvvpLayout->addLayout(hgtStartLayout);
   hvvpLayout->addLayout(hIncLayout);
+  hvvpLayout->addLayout(xtLayout);
   hvvp->setLayout(hvvpLayout);
   
   QVBoxLayout *main = new QVBoxLayout;
@@ -2427,6 +2447,8 @@ HVVPPanel::HVVPPanel()
 	  this, SLOT(valueChanged()));
   connect(hInc, SIGNAL(valueChanged(const QString&)),
 	  this, SLOT(valueChanged()));
+  connect(xtBox, SIGNAL(valueChanged(const QString&)),
+	  this, SLOT(valueChanged()));
 
   setPanelChanged(false);
 }
@@ -2437,6 +2459,7 @@ HVVPPanel::~HVVPPanel()
   delete numLevels;
   delete hgtStart;
   delete hInc;
+  delete xtBox;
 }
 
 void HVVPPanel::updatePanel(const QDomElement panelElement)
@@ -2460,6 +2483,9 @@ void HVVPPanel::updatePanel(const QDomElement panelElement)
     if(name == "hinc") {
       if(parameter.toFloat()!=hInc->value())
 	hInc->setValue(parameter.toFloat()); }
+    if(name == "xt") {
+      if(parameter.toFloat()!=xtBox->value()) 
+	xtBox->setValue(parameter.toFloat()); }
     child = child.nextSiblingElement();
   }
   setPanelChanged(false);
@@ -2481,6 +2507,10 @@ bool HVVPPanel::updateConfig()
       if(fabs(getFromElement("hinc").toFloat()-hInc->value())>= 0.01) {
 	emit changeDom(element, QString("hinc"), 
 		       QString().setNum(hInc->value()));
+      }
+      if(fabs(getFromElement("xt").toFloat()-xtBox->value()) >= 0.1) {
+	emit changeDom(element, QString("xt"),
+		       QString().setNum(xtBox->value())); 
       }
     }
   setPanelChanged(false);
@@ -2508,7 +2538,7 @@ PressurePanel::PressurePanel()
   dirLayout->addWidget(dir, 1, 0, 1, 3);
   dirLayout->addWidget(browse, 1,3);
 
-  QLabel *gradientHeightLabel = new QLabel(tr("Height at which pressure gradient is calculated (km)"));
+  QLabel *gradientHeightLabel = new QLabel(tr("Height at which Pressure Gradient is Calculated (km)"));
   gradientHeight = new QDoubleSpinBox;
   gradientHeight->setDecimals(2);
   gradientHeight->setRange(1,20);
@@ -2536,20 +2566,20 @@ PressurePanel::PressurePanel()
   pressureFormatLayout->addWidget(pressureFormat);
   // add more formats when found
 
-  QLabel *maxObsTimeLabel = new QLabel(tr("Don't use pressure observations older than (minutes)"));
+  QLabel *maxObsTimeLabel = new QLabel(tr("Discard Pressure Observations After (minutes)"));
   maxObsTime = new QSpinBox;
   maxObsTime->setValue(59);
   maxObsTime->setRange(0,500);
   QHBoxLayout *maxObsTimeLayout = new QHBoxLayout;
   maxObsTimeLayout->addWidget(maxObsTimeLabel);
   maxObsTimeLayout->addWidget(maxObsTime);
-
-  QGroupBox *maxObsDistBox = new QGroupBox(tr("Maximum distance to pressure observations"));
-  maxObsDistCenter = new QRadioButton(tr("Measure from TC center"),maxObsDistBox);
- 
-  maxObsDistRing = new QRadioButton(tr("Measure from edge of analysis"),maxObsDistBox);
   
-  QLabel *maxObsDistLabel = new QLabel(tr("Maximum distance (km)"));
+  QGroupBox *maxObsDistBox = new QGroupBox(tr("Maximum Distance to Pressure Observations"));
+  maxObsDistCenter = new QRadioButton(tr("Measure from TC Center"),maxObsDistBox);
+  
+  maxObsDistRing = new QRadioButton(tr("Measure from Edge of Analysis"),maxObsDistBox);
+  
+  QLabel *maxObsDistLabel = new QLabel(tr("Maximum Distance (km)"));
   maxObsDist = new QDoubleSpinBox(maxObsDistBox);
   maxObsDist->setDecimals(2);
   maxObsDist->setRange(0,1000);
@@ -2565,7 +2595,7 @@ PressurePanel::PressurePanel()
   maxObsDistBox->setLayout(maxObsDistBoxLayout);
 
   QGroupBox *intenseBox = new QGroupBox("Intensification Specifications");
-  QLabel *avIntervalLabel = new QLabel(tr("Number of volumes averaged"));
+  QLabel *avIntervalLabel = new QLabel(tr("Number of Volumes Averaged"));
   avInterval = new QSpinBox;
   avInterval->setRange(3,12);
   avInterval->setValue(8);

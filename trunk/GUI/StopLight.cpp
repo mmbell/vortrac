@@ -62,7 +62,6 @@ QSize StopLight::sizeHint() const
 
 void StopLight::paintEvent(QPaintEvent *event)
 {
-
   QPainter *painter = new QPainter(this);
   painter->setRenderHint(QPainter::Antialiasing);
   painter->scale(width()/31, height()/11);
@@ -97,6 +96,8 @@ void StopLight::paintEvent(QPaintEvent *event)
   if (painter->isActive())
     painter->end();
   delete painter;
+  
+  event->accept();
 }
 
 void StopLight::catchLog(const Message& message)

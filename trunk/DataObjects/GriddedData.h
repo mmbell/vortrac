@@ -201,16 +201,6 @@ class GriddedData
   // Latitude and Longitude Coordinates for the i = 0, j= 0, k = 0, point
   float originLat;
   float originLon;
-  
-  /* I don't think we still need these enumeration values -LM 
-
-  enum coordSystems {
-    cartesian,
-    cylindrical,
-    spherical
-  };
-  coordSystems coordSystem;
-  */
 
   // The mins & maxs have units of km relative to radar location
   float xmin, xmax;

@@ -157,7 +157,7 @@ void AbstractPanel::createDataGaps()
 	  QLabel *dataGapLabel = new QLabel("Wave "+QString().setNum(i));
 	  dataGapLabels.append(dataGapLabel);
 	  QDoubleSpinBox *dataGapBox = new QDoubleSpinBox;
-	  dataGapBox->setRange(0, 999);
+	  dataGapBox->setRange(0, 359);
 	  dataGapBox->setDecimals(1);
 	  dataGapBox->setMinimumSize(dataGapBox->sizeHint());
 	  dataGapBoxes.append(dataGapBox);

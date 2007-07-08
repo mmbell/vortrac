@@ -417,7 +417,7 @@ void RadarQC::thresholdData()
       float *refGates = currentRay->getRefData();
       for (int j = 0; j < numVGates; j++)
 	{
-	  int jref = floor((float)j * velGateSp / refGateSp);
+	  int jref = int((float)j * velGateSp / refGateSp);
 	  if(jref >= currentRay->getRef_numgates())
 	    jref = int(velNull);
 	  if((swGates[j] > specWidthLimit)||

@@ -64,6 +64,7 @@ Hvvp::Hvvp()
   //hgtStart = 1.0;
   hInc = .1;                       // km  // Most Recently Used
   //hInc = .5;
+  xt_threshold = 2.0;
   
 }
 
@@ -104,6 +105,7 @@ void Hvvp::setConfig(Configuration* newConfig)
   levels = configData->getParam(hvvp, QString("levels")).toInt();
   hgtStart = configData->getParam(hvvp, QString("hgt_start")).toFloat();
   hInc = configData->getParam(hvvp, QString("hinc")).toFloat();
+  xt_threshold = configData->getParam(hvvp, QString("xt")).toFloat();
 }
 
 float Hvvp::rotateAzimuth(const float &angle)
@@ -569,7 +571,7 @@ bool Hvvp::findHVVPWinds(bool both)
     }
     
     xtsd = sqrt(xtsd/(count-1));  
-    xtsdthr = 2.0*xtsd;
+    xtsdthr = xt_threshold*xtsd;
     for(int i = 0; i < levels; i++) {
       if((fabs(mod_Rankine_xt[i]-xtav)>xtsdthr)||(mod_Rankine_xt[i]==velNull)){
 	u[i] = velNull;
