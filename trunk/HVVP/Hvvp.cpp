@@ -34,7 +34,7 @@ Hvvp::Hvvp()
   rad2deg = 1.0/deg2rad;
   levels = 14;       
   xlsDimension = 16;
-  maxpoints = 200000;               // **
+  maxpoints = 500000;               // **
   
   z = new float[levels];
   u = new float[levels];
@@ -253,7 +253,12 @@ long Hvvp::hvvpPrep(int m) {
 	      xls[13][count] = cosee*sinaa*zz*zz;
 	      xls[14][count] = cosee*cosaa*zz*zz;
 	      xls[15][count] = cosee*sinaa*yy*zz;
-	      count++;
+		  if (count < maxpoints) {
+			  count++;
+		  } else {
+			  // emit log(Message(QString("Truncating HVVP at 500k rows"), 0,this->objectName()));
+			  break;
+		  }
 	    }
 	  }
 	}

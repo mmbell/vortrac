@@ -193,7 +193,8 @@ bool RadarFactory::hasUnprocessedData()
       // Should have filenames starting with radar ID
       dataPath.setNameFilters(QStringList(radarName + "*"));
       dataPath.setFilter(QDir::Files);
-      dataPath.setSorting(QDir::Time | QDir::Reversed);
+      //dataPath.setSorting(QDir::Time | QDir::Reversed);
+	  dataPath.setSorting(QDir::Name);
       QStringList filenames = dataPath.entryList();
       
       // Check to see which are in the time limits
@@ -202,11 +203,25 @@ bool RadarFactory::hasUnprocessedData()
 		  QString timepart = file;
 		  // Replace the radarname so we just have timestamps
 		  timepart.replace(radarName, "");
-		  QStringList timestamp = timepart.split(".");
-		  QDate fileDate = QDate::fromString(timestamp.at(1).left(8), "yyyyMMdd");
-		  QTime fileTime = QTime::fromString(timestamp.at(1).right(6), "hhmmss");
-		  QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
+		  QDate fileDate;
+		  QTime fileTime;
+		  if (timepart.contains('.')) {
+			  // NRL Format
+			  QStringList timestamp = timepart.split(".");
+			  fileDate = QDate::fromString(timestamp.at(1).left(8), "yyyyMMdd");
+			  fileTime = QTime::fromString(timestamp.at(1).right(6), "hhmmss");
+		  }  else if (timepart.contains('_')) {
+			  // Purdue Format
+			  QStringList timestamp = timepart.split("_");
+			  fileDate = QDate::fromString(timestamp.at(1), "yyyyMMdd");
+			  fileTime = QTime::fromString(timestamp.at(2), "hhmm");
+		  }
 		  
+		  QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
+			
+		  QString timeString = fileDateTime.toString(Qt::ISODate);
+		  QString start = startDateTime.toString(Qt::ISODate);
+		  QString end = endDateTime.toString(Qt::ISODate);
 		  if (fileDateTime >= startDateTime && fileDateTime <= endDateTime) {	
 			  // Valid time and radar name, check to see if it has been processed
 			  if (!fileAnalyzed[dataPath.filePath(file)]) {

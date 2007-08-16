@@ -27,23 +27,13 @@ AWIPS::AWIPS(const QString& ob)
 void AWIPS::readObs(const QString& ob)
 {
 	
-	QStringList obList = ob.split(",");
-	stationName = obList.at(1);
-	QDate obDate = QDate(obList.at(2).left(4).toInt(),
-						 obList.at(2).mid(4,2).toInt(),
-						 obList.at(2).right(2).toInt());
+	latitude = ob.mid(12,7).toFloat();
+	longitude = ob.mid(19,9).toFloat();
+	pressure = ob.mid(28,8).toFloat();
+	stationName = ob.mid(36);
 	
-	QTime obTime = QTime(obList.at(3).left(2).toInt(),
-						 obList.at(3).mid(2,2).toInt(),
-						 obList.at(3).right(2).toInt());
-	time.setDate(obDate);
-	time.setTime(obTime);
-	time.setTimeSpec(Qt::UTC);
-	latitude = obList.at(4).toFloat();
-	longitude = obList.at(5).toFloat() - 360.;
-	windSpeed = obList.at(6).toFloat();
-	windDirection = obList.at(7).toFloat();
-	pressure = obList.at(8).toFloat();
-	altitude = obList.at(9).toFloat();
+	windSpeed = -999;
+	windDirection = -999;
+	altitude = 10;
 
 }	

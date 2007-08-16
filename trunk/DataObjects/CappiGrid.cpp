@@ -221,6 +221,16 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 	  }
   }
   
+  // Find the maximum unambiguous range for the volume
+  float maxUnambig_range = 0;
+  for (int n = 0; n < radarData->getNumSweeps(); n++) {
+	  Sweep* currentSweep = radarData->getSweep(n);
+	  float range = currentSweep->getUnambig_range();
+	  if ((currentSweep->getVel_numgates() > 0) and (range > maxUnambig_range)) {
+		  maxUnambig_range = range;
+	  }
+  }
+  
   // Find good values
   for (int n = 0; n < radarData->getNumRays(); n++) {
 	  Ray* currentRay = radarData->getRay(n);
@@ -286,7 +296,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 		  
 	  }
 	  if ((currentRay->getVel_numgates() > 0) and
-		  (currentRay->getUnambig_range() > 170)) {
+		  (currentRay->getUnambig_range() == maxUnambig_range)) {
 		  float* velData = currentRay->getVelData();
 		  float* swData = currentRay->getSwData();
 		  for (int g = 0; g <= (currentRay->getVel_numgates()-1); g++) {

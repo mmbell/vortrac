@@ -243,8 +243,9 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
     xPen.setWidth(5);
     QPen simplexPen(Qt::darkGray);
     simplexPen.setWidth(3);
-    QPen vtdPen(Qt::gray);
+    QPen vtdPen(Qt::white);
     vtdPen.setWidth(3);
+	vtdPen.setStyle(Qt::DotLine);
     painter.setPen(xPen);
     // Draw a small X in the vortex center
     painter.save();

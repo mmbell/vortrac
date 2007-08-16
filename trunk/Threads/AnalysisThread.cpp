@@ -55,23 +55,19 @@ AnalysisThread::~AnalysisThread()
   if(this->isRunning())
     this->abortThread();
 
-  this->exit();
+  delete simplexThread; // This goes first so it can break the cycle which will
+						// allow us a change to lock if we are in simplexThread
+						// Otherwise we could wait a while for a lock
+  simplexThread = NULL;
+  
+  delete vortexThread;    
+  vortexThread = NULL;  
 
-  // Delete Members
-  //delete simplexThread;
-  configData = NULL;
-  delete configData;
-  radarVolume = NULL;
   delete radarVolume;
-  vortexList = NULL;
-  delete vortexList;
-  simplexList = NULL;
-  delete simplexList;
-  pressureList = NULL;
-  delete pressureList;
-  dropSondeList = NULL;
-  delete dropSondeList;
-
+  radarVolume = NULL;
+  
+  this->quit();
+  
   //Message::toScreen("AnalysisThread Destructor OUT");
 }
 
@@ -113,12 +109,7 @@ void AnalysisThread::setDropSondeList(PressureList *archivePtr)
 void AnalysisThread::abortThread()
 {
   //Message::toScreen("In AnalysisThread Abort");
-
-  delete simplexThread; // This goes first so it can break the cycle which will
-  // allow us a change to lock if we are in simplexThread
-  // Otherwise we could wait a while for a lock  
-  delete vortexThread;    
-
+  
   mutex.lock();
   abort = true;
   mutex.unlock();
@@ -131,11 +122,12 @@ void AnalysisThread::abortThread()
     wait();
     //Message::toScreen("Got past wait - AnalysisThread");
     // Got rid of wait because it was getting stuck when aborted in simplex cycle
+	/* Done in Destructor now
     if(radarVolume!=NULL) {
       RadarData *temp = radarVolume;
       radarVolume = NULL;
       delete temp;
-    }
+    } */
   }
   //Message::toScreen("Leaving AnalysisThread Abort");
 }

@@ -2552,7 +2552,7 @@ PressurePanel::PressurePanel()
   pressureFormatOptions = new QHash<QString, QString>;
   pressureFormatOptions->insert(QString("Select a Pressure Data Format"),
 							 QString(""));
-  pressureFormatOptions->insert(QString("Metar"), QString("METAR"));
+  pressureFormatOptions->insert(QString("HWind"), QString("HWind"));
   pressureFormatOptions->insert(QString("AWIPS"), QString("AWIPS"));
   pressureFormat = new QComboBox();
   QList<QString> options = pressureFormatOptions->keys();

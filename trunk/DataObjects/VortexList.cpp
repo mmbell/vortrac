@@ -43,6 +43,7 @@ VortexList::~VortexList()
   delete configFileNames;
   delete vortexDataConfigs;
   delete config;
+  config = NULL;
 }
 
 

@@ -60,7 +60,8 @@ class AbstractPanel:public QWidget
     * 
     */
    virtual void updatePanel(QDomElement panelElement) = 0;
-     // Reads in values from the Configuration and writes
+
+   // Reads in values from the Configuration and writes
      // values from the corresponding section to the panel.
 
    /*!

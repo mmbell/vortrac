@@ -1,5 +1,5 @@
 /*
- *  Metar.h
+ *  HWind.h
  *  VORTRAC
  *
  *  Created by Michael Bell on 7/19/06.
@@ -8,19 +8,19 @@
  *
  */
 
-#ifndef METAR_H
-#define METAR_H
+#ifndef HWIND_H
+#define HWIND_H
 
 #include "PressureData.h"
 #include<QString>
 
-class Metar : public PressureData
+class HWind : public PressureData
 {
 
 public:
-	Metar();
-	Metar(const QString& filename);
-	bool readObs();
+	HWind();
+	HWind(const QString& ob);
+	bool readObs(const QString& ob);
 	
 private:
 	QString obsFile;

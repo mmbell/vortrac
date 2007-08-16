@@ -19,7 +19,7 @@
 #include <QHash>
 #include "Config/Configuration.h"
 #include "Pressure/PressureList.h"
-#include "Pressure/Metar.h"
+#include "Pressure/HWind.h"
 #include "Pressure/AWIPS.h"
 #include "IO/Message.h"
 #include "GUI/ConfigTree.h"
@@ -43,7 +43,7 @@ class PressureFactory : public QObject
 
  private:
   enum dataFormat {
-	metar,
+	hwind,
 	awips,
 	netcdf
   };
@@ -54,6 +54,7 @@ class PressureFactory : public QObject
   QDateTime startDateTime;
   QDateTime endDateTime;
   QHash<QString, bool> fileParsed;
+  float radarlat, radarlon;
 
 };
   

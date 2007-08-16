@@ -38,7 +38,7 @@ PressureList::~PressureList()
 {
 	
 	delete config;
-	
+	config = NULL;
 }
 
 

@@ -37,6 +37,7 @@ SimplexList::SimplexList(Configuration* newConfig)
 SimplexList::~SimplexList()
 {
   delete config;
+  config = NULL;	
   while(simplexDataConfigs->count() > 0)
     delete simplexDataConfigs->takeLast();
   delete simplexDataConfigs;

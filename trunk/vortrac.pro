@@ -55,7 +55,7 @@ HEADERS += Threads/AnalysisThread.h \
            Pressure/PressureData.h \
            Pressure/PressureList.h \
            Pressure/PressureFactory.h \
-           Pressure/Metar.h \
+           Pressure/HWind.h \
            Pressure/AWIPS.h
 SOURCES += main.cpp \
            Threads/AnalysisThread.cpp \
@@ -105,7 +105,7 @@ SOURCES += main.cpp \
            Pressure/PressureData.cpp \
            Pressure/PressureList.cpp \
            Pressure/PressureFactory.cpp \
-           Pressure/Metar.cpp \
+           Pressure/HWind.cpp \
            Pressure/AWIPS.cpp
 RESOURCES += vortrac.qrc
 LIBS += -lbz2

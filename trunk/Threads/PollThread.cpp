@@ -46,6 +46,42 @@ PollThread::~PollThread()
   mutex.unlock();
   //  if(this->isRunning())
   this->abortThread();
+  /* Deleting Members
+	  - Causes crash when explicitly deleting -MB */
+  
+  delete analysisThread;
+  analysisThread = NULL;
+  
+  /* delete configData;
+  configData = NULL; 
+
+  delete vortexConfig;
+  vortexConfig = NULL;
+  
+  delete simplexConfig;
+  simplexConfig = NULL;
+  
+  delete pressureConfig;
+  pressureConfig = NULL;
+  
+  delete dropSondeConfig;
+  dropSondeConfig = NULL; */
+  
+  delete vortexList;
+  vortexList = NULL;
+  
+  delete simplexList;
+  simplexList = NULL;
+  
+  delete pressureList;
+  pressureList = NULL;
+  
+  delete dropSondeList;
+  dropSondeList = NULL;
+  
+  
+  this->quit();
+	
   /*else
     {
     wait();
@@ -82,8 +118,6 @@ void PollThread::abortThread()
   processPressureData = false;
   mutex.unlock();
  
-  delete analysisThread;
-
   //this->exit();
   if(this->isRunning()) {
     //Message::toScreen("PollThread: Wait For Analysis Wake All");
@@ -91,17 +125,7 @@ void PollThread::abortThread()
   }
   wait();
 
-  // Deleting Members
-  configData = NULL;
-  delete configData;
-  delete vortexList;
-  delete simplexList;
-  delete pressureList;
-  delete dropSondeList;
-  // delete vortexConfig;  // This should be deleted do we need to save?
-  // delete simplexConfig;  // This should be deleted do we need to save?
-  // delete pressureConfig;   // This should be deleted do we need to save?
-  // delete dropSondeConfig;   // This should be deleted do we need to save?
+  
   //emit log(Message(QString("Leaving Abort"),0,this->objectName()));
  
 }

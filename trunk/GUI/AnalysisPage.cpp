@@ -52,7 +52,8 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 	  this, SLOT(catchLog(const Message&)));
 
   QTabWidget *visuals = new QTabWidget;
-  visuals->setTabPosition(QTabWidget::West);
+  // For reasons I can't figure out, this is causing a problem displaying the labels in Qt 4.1.3 and 4.1.4
+  //visuals->setTabPosition(QTabWidget::West);
 
   GraphFace *graph = new GraphFace();
   graph->updateTitle(this, vortexLabel);
@@ -173,7 +174,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   cappiLayout->addStretch();
   cappiBox->setLayout(cappiLayout);
 
-  visuals->addTab(pressureGraph, "Pressure & RMW");
+  visuals->addTab(pressureGraph, "Pressure/RMW");
   visuals->addTab(cappiBox, "Current Cappi");
   //visuals->setTabEnabled(visuals->indexOf(cappiBox), false);
   
@@ -259,6 +260,7 @@ AnalysisPage::~AnalysisPage()
   delete cappiDisplay;
   //delete graph; this gets deleted anyway, not sure how
   delete configData;
+  configData = NULL;
   delete diagPanel;
   delete statusLog;
   delete statusText;
@@ -620,13 +622,16 @@ void AnalysisPage::abortThread()
     disconnect(pollThread, SIGNAL(vortexListUpdate(VortexList*)), 
 	       this, SLOT(pollVortexUpdate(VortexList*)));
     pollThread->abortThread();
-    PollThread *dummy = pollThread;
-    pollThread = NULL;
-    delete dummy;
+	delete pollThread;
+	pollThread = NULL;
+    //PollThread *dummy = pollThread;
+    //pollThread = NULL;
+    //delete dummy;
     pollVortexUpdate(NULL);
     cappiDisplay->clearImage();
     emit log(Message(QString("Analysis Aborted!"), -1, this->objectName()));
   }
+
   configDialog->turnOffMembers(false);
   emit log(Message(QString(),-1,this->objectName()));
   //Message::toScreen("Leaving AnalysisPage Abort");
