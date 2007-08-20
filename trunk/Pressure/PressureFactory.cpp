@@ -121,7 +121,7 @@ QList<PressureData>* PressureFactory::getUnprocessedData()
   case awips:
     {
       	QFile file(fileName);
-		QString timepart = fileName;
+		QString timepart = fileName.split("/").last();
 		// Parse the timestamp
 		QStringList timestamp = timepart.split("_");
 		QDate obDate = QDate::fromString(timestamp.at(2), "yyyyMMdd");

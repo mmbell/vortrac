@@ -30,8 +30,8 @@ void AWIPS::readObs(const QString& ob)
 	latitude = ob.mid(12,7).toFloat();
 	longitude = ob.mid(19,9).toFloat();
 	pressure = ob.mid(28,8).toFloat();
-	stationName = ob.mid(36);
-	
+	stationName = ob.mid(38).replace(QRegExp("\\s+"),"_");
+
 	windSpeed = -999;
 	windDirection = -999;
 	altitude = 10;
