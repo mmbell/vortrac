@@ -1509,14 +1509,14 @@ bool CenterPanel::checkValues()
   // We get this directly now
 
   if((int)floor(tLBox->value()-bLBox->value()+1.5)>SimplexData::getMaxLevels()) {
-    emit log(Message(QString(),0, this->objectName(), Red, 
-		     QString(tr("Number of search levels in simplex exceeds the maximum of ")+QString().setNum(SimplexData::getMaxLevels())+tr(", Please decrease the number of search levels"))));
+     emit log(Message(QString(tr("Number of search levels in simplex exceeds the maximum of ")+QString().setNum(SimplexData::getMaxLevels())+tr(", Please decrease the number of levels")),0, this->objectName(), Red, 
+                    QString(tr("Too many simplex levels"))));
     return false;
   }
 
   if((int)floor(oRBox->value()-iRBox->value()+1.5)>SimplexData::getMaxRadii()) {
-    emit log(Message(QString(),0, this->objectName(), Red, 
-		     QString(tr("Number of search rings in simplex exceeds the maximum of ")+QString().setNum(SimplexData::getMaxRadii())+tr(", Please decrease the number of search rings"))));
+     emit log(Message(QString(tr("Number of search radii in simplex exceeds the maximum of ")+QString().setNum(SimplexData::getMaxRadii())+tr(", Please decrease the difference between inner and outer radii")),0, this->objectName(), Red, 
+                    QString(tr("Simplex outer-inner too large"))));
     return false;
   }
 
@@ -3139,13 +3139,13 @@ QCPanel::QCPanel()
 {
   QGroupBox *qcParameters = new QGroupBox(tr("Quality Control Parameters"));
   
-  QLabel *velMinThresLabel = new QLabel(tr("Ignore Gates with Velocity Magnitudes Less Than (km/s)"));
+  QLabel *velMinThresLabel = new QLabel(tr("Ignore Gates with Velocity Magnitudes Less Than (m/s)"));
   velocityMinimum = new QDoubleSpinBox;
   velocityMinimum->setDecimals(3);
   velocityMinimum->setRange(0,10);
   velocityMinimum->setValue(1.5);
 
-  QLabel *velMaxThresLabel = new QLabel(tr("Ignore Gates with Velocity Magnitudes Greater Than (km/s)"));
+  QLabel *velMaxThresLabel = new QLabel(tr("Ignore Gates with Velocity Magnitudes Greater Than (m/s)"));
   velocityMaximum = new QDoubleSpinBox;
   velocityMaximum->setDecimals(3);
   velocityMaximum->setRange(1,999);
@@ -3163,7 +3163,7 @@ QCPanel::QCPanel()
   reflectivityMaximum->setRange(-500,500);
   reflectivityMaximum->setValue(65);
 
-  QLabel *specThresLabel = new QLabel(tr("Ignore Gates with Spectrum Width Greater Than (km/s)"));
+  QLabel *specThresLabel = new QLabel(tr("Ignore Gates with Spectrum Width Greater Than (m/s)"));
   spectralThreshold = new QDoubleSpinBox;
   spectralThreshold->setDecimals(2);
   spectralThreshold->setRange(0,50);
@@ -3197,8 +3197,9 @@ QCPanel::QCPanel()
   qcParameters->setLayout(paramLayout);
 
   QGroupBox *findWind = new QGroupBox(tr("Method For Finding Reference Wind"));
-  vad = new QRadioButton(tr("Use GVAD and VAD Algorithms"), findWind);
-  user = new QRadioButton(tr("Enter Environmental Wind Parameters"), findWind);
+  gvad = new QRadioButton(tr("Use GVAD Algorithm to estimate wind at radar"), findWind);
+  vad = new QRadioButton(tr("Use VAD Algorithm to estimate wind at radar"), findWind);
+  user = new QRadioButton(tr("Enter boundary layer wind at radar manually"), findWind);
   //  known = new QRadioButton(tr("Use Available AWIPS Data"), findWind);
 
   QFrame *vadParameters = new QFrame;
@@ -3230,26 +3231,33 @@ QCPanel::QCPanel()
   vadthrLayout->addWidget(vadthrLabel);
   vadthrLayout->addWidget(vadthr);
 
-QLabel *gvadthrLabel = new QLabel(tr("Minimum Number of Points for GVAD Processing"));
-  gvadthr = new QSpinBox;
-  gvadthr->setRange(1,360);
-  gvadthr->setValue(180);
-  QHBoxLayout *gvadthrLayout = new QHBoxLayout;
-  gvadthrLayout->addSpacing(20);
-  gvadthrLayout->addWidget(gvadthrLabel);
-  gvadthrLayout->addWidget(gvadthr);
-
   QVBoxLayout *vadLayout = new QVBoxLayout;
   vadLayout->addLayout(vadLevelsLayout);
   vadLayout->addLayout(numCoLayout);
   vadLayout->addLayout(vadthrLayout);
-  vadLayout->addLayout(gvadthrLayout);
   vadParameters->setLayout(vadLayout);
   vadParameters->hide();
 
+  QFrame *gvadParameters = new QFrame;
+	
+  QLabel *gvadthrLabel = new QLabel(tr("Minimum Number of Points for GVAD Processing"));
+  gvadthr = new QSpinBox;
+  gvadthr->setRange(1,360);
+  gvadthr->setValue(180);
+  
+  QHBoxLayout *gvadthrLayout = new QHBoxLayout;
+  gvadthrLayout->addSpacing(20);
+  gvadthrLayout->addWidget(gvadthrLabel);
+  gvadthrLayout->addWidget(gvadthr);
+  
+  QVBoxLayout *gvadLayout = new QVBoxLayout;
+  gvadLayout->addLayout(gvadthrLayout);
+  gvadParameters->setLayout(gvadLayout);
+  gvadParameters->hide();
+  
   QFrame *userParameters = new QFrame;
  
-  QLabel *windSpeedLabel = new QLabel(tr("Reference Wind Speed (km/s)"));
+  QLabel *windSpeedLabel = new QLabel(tr("Reference Wind Speed (m/s)"));
   windSpeed = new QDoubleSpinBox;
   windSpeed->setDecimals(2);
   windSpeed->setRange(0, 200);
@@ -3288,6 +3296,8 @@ QLabel *gvadthrLabel = new QLabel(tr("Minimum Number of Points for GVAD Processi
    */
 
   QVBoxLayout *findWindLayout = new QVBoxLayout;
+  findWindLayout->addWidget(gvad);
+  findWindLayout->addWidget(gvadParameters);
   findWindLayout->addWidget(vad);
   findWindLayout->addWidget(vadParameters);
   findWindLayout->addWidget(user);
@@ -3317,10 +3327,14 @@ QLabel *gvadthrLabel = new QLabel(tr("Minimum Number of Points for GVAD Processi
   connect(spectralThreshold, SIGNAL(valueChanged(const QString&)),
 	  this, SLOT(valueChanged()));
 
-  connect(vad, SIGNAL(toggled(const bool)), 
+  connect(gvad, SIGNAL(toggled(const bool)), 
 	  this, SLOT(valueChanged()));
+  connect(gvad, SIGNAL(toggled(bool)),
+	  gvadParameters, SLOT(setVisible(bool)));
+  connect(vad, SIGNAL(toggled(const bool)), 
+		  this, SLOT(valueChanged()));
   connect(vad, SIGNAL(toggled(bool)),
-	  vadParameters, SLOT(setVisible(bool)));
+		  vadParameters, SLOT(setVisible(bool)));
   connect(vadLevels, SIGNAL(valueChanged(const QString&)),
 	  this, SLOT(valueChanged()));
   connect(numCoefficients, SIGNAL(valueChanged(const QString&)),
@@ -3381,6 +3395,8 @@ void QCPanel::updatePanel(const QDomElement panelElement)
     QString name = child.tagName();
     QString parameter = child.text();
     if(name == "wind_method") {
+	  if(parameter == "gvad")
+	gvad->setChecked(true);
       if(parameter == "vad")
 	vad->setChecked(true);
       if(parameter == "user")
@@ -3473,6 +3489,11 @@ bool QCPanel::updateConfig()
 	  emit changeDom(element, QString("vadthr"),
 			 QString().setNum(vadthr->value()));
 	}
+	  }
+	  if(gvad->isChecked()) {
+		  if(getFromElement("wind_method")!=QString("gvad")) {
+			  emit changeDom(element, QString("wind_method"), QString("gvad"));
+		  }		  
 	if(getFromElement("gvadthr").toInt()!=gvadthr->value()) {
 	  emit changeDom(element, QString("gvadthr"),
 			 QString().setNum(gvadthr->value()));

@@ -68,6 +68,7 @@ class AnalysisThread : public QThread
      Configuration *configData;
      RadarData *radarVolume;
      GriddedFactory gridFactory;
+     GriddedData *gridData;     
      SimplexThread *simplexThread;
      VortexThread *vortexThread;
      VortexList *vortexList;

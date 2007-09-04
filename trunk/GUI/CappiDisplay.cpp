@@ -254,6 +254,20 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
     painter.drawLine(QPointF((xPercent-.01)*w,(1-(yPercent+.01))*h),
 		     QPointF((xPercent+.01)*w,(1-(yPercent-.01))*h));
     painter.restore();
+
+    // Annotate the maximum and minimum velocities
+    painter.save();
+    painter.drawLine(QPointF((maxVelXpercent)*w,(1-(maxVelYpercent-.01))*h),
+		      QPointF((maxVelXpercent)*w,(1-(maxVelYpercent+.01))*h));
+    painter.drawLine(QPointF((maxVelXpercent-.01)*w,(1-(maxVelYpercent))*h),
+		     QPointF((maxVelXpercent+.01)*w,(1-(maxVelYpercent))*h));
+    painter.restore();
+
+    painter.save();
+    painter.drawLine(QPointF((minVelXpercent-.01)*w,(1-(minVelYpercent))*h),
+		     QPointF((minVelXpercent+.01)*w,(1-(minVelYpercent))*h));
+    painter.restore();
+
     // Draw the circles about this center
     painter.setPen(simplexPen);
     painter.save();
@@ -338,7 +352,7 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
 	
   // Fill the pixmap with data from the cappi
   imageHolder.lock();
-  hasGBVTDInfo = false;
+  //hasGBVTDInfo = false;
   image.fill(qRgb(255, 255, 255));	
   iDim = (int)cappi->getIdim();
   jDim = (int)cappi->getJdim();
@@ -353,22 +367,43 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
   minVel= 9999;
   float k = 0;
   QString field("ve");
-  for (float i = 0; i < iDim; i++) {
+  float minI, maxI, minJ, maxJ;
+  if(hasGBVTDInfo) {
+    float xIndex = xPercent*iDim;
+    float yIndex = yPercent*jDim;
+    minI = xIndex-(simplexMax*iDim*cappi->getIGridsp());
+    maxI = xIndex+(simplexMax*iDim*cappi->getIGridsp());
+    minJ = yIndex-(simplexMax*iDim*cappi->getJGridsp());
+    maxJ = yIndex+(simplexMax*iDim*cappi->getJGridsp());
+  } else {
+    minI = 0;
+    maxI = iDim;
+    minJ = 0;
+    maxJ = jDim;
+  }
+  
+  for (float i = minI; i < maxI; i++) {
     if(exitNow)
       return;
-    for (float j = 0; j < jDim; j++) {
+    for (float j = minJ; j < maxJ; j++) {
       float vel = cappi->getIndexValue(field,i,j,k);
       if (vel != -999) {
-	if (vel > maxVel) 
+	if (vel > maxVel) { 
 	  maxVel = vel;
-	if (vel < minVel)
+	  maxVelXpercent = (i+1)/iDim;
+	  maxVelYpercent = (j+1)/jDim;
+	}
+	if (vel < minVel) {
 	  minVel = vel;
+	  minVelXpercent = (i+1)/iDim;
+	  minVelYpercent = (j+1)/jDim;
+	}
       }
     }
   }
 
-  maxApp = fabs(maxVel);
-  maxRec = fabs(minVel);
+  maxApp = fabs(minVel);
+  maxRec = fabs(maxVel);
   //Message::toScreen("maxVel is "+QString().setNum(maxVel)+" minVel is "+QString().setNum(minVel));
   float velRange;
   if(maxVel>fabs(minVel)) {

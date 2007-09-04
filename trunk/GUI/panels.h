@@ -423,10 +423,11 @@ class QCPanel:public AbstractPanel
    * This panel uses the dir and browse members declared in AbstractPanel
    * for the location of the AWIPS data directory.
    */
-  QRadioButton *vad, *user, *known;
+  QRadioButton *gvad, *vad, *user, *known;
   /*
    * These buttons are all mutually exclusive choices which decide how the 
    * environmental winds should be determined.
+   * gvad: uses the GVAD algorithm
    * vad: uses the VAD algorithm
    * user: uses user entered winds for environmental winds
    * known: uses AWIPS data when available

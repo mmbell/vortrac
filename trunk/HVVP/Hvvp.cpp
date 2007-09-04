@@ -14,6 +14,7 @@
 #include <math.h>
 #include "Math/Matrix.h"
 #include <QFile>
+#include <QDir>
 #include <QTextStream>
 
 /*
@@ -33,7 +34,10 @@ Hvvp::Hvvp()
   deg2rad = acos(-1)/180.0;
   rad2deg = 1.0/deg2rad;
   levels = 14;       
-  xlsDimension = 16;
+// Current HVVP number of predictor variables
+    xlsDimension = 16;
+// New HVVP number of predictor variables
+//  xlsDimension = 10;
   maxpoints = 500000;               // **
   
   z = new float[levels];
@@ -106,6 +110,9 @@ void Hvvp::setConfig(Configuration* newConfig)
   hgtStart = configData->getParam(hvvp, QString("hgt_start")).toFloat();
   hInc = configData->getParam(hvvp, QString("hinc")).toFloat();
   xt_threshold = configData->getParam(hvvp, QString("xt")).toFloat();
+  QDir workingDirectoryPath(configData->getParam(configData->getConfig("vortex"),"dir"));
+  HVVPLogFile.setFileName(workingDirectoryPath.filePath("HVVP_output.txt"));
+  
 }
 
 float Hvvp::rotateAzimuth(const float &angle)
@@ -183,6 +190,8 @@ long Hvvp::hvvpPrep(int m) {
     for(int r = startRay; r <= stopRay; r++) {
       currentRay = volume->getRay(r);
       float elevation = currentRay->getElevation();
+// Current HVVP set elevation max to 5.0
+// New HVVP set elevation max to 25.0
       if(elevation <= 5.0) {                           // deg
 	vel = currentRay->getVelData();          // still in km/s
 	float vGateSpace = currentRay->getVel_gatesp(); // in m
@@ -244,6 +253,7 @@ long Hvvp::hvvpPrep(int m) {
 	      xls[4][count] = cosee*cosaa*yy;
 	      xls[5][count] = cosee*cosaa*zz;
 	      xls[6][count] = cosee*sinaa*yy;
+// For new HVVP comment out to xls[15][count]
 	      xls[7][count] = rr*sinaa*sinaa*sinaa;
 	      xls[8][count] = rr*sinaa*cosaa*cosaa;
 	      xls[9][count] = rr*cosaa*cosaa*cosaa;
@@ -253,6 +263,10 @@ long Hvvp::hvvpPrep(int m) {
 	      xls[13][count] = cosee*sinaa*zz*zz;
 	      xls[14][count] = cosee*cosaa*zz*zz;
 	      xls[15][count] = cosee*sinaa*yy*zz;
+// For new HVVP, uncomment to xls[9][count] 
+//              xls[7][count] = rr*sinaa;
+//              xls[8][count] = rr*cosaa;
+//              xls[9][count] = (1.0 + sinaa*cosaa)*zz*srange*cosee*cosee;
 		  if (count < maxpoints) {
 			  count++;
 		  } else {
@@ -305,7 +319,10 @@ bool Hvvp::findHVVPWinds(bool both)
 		     0,this->objectName()));
 
   long count = 0; 
-  float mod_Rankine_xt[levels];
+  float xt[levels];
+  float vt[levels];
+  float vr[levels];
+  float xr[levels];
   int last = 0;
 
   // For updating the percentage bar we have 7% to give away in this routine
@@ -318,7 +335,7 @@ bool Hvvp::findHVVPWinds(bool both)
       emit log(Message(QString(),1,this->objectName()));
     }
 
-    mod_Rankine_xt[m] = velNull; 
+    xt[m] = velNull; 
     
     count = hvvpPrep(m);
    
@@ -438,13 +455,13 @@ bool Hvvp::findHVVPWinds(bool both)
 		  // Calculate the HVVP wind parameters:
 		  
 		  // Radial wind above the radar.
-		  float vr = rt*cc[1];
+		  vr[m] = rt*cc[1];
 		  		  
 		  // Along beam component of the environmental wind above the radar.
-		  float vm_c = cc[3]+vr;
+		  float vm_c = cc[3]+vr[m];
 		  		  
 		  // Rankine exponent of the radial wind.
-		  float xr = -1.0*cc[4]/cc[1];
+		  xr[m] = -1.0*cc[4]/cc[1];
 		  		  
 		  /* 
 		   * Variance of xr.  This is used in the
@@ -454,7 +471,7 @@ bool Hvvp::findHVVPWinds(bool both)
 		  
 		  float temp = ((stand_err[4]/cc[4])*(stand_err[4]/cc[4]));
 		  temp += ((stand_err[1]/cc[1])*(stand_err[1]/cc[1]));
-		  var[m] = fabs(xr)*sqrt(temp);
+		  var[m] = fabs(xr[m])*sqrt(temp);
 		  
 		  /*
 		   * Relations between the Rankine exponent of the tangential wind, xt,
@@ -464,43 +481,39 @@ bool Hvvp::findHVVPWinds(bool both)
 		   *   of outflow.
 		   */
 		  
-		  float xt = 0;
-		  
-		  if(vr > 0) {
-		    if(xr > 0)
-		      xt = 1.0-xr;
+		  if(vr[m] > 0) {
+		    if(xr[m] > 0)
+		      xt[m] = 1.0-xr[m];
 		    else
-		      xt = -1.0*xr/2.0;
+		      xt[m] = -1.0*xr[m]/2.0;
 		  }
 		  else {
-		    if(xr >= 0)
-		      xt = xr/2.0;
+		    if(xr[m] >= 0)
+		      xt[m] = xr[m]/2.0;
 		    else
-		      xt = 1.+xr;
+		      xt[m] = 1.+xr[m];
 		  }
 		  
-		  mod_Rankine_xt[m] = xt;
-		  
-		  if(fabs(xt) == xr/2.0) 
+		  if(fabs(xt[m]) == xr[m]/2.0) 
 			  var[m] = .5*var[m];
 		  
 		  // Tangential wind above the radar
 		  // Assume error in rt is 2 km
 		  
-		  float vt = rt*cc[6]/(xt+1.0);
+		  vt[m] = rt*cc[6]/(xt[m]+1.0);
 		  
 		  	  
-		  if(xt == 0) {
+		  if(xt[m] == 0) {
 		    emit log(Message(QString("Xt is Zero, Program Logic Problem"),0,this->objectName(),Red,QString("Xt = 0")));
 		    return false;
 		  }
 		  
 		  temp = (2./rt)*(2./rt)+(stand_err[6]/cc[6])*(stand_err[6]/cc[6]);
-		  temp += (var[m]/xt)*(var[m]/xt);
-		  var[m] = vt*sqrt(temp);
+		  temp += (var[m]/xt[m])*(var[m]/xt[m]);
+		  var[m] = vt[m]*sqrt(temp);
 		  
 		  // Across-beam component of the environmental wind
-		  float vm_s = cc[0]-vt;
+		  float vm_s = cc[0]-vt[m];
 		  //Message::toScreen(" vm_s = "+QString().setNum(vm_s));
 		  
 		  var[m] = sqrt(stand_err[0]*stand_err[0] + var[m]*var[m]);
@@ -519,7 +532,8 @@ bool Hvvp::findHVVPWinds(bool both)
 		  //Message::toScreen(" z[m] = "+QString().setNum(z[m]));
 		  
 		  // Set realistic limit on magnitude of results.
-		  if((xt < 0)||(fabs(ue)>30.0)||(fabs(ve)>30)) {
+		  if((xt[m] < 0)||(xt[m] > 1.5)||(fabs(ue)>30.0)||(fabs(ve)>30)||(vt[m]<1)) 
+                  {
 		    //z[m] = h0;               
 		    u[m] = velNull;
 		    v[m] = velNull;
@@ -561,7 +575,7 @@ bool Hvvp::findHVVPWinds(bool both)
   count=0;
   for(int i = 0; i < levels; i++) {
     if(u[i]!=velNull) {
-      xtav += mod_Rankine_xt[i];
+      xtav += xt[i];
       count++;
     }
   }
@@ -571,14 +585,14 @@ bool Hvvp::findHVVPWinds(bool both)
   if(count >3) {
     for(int i = 0; i < levels; i++) {
       if(u[i]!=velNull) {
-	xtsd+=((mod_Rankine_xt[i]-xtav)*(mod_Rankine_xt[i]-xtav));
+	xtsd+=((xt[i]-xtav)*(xt[i]-xtav));
       }
     }
     
     xtsd = sqrt(xtsd/(count-1));  
     xtsdthr = xt_threshold*xtsd;
     for(int i = 0; i < levels; i++) {
-      if((fabs(mod_Rankine_xt[i]-xtav)>xtsdthr)||(mod_Rankine_xt[i]==velNull)){
+      if((fabs(xt[i]-xtav)>xtsdthr)||(xt[i]==velNull)){
 	u[i] = velNull;
       }
     }
@@ -678,7 +692,7 @@ bool Hvvp::findHVVPWinds(bool both)
   }
   
   // Shorten message for HVVP Results in Log File
-  shortMessage += "Smoothed HVVP RESULTS\n";
+  shortMessage += "Smoothed HVVP RESULTS at "+volume->getDateTimeString()+"\n";
   shortMessage += "\n";
   shortMessage += "Layer, variance-weighted, average Vm_Sin = ";
   shortMessage += QString().setNum(av_VmSin)+" +-";
@@ -690,20 +704,29 @@ bool Hvvp::findHVVPWinds(bool both)
   //shortMessage += QString().setNum(z[ifoundit])+" km altitude.";
   //shortMessage += "\n";
   shortMessage += "Z (km)  Ue (m/s)  Ve (m/s)  Vm_Sin (m/s)";
-  shortMessage += "   Stderr_Vm_Sin (m/s)\n\n";
+  shortMessage += "   Stderr_Vm_Sin (m/s)  Xt\n";
+  shortMessage += "   Vt\t   Vr\t    Xr\n\n";
   for(int i = 0; i < levels; i++) {
     if((u[i]!=velNull) && (v[i]!=velNull)) {
       shortMessage +=QString().setNum(z[i])+"\t   "+QString().setNum(u[i]);
       shortMessage +="\t   "+QString().setNum(v[i])+"\t   "+QString().setNum(vm_sin[i]);
-      shortMessage +="\t   "+QString().setNum(sqrt(var[i]))+"\n";
+      shortMessage +="\t   "+QString().setNum(sqrt(var[i]))+"\t   "+QString().setNum(xt[i])+"\n";
+      shortMessage += "\t   "+QString().setNum(vt[i])+"\t   "+QString().setNum(vr[i]);
+      shortMessage += "\t   "+QString().setNum(xr[i])+"\n";
     }
   }
   
   if(ifoundit>0) {
     if(printOutput) {
       emit log(Message(shortMessage,0,this->objectName()));
-      //Message::toScreen(message);
-    }
+		if(HVVPLogFile.isOpen()) {
+			HVVPLogFile.close();
+		}
+		if(HVVPLogFile.open(QIODevice::Append)) {
+			HVVPLogFile.write(shortMessage.toAscii());
+			HVVPLogFile.close();
+		}
+	}
     emit log(Message(QString(),0,this->objectName(),Green)); 
     return true;
   }
@@ -711,6 +734,14 @@ bool Hvvp::findHVVPWinds(bool both)
     if(printOutput) {
       message = "No Hvvp Results Found";
       emit log(Message(message,0,this->objectName()));
+	  if(HVVPLogFile.isOpen()) {
+		  HVVPLogFile.close();
+	  }
+	  if(HVVPLogFile.open(QIODevice::Append)) {
+		  HVVPLogFile.write(message.toAscii());
+		  HVVPLogFile.close();
+	  }
+	  
       //Message::toScreen(message);
     }
     emit log(Message(QString(),0,this->objectName(),Yellow,QString("Failed to Find HVVP Output"))); 
@@ -926,5 +957,3 @@ void Hvvp::writeToFileWithAltitude(QString& fileName, long aRows, long aCols,
   outputFile->close();
 
 }
- 
-  

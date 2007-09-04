@@ -97,7 +97,7 @@ class SimplexData
 
  private:
   static const int maxLevels = 15;
-  static const int maxRadii = 30;
+  static const int maxRadii = 31;
   static const int maxCenters = 25;
   float velNull;
  

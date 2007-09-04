@@ -354,9 +354,10 @@ void AbstractPanel::createDirectory()
   if(!temp->isAbsolute())
     temp->makeAbsolute();
   if(!temp->exists())
-    temp->mkpath(temp->path());
-  if(!temp->isReadable())
+    if(!temp->mkpath(temp->path())) {
+  //if(!temp->isReadable())
     emit log(Message(QString("Unable to create directory: "+temp->path()+" in file system"), 0, this->objectName()));
+    }
   delete temp;	     
 }
 

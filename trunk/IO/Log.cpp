@@ -241,6 +241,10 @@ void Log::catchLog(const Message& logEntry)
     }
   }
 
+  if (stopLightColor == Red) {
+     emit redLightAbort();
+   }
+
   delete logg;
 }
 

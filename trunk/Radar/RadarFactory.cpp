@@ -80,8 +80,20 @@ RadarData* RadarFactory::getUnprocessedData()
 
   // Get the files off the queue
   QString fileName = dataPath.filePath(radarQueue->dequeue());
+  emit log(Message(QString("Waiting for file:"+fileName), 0, this->objectName()));
 
-  emit log(Message(QString("Using file:"+fileName), 0, this->objectName()));
+  // Test file to make sure it is not growing
+  QFile radarFile(fileName);
+  qint64 newFilesize = radarFile.size();
+  qint64 prevFilesize = 0;
+  while (prevFilesize != newFilesize) {
+	prevFilesize = newFilesize;
+	sleep(1);
+	newFilesize = radarFile.size();
+  }
+  sleep(1);
+
+  emit log(Message(QString("Reading file:"+fileName), 0, this->objectName()));
   // Mark it as processed
   fileAnalyzed[fileName] = true;
     
@@ -214,7 +226,11 @@ bool RadarFactory::hasUnprocessedData()
 			  // Purdue Format
 			  QStringList timestamp = timepart.split("_");
 			  fileDate = QDate::fromString(timestamp.at(1), "yyyyMMdd");
-			  fileTime = QTime::fromString(timestamp.at(2), "hhmm");
+			  if (timestamp.size() > 2) {
+			    fileTime = QTime::fromString(timestamp.at(2), "hhmm");
+			  } else {
+			    emit log(Message(QString("Problem with time in level_II filename, this may be a NCDC file"),0,this->objectName(),Red,QString("Radar format mismatch?")));
+			  } 
 		  }
 		  
 		  QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);

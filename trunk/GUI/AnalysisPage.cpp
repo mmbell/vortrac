@@ -24,6 +24,8 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   
   connect(this, SIGNAL(log(const Message&)),
 	  statusLog, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+  connect(statusLog, SIGNAL(redLightAbort()),
+	  this, SLOT(abortThread()));
 
   // Create the widgets needed to interact with the log
   
@@ -146,7 +148,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   recMaxWind->resize(100,100);
   recMaxWind->display(cappiDisplay->getMaxRec());
   QLabel* recMaxLabel = new QLabel(tr("Maximum"));
-  QLabel* recMaxLabel2 = new QLabel(tr("Receeding Wind (m/s)"));
+  QLabel* recMaxLabel2 = new QLabel(tr("Receding Wind (m/s)"));
   QLabel* emptyLabel = new QLabel();
   QLabel* emptyLabel2 = new QLabel();
   QLabel* emptyLabel3 = new QLabel();  
@@ -629,7 +631,7 @@ void AnalysisPage::abortThread()
     //delete dummy;
     pollVortexUpdate(NULL);
     cappiDisplay->clearImage();
-    emit log(Message(QString("Analysis Aborted!"), -1, this->objectName()));
+    emit log(Message(QString("Analysis Aborted"), -1, this->objectName()));
   }
 
   configDialog->turnOffMembers(false);

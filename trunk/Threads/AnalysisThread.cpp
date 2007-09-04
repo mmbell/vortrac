@@ -181,6 +181,48 @@ void AnalysisThread::run()
 	   vortexList->timeSort();
 	   vortexLat = vortexList->last().getLat();
 	   vortexLon = vortexList->last().getLon();
+	   if(numVolProcessed > 0) {
+	     // If only a few volumes have been attempted then we will use 
+	     // the storm motion to 'bump' the storm into range
+	     // Get direction (degrees cw from north) and speed (m/s)
+	     // of initial storm position
+
+	     QDomElement vortex = configData->getConfig("vortex");
+	     float stormSpeed = configData->getParam(vortex, 
+						     "speed").toFloat();
+	     float stormDirection = configData->getParam(vortex, 
+							 "direction").toFloat();
+	     
+	     // Put the storm direction in math coordinates 
+	     // radians ccw from east
+	     
+	     stormDirection = 450-stormDirection;
+	     if(stormDirection > 360)
+	       stormDirection -=360;
+	     stormDirection*=acos(-1)/180.;
+	     
+	     QDateTime obsDateTime = vortexList->last().getTime();
+	     QDateTime volDateTime = radarVolume->getDateTime();
+
+	     int elapsedSeconds =obsDateTime.secsTo(volDateTime);
+	     //Message::toScreen("Seconds since start "+QString().setNum(elapsedSeconds)+" in AnalysisThread");
+	     if(isnan(elapsedSeconds)) {
+	       emit log(Message(QString("Cannot calculate time until storm is in range of radar, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Yellow,QString("Can not calculate time until storm in range")));
+	       beyondRadar = false;
+		    }
+	     float distanceMoved = elapsedSeconds*stormSpeed/1000.0;
+	     float changeInX = distanceMoved*cos(stormDirection);
+	     float changeInY = distanceMoved*sin(stormDirection);
+	     QString message("changeInX = "+QString().setNum(changeInX)+" changeInY = "+QString().setNum(changeInY));
+	     //emit(log(Message(message,0,this->objectName())));
+	     float *newLatLon = GriddedData::getAdjustedLatLon(vortexLat,vortexLon, changeInX, changeInY);
+	     
+	     
+	     vortexLat = newLatLon[0];
+	     vortexLon = newLatLon[1];
+	     delete [] newLatLon;
+	     //Message::toScreen("New vortexLat = "+QString().setNum(vortexLat)+" New vortexLon = "+QString().setNum(vortexLon));
+	   }
 	 } 
 	 else {
 	   // If the vortexList is empty than we must load 
@@ -255,7 +297,21 @@ void AnalysisThread::run()
 	   if(!obsDateTime.isValid()){
 	     emit log(Message(QString("Observation Date or Time is not of valid format! Date: yyyy-MM-dd Time: hh:mm:ss please adjust the configuration file"),0,this->objectName(),Red, QString("ObsDate or ObsTime invalid in Config")));
 	   }
-	   
+
+	   QString startDate = configData->getParam(radar,"startdate");
+	   QString startTime = configData->getParam(radar,"starttime");
+	   QDateTime radarStart(QDate::fromString(startDate, Qt::ISODate), 
+				QTime::fromString(startTime, Qt::ISODate), 
+				Qt::UTC);
+
+	   if (obsDateTime.secsTo(radarStart)>(3600*6)) {
+	     // Trying to extrapolate too far, bail out
+	     emit log(Message(QString("Extrapolation time exceeds six hours, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Red,QString("Excess extrapolation time")));
+	   } else if (obsDateTime.secsTo(radarStart)<0) {
+	     // Trying to extrapolate into the past, bail out
+	     emit log(Message(QString("Extrapolation time exceeds six hours, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Red,QString("Negative extrapolation time")));
+	   }
+
 	   // Get this volume's time
 	   //Message::toScreen("obs: "+obsDateTime.toString(Qt::ISODate));
 	   
@@ -272,8 +328,7 @@ void AnalysisThread::run()
 	     // Message::toScreen("Using lat lon in Config");
 	     vortexLat = configData->getParam(vortex,"lat").toFloat();
 	     vortexLon = configData->getParam(vortex,"lon").toFloat();
-	   }
-	   else {
+	   } else {
 	     //Message::toScreen("Using Velocity");
 	     // Use the starting position in conjunction with the storm
 	     // velocity to find a current guess for the vortex center
@@ -333,11 +388,18 @@ void AnalysisThread::run()
 		
 	 //Message::toScreen("Distance Between Radar and Storm "+QString().setNum(relDist));
 	 beyondRadar = true;
+	 float unambigRange = 0;
 	 //bool closeToEdge = false;
-	 for(int i = 0; i < radarVolume->getNumSweeps(); i++) {
-	   if((relDist < radarVolume->getSweep(i)->getUnambig_range())
+	 for(int i = 0; i < radarVolume->getNumSweeps(); i++) {	   
+	   if (radarVolume->getSweep(i)->getVel_numgates()> 0) {
+	     float range = radarVolume->getSweep(i)->getUnambig_range();
+	     if (range > unambigRange) {
+	       unambigRange = range;
+	     }
+	   } 
+	   int rangeBuffer = 5;
+	   if((relDist < (radarVolume->getSweep(i)->getUnambig_range()+rangeBuffer))
 	      &&(radarVolume->getSweep(i)->getVel_numgates()> 0)){
-	     
 	     beyondRadar = false;
 	   }
 	   //  if((relDist > radarVolume->getSweep(i)->getUnambig_range()-20)&&(relDist < radarVolume->getSweep(i)->getUnambig_range()+20)) {
@@ -353,6 +415,7 @@ void AnalysisThread::run()
 	   // Too far away for Doppler, need to send a signal
 	   // Calculate the estimated time of arrival
 	   float* distance;
+
 	   distance = GriddedData::getCartesianPoint(
 					    &vortexLat,&vortexLon,
 					    radarVolume->getRadarLat(), 
@@ -366,8 +429,8 @@ void AnalysisThread::run()
 				       "direction").toFloat()*acos(-1)/180.;
 	   // Message::toScreen("Storm Direction .."+QString().setNum(stormDirection));
 	   //Message::toScreen("cca = "+QString().setNum(cca));
-	   //float palpha = (relDist*sin(stormDirection-cca)/174.);
-	   float palpha = -1*(relDist*sin(stormDirection-cca)/174.);
+	   //float palpha = (relDist*sin(stormDirection-cca)/unambigRange);
+	   float palpha = -1*(relDist*sin(stormDirection-cca)/unambigRange);
 	   //Message::toScreen(" palpha = "+QString().setNum(palpha));
 	   //Message::toScreen(" relDist = "+QString().setNum(relDist));
 	   //float alpha = acos(-1)-asin(palpha);
@@ -375,17 +438,20 @@ void AnalysisThread::run()
 	   //Message::toScreen(" alpha = "+QString().setNum(alpha));
 	   float dist2go = 0;
 	   if(fabs(stormDirection-cca)<=1) {
-	     dist2go = fabs(relDist)-174;
+	     dist2go = fabs(relDist)-unambigRange;
 	   }
 	   else {
-	     //dist2go = 174*sin(acos(-1)+cca-stormDirection-alpha)/sin(stormDirection-cca);
-	     dist2go = sqrt(relDist*relDist*(1-2*sin(stormDirection-cca)*sin(stormDirection-cca))+174*174-2*relDist*174*cos(alpha)*cos(stormDirection-cca));
+	     //dist2go = unambigRange*sin(acos(-1)+cca-stormDirection-alpha)/sin(stormDirection-cca);
+	     dist2go = sqrt(relDist*relDist*(1-2*sin(stormDirection-cca)*sin(stormDirection-cca))+unambigRange*unambigRange-2*relDist*unambigRange*cos(alpha)*cos(stormDirection-cca));
 	   }
 	   
 	   // Report distance from Doppler Radar Range
 	   
 	   QString distanceLeft("Circulation Center is "+QString().setNum(relDist)+" km from the radar - Skipping Analysis On This Volume");
 	   emit log(Message(distanceLeft,0,this->objectName()));
+	   if (relDist > 500) {
+	      emit log(Message(QString("Storm position is beyond 500 km from radar, Please check observation parameters"),0,this->objectName(),Red, QString("Storm > 500 km from radar")));
+	   }
 	   
 	   //Message::toScreen(" dist2go = "+QString().setNum(dist2go));
 	   
@@ -402,10 +468,9 @@ void AnalysisThread::run()
 	     //Message::toScreen("minutes till radar"+QString().setNum(eta));
 	     
 	     // These is something wrong with our calculation of time
-	     // until storm is in range, continue processing with
-	     // warnings.
+	     // until storm is in range, stop processing
 	     if((eta < 0)||(isnan(eta))||isinf(eta)) {
-	       emit log(Message(QString("Difficulties Processing Time Until Radar is in Range, Please check observation parameters"),0,this->objectName(),Yellow, QString("Check Observation Parameter is Vortex Panel")));
+	       emit log(Message(QString("Difficulties Processing Time Until Radar is in Range, Please check observation parameters"),0,this->objectName(),Red, QString("ETA Failure")));
 	       if(eta < 0)
 		 Message::toScreen("ETA < 0");
 	       if(isnan(eta))
@@ -591,7 +656,7 @@ void AnalysisThread::run()
 		/*  If Analytic Model is running we need to make an analytic
 		 *  gridded data rather than a cappi
 		 */
-		GriddedData *gridData;
+		//GriddedData *gridData;
 			
 		if(radarVolume->getNumSweeps() < 0) {
 		  Configuration *analyticConfig = new Configuration();

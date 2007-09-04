@@ -69,7 +69,9 @@ private:
     float xPercent, yPercent;
     float simplexMin, simplexMax;
     float vortexMax;
-    
+    float minVelXpercent, minVelYpercent;
+    float maxVelXpercent, maxVelYpercent;
+
 
 };
 

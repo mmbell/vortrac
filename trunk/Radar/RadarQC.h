@@ -117,6 +117,7 @@ class RadarQC : public QObject
    */
 
   bool useVADWinds;
+  bool useGVADWinds;
   bool useUserWinds;
   //bool useAWIPSWinds;
   /* 

@@ -50,6 +50,7 @@ private:
    float hgtStart;
    float hInc;
    float xt_threshold;
+   QFile HVVPLogFile;
    
    /*
     * levels: The number of elevation tilts available including the 2

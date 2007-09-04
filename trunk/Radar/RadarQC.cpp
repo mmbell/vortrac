@@ -28,6 +28,7 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
   maxFold = 4;
   numVGatesAveraged = 30;
   useVADWinds = false;
+  useGVADWinds = false;
   useUserWinds = false;
   //  useAWIPSWinds = false;
   numCoEff = 3;
@@ -50,15 +51,14 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
   
   // Used to determine how the reflectivity data should be interpolated based
   // on the vcp of the radar volume
-
-  if(vcp < 33) {
+  if( (vcp < 33) || (vcp==211) || (vcp==212) ) {
     q = 3;
-    if(vcp == 12) {
+    if( (vcp == 12) || (vcp==212) ) {
       q = 5;
     }
     qinc = 2;
   }
-  if(vcp == 121) {
+  if( (vcp == 121) || (vcp==221) ) {
     q = 5;
     qinc = 4;
   }
@@ -293,11 +293,16 @@ void RadarQC::getConfig(QDomElement qcConfig)
 	useVADWinds = true;
 	// Possible parameters vadthr, gvadthr
 	vadthr = qcConfig.firstChildElement("vadthr").text().toInt();
-	gvadthr = qcConfig.firstChildElement("gvadthr").text().toInt();
 	vadLevels = qcConfig.firstChildElement("vadlevels").text().toInt();
 	numCoEff = qcConfig.firstChildElement("numcoeff").text().toInt();
-      }
-      else {
+	gvadthr = 180;
+      } else if (wind_method == QString("gvad")) {
+		  gvadthr = qcConfig.firstChildElement("gvadthr").text().toInt();
+		  vadLevels = 20;
+		  numCoEff = 3;
+		  vadthr = 30; 
+		  useGVADWinds = true;
+      } else {
 	/*
 	  // Temporarily not concerned about this option
 	if(wind_method == QString("known")) {
@@ -321,7 +326,7 @@ void RadarQC::getConfig(QDomElement qcConfig)
 	  specWidthLimit = 12;
 	  numVGatesAveraged = 30;
 	  maxFold = 4;
-	  useVADWinds = true;
+	  useGVADWinds = true;
 	  vadLevels = 20;
 	  numCoEff = 3;
 	  vadthr = 30; 
@@ -340,7 +345,7 @@ void RadarQC::getConfig(QDomElement qcConfig)
     specWidthLimit = 12;
     numVGatesAveraged = 30;
     maxFold = 4;
-    useVADWinds = true;
+    useGVADWinds = true;
     vadthr = 30; 
     gvadthr = 180; 
   }
@@ -417,6 +422,9 @@ void RadarQC::thresholdData()
       float *refGates = currentRay->getRefData();
       for (int j = 0; j < numVGates; j++)
 	{
+ //         if(j<20) {
+  //         vGates[j]=velNull;
+   //       }
 	  int jref = int((float)j * velGateSp / refGateSp);
 	  if(jref >= currentRay->getRef_numgates())
 	    jref = int(velNull);
@@ -583,13 +591,12 @@ bool RadarQC::findEnvironmentalWind()
     return true;
   }
 
-  if(useVADWinds) {
+  if(useGVADWinds) {
 
     // Attempt to use GVAD algorithm to determine 
     //  environmental winds
 
     bool useGVAD = true;
-    //useGVAD = false;
 
     if(findVADStart(useGVAD)) 
       return true;
@@ -604,7 +611,18 @@ bool RadarQC::findEnvironmentalWind()
 	return false;
     }
   }
-  
+    if(useVADWinds) {
+		
+		// Attempt to use GVAD algorithm to determine 
+		//  environmental winds
+		bool useGVAD = false;
+
+		if(findVADStart(useGVAD))
+			return true;
+		else
+			return false;
+	}
+	
   return false;
 }
 
@@ -898,7 +916,7 @@ bool RadarQC::findVADStart(bool useGVAD)
       else
 	emit log(Message("Level:"+ QString().setNum(m)+" GVAD SPEED: "
 		       +QString().setNum(envWind[m])
-		       +" VAD DIR: "+QString().setNum(envDir[m])));
+		       +" GVAD DIR: "+QString().setNum(envDir[m])));
 
     }
     else {
@@ -1321,7 +1339,7 @@ float RadarQC::getStart(Ray *currentRay)
     float theta = currentRay->getElevation();
     startVelocity = envWind[0]*cos(deg2rad*theta)*cos(deg2rad*(180+envDir[0]-phi)); 
   }
-  if(useVADWinds) {
+  if((useVADWinds) or (useGVADWinds)) {
     
     int dataHeight = -1;
     int numVBins = currentRay->getVel_numgates();

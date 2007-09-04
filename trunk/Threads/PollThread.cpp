@@ -320,7 +320,7 @@ void PollThread::run()
   analysisThread->setDropSondeList(dropSondeList);
   analysisThread->setAnalyticRun(runOnce);
 
-
+  
 	// Begin polling loop
 	forever {
 	  //Message::toScreen("PollThread: Begining Again In Forever");
@@ -530,11 +530,11 @@ void PollThread::checkIntensification()
   
   QDomElement pressure = configData->getConfig("pressure");
 
-  // Units of mb / sec
+  // Units of mb / hr
   float rapidRate = configData->getParam(pressure, QString("rapidlimit")).toFloat();
 
   if(isnan(rapidRate)) {
-    emit log(Message(QString("Could Not Find Rapid Intensification Rate, Using 3 mb/sec"),
+    emit log(Message(QString("Could Not Find Rapid Intensification Rate, Using 3 mb/hr"),
 		     0,this->objectName()));
     rapidRate = 3.0;
   }

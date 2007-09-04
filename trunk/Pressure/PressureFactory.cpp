@@ -34,7 +34,7 @@ PressureFactory::PressureFactory(Configuration *wholeConfig, QObject *parent)
   QTime startTime = QTime::fromString(wholeConfig->getParam(radarConfig,QString("starttime")),
 									  "hh:mm:ss");
   // Set the start time 1 hour earlier so that we can get all relevant pressure measurements
-  startTime.addSecs(-3600);
+  startTime = startTime.addSecs(-3600);
   
   QTime endTime = QTime::fromString(wholeConfig->getParam(radarConfig,QString("endtime")),
 									"hh:mm:ss");
@@ -80,6 +80,19 @@ QList<PressureData>* PressureFactory::getUnprocessedData()
 
   // Get the files off the queue
   QString fileName = dataPath.filePath(pressureQueue->dequeue());
+
+  // Test file to make sure it is not growing
+  QFile pressureFile(fileName);
+  qint64 newFilesize = pressureFile.size();
+  qint64 prevFilesize = 0;
+  while (prevFilesize != newFilesize) {
+	prevFilesize = newFilesize;
+	sleep(1);
+	newFilesize = pressureFile.size();
+  }
+  sleep(1);
+
+
   // Mark it as processed
   fileParsed[fileName] = true;
     
@@ -135,7 +148,7 @@ QList<PressureData>* PressureFactory::getUnprocessedData()
 		while (!in.atEnd()) {
 			QString ob = in.readLine();
 			AWIPS *pressureData = new AWIPS(ob);
-			pressureData->setTime(obDateTime);
+			//pressureData->setTime(obDateTime);
 			
 			// Check to make sure it is not a duplicate -- this messes up the XML structure
 			bool duplicateOb = false;

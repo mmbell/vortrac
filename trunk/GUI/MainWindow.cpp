@@ -127,7 +127,7 @@ void MainWindow::saveAs()
 void MainWindow::about()
 {
    QMessageBox::about(this, tr("About VORTRAC"),
-		      tr("Vortex Structure, Intensity, and Position from Doppler Radar"));
+		      tr("Vortex Objective Radar Tracking and Circulation Version 1.0\nDeveloped by Wen-Chau Lee, Paul Harasti, Michael Bell, and Lisa Mauger\nUniversity Corporation for Atmospheric Research"));
 }
 
 void MainWindow::updateMenus()
@@ -251,7 +251,7 @@ void MainWindow::createActions()
     separatorAct = new QAction(this);
     separatorAct->setSeparator(true);
 
-    aboutAct = new QAction(tr("&About"), this);
+    aboutAct = new QAction(tr("About VORTRAC"), this);
     aboutAct->setStatusTip(tr("Show the application's About box"));
     connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
 
@@ -338,7 +338,7 @@ void MainWindow::createMenus()
 
     menuBar()->addSeparator();
 
-    helpMenu = menuBar()->addMenu(tr("&Help"));
+    helpMenu = menuBar()->addMenu(tr("&About"));
     helpMenu->addAction(aboutAct);
     helpMenu->addAction(aboutQtAct);
 }

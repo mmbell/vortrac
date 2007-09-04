@@ -44,6 +44,7 @@ class Log : public QWidget
   void newStormSignalStatus(StormSignalStatus newStatus, 
 			    const QString newMessage);
   void log(const Message& message);
+  void redLightAbort();
 
  private:
   QString logFileName;
