@@ -116,6 +116,7 @@ void VortexThread::run()
 		// OK, Let's find a center
 		mutex.lock();
 		bool foundWinds = true;
+		emit log(Message(QString(),0,this->objectName(),Green));
 		
 		// Initialize variables
 		readInConfig();
@@ -149,7 +150,7 @@ void VortexThread::run()
 		  }
 		  else {
 		    emit log(Message(QString(),6,this->objectName(),Yellow,
-				     QString("HVVP Failure: Could Not Retrieve HVVP Winds")));
+				     QString("Could Not Retrieve HVVP Wind")));
 		    vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
 		  }
 		}
@@ -280,14 +281,14 @@ void VortexThread::run()
 		if(!foundWinds)
 		{
 			// Some error occurred, notify the user
-			emit log(Message(QString("Vortex Error!"),0,this->objectName()));
+			emit log(Message(QString("Vortex Error!"),0,this->objectName(),Yellow));
 			return;
 		} else {
 			// Update the vortex list
 			// vortexData ???
 		
 			// Update the progress bar and log
-			emit log(Message(QString("Done with Vortex"),0,this->objectName()));
+			emit log(Message(QString("Done with Vortex"),0,this->objectName(),Green));
 
 			// Let the AnalysisThread know we're done
 			emit(windsFound());
@@ -460,7 +461,7 @@ void VortexThread::calcCentralPressure(VortexData* vortex, float* pD, float heig
 	  }
 	
 	  if(numEstimates > 100) {
-	    log(Message(QString("Reached Pressure Estimate Limit"),0,this->objectName(),Yellow));
+	    log(Message(QString("Reached Pressure Estimate Limit"),0,this->objectName()));
 	    break;
 	  }
 	}
@@ -588,7 +589,7 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
     }
     else{
       emit log(Message(QString(),0,this->objectName(),Yellow,
-		       QString("HVVP Failure: Could Not Retrieve HVVP Winds")));
+		       QString("Could Not Retrieve HVVP Wind")));
       vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
     }
   }

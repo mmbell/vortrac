@@ -309,9 +309,9 @@ void PollThread::run()
 	  this, SLOT(catchCappi(const GriddedData*)), Qt::DirectConnection);
   connect(analysisThread, SIGNAL(newCappiInfo(const float&, const float&, 
 					      const float&, const float&, 
-					      const float&)),
+					      const float&, const float&, const float&)),
 	  this, SLOT(catchCappiInfo(const float&, const float&, const float&,
-				    const float&, const float&)),
+				    const float&, const float&, const float&, const float&)),
 	  Qt::DirectConnection);
   
   analysisThread->setVortexList(vortexList);
@@ -635,7 +635,7 @@ void PollThread::checkListConsistency()
   
 void PollThread::catchCappiInfo(const float& x, const float& y, 
 				const float& sMin, const float& sMax, 
-				const float& vMax)
+				const float& vMax, const float& lat, const float& lon)
 {
-  emit newCappiInfo(x,y,sMin,sMax,vMax);
+  emit newCappiInfo(x,y,sMin,sMax,vMax,lat,lon);
 }

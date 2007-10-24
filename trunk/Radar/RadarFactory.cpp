@@ -212,7 +212,7 @@ bool RadarFactory::hasUnprocessedData()
       // Check to see which are in the time limits
       for (int i = 0; i < filenames.size(); ++i) {
 		  QString file = filenames.at(i);
-		  QString timepart = file;
+		  QString timepart = file.split("/").last();
 		  // Replace the radarname so we just have timestamps
 		  timepart.replace(radarName, "");
 		  QDate fileDate;
@@ -349,12 +349,27 @@ void RadarFactory::updateDataQueue(const VortexList* list)
 	  // Should have filenames starting with radar ID
 	  // Check to see which are already in vortexList
 	  QString file = radarQueue->at(i);
-	  QString timepart = file;
+	  QString timepart = file.split("/").last();
 	  // Replace the radarname so we just have timestamps
 	  timepart.replace(radarName, "");
-	  QStringList timestamp = timepart.split(".");
-	  QDate fileDate = QDate::fromString(timestamp.at(1).left(8),"yyyyMMdd");
-	  QTime fileTime = QTime::fromString(timestamp.at(1).right(6), "hhmmss");
+	  QDate fileDate;
+	  QTime fileTime;
+	  if (timepart.contains('.')) {
+	    // NRL Format
+	    QStringList timestamp = timepart.split(".");
+	    fileDate = QDate::fromString(timestamp.at(1).left(8), "yyyyMMdd");
+	    fileTime = QTime::fromString(timestamp.at(1).right(6), "hhmmss");
+	  }  else if (timepart.contains('_')) {
+	    // Purdue Format
+	    QStringList timestamp = timepart.split("_");
+	    fileDate = QDate::fromString(timestamp.at(1), "yyyyMMdd");
+	    if (timestamp.size() > 2) {
+	      fileTime = QTime::fromString(timestamp.at(2), "hhmm");
+	    } else {
+	      emit log(Message(QString("Problem with time in level_II filename, this may be a NCDC file"),0,this->objectName(),Red,QString("Radar format mismatch?")));
+	    } 
+	  }
+	  
 	  QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
 	  if (fileDateTime >= startDateTime && fileDateTime <= endDateTime){
 	    // Valid time and radar name, check to see if it 

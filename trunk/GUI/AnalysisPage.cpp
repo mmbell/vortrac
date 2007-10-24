@@ -151,17 +151,31 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   QLabel* recMaxLabel2 = new QLabel(tr("Receding Wind (m/s)"));
   QLabel* emptyLabel = new QLabel();
   QLabel* emptyLabel2 = new QLabel();
-  QLabel* emptyLabel3 = new QLabel();  
+  QLabel* emptyLabel3 = new QLabel();
+  lcdCenterLat = new QLCDNumber();
+  lcdCenterLat->setSegmentStyle(QLCDNumber::Flat);
+  lcdCenterLat->resize(100,100);
+  lcdCenterLat->display(0);
+  QLabel* lcdCenterLatLabel = new QLabel(tr("TC Latitude"));
+  lcdCenterLon = new QLCDNumber();
+  lcdCenterLon->setSegmentStyle(QLCDNumber::Flat);
+  lcdCenterLon->resize(100,100);
+  lcdCenterLon->display(0);
+  QLabel* lcdCenterLonLabel = new QLabel(tr("TC Longitude"));
   QVBoxLayout *appRecLayout = new QVBoxLayout();
   appRecLayout->addStretch();
   appRecLayout->addWidget(emptyLabel, 100, Qt::AlignHCenter);
   appRecLayout->addWidget(appMaxLabel, 0, Qt::AlignHCenter);
   appRecLayout->addWidget(appMaxLabel2, 0, Qt::AlignHCenter);
   appRecLayout->addWidget(appMaxWind, 0, Qt::AlignHCenter);
-  appRecLayout->addWidget(emptyLabel2, 100, Qt::AlignHCenter);
   appRecLayout->addWidget(recMaxLabel, 0, Qt::AlignHCenter);
   appRecLayout->addWidget(recMaxLabel2, 0, Qt::AlignHCenter);
   appRecLayout->addWidget(recMaxWind, 0, Qt::AlignHCenter);
+  appRecLayout->addWidget(emptyLabel2, 100, Qt::AlignHCenter);
+  appRecLayout->addWidget(lcdCenterLatLabel, 0, Qt::AlignHCenter);
+  appRecLayout->addWidget(lcdCenterLat, 0, Qt::AlignHCenter);
+  appRecLayout->addWidget(lcdCenterLonLabel, 0, Qt::AlignHCenter);
+  appRecLayout->addWidget(lcdCenterLon, 0, Qt::AlignHCenter);
   appRecLayout->addWidget(emptyLabel3, 100, Qt::AlignHCenter);
   appRecLayout->addStretch();
 
@@ -183,13 +197,22 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   statusText = new QTextEdit;
   statusText->setReadOnly(true);
   statusText->setFixedHeight(100);
-
+  QToolButton *statusPopup = new QToolButton;
+  statusPopup->setArrowType(Qt::UpArrow);
+  QHBoxLayout *statusLayout = new QHBoxLayout;
+  statusLayout->addWidget(statusText);
+  statusLayout->addWidget(statusPopup);
+    
   QLabel *hLine = new QLabel;
   hLine->setFrameStyle(QFrame::HLine);
   hLine->setLineWidth(2);
 
-  QPushButton *runButton = new QPushButton("&Run");
-  QPushButton *abortButton = new QPushButton("&Abort");
+  //QPushButton *runButton = new QPushButton("&Run");
+  //QPushButton *abortButton = new QPushButton("&Abort");
+  runButton = new QPushButton("&Run");
+  abortButton = new QPushButton("&Abort");
+  runButton->setEnabled(true);
+  abortButton->setEnabled(false);
   QProgressBar *progressBar = new QProgressBar;
   progressBar->setMinimum(0);
   progressBar->setMaximum(100);
@@ -217,7 +240,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   displayPanel->addLayout(lcdLayout,0,0);
   displayPanel->addWidget(visuals,1,0);
   displayPanel->addWidget(hLine,2,0);
-  displayPanel->addWidget(statusText,3,0);
+  displayPanel->addLayout(statusLayout,3,0);
   displayPanel->addLayout(runLayout,4,0);
   displayPanel->setRowMinimumHeight(0,50);
 
@@ -233,13 +256,14 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 
   // Connect a log to the text window and progress bar
   connect(statusLog, SIGNAL(newLogEntry(QString)), 
-	  statusText, SLOT(insertPlainText(QString)));
-
+	//	  statusText, SLOT(append(QString)));
+		  this, SLOT(updateStatusLog(QString)));
   connect(statusLog, SIGNAL(newProgressEntry(int)),
 	  progressBar, SLOT(setValue(int)));
 
   connect(statusText, SIGNAL(textChanged()),
 	  this, SLOT(autoScroll()));
+  connect(statusPopup, SIGNAL(clicked()), this, SLOT(popUpStatus()));
   
   statusLog->catchLog(Message("VORTRAC Status Log for "+
 			    QDateTime::currentDateTime().toUTC().toString()
@@ -529,6 +553,10 @@ void AnalysisPage::runThread()
 {
   // Start a processing thread using the current configuration
 
+  // Disable the run button so you can only hit it once, enable the abort button
+	runButton->setEnabled(false);
+	abortButton->setEnabled(true);
+
   if(!configDialog->checkPanels()) {
     //Message::toScreen("Didn't clear all diagnostic hoops");
     emit log(Message(QString("Please check errors: One or more entries in configuration cannot be used"), -1, this->objectName()));
@@ -554,9 +582,9 @@ void AnalysisPage::runThread()
 	  cappiDisplay, SLOT(constructImage(const GriddedData*)));
   connect(pollThread, SIGNAL(newCappiInfo(const float&, const float&, 
 					  const float&, const float&, 
-					  const float&)), 
+					  const float&, const float &, const float&)), 
 	  this, SLOT(updateCappiInfo(const float&, const float&, const float&,
-				     const float&, const float&)),
+				     const float&, const float&, const float &, const float&)),
 	  Qt::DirectConnection);
   connect(this, SIGNAL(newCappiInfo(const float&, const float&, const float&,
 				    const float&, const float&)),
@@ -619,6 +647,10 @@ void AnalysisPage::runThread()
 void AnalysisPage::abortThread()
 {
 
+	// Switch the buttons so you can't abort twice
+	runButton->setEnabled(true);
+	abortButton->setEnabled(false);
+
   // Try to kill the threads
   if((pollThread!=NULL)&&(pollThread->isRunning())) {
     disconnect(pollThread, SIGNAL(vortexListUpdate(VortexList*)), 
@@ -676,9 +708,11 @@ void AnalysisPage::updateCappi(const GriddedData* cappi)
 
 void AnalysisPage::updateCappiInfo(const float& x, const float& y, 
 				   const float& sMin, const float& sMax, 
-				   const float& vMax)
+				   const float& vMax, const float& centerLat, const float& centerLon)
 {
-  emit newCappiInfo(x, y, sMin, sMax, vMax);
+	lcdCenterLat->display(centerLat);
+	lcdCenterLon->display(centerLon);
+    emit newCappiInfo(x, y, sMin, sMax, vMax);
 }
 
 void AnalysisPage::updateCappiDisplay(bool hasImage)
@@ -807,6 +841,38 @@ void AnalysisPage::pollVortexUpdate(VortexList* list)
     deficitLabel->setText(tr("Pressure Deficit From 0 km (mb):"));
     emit vortexListChanged(NULL);
   }
+}
+
+void AnalysisPage::popUpStatus()
+{
+
+	QDialog *popUp = new QDialog();
+	popUp->resize(statusText->width(), 600);
+	popUp->window()->setWindowTitle(tr("Status Log"));
+	textPopUp = new QTextEdit();
+	textPopUp->setDocument(statusText->document());
+	textPopUp->setReadOnly(true);
+	textPopUp->resize(statusText->width(), 600);
+	textPopUp->verticalScrollBar()->setValue(statusText->verticalScrollBar()->maximum());
+	
+	QHBoxLayout *popUpLayout = new QHBoxLayout;
+	popUpLayout->addWidget(textPopUp);
+	popUp->setLayout(popUpLayout);
+	
+	textPopUp = statusText;
+	popUp->show();
+	
+}
+
+void AnalysisPage::updateStatusLog(const QString& entry)
+{
+	
+	QTextCursor cursor(statusText->document());
+    cursor.beginEditBlock();
+    cursor.movePosition(QTextCursor::End);
+	cursor.insertText(entry);	
+    cursor.endEditBlock();
+	statusText->verticalScrollBar()->setValue(statusText->verticalScrollBar()->maximum());
 }
 
 /*

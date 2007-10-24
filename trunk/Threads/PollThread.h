@@ -41,7 +41,7 @@ class PollThread : public QThread
 	void catchVCP(const int vcp);
 	void catchCappi(const GriddedData* cappi);
 	void catchCappiInfo(const float& x, const float& y, const float& sMin, 
-			    const float& sMax, const float& vMax);
+			    const float& sMax, const float& vMax, const float& lat, const float& lon);
 	void abortThread();
 	void setOnlyRunOnce(const bool newRunOnce = true);
 	void setContinuePreviousRun(const bool &decision);
@@ -53,7 +53,7 @@ class PollThread : public QThread
 	void dropListChanged(VortexList* list);
 	void newCappi(const GriddedData* cappi);
 	void newCappiInfo(const float& x, const float& y, const float& sMin,
-			  const float& sMax, const float& vMax);
+			  const float& sMax, const float& vMax, const float& lat, const float& lon);
 	
   protected:
 	void run();

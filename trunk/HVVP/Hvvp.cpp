@@ -45,13 +45,21 @@ Hvvp::Hvvp()
   v = new float[levels];
   var = new float[levels];
   vm_sin = new float[levels];
-
+  xt = new float[levels];
+  vt = new float[levels];
+  vr = new float[levels];
+  xr = new float[levels];
+  
   for(int i = 0; i < levels; i++) {
     z[i] = velNull;
     u[i] = velNull;
     v[i] = velNull;
     var[i] = velNull;
     vm_sin[i] = velNull;
+	xt[i] = velNull;
+    vt[i] = velNull;
+	vr[i] = velNull;
+	xr[i] = velNull;
   }
 
   xls = new float*[xlsDimension];
@@ -79,7 +87,11 @@ Hvvp::~Hvvp()
   delete [] v;
   delete [] var;
   delete [] vm_sin;
-
+  delete [] xt;
+  delete [] vt;
+  delete [] xr;
+  delete [] vr;
+  
   for(int i = 0; i < xlsDimension; i++) {
     delete [] xls[i];
   }
@@ -128,7 +140,6 @@ float Hvvp::rotateAzimuth(const float &angle)
 
 long Hvvp::hvvpPrep(int m) {
  
-  float rangeStart = -.375;             // ???? km
   float cumin = 5.0/rt;                 // What are the units here?
   float cuspec = 0.6;                   // Unitless
   float curmw = (rt - rmw)/rt;          // Unitless
@@ -194,8 +205,8 @@ long Hvvp::hvvpPrep(int m) {
 // New HVVP set elevation max to 25.0
       if(elevation <= 5.0) {                           // deg
 	vel = currentRay->getVelData();          // still in km/s
-	float vGateSpace = currentRay->getVel_gatesp(); // in m
-	vGateSpace /= 1000.0;   // now in km
+//	float vGateSpace = currentRay->getVel_gatesp(); // in m
+//	vGateSpace /= 1000.0;   // now in km
 	float numGates = currentRay->getVel_numgates();
 	int first = 0;
 	// int first = currentRay->getFirst_vel_gate();   
@@ -209,7 +220,12 @@ long Hvvp::hvvpPrep(int m) {
 	float cosaa = cos(aa);
 	for(int v = first; v < numGates; v++) {
 	  if(vel[v]!=velNull) {
-	    float srange = (rangeStart+float(v)*vGateSpace);
+// PH 10/2007.  need accurate range - previously missing first gate distance 
+// which  has usually been -0.375 m (due to radar T/R time delay) but is now
+// 0.125 m for VCP 211.
+            float srange =  float(currentRay->getFirst_vel_gate()+(v*currentRay->getVel_gatesp()))/1000.;
+
+//	    float srange = (rangeStart+float(v)*vGateSpace);
 	    float cu = srange/rt * cos(elevation*deg2rad);    // unitless
 	    //float alt = volume->absoluteRadarBeamHeight(srange, elevation);  // km
 	    float alt = volume->radarBeamHeight(srange, elevation);  // km
@@ -313,16 +329,12 @@ bool Hvvp::findHVVPWinds(bool both)
 
   if(both)
     emit log(Message(QString("Using Outlier Thresholding in Second Fit"),
-	     0,this->objectName()));
+	     0,this->objectName(),Green));
   else
     emit log(Message(QString("Running With First Fit Only"),
-		     0,this->objectName()));
+		     0,this->objectName(),Green));
 
   long count = 0; 
-  float xt[levels];
-  float vt[levels];
-  float vr[levels];
-  float xr[levels];
   int last = 0;
 
   // For updating the percentage bar we have 7% to give away in this routine
@@ -744,7 +756,7 @@ bool Hvvp::findHVVPWinds(bool both)
 	  
       //Message::toScreen(message);
     }
-    emit log(Message(QString(),0,this->objectName(),Yellow,QString("Failed to Find HVVP Output"))); 
+    emit log(Message(QString("Insufficient Data for HVVP Correction"),0,this->objectName())); 
     return false;
   }
   return false;

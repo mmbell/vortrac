@@ -320,7 +320,7 @@ bool Log::handleStopLightUpdate(StopLightColor newColor, QString message,
       
       // Make sure we don't already have this signal
       for(int i = 0; i < initialCount; i++) {
-	if(mostRecent == StopLightQueue.at(i)) {
+	if(mostRecent->message == StopLightQueue.at(i)->message) {
 	  // If we have an identical one it will do us no good 
 	  // to add another because the corrections 
 	  // process will not clear up multiple
@@ -338,7 +338,7 @@ bool Log::handleStopLightUpdate(StopLightColor newColor, QString message,
 	if(mostRecent->color < StopLightQueue.at(i)->color) {
 	  
 	  // Append according to color order 
-	  StopLightQueue.insert(i+1, mostRecent);
+	  StopLightQueue.insert(i, mostRecent);
 	  // Message::toScreen("Inside "+mostRecent->location+"  "+mostRecent->message+" @ i = "+QString().setNum(i));
 	}
       }

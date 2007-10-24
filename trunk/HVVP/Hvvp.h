@@ -121,7 +121,7 @@ private:
     *           The standard error in av_VmSin
     *
     */
-
+   float *xt, *xr, *vt, *vr;
    bool printOutput;
 
    /*

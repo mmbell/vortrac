@@ -169,6 +169,7 @@ void AnalysisThread::run()
 	 mutex.lock();
 
 	 bool analysisGood = true;
+	 emit log(Message(QString(),0,this->objectName(),Green));
 	 QTime analysisTime;
 	 analysisTime.start();    // Timer used for user info only
 	 
@@ -216,11 +217,33 @@ void AnalysisThread::run()
 	     QString message("changeInX = "+QString().setNum(changeInX)+" changeInY = "+QString().setNum(changeInY));
 	     //emit(log(Message(message,0,this->objectName())));
 	     float *newLatLon = GriddedData::getAdjustedLatLon(vortexLat,vortexLon, changeInX, changeInY);
-	     
-	     
+
+		 // Get initial lat and lon
+	     float initLat = configData->getParam(vortex,"lat").toFloat();
+	     float initLon = configData->getParam(vortex,"lon").toFloat();
+		 float *extrapLatLon = GriddedData::getAdjustedLatLon(initLat,initLon, changeInX, changeInY);
+		 float relDist = GriddedData::getCartesianDistance(&extrapLatLon[0],&extrapLatLon[1],&newLatLon[0],&newLatLon[1]);
+
+		 // Check if Simplex is out to lunch
+	     if (relDist > 150) {
+			 QString distString;
+			 QString M1 = "Simplex center "+distString.setNum((int)relDist)+" (>150 km) from User estimated center, probably lost or estimate is ";
+			 QString M2 = "Simplex Center/Estimate "+distString.setNum((int)relDist)+" km apart";
+			 emit log(Message(M1,0,this->objectName(),Red, M2));
+			 mutex.unlock();
+			 abort = true;
+			 return;
+		 } else if (relDist > 75) {
+			 QString distString;
+			 QString M1 = "Simplex center "+distString.setNum((int)relDist)+" (>75 km) from User estimated center, may be lost or need to update estimate";
+			 QString M2 = "Simplex Center/Estimate "+distString.setNum((int)relDist)+" km apart";
+			 emit log(Message(M1,0,this->objectName(),Yellow, M2));
+		 }
+		 
 	     vortexLat = newLatLon[0];
 	     vortexLon = newLatLon[1];
 	     delete [] newLatLon;
+		 delete [] extrapLatLon;
 	     //Message::toScreen("New vortexLat = "+QString().setNum(vortexLat)+" New vortexLon = "+QString().setNum(vortexLon));
 	   }
 	 } 
@@ -295,7 +318,10 @@ void AnalysisThread::run()
 	   //Message::toScreen("obs: "+obsTime.toString("hh:mm:ss"));
 	   QDateTime obsDateTime = QDateTime(obsDate, obsTime, Qt::UTC);
 	   if(!obsDateTime.isValid()){
-	     emit log(Message(QString("Observation Date or Time is not of valid format! Date: yyyy-MM-dd Time: hh:mm:ss please adjust the configuration file"),0,this->objectName(),Red, QString("ObsDate or ObsTime invalid in Config")));
+		   emit log(Message(QString("Observation Date or Time is not of valid format! Date: yyyy-MM-dd Time: hh:mm:ss please adjust the configuration file"),0,this->objectName(),Red, QString("ObsDate or ObsTime invalid in Config")));
+		   mutex.unlock();
+		   abort = true;
+		   return;
 	   }
 
 	   QString startDate = configData->getParam(radar,"startdate");
@@ -306,10 +332,16 @@ void AnalysisThread::run()
 
 	   if (obsDateTime.secsTo(radarStart)>(3600*6)) {
 	     // Trying to extrapolate too far, bail out
-	     emit log(Message(QString("Extrapolation time exceeds six hours, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Red,QString("Excess extrapolation time")));
+		   emit log(Message(QString("Extrapolation time exceeds six hours, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Red,QString("Excess extrapolation time")));
+		   mutex.unlock();
+		   abort = true;
+		   return;
 	   } else if (obsDateTime.secsTo(radarStart)<0) {
 	     // Trying to extrapolate into the past, bail out
-	     emit log(Message(QString("Extrapolation time exceeds six hours, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Red,QString("Negative extrapolation time")));
+		   emit log(Message(QString("Extrapolation time exceeds six hours, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Red,QString("Negative extrapolation time")));
+		   mutex.unlock();
+		   abort = true;
+		   return;
 	   }
 
 	   // Get this volume's time
@@ -365,8 +397,7 @@ void AnalysisThread::run()
 	     QString message("changeInX = "+QString().setNum(changeInX)+" changeInY = "+QString().setNum(changeInY));
 	     //emit(log(Message(message,0,this->objectName())));
 	     float *newLatLon = GriddedData::getAdjustedLatLon(vortexLat,vortexLon, changeInX, changeInY);
-	     
-	     
+
 	     vortexLat = newLatLon[0];
 	     vortexLon = newLatLon[1];
 	     delete [] newLatLon;
@@ -450,7 +481,10 @@ void AnalysisThread::run()
 	   QString distanceLeft("Circulation Center is "+QString().setNum(relDist)+" km from the radar - Skipping Analysis On This Volume");
 	   emit log(Message(distanceLeft,0,this->objectName()));
 	   if (relDist > 500) {
-	      emit log(Message(QString("Storm position is beyond 500 km from radar, Please check observation parameters"),0,this->objectName(),Red, QString("Storm > 500 km from radar")));
+		   emit log(Message(QString("Storm position is beyond 500 km from radar, Please check observation parameters"),0,this->objectName(),Red, QString("Storm > 500 km from radar")));
+		   mutex.unlock();
+		   abort = true;
+		   return;
 	   }
 	   
 	   //Message::toScreen(" dist2go = "+QString().setNum(dist2go));
@@ -469,14 +503,19 @@ void AnalysisThread::run()
 	     
 	     // These is something wrong with our calculation of time
 	     // until storm is in range, stop processing
+		   
 	     if((eta < 0)||(isnan(eta))||isinf(eta)) {
-	       emit log(Message(QString("Difficulties Processing Time Until Radar is in Range, Please check observation parameters"),0,this->objectName(),Red, QString("ETA Failure")));
-	       if(eta < 0)
-		 Message::toScreen("ETA < 0");
-	       if(isnan(eta))
-		 Message::toScreen("ETA is NAN");
-	       if(isinf(eta))
-		   Message::toScreen("ETA is infinite");
+			 QString ETA;
+			 if(eta < 0)
+				 ETA = "ETA < 0";
+			 if(isnan(eta))
+				 ETA = "ETA is NAN";
+			 if(isinf(eta))
+				 ETA = "ETA is infinite";
+	       emit log(Message(QString("Difficulties Processing Time Until Radar is in Range, Please check observation parameters"),0,this->objectName(),Red, ETA));
+		   mutex.unlock();
+		   abort = true;
+		   return;
 	     }
 	     
 	     emit log(Message(
@@ -651,7 +690,7 @@ void AnalysisThread::run()
 		
 		// Create CAPPI
 		emit log(Message(QString("Creating CAPPI..."), 0, 
-				 this->objectName(), Green));
+				 this->objectName()));
 		
 		/*  If Analytic Model is running we need to make an analytic
 		 *  gridded data rather than a cappi
@@ -744,7 +783,7 @@ void AnalysisThread::run()
 		//Message::toScreen("sMax is "+QString().setNum(sMax));
 		float vMax = configData->getParam(vtd, "outerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
 		//Message::toScreen("vMax is "+QString().setNum(vMax));
-		emit newCappiInfo(xPercent, yPercent, sMin, sMax, vMax);
+		emit newCappiInfo(xPercent, yPercent, sMin, sMax, vMax, levelLat, levelLon);
 		delete [] xyValues;
 		
 
@@ -793,6 +832,18 @@ void AnalysisThread::run()
 		if(hasConvergingCenters) {
 		  vortexList->append(*vortexData);	
 		  vortexList->save();
+		  
+		  // Print out summary information to log
+		  QString summary = "VORTRAC ATCF,";
+		  QString values;
+		  summary += vortexData->getTime().toString(Qt::ISODate) + ",";
+		  summary += values.setNum(vortexData->getLat()) + ",";
+		  summary += values.setNum(vortexData->getLon()) + ",";
+		  summary += values.setNum(vortexData->getPressure()) + ",";
+		  summary += values.setNum(vortexData->getPressureUncertainty()) + ",";
+		  summary += values.setNum(vortexData->getRMW()) + ",";
+		  summary += values.setNum(vortexData->getRMWUncertainty());
+		  emit log(Message(summary,0,this->objectName()));
 		}
 		else {
 		  emit log(Message(QString("Insufficient Convergence of Simplex Centers"),0,this->objectName(),AllOff,QString(),SimplexError,QString("Could Not Obtain Center Convergence")));

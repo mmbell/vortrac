@@ -1061,12 +1061,15 @@ bool ChooseCenter::fixCenters()
 	  // zone for vortexData in vtd
 
 	  int j = bestRadius[i][levelIndices[i]];
-	  float centerLat = radarLat + y/fac_lat;
-	  float centerLon = radarLon + x/fac_lon;
+	  /* float centerLat = radarLat + y/fac_lat;
+	  float centerLon = radarLon + x/fac_lon; */
+	  float centerLat = radarLat + bestCenter.getY()/fac_lat;
+	  float centerLon = radarLon + bestCenter.getX()/fac_lon;
 	  vortexData->setLat(levelIndices[i], centerLat);
 	  vortexData->setLon(levelIndices[i], centerLon);
 	  vortexData->setHeight(levelIndices[i], simplexResults->at(i).getHeight(levelIndices[i]));
-	  vortexData->setRMW(levelIndices[i], rad);
+	  //vortexData->setRMW(levelIndices[i], rad);
+	  vortexData->setRMW(levelIndices[i], bestCenter.getRadius());
 	  vortexData->setRMWUncertainty(levelIndices[i], radError);
 	  //Message::toScreen("Rad error for level "+QString().setNum(k)+" is "+QString().setNum(radError));
 	  vortexData->setCenterStdDev(levelIndices[i], sqrt(xError*xError+yError*yError));

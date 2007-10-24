@@ -61,7 +61,7 @@ class AnalysisPage : public QWidget
     void catchVCP(const int vcp); 
     void updateCappi(const GriddedData* cappi);
     void updateCappiInfo(const float& x, const float& y, const float& sMin, 
-			 const float& sMax, const float& vMax);
+			 const float& sMax, const float& vMax, const float& centerLat, const float& centerLon);
     void updateCappiDisplay(bool hasImage);
 
     // void changeStopLight(StopLightColor color, const QString message);
@@ -87,6 +87,8 @@ class AnalysisPage : public QWidget
     void autoScroll();
     void prepareToClose();
     void pollVortexUpdate(VortexList* list);
+	void popUpStatus();
+	void updateStatusLog(const QString& entry);
 
  protected:
   void closeEvent(QCloseEvent *event);
@@ -99,6 +101,8 @@ class AnalysisPage : public QWidget
   DiagnosticPanel *diagPanel;
   Log *statusLog;
   QTextEdit *statusText;
+  QTextEdit *textPopUp;
+  QDialog *popUp;
   int lastMax;
   PollThread *pollThread;
   bool isUntitled;
@@ -113,7 +117,11 @@ class AnalysisPage : public QWidget
   CappiDisplay* cappiDisplay;
   QLCDNumber *appMaxWind;
   QLCDNumber *recMaxWind;
+  QLCDNumber *lcdCenterLat;
+  QLCDNumber *lcdCenterLon;
   QLabel* deficitLabel;
+  QPushButton *runButton;
+  QPushButton *abortButton;
   //  TestGraph *tester;
 
   bool analyticModel();

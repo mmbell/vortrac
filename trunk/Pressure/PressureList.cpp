@@ -104,6 +104,7 @@ bool PressureList::open()
 					  QString("pressure")).toFloat();
       if(pressureOb != -999)
 	newPressure->setPressure(pressureOb);
+	  /* Not using these, so they throw up lots of errors
       // Wind Speed
       float newWindSpeed = config->getParam(currElement, 
 					    QString("windspeed")).toFloat();
@@ -114,7 +115,7 @@ bool PressureList::open()
 					  QString("winddir")).toFloat();
       if(newWindDir!=-999)
 	newPressure->setWindDirection(newWindDir);
-      
+      */
       QList<PressureData>::append(*newPressure);
       numPressureObs++;
     }
