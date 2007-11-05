@@ -221,8 +221,30 @@ void AnalysisThread::run()
 		 // Get initial lat and lon
 	     float initLat = configData->getParam(vortex,"lat").toFloat();
 	     float initLon = configData->getParam(vortex,"lon").toFloat();
-		 float *extrapLatLon = GriddedData::getAdjustedLatLon(initLat,initLon, changeInX, changeInY);
-		 float relDist = GriddedData::getCartesianDistance(&extrapLatLon[0],&extrapLatLon[1],&newLatLon[0],&newLatLon[1]);
+	     QString dateString = configData->getParam(vortex,"obsdate");
+	     QString timeString = configData->getParam(vortex,"obstime");
+	     QDate obsDate = QDate::fromString(configData->getParam(vortex,"obsdate"),"yyyy-MM-dd");
+	     //Message::toScreen("obs: "+obsDate.toString("yyyy-MM-dd"));
+	     QTime obsTime = QTime::fromString(timeString,"hh:mm:ss");
+	     //Message::toScreen("obs: "+obsTime.toString("hh:mm:ss"));
+	     obsDateTime = QDateTime(obsDate, obsTime, Qt::UTC);
+	     if(!obsDateTime.isValid()){
+	       emit log(Message(QString("Observation Date or Time is not of valid format! Date: yyyy-MM-dd Time: hh:mm:ss please adjust the configuration file"),0,this->objectName(),Red, QString("ObsDate or ObsTime invalid in Config")));
+	       mutex.unlock();
+	       abort = true;
+	       return;
+	     }
+	     elapsedSeconds =obsDateTime.secsTo(volDateTime);
+	     //Message::toScreen("Seconds since start "+QString().setNum(elapsedSeconds)+" in AnalysisThread");
+	     if(isnan(elapsedSeconds)) {
+	       emit log(Message(QString("Cannot calculate time until storm is in range of radar, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Yellow,QString("Can not calculate time until storm in range")));
+	       beyondRadar = false;
+		    }
+	     distanceMoved = elapsedSeconds*stormSpeed/1000.0;
+	     changeInX = distanceMoved*cos(stormDirection);
+	     changeInY = distanceMoved*sin(stormDirection);
+	     float *extrapLatLon = GriddedData::getAdjustedLatLon(initLat,initLon, changeInX, changeInY);
+	     float relDist = GriddedData::getCartesianDistance(&extrapLatLon[0],&extrapLatLon[1],&newLatLon[0],&newLatLon[1]);
 
 		 // Check if Simplex is out to lunch
 	     if (relDist > 150) {
@@ -239,12 +261,13 @@ void AnalysisThread::run()
 			 QString M2 = "Simplex Center/Estimate "+distString.setNum((int)relDist)+" km apart";
 			 emit log(Message(M1,0,this->objectName(),Yellow, M2));
 		 }
+	     // Message::toScreen("Old vortexLat = "+QString().setNum(vortexLat)+" Old vortexLon = "+QString().setNum(vortexLon));
+	     // Message::toScreen("New vortexLat = "+QString().setNum(newLatLon[0])+" New vortexLon = "+QString().setNum(newLatLon[1]));
 		 
 	     vortexLat = newLatLon[0];
 	     vortexLon = newLatLon[1];
 	     delete [] newLatLon;
-		 delete [] extrapLatLon;
-	     //Message::toScreen("New vortexLat = "+QString().setNum(vortexLat)+" New vortexLon = "+QString().setNum(vortexLon));
+	     delete [] extrapLatLon;
 	   }
 	 } 
 	 else {

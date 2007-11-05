@@ -78,7 +78,7 @@ class VortexThread : public QThread
      float hvvpUncertainty;
      
      int numEstimates;
-     PressureData presObs[100];
+     PressureData presObs[101];
 
      float vtdStdDev;
      float convergingCenters;

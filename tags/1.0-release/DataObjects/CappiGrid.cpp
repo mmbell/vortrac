@@ -226,7 +226,8 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
   for (int n = 0; n < radarData->getNumSweeps(); n++) {
 	  Sweep* currentSweep = radarData->getSweep(n);
 	  float range = currentSweep->getUnambig_range();
-	  if ((currentSweep->getVel_numgates() > 0) and (range > maxUnambig_range)) {
+	  if ((currentSweep->getVel_numgates() > 0) and (range > maxUnambig_range)
+	      and (currentSweep->getElevation() < 0.6)) {
 		  maxUnambig_range = range;
 	  }
   }
