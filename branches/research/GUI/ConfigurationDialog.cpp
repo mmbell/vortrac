@@ -154,6 +154,7 @@ void ConfigurationDialog::makePanelForString()
   panelForString.insert("pressure", pressure);
   panelForString.insert("graphics", graphics);
   panelForString.insert("qc", qc);
+  panelForString.insert("research", research);
   QList<QString> strings = panelForString.keys();
   for(int p = 0; p < strings.count(); p++) {
     panelForString.value(strings[p])->setObjectName(strings[p]);
@@ -214,6 +215,11 @@ void ConfigurationDialog::populateSelection()
   makeSelectionItem(qc);
   qc->setIcon(QIcon("images/DropSondeImage"));
 
+  QListWidgetItem *rs = new QListWidgetItem(selection);
+  rs->setText(tr("Research Mode Configuration"));
+  makeSelectionItem(rs);
+  rs->setIcon(QIcon("images/DropSondeImage"));
+
 }
 
 void ConfigurationDialog::populatePanels()
@@ -256,6 +262,9 @@ void ConfigurationDialog::populatePanels()
   qc = new QCPanel;
   panels->addWidget(qc);
   connectPanel(qc);
+  research = new ResearchPanel;
+  panels->addWidget(research);
+  connectPanel(research);
 }
 
 void ConfigurationDialog::makeSelectionItem(QListWidgetItem * item)

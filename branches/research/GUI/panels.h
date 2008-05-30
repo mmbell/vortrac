@@ -25,6 +25,7 @@
 #include <QVBoxLayout>
 #include <QRadioButton>
 #include <QPointF>
+#include <QCheckBox>
 
 /*
  * These classes created the Panels for used in the ConfigurationDialog
@@ -453,6 +454,71 @@ class QCPanel:public AbstractPanel
   QDoubleSpinBox *velocityMinimum, *velocityMaximum, *spectralThreshold;
   QDoubleSpinBox *reflectivityMinimum, *reflectivityMaximum, *windSpeed;
   QDoubleSpinBox *windDirection;
+  /*
+   * velocityMinimum adjusts the minimum absolute value of velocities that 
+   *   will be used for analysis (attempts to remove ground clutter)
+   * velocityMaximum adjusts the maximum absolute value of velocities that 
+   *   will be used for analysis (attempts to remove erroneous data)
+   * reflectivityMinimum adjusts the minimum value of reflectivity that 
+   *   will be used for analysis (attempts to remove erroneous data)
+   * reflectivityMaximum adjusts the maximum value of reflectivity that 
+   *   will be used for analysis (attempts to remove erroneous data)
+   * spectralThreshold adjusts the minimum spectral width required for a 
+   *   velocities that will be used for analysis
+   * windSpeed is used to adjust the user entered environmental wind speed
+   *   (used only when user entered environmental winds are used)
+   * windDirection is used to adjust the user entered environmental wind 
+   *   direction (used only when user entered environmental winds are used)
+   */
+
+
+  
+};
+
+class ResearchPanel:public AbstractPanel
+{
+  // Modifies the Research Section of the Configuration
+ public:
+  ResearchPanel();
+  ~ResearchPanel();
+  void updatePanel(const QDomElement panelElement);
+  bool updateConfig();
+  bool checkValues();
+ private:
+  /*
+   * This panel uses the dir and browse members declared in AbstractPanel
+   * for the location of the AWIPS data directory.
+   */
+  QRadioButton *operations, *research;
+  /*
+   * These buttons are all mutually exclusive choices which decide how the 
+   * environmental winds should be determined.
+   * gvad: uses the GVAD algorithm
+   * vad: uses the VAD algorithm
+   * user: uses user entered winds for environmental winds
+   * known: uses AWIPS data when available
+   */
+
+  QCheckBox *researchC, *researchS, *researchV, *researchQC;
+  //QGroupBox *operationsthr, *researchthr;
+ 
+  /*
+   * bbSegmentSize handles the number of gates that should be used for 
+   *   averaging in the Bargain & Brown dealiasing algorithm
+   * 
+   * maxFoldCount sets the maximum number of velocity folds before they are
+   *   reported as an error
+   * 
+   * valLevels indicates the number of levels the VAD algorithm should generate
+   *   (used only when the VAD method is used)
+   * 
+   * numCoefficients indicates the number of coefficients used for the VAD
+   *   algorithm fit (used only when the VAD method is used)
+   */
+
+  /* QDoubleSpinBox *velocityMinimum, *velocityMaximum, *spectralThreshold; */
+/*   QDoubleSpinBox *reflectivityMinimum, *reflectivityMaximum, *windSpeed; */
+/*   QDoubleSpinBox *windDirection; */
   /*
    * velocityMinimum adjusts the minimum absolute value of velocities that 
    *   will be used for analysis (attempts to remove ground clutter)

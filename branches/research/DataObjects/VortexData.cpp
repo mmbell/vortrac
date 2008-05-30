@@ -88,6 +88,11 @@ float VortexData::getLat()
   return centerLatitude[0];
 }
 
+float VortexData::getLat() const
+{
+  return centerLatitude[0];
+}
+
 float VortexData::getLat(const int& i) const
 {
   if (i < numLevels)
@@ -108,6 +113,11 @@ void VortexData::setLat(const float a[], const int& howMany)
 }
 
 float VortexData::getLon()
+{
+  return centerLongitude[0];
+}
+
+float VortexData::getLon() const
 {
   return centerLongitude[0];
 }
@@ -341,9 +351,40 @@ Coefficient VortexData::getCoefficient(const int& lev, const int& rad,
 Coefficient VortexData::getCoefficient(const int& lev, const int& rad,
 				       const QString& parameter) const
 {
+
+  int nlev;
+  int nrad;
+
+  if (lev < 0) {
+    nlev = 0;
+  }
+  else {
+    nlev = lev;
+  }
+
+//   if (lev > 9) {
+//     nlev = 9;
+//   }
+//   else {
+//     nlev = lev;
+//   }
+
+  if (rad < 0) {
+    nrad = 0;
+  }
+  else {
+    nrad = rad;
+  }
+//   if (rad > 79) {
+//     nrad = 79;
+//   }
+//   else {
+//     nrad = rad;
+//   }
+
   for(int i = 0; i < numWaveNum; i++) {
-    if(coefficients[lev][rad][i].getParameter()==parameter)
-      return coefficients[lev][rad][i];
+    if(coefficients[nlev][nrad][i].getParameter()==parameter)
+      return coefficients[nlev][nrad][i];
   }
   return Coefficient();
 }

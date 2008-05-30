@@ -881,16 +881,25 @@ bool ChooseCenter::fixCenters()
     if(simplexResults->at(ii).getTime() < firstTime)
       firstTime = simplexResults->at(ii).getTime();
   }
-
-  // Find the last index for picking a center;
   int lastTimeIndex = 0;
-  float longestTime = 0;
-  for(int i = 0; i < simplexResults->count(); i++) {
-    if(getMinutesTo(simplexResults->at(i).getTime()) > longestTime) {
-      lastTimeIndex = i;
-      longestTime = getMinutesTo(simplexResults->at(i).getTime());
-    }
+  QString forstr = "ddd MMMM d yy hh:mm:ss";
+  //looping here to find the index, i, that corresponds to the time of the current volume
+  for (int jj = simplexResults->size()-1; jj>=0; jj--) {
+    QString t1 = simplexResults->at(jj).getTime().toString(forstr);
+    QString t2 = vortexData->getTime().toString(forstr);
+    if (t1 == t2) {lastTimeIndex = jj;}
   }
+  
+
+//   // Find the last index for picking a center;
+//   int lastTimeIndex = 0;
+//   float longestTime = 0;
+//   for(int i = 0; i < simplexResults->count(); i++) {
+//     if(getMinutesTo(simplexResults->at(i).getTime()) > longestTime) {
+//       lastTimeIndex = i;
+//       longestTime = getMinutesTo(simplexResults->at(i).getTime());
+//     }
+//   }
   
   QList<int> heights = numHeights->keys();
   // Sort heights so that k index is attached to a specific height
@@ -1067,7 +1076,7 @@ bool ChooseCenter::fixCenters()
 	  float centerLon = radarLon + bestCenter.getX()/fac_lon;
 	  vortexData->setLat(levelIndices[i], centerLat);
 	  vortexData->setLon(levelIndices[i], centerLon);
-	  vortexData->setHeight(levelIndices[i], simplexResults->at(i).getHeight(levelIndices[i]));
+	  //vortexData->setHeight(levelIndices[i], simplexResults->at(i).getHeight(levelIndices[i]));
 	  //vortexData->setRMW(levelIndices[i], rad);
 	  vortexData->setRMW(levelIndices[i], bestCenter.getRadius());
 	  vortexData->setRMWUncertainty(levelIndices[i], radError);
@@ -1092,6 +1101,9 @@ bool ChooseCenter::fixCenters()
     // so that is what I will set it to here
   }
 
+	// MB 11/05/07 -- Needs to extrapolate choose center selections to top of vortex
+
+  
   for(int i = 0; i < 4; i++)
     delete [] newVariance[i];
   delete [] newVariance;
@@ -1110,19 +1122,41 @@ void ChooseCenter::useLastMean()
   float fac_lon = 111.41513 * cos(radarLatRadians)
 	  - 0.09455 * cos(3.0 * radarLatRadians) + 0.00012 * cos(5.0 * radarLatRadians);
   
-  int i = simplexResults->size() - 1;
+  //looping here to find the index, i, that corresponds to the time of the current volume
+  int i = 5; //doesnt matter what it is initially
+  QString forstr = "ddd MMMM d yy hh:mm:ss";
+  for (int jj = simplexResults->size()-1; jj>=0; jj--) {
+    QString t1 = simplexResults->at(jj).getTime().toString(forstr);
+    QString t2 = vortexData->getTime().toString(forstr);
+    if (t1 == t2)  {i = jj;}
+  }
+  
+  //int i = simplexResults->size() - 1;
+  
   for(int k = 0; k < simplexResults->at(i).getNumLevels(); k++) {
 	  int j = bestRadius[i][k];
 	  float centerLat = radarLat + simplexResults->at(i).getY(k,j)/fac_lat;
 	  float centerLon = radarLon + simplexResults->at(i).getX(k,j)/fac_lon;
 	  vortexData->setLat(k, centerLat);
 	  vortexData->setLon(k, centerLon);
-	  vortexData->setHeight(k, simplexResults->at(i).getHeight(k));
+	  //vortexData->setHeight(k, simplexResults->at(i).getHeight(k));
 	  vortexData->setRMW(k, simplexResults->at(i).getRadius(j));
 	  vortexData->setRMWUncertainty(k, -999);
 	  vortexData->setCenterStdDev(k, simplexResults->at(i).getCenterStdDev(k,j));
 	  vortexData->setNumConvergingCenters(k, simplexResults->at(i).getNumConvergingCenters(k,j));
   } 
+  int topSimplex = simplexResults->at(i).getNumLevels()-1;
+  for(int k = topSimplex+1; k < vortexData->getNumLevels(); k++) {
+		int j = bestRadius[i][topSimplex];
+		float centerLat = radarLat + simplexResults->at(i).getY(topSimplex,j)/fac_lat;
+		float centerLon = radarLon + simplexResults->at(i).getX(topSimplex,j)/fac_lon;
+		vortexData->setLat(k, centerLat);
+		vortexData->setLon(k, centerLon);
+		vortexData->setRMW(k, simplexResults->at(i).getRadius(j));
+		vortexData->setRMWUncertainty(k, -999);
+		vortexData->setCenterStdDev(k, simplexResults->at(i).getCenterStdDev(topSimplex,j));
+		vortexData->setNumConvergingCenters(k, simplexResults->at(i).getNumConvergingCenters(topSimplex,j));
+  }	  
   
 }
 

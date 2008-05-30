@@ -140,6 +140,20 @@ void PollThread::analysisDoneProcessing()
 void PollThread::run()
 {
 
+  //Check for research mode
+  QDomElement research = configData->getConfig("research");
+  QString RunMode = configData->getParam(research,"run_mode");
+  bool CappiON = configData->getParam(research,"cappi").toInt();
+  bool SimplexON = configData->getParam(research,"simplex").toInt();
+  bool VtdON = configData->getParam(research,"vtd").toInt();
+  bool QCON = configData->getParam(research,"qc").toInt();
+  if (RunMode == "operations") {
+    CappiON = 1;
+    SimplexON = 1;
+    VtdON = 1;
+    QCON = 1;
+  }
+  
   abort = false;
   emit log(Message(QString("Polling for data..."), 0, this->objectName()));
   dataSource = new RadarFactory(configData);
@@ -151,45 +165,258 @@ void PollThread::run()
 		  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
 
   if(!continuePreviousRun) {
-    QString file("vortrac_defaultVortexListStorage.xml");
-    vortexConfig = new Configuration(0, file);
-    vortexConfig->setObjectName("Vortex Configuration");
+
+    if (SimplexON == 1) { 
+      QString file("vortrac_defaultVortexListStorage.xml");
+      vortexConfig = new Configuration(0, file);
+      vortexConfig->setObjectName("Vortex Configuration");
+      vortexConfig->setLogChanges(false);
+      connect(vortexConfig, SIGNAL(log(const Message&)), 
+	      this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+      vortexList = new VortexList(vortexConfig);
+      vortexList->open();
+      
+      file = QString("vortrac_defaultSimplexListStorage.xml");
+      //simplexConfig = new Configuration(0,QString());
+      simplexConfig = new Configuration(0, file);
+      simplexConfig->setObjectName("Simplex Configuration");
+      simplexConfig->setLogChanges(false);
+      connect(simplexConfig, SIGNAL(log(const Message&)), 
+	      this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+      simplexList = new SimplexList(simplexConfig);
+      simplexList->open();
+      
+      file = QString("vortrac_defaultPressureListStorage.xml");
+      //pressureConfig = new Configuration(0,QString());
+      pressureConfig = new Configuration(0, file);
+      pressureConfig->setObjectName("Pressure Configuration");
+      pressureConfig->setLogChanges(false);
+      connect(pressureConfig, SIGNAL(log(const Message&)), 
+	      this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+      pressureList = new PressureList(pressureConfig);
+      pressureList->open();
+    
+
+      dropSondeConfig = new Configuration(0, file);
+      dropSondeConfig->setObjectName("Dropsonde Configuration");
+      dropSondeConfig->setLogChanges(false);
+      connect(dropSondeConfig, SIGNAL(log(const Message&)), 
+	      this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+      dropSondeList = new PressureList(dropSondeConfig);
+      dropSondeList->open();
+    }
+    if (SimplexON == 0) {
+     
+      // Gather information about the files in the working directory so we can 
+    // load information about previous runs
+
+    QString workingDirectoryPath = configData->getParam(configData->getConfig("vortex"),"dir");
+    QDir workingDirectory(workingDirectoryPath);
+    QString vortexName = configData->getParam(configData->getConfig("vortex"), "name");
+    QString radarName = configData->getParam(configData->getConfig("radar"), "name");
+    QString year;
+    year.setNum(QDate::fromString(configData->getParam(configData->getConfig("radar"),"startdate"), "yyyy-MM-dd").year());
+
+    QString nameFilter = vortexName+"_"+radarName+"_"+year;
+    QStringList allPossibleFiles = workingDirectory.entryList(QDir::Files);
+    allPossibleFiles = allPossibleFiles.filter(nameFilter, Qt::CaseInsensitive);
+
+    QString file = allPossibleFiles.filter("vortexList").value(0);
+    emit log(Message(QString("Loading Vortex List from File: "+file),0,this->objectName()));
+    vortexConfig = new Configuration(0, workingDirectory.filePath(file));
+    vortexConfig->setObjectName("vortexConfig");
     vortexConfig->setLogChanges(false);
     connect(vortexConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     vortexList = new VortexList(vortexConfig);
     vortexList->open();
+    
+    QString vortexPath = configData->getParam(configData->getConfig("vtd"), 
+					      "dir");
+    QDir vortexWorkingDirectory(vortexPath);
+    QString outFileName = workingDirectory.path()+"/";
+    outFileName += vortexName+"_"+radarName+"_"+year+"_vortexList.xml";
+    vortexList->setFileName(outFileName);
+    vortexList->setNewWorkingDirectory(vortexWorkingDirectory.path()+"/");
   
-    file = QString("vortrac_defaultSimplexListStorage.xml");
-    //simplexConfig = new Configuration(0,QString());
-    simplexConfig = new Configuration(0, file);
-    simplexConfig->setObjectName("Simplex Configuration");
+    file = allPossibleFiles.filter("simplexList").value(0);
+    emit log(Message(QString("Loading Simplex List from File: "+file),0,this->objectName()));
+    simplexConfig = new Configuration(0, workingDirectory.filePath(file));
+    simplexConfig->setObjectName("simplexConfig");
     simplexConfig->setLogChanges(false);
     connect(simplexConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     simplexList = new SimplexList(simplexConfig);
-    simplexList->open();
     
-    file = QString("vortrac_defaultPressureListStorage.xml");
-    //pressureConfig = new Configuration(0,QString());
-    pressureConfig = new Configuration(0, file);
-    pressureConfig->setObjectName("Pressure Configuration");
+    simplexList->open();
+
+    QString simplexPath = configData->getParam(configData->getConfig("center"),
+					       "dir");
+    QDir simplexWorkingDirectory(simplexPath);
+
+    outFileName = workingDirectory.path() + "/";
+    outFileName += vortexName+"_"+radarName+"_"+year+"_simplexList.xml";
+    simplexList->setFileName(outFileName);
+    simplexList->setNewWorkingDirectory(simplexWorkingDirectory.path()+"/");
+    
+    if(allPossibleFiles.filter("pressureList").count() > 0) {
+      file = allPossibleFiles.filter("pressureList").value(0);
+      pressureConfig = new Configuration(0, workingDirectory.filePath(file));
+    }
+    else {
+      file = QString("vortrac_defaultPressureListStorage.xml");
+      pressureConfig = new Configuration(0, QDir::current().filePath(file));
+    }
+   
+    emit log(Message(QString("Loading Pressure List from File: "+file),0,this->objectName()));
+    pressureConfig->setObjectName("pressureConfig");
     pressureConfig->setLogChanges(false);
     connect(pressureConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     pressureList = new PressureList(pressureConfig);
     pressureList->open();
+    emit log(Message(QString("Number of pressure obs loaded: "+QString().setNum(pressureList->count()))));
+    //Message::toScreen("Number of pressure obs loaded "+QString().setNum(pressureList->count()));
+    
+    outFileName = workingDirectory.path()+"/";
+    outFileName+= vortexName+"_"+radarName+"_"+year+"_pressureList.xml";
+    pressureList->setFileName(outFileName);
+    pressureList->setNewWorkingDirectory(workingDirectory.path());
 
-    dropSondeConfig = new Configuration(0, file);
-    dropSondeConfig->setObjectName("Dropsonde Configuration");
+    if(allPossibleFiles.filter("dropSondeList").count() > 0) {
+      file = allPossibleFiles.filter("dropSondeList").value(0);
+      dropSondeConfig = new Configuration(0, workingDirectory.filePath(file));
+    }
+    else {
+      file = QString("vortrac_defaultPressureListStorage.xml");
+      dropSondeConfig = new Configuration(0, QDir::current().filePath(file));
+    }
+    //emit log(Message(file,0,this->objectName()));
+    dropSondeConfig->setObjectName("dropSondeConfig");
     dropSondeConfig->setLogChanges(false);
     connect(dropSondeConfig, SIGNAL(log(const Message&)), 
 	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
     dropSondeList = new PressureList(dropSondeConfig);
     dropSondeList->open();
-  
+
+    outFileName = workingDirectory.path()+"/";
+    outFileName += vortexName+"_"+radarName+"_"+year+"_dropSondeList.xml";
+    dropSondeList->setFileName(outFileName);
+    dropSondeList->setNewWorkingDirectory(workingDirectory.path());
+
+    checkListConsistency();
+
+    emit vortexListUpdate(vortexList);
+    
+    checkIntensification();
+    /*
+      // Gather information about the files in the working directory so we can 
+      // load information about a previous run
+      
+      QString workingDirectoryPath = configData->getParam(configData->getConfig("vortex"),"dir");
+      QDir workingDirectory(workingDirectoryPath);
+      QString vortexName = configData->getParam(configData->getConfig("vortex"), "name");
+      QString radarName = configData->getParam(configData->getConfig("radar"), "name");
+      QString year;
+      year.setNum(QDate::fromString(configData->getParam(configData->getConfig("radar"),"startdate"), "yyyy-MM-dd").year());
+      
+      QString nameFilter = vortexName+"_"+radarName+"_"+year;
+      QStringList allPossibleFiles = workingDirectory.entryList(QDir::Files);
+      allPossibleFiles = allPossibleFiles.filter(nameFilter, Qt::CaseInsensitive);
+      
+      		   QString file = allPossibleFiles.filter("vortexList").value(0);
+      		   emit log(Message(QString("Loading Vortex List from File: "+file),0,this->objectName()));
+      		   vortexConfig = new Configuration(0, workingDirectory.filePath(file));
+      		   vortexConfig->setObjectName("vortexConfig");
+      		   vortexConfig->setLogChanges(false);
+      		   connect(vortexConfig, SIGNAL(log(const Message&)), 
+      			   this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+      		   vortexList = new VortexList(vortexConfig);
+      		   vortexList->open();
+      
+      		   QString vortexPath = configData->getParam(configData->getConfig("vtd"), 
+      							     "dir");
+      		   QDir vortexWorkingDirectory(vortexPath);
+      		   QString outFileName = workingDirectory.path()+"/";
+      		   outFileName += vortexName+"_"+radarName+"_"+year+"_vortexList.xml";
+      		   vortexList->setFileName(outFileName);
+      		   vortexList->setNewWorkingDirectory(vortexWorkingDirectory.path()+"/");
+      
+      file = allPossibleFiles.filter("simplexList").value(0);
+      emit log(Message(QString("Loading Simplex List from File: "+file),0,this->objectName()));
+      simplexConfig = new Configuration(0, workingDirectory.filePath(file));
+      simplexConfig->setObjectName("simplexConfig");
+      simplexConfig->setLogChanges(false);
+      connect(simplexConfig, SIGNAL(log(const Message&)), 
+	      this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+      simplexList = new SimplexList(simplexConfig);
+      
+      simplexList->open();
+      
+      QString simplexPath = configData->getParam(configData->getConfig("center"),
+						 "dir");
+      QDir simplexWorkingDirectory(simplexPath);
+      
+      outFileName = workingDirectory.path() + "/";
+      outFileName += vortexName+"_"+radarName+"_"+year+"_simplexList.xml";
+      simplexList->setFileName(outFileName);
+      simplexList->setNewWorkingDirectory(simplexWorkingDirectory.path()+"/");
+      
+      if(allPossibleFiles.filter("pressureList").count() > 0) {
+	file = allPossibleFiles.filter("pressureList").value(0);
+	pressureConfig = new Configuration(0, workingDirectory.filePath(file));
+      }
+      else {
+	file = QString("vortrac_defaultPressureListStorage.xml");
+	pressureConfig = new Configuration(0, QDir::current().filePath(file));
+      }
+      
+      emit log(Message(QString("Loading Pressure List from File: "+file),0,this->objectName()));
+      pressureConfig->setObjectName("pressureConfig");
+      pressureConfig->setLogChanges(false);
+      connect(pressureConfig, SIGNAL(log(const Message&)), 
+	      this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+      pressureList = new PressureList(pressureConfig);
+      pressureList->open();
+      emit log(Message(QString("Number of pressure obs loaded: "+QString().setNum(pressureList->count()))));
+      //Message::toScreen("Number of pressure obs loaded "+QString().setNum(pressureList->count()));
+      
+      outFileName = workingDirectory.path()+"/";
+      outFileName+= vortexName+"_"+radarName+"_"+year+"_pressureList.xml";
+      pressureList->setFileName(outFileName);
+      pressureList->setNewWorkingDirectory(workingDirectory.path());
+      
+      if(allPossibleFiles.filter("dropSondeList").count() > 0) {
+	file = allPossibleFiles.filter("dropSondeList").value(0);
+	dropSondeConfig = new Configuration(0, workingDirectory.filePath(file));
+      }
+      else {
+	file = QString("vortrac_defaultPressureListStorage.xml");
+	dropSondeConfig = new Configuration(0, QDir::current().filePath(file));
+      }
+      //emit log(Message(file,0,this->objectName()));
+      dropSondeConfig->setObjectName("dropSondeConfig");
+      dropSondeConfig->setLogChanges(false);
+      connect(dropSondeConfig, SIGNAL(log(const Message&)), 
+	      this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+      dropSondeList = new PressureList(dropSondeConfig);
+      dropSondeList->open();
+      
+      outFileName = workingDirectory.path()+"/";
+      outFileName += vortexName+"_"+radarName+"_"+year+"_dropSondeList.xml";
+      dropSondeList->setFileName(outFileName);
+      dropSondeList->setNewWorkingDirectory(workingDirectory.path());
+      
+      checkListConsistency();
+      
+      emit vortexListUpdate(vortexList);
+      
+      checkIntensification();
+    */
+
+    }
   }
-  else {
+  if(continuePreviousRun)  {
 
     // Gather information about the files in the working directory so we can 
     // load information about a previous run
@@ -294,7 +521,7 @@ void PollThread::run()
     
     checkIntensification();
 
-  }  
+  }   
 
   analysisThread = new AnalysisThread;
   connect(analysisThread, SIGNAL(doneProcessing()), 
@@ -324,6 +551,7 @@ void PollThread::run()
 	// Begin polling loop
 	forever {
 	  //Message::toScreen("PollThread: Begining Again In Forever");
+	
 	  
      	  // Check for new data
 	  if (dataSource->hasUnprocessedData()) {
@@ -333,8 +561,10 @@ void PollThread::run()
 	    mutex.lock();
 	    // Update the data queue with any knowledge of any volumes that
 	    // might have already been processed
-
+	    // We only want to do this if simplex is on
+	  if (SimplexON == 1) {
 	    dataSource->updateDataQueue(vortexList);
+	  }
 	    analysisThread->setNumVolProcessed(dataSource->getNumProcessed());
 	        
 	    // Select a volume off the queue
@@ -458,7 +688,7 @@ void PollThread::run()
 	      // Moving the pressureList save step further up in processing
 	      // could result in serious synchronization issues.
 	      
-	      if (!pressureList->getFileName().isNull()) 	
+	      if (!pressureList->getFileName().isNull() & (SimplexON == 1)) 	
 		pressureList->save();
 	      
 	      // Done with radar volume, send a signal to the Graph to update
@@ -486,6 +716,8 @@ void PollThread::run()
 	    runOnce = false;
 	    return;
 	  }
+	   
+	  
 	}
 	
 	emit log(Message(QString("PollThread Finished"),-1,this->objectName()));	
@@ -627,9 +859,20 @@ void PollThread::checkListConsistency()
   } 
   // Removing the last ones for safety, any partially formed file could do serious damage
   // to data integrity
+
+	 //Check for research mode
+	 QDomElement research = configData->getConfig("research");
+	 QString RunMode = configData->getParam(research,"run_mode");
+	 bool SimplexON = configData->getParam(research,"simplex").toInt();
+	 if (RunMode == "operations") {
+	   SimplexON = 1;
+	 }
+
+  if (SimplexON == 1) {
   simplexList->removeAt(simplexList->count()-1);
-  simplexList->save();
   vortexList->removeAt(vortexList->count()-1);
+  }
+  simplexList->save();
   vortexList->save();
 }
   

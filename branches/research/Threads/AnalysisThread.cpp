@@ -40,6 +40,7 @@ AnalysisThread::AnalysisThread(QObject *parent)
   configData = NULL;
   radarVolume = NULL;
   vortexList = NULL;
+  // CurrentList = NULL;
   simplexList = NULL;
   pressureList = NULL;
   dropSondeList = NULL;
@@ -168,6 +169,20 @@ void AnalysisThread::run()
 	 // OK, Let's process some radar data
 	 mutex.lock();
 
+	 //Check for research mode
+	 QDomElement research = configData->getConfig("research");
+	 QString RunMode = configData->getParam(research,"run_mode");
+	 bool CappiON = configData->getParam(research,"cappi").toInt();
+	 bool SimplexON = configData->getParam(research,"simplex").toInt();
+	 bool VtdON = configData->getParam(research,"vtd").toInt();
+	 bool QCON = configData->getParam(research,"qc").toInt();
+	 if (RunMode == "operations") {
+	   CappiON = 1;
+	   SimplexON = 1;
+	   VtdON = 1;
+	   QCON = 1;
+	 }
+
 	 bool analysisGood = true;
 	 emit log(Message(QString(),0,this->objectName(),Green));
 	 QTime analysisTime;
@@ -177,11 +192,45 @@ void AnalysisThread::run()
 	 
 	 // Check the vortexList for a current center to use
 	 // as the starting point for analysis
-
+	 
 	 if (!vortexList->isEmpty()) {
+
 	   vortexList->timeSort();
-	   vortexLat = vortexList->last().getLat();
-	   vortexLon = vortexList->last().getLon();
+	   
+	   if (SimplexON == 0) {
+	     //looping here to find the index, i, that corresponds to the time of the current volume
+// 	     VortexList CurrentList = *vortexList;
+// 	     //*CurrentList = *vortexList;
+// 	     int i = 5; //doesnt matter what it is initially
+// 	     QString forstr = "ddd MMMM d yy hh:mm:ss";
+// 	     for (int jj = vortexList->size()-1; jj>=0; jj--) {
+// 	       QString t1 = vortexList->at(jj).getTime().toString(forstr);
+// 	       QString t2 = radarVolume->getDateTime().toString(forstr);
+// 	       if (t1 == t2)  {i = jj;}
+// 	       else {CurrentList.removeAt(jj);}
+// 	     }
+	     
+// 	     vortexLat = CurrentList.last().getLat();
+// 	     vortexLon = CurrentList.last().getLon();
+	     
+	     //looping here to find the index, i, that corresponds to the time of the current volume
+	     int i = 5; //doesnt matter what it is initially
+	     QString forstr = "ddd MMMM d yy hh:mm:ss";
+	     for (int jj = vortexList->size()-1; jj>=0; jj--) {
+	       QString t1 = vortexList->at(jj).getTime().toString(forstr);
+	       QString t2 = radarVolume->getDateTime().toString(forstr);
+	       if (t1 == t2)  {i = jj; break;}
+	     }
+	     
+ 	     vortexLat = vortexList->at(i).getLat();
+	     vortexLon = vortexList->at(i).getLon();
+	   }
+	   else{
+	     vortexLat = vortexList->last().getLat();
+	     vortexLon = vortexList->last().getLon();
+	   }
+
+
 	   if(numVolProcessed > 0) {
 	     // If only a few volumes have been attempted then we will use 
 	     // the storm motion to 'bump' the storm into range
@@ -591,6 +640,7 @@ void AnalysisThread::run()
 	 for(int i = 0; i < vortexData->getNumLevels(); i++) {
 	   vortexData->setLat(i,vortexLat);
 	   vortexData->setLon(i,vortexLon);
+	   vortexData->setHeight(i,bottom+(zSpacing*(float)i));
 	 }		
 	 
 	 mutex.unlock();
@@ -601,6 +651,8 @@ void AnalysisThread::run()
 	 // Pass VCP value to display
 	 emit newVCP(radarVolume->getVCP());
 	 
+	 if (QCON) {
+
 		// Dealias 		
 		if(!radarVolume->isDealiased()){
 		  
@@ -624,7 +676,7 @@ void AnalysisThread::run()
 		}
 		else
 		  emit log(Message(QString("RadarVolume is Dealiased"),0,this->objectName()));
-		
+	 
 		/*
 			 // Using this for running FORTRAN version
 			 QString name("fchar1824Verify.dat");
@@ -698,11 +750,8 @@ void AnalysisThread::run()
 			 
 			 return;
 		*/ // comments end here
-		
-		mutex.unlock();
-		if(abort)
-		  return;
-		  
+	 }		
+	 
 		/* mutex.lock(); 
 		 *
 		 * We have to leave this section unlocked so that a change 
@@ -710,122 +759,240 @@ void AnalysisThread::run()
 		 * cappi routines, otherwise the thread cannot exit until 
 		 * they return -LM
 		 */
+	      
+
+		if (CappiON)
+		  {
+
+		    mutex.unlock();
+		    if(abort)
+		      return;
+		    // Create CAPPI
+		    
+		    emit log(Message(QString("Creating CAPPI..."), 0, 
+				     this->objectName()));
+		    
+		    /*  If Analytic Model is running we need to make an analytic
+		     *  gridded data rather than a cappi
+		     */
+		    //GriddedData *gridData;
+		    
+		    if(radarVolume->getNumSweeps() < 0) {
+		      Configuration *analyticConfig = new Configuration();
+		      QDomElement radar = configData->getConfig("radar");
+		      float radarLat = configData->getParam(radar,"lat").toFloat();
+		      float radarLon = configData->getParam(radar,"lon").toFloat();
+		      analyticConfig->read(configData->getParam(radar, "dir"));
+		      gridData = gridFactory.makeAnalytic(radarVolume,
+							  configData,analyticConfig, 
+							  &vortexLat, &vortexLon, 
+							  &radarLat, &radarLon);
+		    }
+		    else {
+		      //Message::toScreen("Before Making Cappi vLat = "+QString().setNum(vortexLat)+" vLon = "+QString().setNum(vortexLon));
+		      
+		      gridData = gridFactory.makeCappi(radarVolume, configData,
+						       &vortexLat, &vortexLon);
+		      //Message::toScreen("AnalysisThread: outside makeCappi");
+		      
+		    }
+		    
+		    emit log(Message("Done with Cappi",15,this->objectName()));
+		    
+		    if(abort)
+		      return;
+		    
+		    // Pass Cappi to display
+		    emit newCappi(gridData);
+		    //emit newCappiInfo(.3,.3,.1,.2,.3);
+		    
+		    
+		    if(abort)
+		      return;
+		    mutex.lock();
+		    
+		    /* GriddedData not currently a QObject so this will fail
+		       connect(gridData, SIGNAL(log(const Message&)),this,
+		       SLOT(catchLog(const Message&)), Qt::DirectConnection); */
 		
-		// Create CAPPI
-		emit log(Message(QString("Creating CAPPI..."), 0, 
-				 this->objectName()));
+		    // Output Radar data to check if dealias worked
+		    
+		    gridData->writeAsi();
+		    emit log(Message("Wrote Cappi To File",5,this->objectName()));
+		    QString cappiTime;
+		    cappiTime.setNum((float)analysisTime.elapsed() / 60000);
+		    cappiTime.append(" minutes elapsed");
+		    emit log(Message(cappiTime));
+		    
+		  }
 		
-		/*  If Analytic Model is running we need to make an analytic
-		 *  gridded data rather than a cappi
-		 */
-		//GriddedData *gridData;
-			
-		if(radarVolume->getNumSweeps() < 0) {
-		  Configuration *analyticConfig = new Configuration();
+		//Read in cappi grid from file if CappiON is false 
+		if (CappiON == 0) {
+		  gridData = gridFactory.readCappi(radarVolume, configData,
+						   &vortexLat, &vortexLon);
+				  
+		  emit log(Message("Done reading Cappi",15,this->objectName()));
+		  
+		  if(abort)
+		    return;
+		  
+		  // Pass Cappi to display
+		  emit newCappi(gridData);
+
+		 //  gridData->writeAsi();
+// 		  emit log(Message("Wrote Cappi To File",5,this->objectName()));
+		  
+		  
+		}
+       
+       
+		if (SimplexON) {
+	 
+
+		  // Set the initial guess in the data object as a temporary center
+		  vortexData->setLat(0,vortexLat);
+		  vortexData->setLon(0,vortexLon);
+		  
+		  //Find Center 
+		  simplexThread->findCenter(configData, gridData, radarVolume, 
+					    simplexList, vortexData);
+		  waitForCenter.wait(&mutex); 
+		  
+		  QString simplexTime;
+		  simplexTime.setNum((float)analysisTime.elapsed() / 60000);
+		  simplexTime.append(" minutes elapsed");
+		  emit log(Message(simplexTime));
+		  
+		  // Send info about simplex search to cappiDisplay 
+		  
+		  int vortexIndex = vortexData->getHeightIndex(1);
+		  if(vortexIndex == -1)
+		    vortexIndex = 0;
+		  float levelLat = vortexData->getLat(vortexIndex);
+		  float levelLon = vortexData->getLon(vortexIndex);
 		  QDomElement radar = configData->getConfig("radar");
+		  QDomElement simplex = configData->getConfig("center");
 		  float radarLat = configData->getParam(radar,"lat").toFloat();
 		  float radarLon = configData->getParam(radar,"lon").toFloat();
-		  analyticConfig->read(configData->getParam(radar, "dir"));
-		  gridData = gridFactory.makeAnalytic(radarVolume,
-					   configData,analyticConfig, 
-					   &vortexLat, &vortexLon, 
-					   &radarLat, &radarLon);
-		}
-		else {
-		  //Message::toScreen("Before Making Cappi vLat = "+QString().setNum(vortexLat)+" vLon = "+QString().setNum(vortexLon));
-
-		  gridData = gridFactory.makeCappi(radarVolume, configData,
-						   &vortexLat, &vortexLon);
-		  //Message::toScreen("AnalysisThread: outside makeCappi");
+		  float* xyValues = gridData->getCartesianPoint(&radarLat, &radarLon, &levelLat, &levelLon);
+		  float xPercent = float(gridData->getIndexFromCartesianPointI(xyValues[0])+1)/gridData->getIdim();
+		  //Message::toScreen("xPercent is "+QString().setNum(xPercent));
+		  float yPercent = float(gridData->getIndexFromCartesianPointJ(xyValues[1])+1)/gridData->getJdim();
+		  //Message::toScreen("yPercent is "+QString().setNum(yPercent));
+		  float sMin = configData->getParam(simplex, "innerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
+		  //Message::toScreen("sMin is "+QString().setNum(sMin));
+		  float sMax = configData->getParam(simplex, "outerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
+		  //Message::toScreen("sMax is "+QString().setNum(sMax));
+		  float vMax = configData->getParam(vtd, "outerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
+		  //Message::toScreen("vMax is "+QString().setNum(vMax));
+		  emit newCappiInfo(xPercent, yPercent, sMin, sMax, vMax, levelLat, levelLon);
+		  delete [] xyValues;
 		  
 		}
-		
-		emit log(Message("Done with Cappi",15,this->objectName()));
+       
+		if (SimplexON == 0) {
+  
+		  // Already loaded the new simplex data in PollThread, now peform the second step:
 
-		if(abort)
-		  return;
-		
-		// Pass Cappi to display
-		emit newCappi(gridData);
-		//emit newCappiInfo(.3,.3,.1,.2,.3);
-		
-	
-		if(abort)
-		  return;
-		mutex.lock();
-
-		/* GriddedData not currently a QObject so this will fail
-		   connect(gridData, SIGNAL(log(const Message&)),this,
-		   SLOT(catchLog(const Message&)), Qt::DirectConnection); */
-		
-		// Output Radar data to check if dealias worked
-
-		gridData->writeAsi();
-		emit log(Message("Wrote Cappi To File",5,this->objectName()));
-		QString cappiTime;
-		cappiTime.setNum((float)analysisTime.elapsed() / 60000);
-		cappiTime.append(" minutes elapsed");
-		emit log(Message(cappiTime));
-		
-		
-		// Set the initial guess in the data object as a temporary center
-		vortexData->setLat(0,vortexLat);
-		vortexData->setLon(0,vortexLon);
-		
-		
-	      
-		//Find Center 
-		simplexThread->findCenter(configData, gridData, radarVolume, 
-					  simplexList, vortexData);
-		waitForCenter.wait(&mutex); 
-					 
-		QString simplexTime;
-		simplexTime.setNum((float)analysisTime.elapsed() / 60000);
-		simplexTime.append(" minutes elapsed");
-		emit log(Message(simplexTime));
-
-		// Send info about simplex search to cappiDisplay 
-		
-		int vortexIndex = vortexData->getHeightIndex(1);
-		if(vortexIndex == -1)
-		  vortexIndex = 0;
-		float levelLat = vortexData->getLat(vortexIndex);
-		float levelLon = vortexData->getLon(vortexIndex);
-		QDomElement radar = configData->getConfig("radar");
-		QDomElement simplex = configData->getConfig("center");
-		float radarLat = configData->getParam(radar,"lat").toFloat();
-		float radarLon = configData->getParam(radar,"lon").toFloat();
-		float* xyValues = gridData->getCartesianPoint(&radarLat, &radarLon, &levelLat, &levelLon);
-		float xPercent = float(gridData->getIndexFromCartesianPointI(xyValues[0])+1)/gridData->getIdim();
-		//Message::toScreen("xPercent is "+QString().setNum(xPercent));
-		float yPercent = float(gridData->getIndexFromCartesianPointJ(xyValues[1])+1)/gridData->getJdim();
-		//Message::toScreen("yPercent is "+QString().setNum(yPercent));
-		float sMin = configData->getParam(simplex, "innerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
-		//Message::toScreen("sMin is "+QString().setNum(sMin));
-		float sMax = configData->getParam(simplex, "outerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
-		//Message::toScreen("sMax is "+QString().setNum(sMax));
-		float vMax = configData->getParam(vtd, "outerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
-		//Message::toScreen("vMax is "+QString().setNum(vMax));
-		emit newCappiInfo(xPercent, yPercent, sMin, sMax, vMax, levelLat, levelLon);
-		delete [] xyValues;
-		
-
-		mutex.unlock();  	
-		
-		if (!abort) {
+	// 	  float firstLevel = configData->getParam(simplexConfig,
+// 						    QString("bottomlevel")).toFloat();
+// 		  float lastLevel = configData->getParam(simplexConfig,
+// 						   QString("toplevel")).toFloat();
 		  
-		  mutex.lock();
-		  // Get the GBVTD winds
-		  emit log(Message(QString(), 2,this->objectName()));
-		  vortexThread->getWinds(configData, gridData, radarVolume, 
-					 vortexData, pressureList);
-		  waitForWinds.wait(&mutex); 
-		  mutex.unlock();
-		}
+// 		  int numLevels = int(lastLevel-firstLevel+1);
+// 		  int loopPercent = int(20.0/float(numLevels));
+// 		  int endPercent = 20-(numLevels*loopPercent);
+		  
+// 		  emit log(Message(QString(),1+endPercent,this->objectName()));
+    
+		  //Now pick the best center
+		  simplexResults = simplexList;
+		  simplexResults->timeSort();
+		  ChooseCenter *centerFinder = new ChooseCenter(configData,simplexResults,
+								vortexData);
+		  
+		  connect(centerFinder, SIGNAL(errorlog(const Message&)),
+			  this, SLOT(catchLog(const Message&)),Qt::DirectConnection);
+		  bool foundCenter = centerFinder->findCenter();
+		  
+		  // Save to keep mean values found in chooseCenter
+		  simplexResults->save();
+		  
+		  emit log(Message(QString(),4,this->objectName()));
+		  
+		  // Clean up
+		  delete centerFinder;
+			  
+		  //signal that simplex is done so program can move on
+		  if(!foundCenter)
+		    {
+		      // Some error occurred, notify the user
+		      emit log(Message(QString("Failed to Indentify Center!"),0,this->objectName(),AllOff,QString(),SimplexError,QString("Simplex Failed")));
+		      // return;
+		    } else {
+		      // Update the vortex list
+		      emit log(Message(QString("Done with Simplex"),0, this->objectName()));
+		      
+		      // Let the poller know we're done
+		      //     emit(simplexThread->centerFound());
+		    }
+	// 	  mutex.unlock();
+		  
+// 		  // Go to sleep, wait for more data   
+// 		  if (!abort) {
+// 		    mutex.lock();
+// 		    // Wait until new data is available
+// 		    waitForData.wait(&mutex);	
+// 		    mutex.unlock();    
+// 		  }
+// 		  if(abort)
+// 		    return;
 		
-		if(abort)
-		  return;  
-				 
+		
+		  // Send info about simplex search to cappiDisplay 
+		  int vortexIndex = vortexData->getHeightIndex(1);
+		  if(vortexIndex == -1) {
+		    vortexIndex = 0;
+		  }
+		  float levelLat = vortexData->getLat(vortexIndex);
+		  float levelLon = vortexData->getLon(vortexIndex);
+		  QDomElement radar = configData->getConfig("radar");
+		  QDomElement simplex = configData->getConfig("center");
+		  float radarLat = configData->getParam(radar,"lat").toFloat();
+		  float radarLon = configData->getParam(radar,"lon").toFloat();
+		  float* xyValues = gridData->getCartesianPoint(&radarLat, &radarLon, &levelLat, &levelLon);
+		  float xPercent = float(gridData->getIndexFromCartesianPointI(xyValues[0])+1)/gridData->getIdim();
+		  //Message::toScreen("xPercent is "+QString().setNum(xPercent));
+		  float yPercent = float(gridData->getIndexFromCartesianPointJ(xyValues[1])+1)/gridData->getJdim();
+		  //Message::toScreen("yPercent is "+QString().setNum(yPercent));
+		  float sMin = configData->getParam(simplex, "innerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
+		  //Message::toScreen("sMin is "+QString().setNum(sMin));
+		  float sMax = configData->getParam(simplex, "outerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
+		  //Message::toScreen("sMax is "+QString().setNum(sMax));
+		  float vMax = configData->getParam(vtd, "outerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
+		  //Message::toScreen("vMax is "+QString().setNum(vMax));
+		  emit newCappiInfo(xPercent, yPercent, sMin, sMax, vMax, levelLat, levelLon);
+		  delete [] xyValues;
+		}
+		mutex.unlock();  			  
+		
+		
+		if (VtdON) {
+		  
+		  if (!abort) {
+		    
+		    mutex.lock();
+		    // Get the GBVTD winds
+		    emit log(Message(QString(), 2,this->objectName()));
+		    vortexThread->getWinds(configData, gridData, radarVolume, 
+					   vortexData, pressureList);
+		    waitForWinds.wait(&mutex); 
+		    mutex.unlock();
+		  }
+		  
+		  if(abort)
+		    return;  
+		} 
 		// Should have all relevant variables now
 		// Update timeline and output
 
@@ -842,7 +1009,7 @@ void AnalysisThread::run()
 		emit log(Message(vortexTime));
 
 				// Easiest Thresholding
-
+		
 		bool hasConvergingCenters = false;
 		for(int l = 0; (l < vortexData->getNumLevels())
 		      &&(hasConvergingCenters==false); l++) {
@@ -852,26 +1019,36 @@ void AnalysisThread::run()
 
 		emit log(Message(QString(),2,this->objectName())); // 97 %
 		
-		if(hasConvergingCenters) {
-		  vortexList->append(*vortexData);	
-		  vortexList->save();
+		//if (SimplexON == 1) {
+		  if(hasConvergingCenters) {
+		    if (SimplexON == 0) {
+		      if (radarVolume->getDateTime() > vortexList->last().getTime()) {
+			vortexList->append(*vortexData);	
+		      }
+		    }
+		    else {
+		      vortexList->append(*vortexData);
+		    }
+		    vortexList->save();
 		  
-		  // Print out summary information to log
-		  QString summary = "VORTRAC ATCF,";
-		  QString values;
-		  summary += vortexData->getTime().toString(Qt::ISODate) + ",";
-		  summary += values.setNum(vortexData->getLat()) + ",";
-		  summary += values.setNum(vortexData->getLon()) + ",";
-		  summary += values.setNum(vortexData->getPressure()) + ",";
-		  summary += values.setNum(vortexData->getPressureUncertainty()) + ",";
-		  summary += values.setNum(vortexData->getRMW()) + ",";
-		  summary += values.setNum(vortexData->getRMWUncertainty());
-		  emit log(Message(summary,0,this->objectName()));
-		}
-		else {
-		  emit log(Message(QString("Insufficient Convergence of Simplex Centers"),0,this->objectName(),AllOff,QString(),SimplexError,QString("Could Not Obtain Center Convergence")));
-		}
-		  
+		
+		    // Print out summary information to log
+		    QString summary = "VORTRAC ATCF,";
+		    QString values;
+		    summary += vortexData->getTime().toString(Qt::ISODate) + ",";
+		    summary += values.setNum(vortexData->getLat()) + ",";
+		    summary += values.setNum(vortexData->getLon()) + ",";
+		    summary += values.setNum(vortexData->getPressure()) + ",";
+		    summary += values.setNum(vortexData->getPressureUncertainty()) + ",";
+		    summary += values.setNum(vortexData->getRMW()) + ",";
+		    summary += values.setNum(vortexData->getRMWUncertainty());
+		    emit log(Message(summary,0,this->objectName()));
+		  }
+		
+		  else {
+		    emit log(Message(QString("Insufficient Convergence of Simplex Centers"),0,this->objectName(),AllOff,QString(),SimplexError,QString("Could Not Obtain Center Convergence")));
+		  }
+		  //}
 		if(!hasConvergingCenters && (vortexList->count() > 0)){
 		  emit log(Message(QString("Simplex Analysis Found No Converging Centers in this volume"),0,this->objectName(),Green, QString("No Center Found!"),OutOfRange, QString("No Converging Centers")));
 		  analysisGood = false;
@@ -932,6 +1109,8 @@ void AnalysisThread::run()
 	emit log(Message("End of Analysis Thread Run"));
 }
 
+
+
 void AnalysisThread::archiveAnalysis()
 {
 
@@ -960,4 +1139,113 @@ void AnalysisThread::setNumVolProcessed(const float& num)
 void AnalysisThread::setAnalyticRun(const bool& runOnce)
 {
   analyticRun = runOnce;
+}
+
+void AnalysisThread::checkIntensification()
+{
+  // Checks for any rapid changes in pressure
+  
+  QDomElement pressure = configData->getConfig("pressure");
+
+  // Units of mb / hr
+  float rapidRate = configData->getParam(pressure, QString("rapidlimit")).toFloat();
+
+  if(isnan(rapidRate)) {
+    emit log(Message(QString("Could Not Find Rapid Intensification Rate, Using 3 mb/hr"),
+		     0,this->objectName()));
+    rapidRate = 3.0;
+  }
+  
+  // So we don't report falsely there must be a rapid increase trend which 
+  // spans several measurements
+
+  // Number of volumes which are averaged.
+  int volSpan = configData->getParam(pressure, QString("av_interval")).toInt();
+  if(isnan(volSpan)) {
+    emit log(Message(QString("Could Not Find Pressure Averaging Interval for Rapid Intensification, Using 8 volumes"),0,this->objectName()));
+    volSpan = 8;
+  }
+
+  int lastVol = vortexList->count()-1;
+
+  if(lastVol > 2*volSpan) {
+    if(vortexList->at(int(volSpan/2.)).getTime().secsTo(vortexList->at(lastVol-int(volSpan/2.)).getTime()) > 3600) {
+      float recentAv = 0;
+      float pastAv = 0;
+      int recentCount = 0;
+      int pastCenter = 0;
+      int pastCount = 0;
+      for(int k = lastVol; k > lastVol-volSpan; k--) {
+	if(vortexList->at(k).getPressure()==-999)
+	  continue;
+	recentAv+=vortexList->at(k).getPressure();
+	recentCount++;
+      }      
+      recentAv /= (recentCount*1.);
+      float timeSpan = vortexList->at(lastVol-volSpan).getTime().secsTo(vortexList->at(lastVol).getTime());
+      QDateTime pastTime = vortexList->at(lastVol).getTime().addSecs(-1*int(timeSpan/2+3600));
+      for(int k = 0; k < lastVol; k++) {
+	if(vortexList->at(k).getPressure()==-999)
+	  continue;
+	if(vortexList->at(k).getTime() <= pastTime)
+	  pastCenter = k;
+      }      
+      for(int j = pastCenter-int(volSpan/2.); 
+	  (j < pastCenter+int(volSpan/2.))&&(j<lastVol); j++) {
+	if(vortexList->at(j).getPressure()==-999)
+	  continue;
+	pastAv+= vortexList->at(j).getPressure();
+	pastCount++;
+      }
+      pastAv /= (pastCount*1.);
+      if(recentAv - pastAv > rapidRate) {
+	emit(log(Message(QString("Rapid Increase in Storm Central Pressure Reported @ Rate of "+QString().setNum(recentAv-pastAv)+" mb/hour"), 0,this->objectName(), Green, QString(), RapidIncrease, QString("Storm Pressure Rising"))));
+      } else {
+	if(recentAv - pastAv < -1.0*rapidRate) {
+	  emit(log(Message(QString("Rapid Decline in Storm Central Pressure Reporting @ Rate of "+QString().setNum(recentAv-pastAv)+" mb/hour"), 0, this->objectName(), Green, QString(), RapidDecrease, QString("Storm Pressure Falling"))));
+	}
+	else {
+	  emit(log(Message(QString("Storm Central Pressure Stablized"), 0, this->objectName(),Green,QString(), Ok, QString())));
+	}
+      }
+    }
+  }
+}
+			 
+
+void AnalysisThread::checkListConsistency()
+{
+  if(vortexList->count()!=simplexList->count()) {
+    emit log(Message(QString("Storage Lists Reloaded With Mismatching Volume Entries"),0,this->objectName()));
+  }
+  
+  for(int vv = vortexList->count()-1; vv >= 0; vv--) {
+    bool foundMatch = false;
+    for(int ss = 0; ss < simplexList->count(); ss++) {
+      if(vortexList->at(vv).getTime()==simplexList->at(ss).getTime())
+	foundMatch = true;
+    }
+    if(!foundMatch) {
+      emit log(Message(QString("Removing Vortex Entry @ "+vortexList->at(vv).getTime().toString(Qt::ISODate)+" because no matching simplex was found"),0,this->objectName()));
+      vortexList->removeAt(vv);
+    }
+  }
+
+  for(int ss = simplexList->count()-1; ss >= 0; ss--) {
+    bool foundMatch = false;
+    for(int vv = 0; vv < vortexList->count(); vv++) {
+      if(simplexList->at(ss).getTime() == vortexList->at(vv).getTime())
+	foundMatch = true;
+    }
+    if(!foundMatch) {
+      emit log(Message(QString("Removing Simplex Entry @ "+simplexList->at(ss).getTime().toString(Qt::ISODate)+" Because No Matching Vortex Was Found"),0,this->objectName()));
+      simplexList->removeAt(ss);
+    }
+  } 
+  // Removing the last ones for safety, any partially formed file could do serious damage
+  // to data integrity
+  simplexList->removeAt(simplexList->count()-1);
+  simplexList->save();
+  vortexList->removeAt(vortexList->count()-1);
+  vortexList->save();
 }

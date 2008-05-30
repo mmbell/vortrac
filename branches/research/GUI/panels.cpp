@@ -1924,6 +1924,8 @@ VTDPanel::VTDPanel()
 			  QString("GBVTD"));
   geometryOptions->insert(QString("Select Geometry"), 
 			  QString(""));
+  geometryOptions->insert(QString("GVTD"), 
+			  QString("GVTD"));
   // Add additional option here
   
   geometryBox = new QComboBox;
@@ -1939,6 +1941,10 @@ VTDPanel::VTDPanel()
 			QString("original"));
   closureOptions->insert(QString("Original-HVVP"), 
 			 QString("original_hvvp"));
+  closureOptions->insert(QString("GVTD"), 
+			 QString("GVTD"));
+  closureOptions->insert(QString("GVTD-HVVP"), 
+			 QString("GVTD_hvvp"));
 
   // Add addtional options here
 
@@ -3636,3 +3642,457 @@ bool QCPanel::checkValues()
     QPointF(0.0, 0.0));
     }
 */
+
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+ResearchPanel::ResearchPanel():AbstractPanel()
+{
+  
+
+  QGroupBox *researchComps = new QGroupBox(tr("Run Mode"));
+  operations = new QRadioButton(tr("Operations: Run all components"), researchComps);
+  research = new QRadioButton(tr("Research - Only run these components:"), researchComps);
+
+  
+  QFrame *researchParameters = new QFrame;
+  
+  // QLabel *researchCLabel = new QLabel(tr("Cappi"));
+   researchC = new QCheckBox(tr("Cappi"));
+   QHBoxLayout *researchCLayout = new QHBoxLayout;
+   researchCLayout->addSpacing(20);
+   //researchCLayout->addWidget(researchCLabel, 1);
+   researchCLayout->addWidget(researchC);
+
+   //  QLabel *researchSLabel = new QLabel(tr("Simplex"));
+   researchS = new QCheckBox(tr("Simplex"));
+   QHBoxLayout *researchSLayout = new QHBoxLayout;
+   researchSLayout->addSpacing(20);
+   // researchSLayout->addWidget(researchSLabel, 1);
+   researchSLayout->addWidget(researchS);
+
+   //   QLabel *researchVLabel = new QLabel(tr("Vtd"));
+   researchV = new QCheckBox(tr("Vtd"));
+   QHBoxLayout *researchVLayout = new QHBoxLayout;
+   researchVLayout->addSpacing(20);
+   // researchVLayout->addWidget(researchVLabel, 1);
+   researchVLayout->addWidget(researchV);
+
+   //  QLabel *researchQCLabel = new QLabel(tr("Radar QC"));
+   researchQC = new QCheckBox(tr("Radar QC"));
+   QHBoxLayout *researchQCLayout = new QHBoxLayout;
+   researchQCLayout->addSpacing(20);
+   // researchQCLayout->addWidget(researchQCLabel, 1);
+   researchQCLayout->addWidget(researchQC);
+
+   QVBoxLayout *researchLayout = new QVBoxLayout;
+   researchLayout->addLayout(researchCLayout);
+   researchLayout->addLayout(researchSLayout);
+   researchLayout->addLayout(researchVLayout);
+   researchLayout->addLayout(researchQCLayout);
+   researchParameters->setLayout(researchLayout);
+   researchParameters->hide();
+   
+   QVBoxLayout *ResearchLayout = new QVBoxLayout;
+   ResearchLayout->addWidget(operations);
+   ResearchLayout->addWidget(research);
+   ResearchLayout->addWidget(researchParameters);
+   researchComps->setLayout(ResearchLayout);
+   
+   QVBoxLayout *main = new QVBoxLayout;
+   main->addWidget(researchComps);
+   main->addStretch(1);
+   setLayout(main);
+
+
+  //~*~*~*~*~*~*COME BACK TO THIS*~*~*~*~*~*~*~
+
+  connect(operations, SIGNAL(toggled(const bool)), 
+	  this, SLOT(valueChanged()));
+  //connect(operations, SIGNAL(toggled(bool)),
+  //	  operationsParameters, SLOT(setVisible(bool)));
+  connect(research, SIGNAL(toggled(const bool)), 
+		  this, SLOT(valueChanged()));
+  connect(research, SIGNAL(toggled(bool)),
+		  researchParameters, SLOT(setVisible(bool)));
+  connect(researchC, SIGNAL(stateChanged(int)), 
+	  this, SLOT(stateChanged()));
+  connect(researchS, SIGNAL(stateChanged(int)),
+	  this, SLOT(stateChanged()));
+  connect(researchV, SIGNAL(stateChanged(int)),
+	  this, SLOT(stateChanged()));
+  connect(researchQC, SIGNAL(stateChanged(int)),
+	  this, SLOT(stateChanged()));
+
+ 
+  setPanelChanged(false);
+
+
+  //  user = new QRadioButton(tr("Enter boundary layer wind at radar manually"), findWind);
+  //  known = new QRadioButton(tr("Use Available AWIPS Data"), findWind);
+
+//   researchLevels = new QSpinBox;
+//   researchLevels->setRange(5,50);
+//   researchLevels->setValue(20);
+
+ //  QLabel *numCoLabel=new QLabel(tr("Simplex"));
+//   numCoefficients = new QSpinBox;
+//   numCoefficients->setRange(3,5);
+//   numCoefficients->setValue(3);
+  
+
+  // QLabel *researchthrLabel = new QLabel(tr("VTD"));
+
+
+//   researchthr->setRange(1,360);
+//   researchthr->setValue(30);
+//   QHBoxLayout *researchthrLayout = new QHBoxLayout;
+//   researchthrLayout->addSpacing(20);
+//   researchthrLayout->addWidget(researchthrLabel);
+//   researchthrLayout->addWidget(researchthr);
+
+
+//   QFrame *operationsParameters = new QFrame;
+	
+   //    QLabel *operationsthrLabel = new QLabel(tr("Minimum Number of Points for OPERATIONS Processing"));
+//   operationsthr = new QSpinBox;
+//   operationsthr->setRange(1,360);
+//   operationsthr->setValue(180);
+  
+   // QHBoxLayout *operationsthrLayout = new QHBoxLayout;
+   //  operationsthrLayout->addSpacing(20);
+   // operationsthrLayout->addWidget(operationsthrLabel);
+  // operationsthrLayout->addWidget(operationsthr);
+  
+   //  QVBoxLayout *operationsLayout = new QVBoxLayout;
+   // operationsLayout->addLayout(operationsthrLayout);
+   //  operationsParameters->setLayout(operationsLayout);
+   // operationsParameters->hide();
+  
+  // QFrame *userParameters = new QFrame;
+ 
+//   QLabel *windSpeedLabel = new QLabel(tr("Reference Wind Speed (m/s)"));
+//   windSpeed = new QDoubleSpinBox;
+//   windSpeed->setDecimals(2);
+//   windSpeed->setRange(0, 200);
+//   QHBoxLayout *windSpeedLayout = new QHBoxLayout;
+//   windSpeedLayout->addSpacing(20);
+//   windSpeedLayout->addWidget(windSpeedLabel);
+//   windSpeedLayout->addWidget(windSpeed);
+
+//   QLabel *windDirectionLabel = new QLabel(tr("Reference Wind Direction (degrees from North)"));
+//   windDirection = new QDoubleSpinBox;
+//   windDirection->setDecimals(1);
+//   windDirection->setRange(0, 359.9);
+//   QHBoxLayout *windDirectionLayout = new QHBoxLayout;
+//   windDirectionLayout->addSpacing(20);
+//   windDirectionLayout->addWidget(windDirectionLabel);
+//   windDirectionLayout->addWidget(windDirection);
+
+//   QVBoxLayout *userParametersLayout = new QVBoxLayout;
+//   userParametersLayout->addLayout(windSpeedLayout);
+//   userParametersLayout->addLayout(windDirectionLayout);
+//   userParameters->setLayout(userParametersLayout);
+//   userParameters->hide();
+
+  /*
+   * QFrame *knownParameters = new QFrame;
+   * QLabel *knownDirLabel = new QLabel(tr("AWIPS Data Directory"));
+   * QGridLayout *knownDirLayout = new QGridLayout();
+   * QHBoxLayout *knownLayout = new QHBoxLayout;
+   * knownDirLayout->addWidget(knownDirLabel, 0, 0);
+   * knownDirLayout->addWidget(dir, 1, 0, 1, 3);
+   * knownDirLayout->addWidget(browse, 1, 3);
+   * knownLayout->addSpacing(20);
+   * knownLayout->addLayout(knownDirLayout);
+   * knownParameters->setLayout(knownLayout);
+   * knownParameters->hide();
+   */
+
+ //  QVBoxLayout *ResearchLayout = new QVBoxLayout;
+//   ResearchLayout->addWidget(operations);
+//   // ResearchLayout->addWidget(operationsParameters);
+//   ResearchLayout->addWidget(research);
+//   ResearchLayout->addWidget(researchParameters);
+// //   findWindLayout->addWidget(user);
+// //   findWindLayout->addWidget(userParameters);
+//   //  findWindLayout->addWidget(known);
+//   //  findWindLayout->addWidget(knownParameters);
+//   researchComps->setLayout(ResearchLayout);
+
+//   QVBoxLayout *main = new QVBoxLayout;
+//   //  main->addWidget(qcParameters);
+//   main->addWidget(researchComps);
+//   main->addStretch(1);
+//   setLayout(main);
+
+
+  //~*~*~*~*~*~~COME BACK TO THIS*~*~*~*~*~*~*~
+
+
+//   connect(bbSegmentSize, SIGNAL(valueChanged(const QString&)), 
+// 	  this, SLOT(valueChanged()));
+//   connect(maxFoldCount, SIGNAL(valueChanged(const QString&)),
+// 	  this, SLOT(valueChanged()));
+//   connect(velocityMinimum, SIGNAL(valueChanged(const QString&)),
+// 	  this, SLOT(valueChanged()));
+//   connect(velocityMaximum, SIGNAL(valueChanged(const QString&)),
+// 	  this, SLOT(valueChanged()));
+//   connect(reflectivityMinimum, SIGNAL(valueChanged(const QString&)),
+// 	  this, SLOT(valueChanged()));
+//   connect(reflectivityMaximum, SIGNAL(valueChanged(const QString&)),
+// 	  this, SLOT(valueChanged()));
+//   connect(spectralThreshold, SIGNAL(valueChanged(const QString&)),
+// 	  this, SLOT(valueChanged()));
+
+//   connect(operations, SIGNAL(toggled(const bool)), 
+// 	  this, SLOT(valueChanged()));
+//   connect(operations, SIGNAL(toggled(bool)),
+// 	  operationsParameters, SLOT(setVisible(bool)));
+//   connect(research, SIGNAL(toggled(const bool)), 
+// 		  this, SLOT(valueChanged()));
+//   connect(research, SIGNAL(toggled(bool)),
+// 		  researchParameters, SLOT(setVisible(bool)));
+//   connect(researchC, SIGNAL(valueChanged(const QString&)),
+// 	  this, SLOT(valueChanged()));
+//   connect(researchS, SIGNAL(valueChanged(const QString&)),
+// 	  this, SLOT(valueChanged()));
+//   connect(researchV, SIGNAL(valueChanged(const QString&)),
+// 	  this, SLOT(valueChanged()));
+//   connect(operationsthr, SIGNAL(valueChanged(const QString&)),
+// 	  this, SLOT(valueChanged()));
+
+ //  connect(user, SIGNAL(toggled(const bool)), 
+// 	  this, SLOT(valueChanged()));
+//   connect(user, SIGNAL(toggled(bool)), 
+// 	  userParameters, SLOT(setVisible(bool)));
+//   connect(windSpeed, SIGNAL(valueChanged(const QString&)),
+// 	  this, SLOT(valueChanged()));
+//   connect(windDirection, SIGNAL(valueChanged(const QString&)),
+// 	  this, SLOT(valueChanged()));
+
+  /*
+   * connect(known, SIGNAL(toggled(const bool)), 
+   *	  this, SLOT(valueChanged()));
+   * connect(known, SIGNAL(toggled(bool)),
+   *	  knownParameters, SLOT(setVisible(bool)));
+   * connect(dir, SIGNAL(textChanged(const QString&)),
+   *  this, SLOT(valueChanged()));
+   */
+  
+  //  setPanelChanged(false);
+
+}
+
+ResearchPanel::~ResearchPanel()
+{
+  turnOffWhenRunning.clear(); 
+  delete research;
+  delete operations;
+  delete researchC;
+  delete researchS;
+  delete researchV;
+  delete researchQC;
+
+}
+
+void ResearchPanel::updatePanel(const QDomElement panelElement)
+{
+  setElement(panelElement);
+  QDomElement child = panelElement.firstChildElement();
+  while (!child.isNull()) {
+    QString name = child.tagName();
+    QString parameter = child.text();
+    if(name == "run_mode") {
+      if(parameter == "operations")
+	operations->setChecked(true);
+      if(parameter == "research")
+	research->setChecked(true);
+    }
+    if(name == "cappi") {
+      if(parameter == QString("1"))
+	researchC->setChecked(true);
+    }
+    if(name == "simplex") {
+      if(parameter == QString("1"))
+	researchS->setChecked(true);
+    }    
+    if(name == "vtd") {
+      if(parameter == QString("1"))
+	researchV->setChecked(true);
+    }   
+    if(name == "qc") {
+      if(parameter == QString("1"))
+	researchQC->setChecked(true);
+    }
+    child = child.nextSiblingElement();
+  }
+      // if(parameter == "user")
+// 	user->setChecked(true);
+      //      if(parameter == "known")
+      //	known->setChecked(true);
+    
+//     if(name == "vel_min") {
+//       velocityMinimum->setValue(parameter.toDouble()); }
+//     if(name == "vel_max") {
+//       velocityMaximum->setValue(parameter.toDouble()); }
+//     if(name == "ref_min") {
+//       reflectivityMinimum->setValue(parameter.toDouble()); }
+//     if(name == "ref_max") {
+//       reflectivityMaximum->setValue(parameter.toDouble()); }
+//     if(name == "sw_threshold") {
+//       spectralThreshold->setValue(parameter.toDouble()) ; }
+//     if(name == "bbcount") {
+//       bbSegmentSize->setValue(parameter.toInt()); }
+//     if(name == "maxfold") {
+//       maxFoldCount->setValue(parameter.toInt()); }
+//     if(name == "windspeed") {
+//       windSpeed->setValue(parameter.toDouble()); }
+//     if(name == "winddirection") {
+//       windDirection->setValue(parameter.toDouble()); }
+    /*
+    if(name == "awips_dir") {
+      dir->clear();
+      dir->insert(parameter); }
+    */
+//     if(name == "researchlevels") {
+//       researchC->setValue(parameter.toInt()); }
+//     if(name == "numcoeff") {
+//       researchS->setValue(parameter.toInt()); }
+//     if(name == "researchV") {
+//       researchV->setValue(parameter.toInt()); }
+//     if(name == "operationsthr") {
+//       operationsthr->setValue(parameter.toInt()); }
+//     child = child.nextSiblingElement();
+//   }
+
+  setPanelChanged(false);
+}
+
+
+bool ResearchPanel::updateConfig()
+{
+  QDomElement element = getPanelElement();
+  if (checkPanelChanged()) 
+    {
+
+	//~*~*~*~*~*~**~*~*COME BACK TO THIS~*~*~*~~**~*~*~~**
+
+
+ //      if(getFromElement("vel_min").toDouble()!=velocityMinimum->value()) {
+// 	emit changeDom(element, QString("vel_min"), 
+// 		       QString().setNum(velocityMinimum->value()));
+//       }
+//       if(getFromElement("vel_max").toDouble() !=velocityMaximum->value()) {
+// 	emit changeDom(element, QString("vel_max"), 
+// 		       QString().setNum(velocityMaximum->value()));
+//       }
+//       if(getFromElement("ref_min").toDouble()!=reflectivityMinimum->value()) {
+// 	emit changeDom(element, QString("ref_min"), 
+// 		       QString().setNum(reflectivityMinimum->value()));
+//       }
+//       if(getFromElement("ref_max").toDouble() !=reflectivityMaximum->value()) {
+// 	emit changeDom(element, QString("ref_max"), 
+// 		       QString().setNum(reflectivityMaximum->value()));
+//       }
+//       if(getFromElement("sw_threshold").toDouble()!=spectralThreshold->value()) {
+// 	emit changeDom(element, QString("sw_threshold"),
+// 		       QString().setNum(spectralThreshold->value()));
+//       }
+//       if(getFromElement("bbcount").toInt() !=bbSegmentSize->value()) {
+// 	emit changeDom(element,QString("bbcount"),
+// 		       QString().setNum(bbSegmentSize->value()));
+//       }
+//       if(getFromElement("maxfold").toInt()!=maxFoldCount->value()) {
+// 	emit changeDom(element, QString("maxfold"),
+// 		       QString().setNum(maxFoldCount->value()));
+//       }
+//       if(research->isChecked()) {
+// 	if(getFromElement("wind_method")!=QString("research")) {
+// 	  emit changeDom(element, QString("wind_method"), QString("research"));
+// 	}
+// 	if(getFromElement("researchlevels").toInt()!= researchC->value()) {
+// 	  emit changeDom(element, QString("researchlevels"),
+// 			  QString().setNum(researchC->value()));
+// 	}
+// 	if(getFromElement("numcoeff").toInt()!= researchS->value()) {
+// 	  emit changeDom(element, QString("numcoeff"),
+// 			 QString().setNum(researchS->value()));
+// 	}
+// 	if(getFromElement("researchV").toInt()!=researchV->value()) {
+// 	  emit changeDom(element, QString("resV"),
+// 			 QString().setNum(resV->value()));
+// 	}
+
+      if(operations->isChecked()) {
+	if(getFromElement("run_mode")!=QString("operations")) {
+	  emit changeDom(element, QString("run_mode"), QString("operations"));
+	}		  
+      }
+      if(research->isChecked()) {
+	if(getFromElement("run_mode")!=QString("research")) {
+	  emit changeDom(element, QString("run_mode"), QString("research"));
+	}
+      }
+
+      int researchCnum = 0;
+      int researchSnum = 0;
+      int researchVnum = 0;
+      int researchQCnum = 0;
+      if(researchC->isChecked()) { researchCnum = 1; }
+      if(researchS->isChecked()) { researchSnum = 1; }
+      if(researchV->isChecked()) { researchVnum = 1; }
+      if(researchQC->isChecked()) { researchQCnum = 1; }
+      
+      QString Cstr;
+      Cstr.setNum(researchCnum);
+      QString Sstr;
+      Sstr.setNum(researchSnum);
+      QString Vstr;
+      Vstr.setNum(researchVnum);
+      QString QCstr;
+      QCstr.setNum(researchQCnum);
+	
+      if(getFromElement("cappi")!=Cstr) {
+	emit changeDom(element, QString("cappi"), Cstr);
+      }
+      if(getFromElement("simplex")!=Sstr) {
+	emit changeDom(element, QString("simplex"), Sstr);
+      }
+      if(getFromElement("vtd")!=Vstr) {
+	emit changeDom(element, QString("vtd"), Vstr);
+      }
+      if(getFromElement("qc")!=QCstr) {
+	emit changeDom(element, QString("qc"), QCstr);
+      }
+    }
+  setPanelChanged(false);
+  return true;
+}
+
+
+bool ResearchPanel::checkValues()
+{
+  // Returning False means that one of the values has not been set correctly
+  // Returning True means that all the values check out...
+
+  // All of the values used in this panel are adequately constrained by
+  // the limits in constructing their GUI counterparts, nothing to check
+  // right now.
+
+  emit log(Message(QString(), 0, this->objectName(), Green));
+  return true;
+}
+
+
+
+
+
+
+

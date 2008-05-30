@@ -24,6 +24,9 @@ class GriddedFactory
 		GriddedData* makeCappi(RadarData *radarData, 
 				       Configuration* mainConfig,
 				       float *vortexLat, float *vortexLon);
+		GriddedData* readCappi(RadarData *radarData, 
+				       Configuration* mainConfig,
+				       float *vortexLat, float *vortexLon);
 		GriddedData* makeAnalytic(RadarData *radarData,
 					  Configuration* mainConfig,
 					  Configuration* analyticConfig,

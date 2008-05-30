@@ -125,6 +125,14 @@ void AbstractPanel::valueChanged()
   // updates the internal state of the panel when modifications were
   // made to it's members
 }
+
+void AbstractPanel::stateChanged()
+{
+  panelChanged = true;
+  // updates the internal state of the panel when modifications were
+  // made to it's members
+}
+
 /*
 void AbstractPanel::valueChanged(const bool signal)
 {

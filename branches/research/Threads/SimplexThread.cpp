@@ -107,11 +107,27 @@ void SimplexThread::findCenter(Configuration *wholeConfig,GriddedData *dataPtr,
 void SimplexThread::run()
 {
   
+// 	 //Check for research mode
+// 	 QDomElement research = configData->getConfig("research");
+// 	 QString RunMode = configData->getParam(research,"run_mode");
+// 	 bool CappiON = configData->getParam(research,"cappi").toInt();
+// 	 bool SimplexON = configData->getParam(research,"simplex").toInt();
+// 	 bool VtdON = configData->getParam(research,"vtd").toInt();
+// 	 bool QCON = configData->getParam(research,"qc").toInt();
+// 	 if (RunMode == "operations") {
+// 	   CappiON = 1;
+// 	   SimplexON = 1;
+// 	   VtdON = 1;
+// 	   QCON = 1;
+// 	 }
+
   forever {
     // Check to see if we should quit
     if (abort)
       return;
-    
+ 
+    // if (SimplexON == 1) {
+   
     // OK, Let's find a center
     mutex.lock();
     
@@ -595,8 +611,71 @@ void SimplexThread::run()
       waitForData.wait(&mutex);	
       mutex.unlock();    
     }
-    if(abort)
-      return;
+
+    //   }
+ //   if (SimplexON == 0) {
+     
+//      firstLevel = configData->getParam(simplexConfig,
+// 				       QString("bottomlevel")).toFloat();
+//      lastLevel = configData->getParam(simplexConfig,
+// 				      QString("toplevel")).toFloat();
+     
+//      int numLevels = int(lastLevel-firstLevel+1);
+//      int loopPercent = int(20.0/float(numLevels));
+//      int endPercent = 20-(numLevels*loopPercent);
+     
+//      emit log(Message(QString(),1+endPercent,this->objectName()));
+     
+//      //Now pick the best center
+//      simplexResults->timeSort();
+//      ChooseCenter *centerFinder = new ChooseCenter(configData,simplexResults,
+// 						   vortexData);
+     
+//      connect(centerFinder, SIGNAL(errorlog(const Message&)),
+// 	     this, SLOT(catchLog(const Message&)),Qt::DirectConnection);
+//      bool foundCenter = centerFinder->findCenter();
+     
+//      // Save again to keep mean values found in chooseCenter
+//      simplexResults->save();
+     
+//      emit log(Message(QString(),4,this->objectName()));
+     
+//      // Clean up
+//      delete centerFinder;
+//      //delete[] dataGaps;
+//      //   for(int i = 2; i >=0; i--)
+//      //    delete [] vertex[i];
+//      // delete[] vertex;
+//      //  delete[] VT;
+//      //  delete[] vertexSum;
+//      //  delete[] vtdCoeffs;
+//      //  delete   vtd;
+     
+//      if(!foundCenter)
+//        {
+// 	 // Some error occurred, notify the user
+// 	 emit log(Message(QString("Failed to Indentify Center!"),0,this->objectName(),AllOff,QString(),SimplexError,QString("Simplex Failed")));
+// 	 return;
+//        } else {
+// 	 // Update the vortex list
+// 	 emit log(Message(QString("Done with Simplex"),0, this->objectName()));
+	 
+// 	 // Let the poller know we're done
+// 	 emit(centerFound());
+//        }
+//      mutex.unlock();
+     
+//      // Go to sleep, wait for more data   
+//      if (!abort) {
+//        mutex.lock();
+//        // Wait until new data is available
+//        waitForData.wait(&mutex);	
+//        mutex.unlock();    
+//      }
+//    }
+   
+   if(abort)
+     return;
   }
 }
 
@@ -790,4 +869,3 @@ bool SimplexThread::calcHVVP(float& lat, float& lon)
     
   return hasHVVP;
 }
-

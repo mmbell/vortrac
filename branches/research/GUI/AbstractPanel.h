@@ -27,6 +27,7 @@
 #include <QDir>
 #include "Message.h"
 #include "Configuration.h"
+#include <QCheckBox>
 
 /*!
  * AbstractPanel is a model for creating many panels used in the
@@ -186,7 +187,7 @@ class AbstractPanel:public QWidget
     * \return
     * \sa
     */
-   void createDataGaps();
+  void createDataGaps();
    // Generates the framework nessecary for automatically adjusting data 
    // gap parameter entry boxes
    /*!
@@ -237,6 +238,7 @@ class AbstractPanel:public QWidget
     * \sa
     */
    void valueChanged();
+   void stateChanged();
  // These slots receive signals when one of the panel's parameters has
  // been changed.
  /*!
@@ -292,6 +294,9 @@ class AbstractPanel:public QWidget
    void log(const Message& message);
    void changeDom(const QDomElement &element, const QString &name, 
 		  const QString &value);
+
+   //  void changeDom(QDomElement &element, QString name, 
+   //	  QCheckBox* &value);
 
    void changeDom(const QDomElement &element, const QString &name,
 		  const QString &value, const QString &aname, 

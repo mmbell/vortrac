@@ -44,6 +44,21 @@ GriddedData* GriddedFactory::makeCappi(RadarData *radarData,
 		
 }
 
+GriddedData* GriddedFactory::readCappi(RadarData *radarData, 
+				       Configuration* mainConfig,
+				       float *vortexLat, float *vortexLon)
+{
+
+		CappiGrid* cappi = new CappiGrid;
+		//	cappi->setExit(abort);
+		//	cappi->gridRadarData(radarData,mainConfig->getConfig("cappi"),
+		//		     vortexLat,vortexLon);
+		
+		cappi->readAsi(radarData,mainConfig->getConfig("cappi"),vortexLat,vortexLon);
+		return cappi;
+		
+}
+
 GriddedData* GriddedFactory::makeAnalytic(RadarData *radarData,
 					  Configuration* mainConfig, 
 					  Configuration* analyticConfig,

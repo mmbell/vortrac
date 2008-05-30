@@ -129,4 +129,11 @@
       <vadthr>30</vadthr>
       <gvadthr>180</gvadthr>
    </qc>
+   <research>
+      <run_mode>ops</run_mode>
+      <cappi>1</cappi>
+      <simplex>1</simplex>
+      <vtd>1</vtd>
+      <qc>1</qc>
+   </research>
 </vortrac>

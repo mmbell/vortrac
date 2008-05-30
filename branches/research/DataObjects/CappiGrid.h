@@ -31,6 +31,7 @@ class CappiGrid : public GriddedData
   float trilinear(const float &x, const float &y,
 		 const float &z, const int &param);
   void writeAsi();
+  void readAsi(RadarData *radarData, QDomElement cappiConfig,float *vortexLat, float *vortexLon);
   bool writeAsi(const QString& fileName);
   
  private:

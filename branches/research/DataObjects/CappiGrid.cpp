@@ -10,6 +10,7 @@
 
 #include "CappiGrid.h"
 #include "Message.h"
+#include <QTextStream>
 #include <math.h>
 #include <QTextStream>
 #include <QFile>
@@ -792,7 +793,7 @@ void CappiGrid::writeAsi()
 	}
 	id[36] = (int)lonReference;
 	id[37] = (int)((lonReference - (float)id[36]) * 60.);
-	id[38] = (int)((((lonReference - (float)id[36]) * 60.) - (float)id[37]) * 60.) * 100;
+	id[38] = (int)( ( ( (lonReference - (float)id[36]) * 60.) - (float)id[37]) * 60.) * 100;
 	id[40] = 90;
 
 	// Scale factors
@@ -895,3 +896,354 @@ bool CappiGrid::writeAsi(const QString& fileName)
     return false;
   }
 }
+
+
+void CappiGrid::readAsi(RadarData *radarData, QDomElement cappiConfig,float *vortexLat, float *vortexLon)
+{
+        //Setting .asi field names
+        fieldNames << "DZ" << "VE" << "SW";
+
+        //setting asi filename
+        QString cappiPath = cappiConfig.firstChildElement("dir").text();
+	QString cappiFile = radarData->getDateTimeString();
+	cappiFile.replace(QString(":"),QString("_"));
+	outFileName = cappiPath + "/" + cappiFile;
+
+        // Get the dimensions from the configuration 
+        // all dimensions are in units of cappi grid points
+        iDim = cappiConfig.firstChildElement("xdim").text().toFloat();
+	jDim = cappiConfig.firstChildElement("ydim").text().toFloat();
+	kDim = cappiConfig.firstChildElement("zdim").text().toFloat();
+	// all grid spacings are in units of km
+	iGridsp = cappiConfig.firstChildElement("xgridsp").text().toFloat();
+	jGridsp = cappiConfig.firstChildElement("ygridsp").text().toFloat();
+	kGridsp = cappiConfig.firstChildElement("zgridsp").text().toFloat();
+	
+        float rXDistance =  0;
+	float rYDistance =  0;
+	
+	// connects the (0,0) point on the cappi grid, to the latitude and
+	// longitude of the radar.
+	
+	setLatLonOrigin(radarData->getRadarLat(), radarData->getRadarLon(),
+			&rXDistance,&rYDistance);
+
+  
+	relDist = getCartesianPoint(radarData->getRadarLat(),radarData->getRadarLon(),vortexLat, vortexLon);
+	
+	// Defines iteration indexes for cappi grid
+  
+	xmin = nearbyintf(relDist[0] - (iDim/2)*iGridsp);
+	xmax = nearbyintf(relDist[0] + (iDim/2)*iGridsp);
+	ymin = nearbyintf(relDist[1] - (jDim/2)*jGridsp);
+	ymax = nearbyintf(relDist[1] + (jDim/2)*jGridsp);
+	
+	//  Message::toScreen("Xmin = "+QString().setNum(xmin)+" Xmax = "+QString().setNum(xmax)+" Ymin = "+QString().setNum(ymin)+" Ymax = "+QString().setNum(ymax));
+	
+	// Adjust the cappi so that it doesn't waste space on areas without velocity data
+	if (xmin < -180) {
+	  float adjust = -xmin - 180;
+	  xmin += adjust;
+	  xmax += adjust;
+	} else if (xmax > 180) {
+	  float adjust = -xmax + 180;
+	  xmin += adjust;
+	  xmax += adjust;
+	}
+	if (ymin < -180) {
+	  float adjust = -ymin - 180;
+	  ymin += adjust;
+	  ymax += adjust;
+	} else if (ymax > 180) {
+	  float adjust = -ymax + 180;
+	  ymin += adjust;
+	  ymax += adjust;
+	}
+
+	/* Changed to be hardcoded absolute minimum zmin at 1 km for array purposes M. Bell
+	   float distance = sqrt(relDist[0] * relDist[0] + relDist[1] * relDist[1]);
+	   float beamHeight = radarData->radarBeamHeight(distance, radarData->getSweep(0)->getElevation());
+	   zmin = (float(int(beamHeight/kGridsp)))*kGridsp;
+	   zmax = zmin + kDim*kGridsp;
+	*/
+	zmin = 1.0;
+	zmax = zmin + kDim*kGridsp;
+       
+	latReference = *radarData->getRadarLat();
+	lonReference = *radarData->getRadarLon();
+	
+
+	// Read in the CAPPI from an asi file
+	// Set the input file
+// 	QString cappiPath = cappiConfig.firstChildElement("dir").text();    (ALREADY DECLARED ABOVE)
+// 	QString cappiFile = radarData->getDateTimeString();
+	cappiFile.replace(QString(":"),QString("_"));
+	QString dir = cappiPath + "/" + cappiFile;
+	const QString& FileName = dir + ".asi";
+
+	QFile asiFile(FileName);
+	if(!asiFile.open(QIODevice::ReadOnly)) {
+		Message::toScreen("Can't open CAPPI file for reading");
+	}
+	QTextStream in(&asiFile);
+	
+	//read header
+	QString inStr;
+	QString field;
+	float id[511];
+	for (int line = 1; line < 52 ;line++) {
+	  inStr = in.readLine(0);
+	  for (int f=0;f<10;f++) {
+	    field = inStr.mid(8*(f),8);
+	    id[((line-1)*10)+(f+1)] = field.toFloat();
+	    // in >> qSkipWhiteSpace() >> id[g];
+	  }
+	}
+
+	// assign header properties
+
+
+// 	// Lat and Lon
+// 	id[33] = (int)latReference;
+// 	id[34] = (int)((latReference - (float)id[33]) * 60.);
+// 	id[35] = (int) (              (((latReference - (float)id[33]) * 60.) - (float)id[34]) * 60.            ) * 100;
+// 	if (lonReference < 0) {
+// 		lonReference += 360.;
+// 	}
+// 	id[36] = (int)lonReference;
+// 	id[37] = (int)((lonReference - (float)id[36]) * 60.);
+// 	id[38] = (int)((((lonReference - (float)id[36]) * 60.) - (float)id[37]) * 60.) * 100;
+// 	id[40] = 90;
+
+
+	float ClatReference = (  (id[35]/60/100) + id[34]   )/60 +  id[33];
+	float ClonReference = (  (id[38]/60/100) + id[37]   )/60 +  id[36];
+	if (ClonReference > 180) {
+		ClonReference -= 360.;
+	}
+
+	float idimCap = id[162];
+	float jdimCap = id[167];
+	float kdimCap = id[172];
+
+	float iGridspCap = id[163]/1000;
+	float jGridspCap = id[168]/1000;
+	float kGridspCap = id[173]/1000;
+
+	float Cxmin = id[160]/100;
+	float Cxmax = id[161]/100;
+	float Cymin = id[165]/100;
+	float Cymax = id[166]/100;
+	float Czmin = id[170]/1000;
+	float Czmax = id[171]/1000;
+
+
+// 	// X Header
+// 	id[160] = (int)(xmin * 100);
+// 	id[161] = (int)(xmax * 100);
+// 	id[162] = (int)iDim;
+// 	id[163] = (int)iGridsp * 1000;
+// 	id[164] = 1;
+  
+// 	// Y Header
+// 	id[165] = (int)(ymin *  100);
+// 	id[166] = (int)(ymax * 100);
+// 	id[167] = (int)jDim;
+// 	id[168] = (int)jGridsp * 1000;
+// 	id[169] = 2;
+  
+// 	// Z Header
+// 	id[170] = (int)(zmin * 1000);
+// 	id[171] = (int)(zmax * 1000);
+
+
+// 	float xminCap = id[160]/100;
+// 	float yminCap = id[165]/100;
+// 	float zminCap = id[170]/100;
+// 	float xmaxCap = id[161]/100;
+// 	float ymaxCap = id[166]/100;
+// 	float zmaxCap = id[171]/100;
+
+	//Read Grid Data
+	//trash string to skip over unwanted lines
+		QString dump;	
+		QString tempString;
+
+		//qSetRealNumberPrecision(3) >> scientific >> qSetFieldWidth(10)
+
+	// Read data
+	for(int k = 0; k < int(kDim); k++) {
+	  in >> dump; //skips level
+	  in >> dump; //skips the "n" in n'th level
+		for(int j = 0; j < int(jDim); j++) {
+		  in >> dump;// skips azimuth
+		  if (j < 99) {
+		  in >> dump; //skips the "n" in n'th azimuth
+		  }
+			for(int n = 0; n < 3; n++) {
+			  in >> dump; // skips field name
+			  //	int line = 0;
+			  dump = in.readLine(0); //dumps extra \n cahracter
+			  for (int dline=1;dline<=(int(iDim/8)+1);dline++) {
+			    tempString = in.readLine(0);
+			    if (dline <= int(iDim/8)) {
+			      for (int i = 0; i < 8;  i++){
+				dataGrid[n][(dline-1)*8+i][j][k] = tempString.mid(10*(i),10).toFloat();
+			      }
+			    }
+			    else {
+			      for (int i = 0; i < ( (int(iDim)%8)*8 );  i++){
+				dataGrid[n][(dline-1)*8+i][j][k] = tempString.mid(10*(i),10).toFloat();
+			      }
+			    }
+			  }
+			}
+		}
+	}	
+	
+
+	//check to make sure we've got the right grid
+// 	QDomElement cappi = configData->getConfig("cappi");
+// 	float idim = configData->getParam(cappi,"xdim").toFloat();
+// 	float jdim = configData->getParam(cappi,"ydim").toFloat();
+// 	float kdim = configData->getParam(cappi,"zdim").toFloat();
+	
+	float idim = cappiConfig.firstChildElement("xdim").text().toFloat();
+	float jdim = cappiConfig.firstChildElement("ydim").text().toFloat();
+	float kdim = cappiConfig.firstChildElement("zdim").text().toFloat();
+	// all grid spacings are in units of km
+	float iGridsp = cappiConfig.firstChildElement("xgridsp").text().toFloat();
+	float jGridsp = cappiConfig.firstChildElement("ygridsp").text().toFloat();
+	float kGridsp = cappiConfig.firstChildElement("zgridsp").text().toFloat();
+	//	float vlat = *vortexLat;
+	//      float vlon = *vortexLon;
+	float vlat = latReference;
+	float vlon = lonReference;
+
+	if ( (idimCap == idim) & (jdimCap == jdim) & (kdimCap == kdim) & (abs(ClatReference-vlat) < .05) & (abs(ClonReference-vlon) < .05) & (iGridspCap == iGridsp) & (jGridspCap == jGridsp) & (kGridspCap == kGridsp) & (xmin == Cxmin) & (ymin == Cymin) & (zmin == Czmin) ) {
+	  // emit log(Message("Cappi File Matches Configuration, Continuing...",5,this->objectName()));
+	  	  Message::toScreen("Cappi Grid Matches Configuration!");
+	}
+	else {
+	  // emit log(Message(QString("Cappi File Does Not Match Configuration! Aborting..."),0,this->objectName(),Red, QString("Cappi xml file/configuration mismatch")));
+	   Message::toScreen("WARNING: Cappi Grid Does Not Match Configuration!");
+	   //  return;
+	}
+	xmin = Cxmin;
+	xmax = Cxmax;
+	ymin = Cymin;
+	ymax = Cymax;
+	zmin = Czmin;
+	zmax = Czmax;
+
+	delete[] relDist;
+	
+
+// 	//	id[175] = fieldNames.size();
+//     for(int n = 0; n < id[175]; n++) {
+// 		QString name_1 = fieldNames.at(n).left(1);
+//         QString name_2 = fieldNames.at(n).mid(1,1);
+// 		int int_1 = *name_1.toAscii().data();
+// 		int int_2 = *name_2.toAscii().data();
+// 		id[176 + (5 * n)] = (int_1 * 256) + int_2;
+// 		id[177 + (5 * n)] = 8224;
+// 		id[178 + (5 * n)] = 8224;
+// 		id[179 + (5 * n)] = 8224;
+// 		id[180 + (5 * n)] = 1;
+// 	}
+
+// 	// Cartesian file
+// 	id[16] = 17217;
+// 	id[17] = 21076;
+  
+// 	// Lat and Lon
+// 	id[33] = (int)latReference;
+// 	id[34] = (int)((latReference - (float)id[33]) * 60.);
+// 	id[35] = (int)((((latReference - (float)id[33]) * 60.) - (float)id[34]) * 60.) * 100;
+// 	if (lonReference < 0) {
+// 		lonReference += 360.;
+// 	}
+// 	id[36] = (int)lonReference;
+// 	id[37] = (int)((lonReference - (float)id[36]) * 60.);
+// 	id[38] = (int)((((lonReference - (float)id[36]) * 60.) - (float)id[37]) * 60.) * 100;
+// 	id[40] = 90;
+
+// 	// Scale factors
+// 	id[68] = 100;
+// 	id[69] = 64;
+
+// 	// X Header
+// 	id[160] = (int)(xmin * 100);
+// 	id[161] = (int)(xmax * 100);
+// 	id[162] = (int)iDim;
+// 	id[163] = (int)iGridsp * 1000;
+// 	id[164] = 1;
+  
+// 	// Y Header
+// 	id[165] = (int)(ymin *  100);
+// 	id[166] = (int)(ymax * 100);
+// 	id[167] = (int)jDim;
+// 	id[168] = (int)jGridsp * 1000;
+// 	id[169] = 2;
+  
+// 	// Z Header
+// 	id[170] = (int)(zmin * 1000);
+// 	id[171] = (int)(zmax * 1000);
+// 	id[172] = (int)kDim;
+// 	id[173] = (int)kGridsp * 1000;
+// 	id[174] = 3;
+
+// 	// Number of radars
+// 	id[303] = 1;
+  
+// 	// Index of center
+// 	id[309] = (int)((1 - xmin) * 100);
+// 	id[310] = (int)((1 - ymin) * 100);
+// 	id[311] = 0;
+	
+// 	// Write ascii file for grid2ps
+// 	//Message::toScreen("Trying to write cappi to "+outFileName);
+// 	outFileName += ".asi";
+// 	QFile asiFile(outFileName);
+// 	if(!asiFile.open(QIODevice::WriteOnly)) {
+// 		Message::toScreen("Can't open CAPPI file for writing");
+// 	}
+
+// 	QTextStream out(&asiFile);
+	
+// 	// Write header
+//     int line = 0;
+// 	for (int n = 1; n <= 510; n++) {
+// 		line++;
+// 		out << qSetFieldWidth(8) << id[n];
+// 		if (line == 10) {
+// 			out << endl;
+//             line = 0;
+// 		}
+// 	}
+
+// 	// Write data
+// 	for(int k = 0; k < int(kDim); k++) {
+// 		out << reset << "level" << qSetFieldWidth(2) << k+1 << endl;
+// 		for(int j = 0; j < int(jDim); j++) {
+// 			out << reset << "azimuth" << qSetFieldWidth(3) << j+1 << endl;
+
+// 			for(int n = 0; n < fieldNames.size(); n++) {
+// 				out << reset << left << fieldNames.at(n) << endl;
+// 				int line = 0;
+// 				for (int i = 0; i < int(iDim);  i++){
+// 				    out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << dataGrid[n][i][j][k];
+// 					line++;
+// 					if (line == 8) {
+// 						out << endl;
+// 						line = 0;
+// 					}
+// 				}
+// 				if (line != 0) {
+// 					out << endl;
+// 				}
+// 			}
+// 		}
+// 	}	
+
+}     

@@ -38,6 +38,9 @@ private:
 	float deg2rad;
 	float rad2deg;
 	float* ringPsi;
+	float* thetaP;
+	float* ringthetaP;
+	float* D;
 	float* vel;
 	float* psi;
 	float thetaT;
@@ -51,6 +54,7 @@ private:
 	
 	void setWindCoefficients(float& radius, float& height, int& numCoefficients, float*& FourierCoeffs, Coefficient*& vtdCoeffs);
 	int getNumCoefficients(int& numData);
+	//int getNumCoefficients(int& numData,float& r, float& z);
 	float fixAngle(float& angle);
 	
 };

@@ -34,6 +34,8 @@ class VortexThread : public QThread
   VortexThread(QObject *parent = 0);
   ~VortexThread();
   void getWinds(Configuration *wholeConfig, GriddedData *dataPtr, RadarData *radarPtr, VortexData *vortexPtr, PressureList *pressurePtr);
+  void writeAsi(float*** propGrid,float& kdim);
+  // bool writeAsi(const QString& fileName);
 
  public slots:
      void catchLog(const Message& message);
@@ -88,9 +90,15 @@ class VortexThread : public QThread
 		       int& height,float& maxCoeffs);
      // void getPressureDeficit(const float& height);
      void getPressureDeficit(VortexData* data, float* pDeficit, 
-			     const float& height);
+			     const float& height, float& kdim);
+     void getPressureDeficit(VortexData* data, float* pDeficit, const float& height);
      //void calcCentralPressure();
-     void calcCentralPressure(VortexData* vortex, float* pD, float height);
+     void getRhoDeficit(VortexData* data, float** rhoDeficit, float& kdim);
+     void getDeficitFields(VortexData* data, float& kdim, float*** propGrid,float centralPressure);
+     //void calcCentralPressure();
+     float calcCentralPressure(VortexData* vortex, float* pD, float centralPressure, float height);
+     float createRankine(float radius, float height, float H);
+     void getTDeficit(VortexData* data,float** T1,float** P1,float** Rho1,float** theta1,float** thetadiff1,float** Tdeficit1,float** rhoDeficit, float& kdim, float centralPressure, float*** propGrid1);
      void calcPressureUncertainty(float setLimit, QString nameAddition);
      void storePressureUncertaintyData(QString& fileLocation);
      void readInConfig();

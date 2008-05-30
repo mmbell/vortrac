@@ -55,6 +55,7 @@ private:
        PressurePanel* pressure;
        GraphicsPanel* graphics;
        QCPanel* qc;
+       ResearchPanel* research;
        QHash <QString, AbstractPanel*> panelForString;
        QDir* workingDirectory;
 

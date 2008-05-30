@@ -24,6 +24,7 @@
 #include "SimplexThread.h"
 #include "VortexThread.h"
 #include "Pressure/PressureList.h"
+//#include "PollThread.h"
 
 class AnalysisThread : public QThread
 {
@@ -40,6 +41,7 @@ class AnalysisThread : public QThread
      void setDropSondeList(PressureList *archivePtr);
      void setNumVolProcessed(const float& num);
      void setAnalyticRun(const bool& runOnce);
+
 	 
  public slots:
      void catchLog(const Message& message);
@@ -58,6 +60,7 @@ class AnalysisThread : public QThread
      void newCappiInfo(const float& x, const float& y, const float& sMin,
 		       const float& sMax, const float& vMax, const float& lat, const float& lon);
      void abortChanged(volatile bool *abortStatus);
+     void vortexListUpdate(VortexList* list);
 	 
  private:
      QMutex mutex;
@@ -73,13 +76,22 @@ class AnalysisThread : public QThread
      VortexThread *vortexThread;
      VortexList *vortexList;
      SimplexList *simplexList;
+     SimplexList *simplexResults;
      PressureList *pressureList;
      PressureList *dropSondeList;  
+
      // is this supposed to be type vortexList -LM
      void archiveAnalysis();
      float vortexLat, vortexLon;
      int numVolProcessed;
      bool analyticRun;
+     Configuration *vortexConfig;
+     Configuration *simplexConfig;
+     Configuration *pressureConfig;
+     Configuration *dropSondeConfig;
+
+      void checkIntensification(); 
+      void checkListConsistency(); 
     
 };
 

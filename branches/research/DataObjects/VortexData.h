@@ -25,11 +25,13 @@ class VortexData
   void printString();
 
   float getLat();
+  float getLat() const;
   float getLat(const int& i) const;
   void setLat(const int& index, const float& latitude);
   void setLat(const float a[], const int& howMany);
 
   float getLon();
+  float getLon() const;
   float getLon(const int& i) const;
   void setLon(const int& index,const float& longitude);
   void setLon(const float a[], const int& howMany);

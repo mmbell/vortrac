@@ -551,6 +551,21 @@ void AnalysisPage::updatePage()
 
 void AnalysisPage::runThread()
 {
+
+  //Check for research mode
+  QDomElement research = configData->getConfig("research");
+  QString RunMode = configData->getParam(research,"run_mode");
+  //  bool CappiON = configData->getParam(research,"cappi").toInt();
+  bool SimplexON = configData->getParam(research,"simplex").toInt();
+  //  bool VtdON = configData->getParam(research,"vtd").toInt();
+  //  bool QCON = configData->getParam(research,"qc").toInt();
+  if (RunMode == "operations") {
+    //    CappiON = 1;
+    SimplexON = 1;
+    //    VtdON = 1;
+    //    QCON = 1;
+  }
+
   // Start a processing thread using the current configuration
 
   // Disable the run button so you can only hit it once, enable the abort button
@@ -605,6 +620,8 @@ void AnalysisPage::runThread()
   QStringList allPossibleFiles = workingDirectory.entryList(QDir::Files);
   allPossibleFiles = allPossibleFiles.filter(nameFilter, Qt::CaseInsensitive);
   bool continuePreviousRun = false;
+
+  if (SimplexON) {
   QString openOldMessage = QString(tr("Vortrac has found information about a previously started run. Would you like to continue this run?\nPress 'Yes' to continue a previous run. Press 'No' to start a new run."));
   if(allPossibleFiles.count()> 0){
     if(allPossibleFiles.filter("vortexList").count()>0)
@@ -619,6 +636,7 @@ void AnalysisPage::runThread()
 	  return;
       }
     
+  }
   }
   
   pollThread->setContinuePreviousRun(continuePreviousRun);
