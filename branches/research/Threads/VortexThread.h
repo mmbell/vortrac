@@ -35,6 +35,7 @@ class VortexThread : public QThread
   ~VortexThread();
   void getWinds(Configuration *wholeConfig, GriddedData *dataPtr, RadarData *radarPtr, VortexData *vortexPtr, PressureList *pressurePtr);
   void writeAsi(float*** propGrid,float& kdim);
+  void writeANAsi(float** MeanWindField,float& IT,float& kdim, int& xdim, int& ydim);
   // bool writeAsi(const QString& fileName);
 
  public slots:

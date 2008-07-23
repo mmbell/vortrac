@@ -14,6 +14,7 @@
 #include "RadarData.h"
 #include "Message.h"
 #include "Configuration.h"
+#include "VTD/GBVTD.h"
 
 
 class Hvvp : public QObject
@@ -44,6 +45,7 @@ public slots:
    void catchLog(const Message& message);
 
 private:
+   GBVTD* vtd;
    RadarData *volume;
    Configuration* configData;
    int levels;
@@ -79,6 +81,9 @@ private:
    long maxpoints;
    float* yls;
    float* wgt;
+
+   //used in GVTD-HVVP closure in GBVTD.cpp
+   float ThetaM;
 
    float *z, *u, *v, *vm_sin, *var, av_VmSin, stdErr_VmSin;
    /*

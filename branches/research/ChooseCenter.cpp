@@ -36,6 +36,8 @@ ChooseCenter::ChooseCenter(Configuration* newConfig,
   numHeights = NULL;
   indexOfHeights = NULL;
   setObjectName("Center Chooser");
+  //flag used in analytic runs with ONLY a mean wind, this line sets it as non-analytic by default
+  ForceCenter = false;
 }
 
 ChooseCenter::~ChooseCenter()
@@ -133,6 +135,11 @@ void ChooseCenter::setConfig(Configuration* newConfig)
   config = newConfig; 
 }
 
+void ChooseCenter::setForceCenter(bool ForceCenterFlag)
+{
+  ForceCenter = ForceCenterFlag;
+}
+
 void ChooseCenter::setSimplexList(const SimplexList* newList)
 {
   simplexResults = NULL;
@@ -141,7 +148,7 @@ void ChooseCenter::setSimplexList(const SimplexList* newList)
 
 bool ChooseCenter::findCenter()
 {
-  
+
    initialize();
    if(!chooseMeanCenters()) {
      emit errorlog(Message(QString("Failed in ChooseMeanCenters!"),
@@ -1074,15 +1081,18 @@ bool ChooseCenter::fixCenters()
 	  float centerLon = radarLon + x/fac_lon; */
 	  float centerLat = radarLat + bestCenter.getY()/fac_lat;
 	  float centerLon = radarLon + bestCenter.getX()/fac_lon;
-	  vortexData->setLat(levelIndices[i], centerLat);
-	  vortexData->setLon(levelIndices[i], centerLon);
-	  //vortexData->setHeight(levelIndices[i], simplexResults->at(i).getHeight(levelIndices[i]));
-	  //vortexData->setRMW(levelIndices[i], rad);
-	  vortexData->setRMW(levelIndices[i], bestCenter.getRadius());
-	  vortexData->setRMWUncertainty(levelIndices[i], radError);
+
+	  if (!ForceCenter) {
+	    vortexData->setLat(levelIndices[i], centerLat);
+	    vortexData->setLon(levelIndices[i], centerLon);
+	    //vortexData->setHeight(levelIndices[i], simplexResults->at(i).getHeight(levelIndices[i]));
+	    //vortexData->setRMW(levelIndices[i], rad);
+	    vortexData->setRMW(levelIndices[i], bestCenter.getRadius());
+	    vortexData->setRMWUncertainty(levelIndices[i], radError);
 	  //Message::toScreen("Rad error for level "+QString().setNum(k)+" is "+QString().setNum(radError));
-	  vortexData->setCenterStdDev(levelIndices[i], sqrt(xError*xError+yError*yError));
-	  vortexData->setNumConvergingCenters(levelIndices[i], simplexResults->at(i).getNumConvergingCenters(levelIndices[i],j));
+	    vortexData->setCenterStdDev(levelIndices[i], sqrt(xError*xError+yError*yError));
+	    vortexData->setNumConvergingCenters(levelIndices[i], simplexResults->at(i).getNumConvergingCenters(levelIndices[i],j));
+	  }
 	}
       }
     }
@@ -1137,25 +1147,30 @@ void ChooseCenter::useLastMean()
 	  int j = bestRadius[i][k];
 	  float centerLat = radarLat + simplexResults->at(i).getY(k,j)/fac_lat;
 	  float centerLon = radarLon + simplexResults->at(i).getX(k,j)/fac_lon;
-	  vortexData->setLat(k, centerLat);
-	  vortexData->setLon(k, centerLon);
-	  //vortexData->setHeight(k, simplexResults->at(i).getHeight(k));
-	  vortexData->setRMW(k, simplexResults->at(i).getRadius(j));
-	  vortexData->setRMWUncertainty(k, -999);
-	  vortexData->setCenterStdDev(k, simplexResults->at(i).getCenterStdDev(k,j));
-	  vortexData->setNumConvergingCenters(k, simplexResults->at(i).getNumConvergingCenters(k,j));
+
+	  if (!ForceCenter) {
+	    vortexData->setLat(k, centerLat);
+	    vortexData->setLon(k, centerLon);
+	    //vortexData->setHeight(k, simplexResults->at(i).getHeight(k));
+	    vortexData->setRMW(k, simplexResults->at(i).getRadius(j));
+	    vortexData->setRMWUncertainty(k, -999);
+	    vortexData->setCenterStdDev(k, simplexResults->at(i).getCenterStdDev(k,j));
+	    vortexData->setNumConvergingCenters(k, simplexResults->at(i).getNumConvergingCenters(k,j));
+	  }
   } 
   int topSimplex = simplexResults->at(i).getNumLevels()-1;
   for(int k = topSimplex+1; k < vortexData->getNumLevels(); k++) {
 		int j = bestRadius[i][topSimplex];
 		float centerLat = radarLat + simplexResults->at(i).getY(topSimplex,j)/fac_lat;
 		float centerLon = radarLon + simplexResults->at(i).getX(topSimplex,j)/fac_lon;
-		vortexData->setLat(k, centerLat);
-		vortexData->setLon(k, centerLon);
-		vortexData->setRMW(k, simplexResults->at(i).getRadius(j));
-		vortexData->setRMWUncertainty(k, -999);
-		vortexData->setCenterStdDev(k, simplexResults->at(i).getCenterStdDev(topSimplex,j));
-		vortexData->setNumConvergingCenters(k, simplexResults->at(i).getNumConvergingCenters(topSimplex,j));
+		if (!ForceCenter) {
+		  vortexData->setLat(k, centerLat);
+		  vortexData->setLon(k, centerLon);
+		  vortexData->setRMW(k, simplexResults->at(i).getRadius(j));
+		  vortexData->setRMWUncertainty(k, -999);
+		  vortexData->setCenterStdDev(k, simplexResults->at(i).getCenterStdDev(topSimplex,j));
+		  vortexData->setNumConvergingCenters(k, simplexResults->at(i).getNumConvergingCenters(topSimplex,j));
+		}
   }	  
   
 }

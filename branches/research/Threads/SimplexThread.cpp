@@ -72,12 +72,14 @@ SimplexThread::~SimplexThread()
 
 void SimplexThread::findCenter(Configuration *wholeConfig,GriddedData *dataPtr,
 			       RadarData* radarPtr, SimplexList* simplexPtr, 
-			       VortexData* vortexPtr)
+			       VortexData* vortexPtr, bool JustMeanWindFlag)
 {
 
 	// Lock the thread
   	QMutexLocker locker(&mutex);
-        
+ 
+	JustMeanWind = JustMeanWindFlag;
+       
 	// Set the grid object
 	gridData = dataPtr;
 
@@ -572,6 +574,9 @@ void SimplexThread::run()
     
     connect(centerFinder, SIGNAL(errorlog(const Message&)),
 	    this, SLOT(catchLog(const Message&)),Qt::DirectConnection);
+
+    centerFinder->setForceCenter(JustMeanWind);
+
     foundCenter = centerFinder->findCenter();
     
     // Save again to keep mean values found in chooseCenter

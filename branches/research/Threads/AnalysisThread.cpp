@@ -183,6 +183,11 @@ void AnalysisThread::run()
 	   QCON = 1;
 	 }
 
+	 //this is used in analytic runs, set to default here
+	 bool ForceCenter = false;
+
+	 
+
 	 bool analysisGood = true;
 	 emit log(Message(QString(),0,this->objectName(),Green));
 	 QTime analysisTime;
@@ -776,13 +781,25 @@ void AnalysisThread::run()
 		     *  gridded data rather than a cappi
 		     */
 		    //GriddedData *gridData;
+		    QDomElement radar = configData->getConfig("radar");
+		    QString format = configData->getParam(radar,"format");
 		    
-		    if(radarVolume->getNumSweeps() < 0) {
+		    if(format == "MODEL") {
+
+		      //so that we include ALL wavenumbers in analytic vortex
+		      vortexData->setNumWaveNum(2);
+
 		      Configuration *analyticConfig = new Configuration();
-		      QDomElement radar = configData->getConfig("radar");
 		      float radarLat = configData->getParam(radar,"lat").toFloat();
 		      float radarLon = configData->getParam(radar,"lon").toFloat();
 		      analyticConfig->read(configData->getParam(radar, "dir"));
+
+		      QDomElement winds =analyticConfig->getConfig("wind_field");
+		      QString forceCenterFlag = analyticConfig->getParam(winds, "force_center");
+		      if (forceCenterFlag == "true") {
+			ForceCenter = true;
+		      }
+
 		      gridData = gridFactory.makeAnalytic(radarVolume,
 							  configData,analyticConfig, 
 							  &vortexLat, &vortexLon, 
@@ -855,7 +872,7 @@ void AnalysisThread::run()
 		  
 		  //Find Center 
 		  simplexThread->findCenter(configData, gridData, radarVolume, 
-					    simplexList, vortexData);
+					    simplexList, vortexData, ForceCenter);
 		  waitForCenter.wait(&mutex); 
 		  
 		  QString simplexTime;
@@ -913,6 +930,8 @@ void AnalysisThread::run()
 		  
 		  connect(centerFinder, SIGNAL(errorlog(const Message&)),
 			  this, SLOT(catchLog(const Message&)),Qt::DirectConnection);
+	
+		  centerFinder->setForceCenter(ForceCenter);
 		  bool foundCenter = centerFinder->findCenter();
 		  
 		  // Save to keep mean values found in chooseCenter
@@ -1020,6 +1039,12 @@ void AnalysisThread::run()
 		emit log(Message(QString(),2,this->objectName())); // 97 %
 		
 		//if (SimplexON == 1) {
+
+		QDomElement radar = configData->getConfig("radar");
+		QString format = configData->getParam(radar,"format");
+		
+		if(format == "MODEL") { hasConvergingCenters = true; }
+
 		  if(hasConvergingCenters) {
 		    if (SimplexON == 0) {
 		      if (radarVolume->getDateTime() > vortexList->last().getTime()) {
@@ -1047,6 +1072,7 @@ void AnalysisThread::run()
 		
 		  else {
 		    emit log(Message(QString("Insufficient Convergence of Simplex Centers"),0,this->objectName(),AllOff,QString(),SimplexError,QString("Could Not Obtain Center Convergence")));
+
 		  }
 		  //}
 		if(!hasConvergingCenters && (vortexList->count() > 0)){

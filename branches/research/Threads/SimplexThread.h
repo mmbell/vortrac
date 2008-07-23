@@ -37,7 +37,7 @@ class SimplexThread : public QThread
      ~SimplexThread();
      void findCenter(Configuration *wholeConfig, GriddedData *dataPtr, 
 		     RadarData* radarPtr, SimplexList *simplexPtr, 
-		     VortexData *vortexPtr);
+		     VortexData *vortexPtr, bool JustMeanWindFlag);
 
  public slots:
      void catchLog(const Message& message);
@@ -50,6 +50,7 @@ class SimplexThread : public QThread
      void log(const Message& message);
  
  private:
+     bool JustMeanWind;
      QMutex mutex;
      QWaitCondition waitForData;
      bool abort;

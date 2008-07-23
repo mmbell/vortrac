@@ -595,6 +595,7 @@ void PollThread::run()
 	    // start and stop dates specified in the configuration.
 	    QDomElement radar = configData->getConfig("radar");
 	    QString startDate = configData->getParam(radar,"startdate");
+	    QString format = configData->getParam(radar,"format");
 	    QString startTime = configData->getParam(radar,"starttime");
 	    QString stopDate = configData->getParam(radar, "enddate");
 	    QString stopTime = configData->getParam(radar, "endtime");
@@ -605,10 +606,13 @@ void PollThread::run()
 	    QDateTime radarStop(QDate::fromString(stopDate,Qt::ISODate),
 				QTime::fromString(stopTime, Qt::ISODate),
 				Qt::UTC);
-	    if((volTime < radarStart)||(volTime > radarStop)) {
-	      delete newVolume;
-	      mutex.unlock();
-	      continue;
+
+	    if (format != "MODEL") {
+	      if((volTime < radarStart)||(volTime > radarStop)) {
+		delete newVolume;
+		mutex.unlock();
+		continue;
+	      }
 	    }
 
 	    emit log(Message(QString(),3,this->objectName()));

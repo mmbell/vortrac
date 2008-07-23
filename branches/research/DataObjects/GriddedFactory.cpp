@@ -66,7 +66,21 @@ GriddedData* GriddedFactory::makeAnalytic(RadarData *radarData,
 					  float *radarLat, float *radarLon)
 {
                 
-                if(radarData->getNumRays() <= 0) {
+                // if(radarData->getNumRays() <= 0) {
+// 		  //coordSystem = cartesian;
+// 		     AnalyticGrid *data = new AnalyticGrid();
+// 		     data->setExit(abort);
+// 		     data->gridAnalyticData(mainConfig, analyticConfig, 
+// 					    vortexLat, vortexLon,radarLat,
+// 					    radarLon);
+// 		     return data;
+// 		}
+// 		else {
+// 		    return makeCappi(radarData, mainConfig, 
+// 				     vortexLat, vortexLon);
+// 		}
+
+               
 		  //coordSystem = cartesian;
 		     AnalyticGrid *data = new AnalyticGrid();
 		     data->setExit(abort);
@@ -74,14 +88,8 @@ GriddedData* GriddedFactory::makeAnalytic(RadarData *radarData,
 					    vortexLat, vortexLon,radarLat,
 					    radarLon);
 		     return data;
-		}
-		else {
-		    return makeCappi(radarData, mainConfig, 
-				     vortexLat, vortexLon);
-		}
 		
-		Message::toScreen("Error in make Analytic GriddedFactory");
-		return new CappiGrid();
+		
 	      
 }
 

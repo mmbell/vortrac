@@ -72,12 +72,14 @@ bool AnalyticRadar::readVolume()
       return true;
   }
   else {
-    // Sample the analytic data with the analytic radar
+    // Sample the analytic data with the analytic radar if Cappi is ON
 
-    if(readVolumeAnalytic()) {
-      //testing Message::toScreen("Finished read Volume Analytic");
-      return true;
-    }
+    //  if (CappiON) {
+      if(readVolumeAnalytic()) {
+	//testing Message::toScreen("Finished read Volume Analytic");
+	return true;
+      }
+      //    }
   }
 
 return false;
@@ -324,7 +326,7 @@ Ray* AnalyticRadar::addRay()
 bool AnalyticRadar::skipReadVolume()
 {
   // This indicates that none of the RadarQC is used
-  // This radarData is a dude, and goes straight to cappi
+  // This radarData is a dud, and goes straight to cappi
   
   numSweeps = -1;
   numRays = -1;

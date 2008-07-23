@@ -302,7 +302,7 @@ RadarPanel::RadarPanel()
 			     QString(""));
   radarFormatOptions->insert(QString("NCDC Level II"), QString("NCDCLEVELII"));
   radarFormatOptions->insert(QString("LDM Level II"), QString("LDMLEVELII"));
-  //radarFormatOptions->insert(QString("Analytic Model"), QString("MODEL"));
+  radarFormatOptions->insert(QString("Analytic Model"), QString("MODEL"));
   radarFormat = new QComboBox();
   QList<QString> options = radarFormatOptions->keys();
   for(int i = 0; i < options.count(); i++) 
@@ -1943,6 +1943,8 @@ VTDPanel::VTDPanel()
 			 QString("original_hvvp"));
   closureOptions->insert(QString("GVTD"), 
 			 QString("GVTD"));
+  closureOptions->insert(QString("GVTD-MeanWind"), 
+			 QString("GVTD_MeanWind"));
   closureOptions->insert(QString("GVTD-HVVP"), 
 			 QString("GVTD_hvvp"));
 

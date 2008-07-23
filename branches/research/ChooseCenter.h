@@ -31,6 +31,7 @@ class ChooseCenter : public QObject
   
     void setConfig(Configuration* newConfig);
     void setSimplexList(const SimplexList* newList);
+    void setForceCenter(bool ForceCenterFlag);
     bool findCenter();
 
  public slots:
@@ -40,6 +41,7 @@ class ChooseCenter : public QObject
     void errorlog(const Message& message);
 
  private:
+    bool ForceCenter;
     Configuration* config;       // Should this be a constant parameter
     const SimplexList* simplexResults;
 	SimplexData* simplexData;

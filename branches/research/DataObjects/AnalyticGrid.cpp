@@ -310,11 +310,12 @@ void AnalyticGrid::gridWindFieldData()
 	float c1 = .1;
 	float c2 = 3;
 
+
 	// Add in tangential wind structure
 
 	/* The storm velocity is calculated at each point according to the
 	 * relative position of the storm. A vector is drawn from the point
-	 * of interest to the 
+	 * of interest to the ??storm center??
 	 */
 
 	if(r>rmw) {
@@ -340,11 +341,32 @@ void AnalyticGrid::gridWindFieldData()
 
 	// Haven't fixed radial yet
 	
+// 	if(r>rmw) {
+// 	  for(int a = 0; a < vR.count(); a++) {
+// 	    float radialV = vR[a]*-c2*sqrt(r-rmw)*(rmw/r);
+// 	    radialV *= cos(a*(Pi-theta+vRAngle[a]));
+// 	    vx+=radialV *(-delX/r);
+// 	    vy+=radialV *(delY/r);
+// 	    //ref+=radialV;
+// 	  }
+// 	}
+// 	else {
+// 	  if(r!=0) {
+// 	    for(int a = 0; a < vR.count(); a++) {
+// 	      float radialV = vR[a]*c1*sqrt((rmw-r)*r);
+// 	      radialV *=cos(a*(Pi-theta+vRAngle[a]));
+// 	      vx+=radialV*(-delX/r);
+// 	      vy+=radialV*(delY/r);
+// 	    //ref+=radialV;
+// 	    }
+// 	  }
+// 	}
+
 	if(r>rmw) {
 	  for(int a = 0; a < vR.count(); a++) {
-	    float radialV = vR[a]*-c2*sqrt(r-rmw)*(rmw/r);
-	    radialV *= cos(a*(Pi-theta+vRAngle[a]));
-	    vx+=radialV *(-delX/r);
+	    float radialV = vR[a]*(rmw/r);
+	    //radialV *= cos(a*(Pi-theta+vRAngle[a]));
+	    vx+=radialV *(delX/r);
 	    vy+=radialV *(delY/r);
 	    //ref+=radialV;
 	  }
@@ -352,9 +374,9 @@ void AnalyticGrid::gridWindFieldData()
 	else {
 	  if(r!=0) {
 	    for(int a = 0; a < vR.count(); a++) {
-	      float radialV = vR[a]*c1*sqrt((rmw-r)*r);
-	      radialV *=cos(a*(Pi-theta+vRAngle[a]));
-	      vx+=radialV*(-delX/r);
+	      float radialV = vR[a]*(r/rmw);
+	      //radialV *=cos(a*(Pi-theta+vRAngle[a]));
+	      vx+=radialV*(delX/r);
 	      vy+=radialV*(delY/r);
 	    //ref+=radialV;
 	    }

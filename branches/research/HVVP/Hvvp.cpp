@@ -628,6 +628,18 @@ bool Hvvp::findHVVPWinds(bool both)
     }
   }
   
+  //find the average thetaM for all heights, the angle of the mean wind in Math coordinates.
+  float thetaMsum = 0;
+  float numthetaM = 0;
+  for(int i = 0; i < levels; i++) {
+    if((u[i] != velNull)&&(v[i]!=velNull)) {
+      thetaMsum += atan2(v[i],u[i]);
+      numthetaM++;
+    }
+  }
+  ThetaM = thetaMsum/numthetaM;
+  vtd->setHVVPangle(ThetaM);
+
   // if(u(i)!=velNull) {   ---- This is how it was in Pauls code
   // the for loop extended to the outside of the else bracket below.. 
   // didn't seem right (or I may have interpretted it wrong but I think

@@ -173,6 +173,13 @@ void VortexThread::run()
 		int loopPercent = int(7.0/float(gridData->getKdim()));
 		int endPercent = 7-int(gridData->getKdim()*loopPercent);
 		int storageIndex = -1;
+
+
+		//get some boundary values
+		int xdim = gridData->getIdim();
+		int ydim = gridData->getJdim();
+		float zdim = gridData->getKdim();
+
 		for(int h = 0; h < gridData->getKdim(); h++) {
 		  emit log(Message(QString(),loopPercent,this->objectName()));
 		  if(abort)
@@ -210,21 +217,22 @@ void VortexThread::run()
 		      gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);
 		      
 		      // Call gbvtd
-		      if (vtd->analyzeRing(xCenter, yCenter, radius, height, numData, ringData,
-					   ringAzimuths, vtdCoeffs, vtdStdDev)) {
-			if (vtdCoeffs[0].getParameter() == "VTC0") {
-			  // VT[v] = vtdCoeffs[0].getValue();
+			if (vtd->analyzeRing(xCenter, yCenter, radius, height, numData, ringData,
+					     ringAzimuths, vtdCoeffs, vtdStdDev)) {
+			  if (vtdCoeffs[0].getParameter() == "VTC0") {
+			    // VT[v] = vtdCoeffs[0].getValue();
+			  } else {
+			    emit log(Message(QString("Error retrieving VTC0 in vortex!"),0,this->objectName()));
+			  } 
 			} else {
-			  emit log(Message(QString("Error retrieving VTC0 in vortex!"),0,this->objectName()));
-			} 
-		      } else {
-			QString err("Insufficient data for VTD winds: radius ");
-			QString loc;
-			err.append(loc.setNum(radius));
-			err.append(", height ");
-			err.append(loc.setNum(height));
-			emit log(Message(err));
-		      }
+			  QString err("Insufficient data for VTD winds: radius ");
+			  QString loc;
+			  err.append(loc.setNum(radius));
+			  err.append(", height ");
+			  err.append(loc.setNum(height));
+			  emit log(Message(err));
+			}
+		      
 
 		      delete[] ringData;
 		      delete[] ringAzimuths;
@@ -234,7 +242,324 @@ void VortexThread::run()
 		    }
 		  }
 		  mutex.unlock();
+		
+
+		  
 		}
+		storageIndex = -1;
+
+		//printing meanwind header in log		
+		// Shorten message for HVVP Results in Log File
+		QFile HVVPLogFile;
+		QDir workingDirectoryPath(configData->getParam(configData->getConfig("vortex"),"dir"));
+		HVVPLogFile.setFileName(workingDirectoryPath.filePath("HVVP_output.txt"));
+		QString Header;
+		Header += "Average GVTD RESULTS\n";
+		Header += "Z (km)     VMx (m/s)     VMy (m/s)     Mag.Vm (m/s)     ThetaM (rad)     VmSin (m/s)    VmCos (m/s)     VmCosCheck\n";
+		if(HVVPLogFile.isOpen()) {
+		  HVVPLogFile.close();
+		}
+		if(HVVPLogFile.open(QIODevice::Append)) {
+		  HVVPLogFile.write(Header.toAscii());
+		  HVVPLogFile.close();
+		}
+
+		//now find mean wind using GVTD
+		for (int h = 0; h < gridData->getKdim(); h++) {
+		  float height = gridData->getCartesianPointFromIndexK(h);
+		  if((height<firstLevel)||(height>lastLevel)) { continue; }
+		  storageIndex++;
+
+		  if (closure.contains(QString("MeanWind"),Qt::CaseInsensitive)) {
+		  
+		    //find mean wind by finding gradient of mean wind field
+	    
+		      QString fieldName = "VE";	
+  		      float** CappiWindField = new float*[xdim];
+		      bool** goodData = new bool*[xdim];
+		      float** MeanWindField = new float*[xdim];
+		      float** vmx = new float*[xdim];
+		      float** vmy = new float*[xdim];
+		      for (int x =0; x < xdim; x++) {
+			CappiWindField[x] = new float[ydim];
+			MeanWindField[x] = new float[ydim];
+			vmx[x] = new float[ydim];
+			vmy[x] = new float[ydim];
+			goodData[x] = new bool[ydim];
+		      }	      
+
+		      // Get the cartesian center
+		      xCenter = gridData->getCartesianRefPointI();
+		      yCenter = gridData->getCartesianRefPointJ();
+		      float centerDistance = sqrt(xCenter*xCenter + yCenter*yCenter);
+		      		      
+		      // Get thetaT
+		      float thetaT = atan2(yCenter,xCenter);
+		      thetaT = vtd->fixAngle(thetaT);
+		      
+		      //retrieve the cappi wind field
+		      float xref;
+		      for (int i = 1; i < xdim; i++) {
+			xref = gridData->getCartesianPointFromIndexI(i);
+			CappiWindField[i] = gridData->getCartesianYslice(fieldName,xref,h+1);
+		      }
+		      float MeanWindDiff = 100;
+		      //   bool FirstIteration = true;
+		      float LastMeanWind = 0;
+		      float NewMeanWind = -999;
+		      QString vtc0 = "VTCO";
+		      QString vrc0 = "VRCO";
+		      float VMCosCheck;
+		      float VMx;
+		      float VMy;
+		      float IT = 0;
+		      float stdold = 999999999; //very large!
+
+		      if (h == 0) {
+			writeANAsi(CappiWindField,IT,zdim, xdim, ydim);
+		      }
+
+		      while (MeanWindDiff > 10) {
+			IT += 1;
+			
+			//find the mean wind field
+			float xpos;float ypos;float D;float xp;float yp;float theta;float R;float Vt;float Vr;float VTC0;float VRC0;float VTC1; float VTS1;
+			float radius;
+		
+			for (int i = 1; i < xdim; i++) {
+			  for (int j = 1; j < ydim; j++) {
+			    goodData[i][j] = false; //for now...
+			    xpos = gridData->getCartesianPointFromIndexI(i);
+			    ypos = gridData->getCartesianPointFromIndexJ(j);
+			    D = sqrt( xpos*xpos + ypos*ypos );
+			    xp = xpos - xCenter;
+			    yp = ypos - yCenter;
+			    theta = atan2(yp,xp);
+			    theta = vtd->fixAngle(theta);
+			    R = sqrt( xp*xp + yp*yp );
+
+			    if ( R-(int)R < .5 ) {
+			    radius = (int)R;
+			    } else {
+			      radius = (int)R + 1;
+			    }
+			  
+
+			    if (height == 1) {
+			      // Message::toScreen(QString().setNum(IT) + " "+QString().setNum(radius) + " "+QString().setNum(Vt) + " "+ QString().setNum(Vr) );
+			    }
+
+
+			    if (radius < lastRing) {
+			      // these values depend on NumWaveNum, set in AnalysisThread.cpp. 
+			      //        i.e. if NumWaveNum = 2, VTC1 and VTS1 return -999
+			      VTC0 = vortexData->getCoefficient(height, radius, QString("VTC0")).getValue();
+			      VTC1 = vortexData->getCoefficient(height, radius, QString("VTC1")).getValue();
+			      VTS1 = vortexData->getCoefficient(height, radius, QString("VTS1")).getValue();
+			      VRC0 = vortexData->getCoefficient(height, radius, QString("VRC0")).getValue();
+			      if (VTC0 == -999) { VTC0 = 0;}
+			      if (VTC1 == -999) { VTC1 = 0;}
+			      if (VTS1 == -999) { VTS1 = 0;}
+			      if (VRC0 == -999) { VRC0 = 0;}
+			      //			      Vt = VTC0 + VTC1*cos(theta - thetaT) + VTS1*sin(theta - thetaT);
+			      Vt = VTC0;
+			      Vr = VRC0;
+
+			      if ( (Vt != -999) ) {
+				goodData[i][j] = true;
+			      }
+			    }
+			    else { Vt = 0; Vr = 0;}
+
+			    //   float meanVTx1 = vortexData->getCoefficient((int)h, (int)radius, QString("VTC0")).getValue();
+			    // float meanVTx2 = vortexData->getCoefficient((int)h, (int)radius+1, QString("VTC0")).getValue();
+		      
+			      //			    }
+	// 		    else{
+// 			      Vt = NewVt;
+// 			      Vr = NewVr;
+// 			    }
+			    if (radius < 10){
+			    float thetaLAME = theta;
+			    }
+			    MeanWindField[i][j] = CappiWindField[i][j]*D + centerDistance*Vt*sin(theta - thetaT) - centerDistance*Vr*(R/centerDistance + cos(theta - thetaT));
+ 			    if ( height == 1 ) {
+			      // Message::toScreen("VT or VR NOT ZERO>>> Iteration=" + QString().setNum(IT) + ", level=" + QString().setNum(h) + ", Radius=" + QString().setNum(radius) + ", i="+ QString().setNum(i) + ", j="+ QString().setNum(j) + ", Vt="+ QString().setNum(Vt) + ", Vr="+ QString().setNum(Vr) );
+			      //  Message::toScreen(QString().setNum(Vt) + " "+ QString().setNum(Vr) ); 
+ 			    }
+			    //MeanWindField[i][j] = (  CappiWindField[i][j] + Vt*sin(theta - thetaT)*centerDistance/D 
+			    //			     - Vr/D*centerDistance*(R/centerDistance + cos(theta - thetaT))   ) * D;
+			  }
+			}
+
+			//writing ANALYTIC CAPPI ASI for first level only
+			if (h == 0) {
+			  writeANAsi(MeanWindField,IT,zdim, xdim, ydim);
+			}
+			
+			//Perform the gradient:
+			float dx = 1;
+			float dy = 1;
+			int numGradValues = 0;
+			float gradYsum = 0;
+			for (int x = 1; x < xdim; x++) {
+			  for (int y = 1; y < ydim-1; y++) {
+			    if (goodData[x][y] && goodData[x][y+1]) {
+			      vmy[x][y] = (MeanWindField[x][y+1] - MeanWindField[x][y])/dy;
+			      gradYsum += vmy[x][y];
+			      numGradValues += 1;
+			    }
+			  }
+			}
+			float Ygradient = gradYsum/numGradValues;
+			numGradValues = 0;
+			float gradXsum = 0;
+			for (int y = 1; y < ydim; y++) {
+			  for (int x = 1; x < xdim-1; x++) {
+			    if (goodData[x][y]  && goodData[x+1][y]) {
+			      vmx[x][y] += (MeanWindField[x+1][y] - MeanWindField[x][y])/dx;
+			      gradXsum += vmx[x][y];
+			      numGradValues += 1;
+			    }
+			  }
+			}
+			float Xgradient = gradXsum/numGradValues;
+
+			//find standard deviation of Vm, used to point the iteration in a particular direction
+			float Vmbar = sqrt( Xgradient*Xgradient + Ygradient*Ygradient );
+			float Thetambar = atan2(Ygradient,Xgradient);
+			float stdnew;
+			for (int y = 1; y < ydim; y++) {
+			  for (int x = 1; x < xdim-1; x++) {
+			    if (goodData[x][y]  && goodData[x+1][y]) {
+			      float Vm = sqrt( vmx[x][y]*vmx[x][y] + vmy[x][y]*vmy[x][y] );
+			      float Thetam = atan2(vmy[x][y],vmx[x][y]);
+			      stdnew +=  (Vm - Vmbar)*(Vm - Vmbar) + (Thetam - Thetambar)*(Thetam - Thetambar);
+			    }
+			  }
+			}
+		       
+			if (IT == 1) {
+			  //QDomElement meanwind = configData->getConfig("meanwind");
+			  //float VMGuess = configData->getParam(meanwind,"VMGuess").toFloat();
+			  //float thetaMGuess = configData->getParam(meanwind,"ThetaMGuess").toFloat();
+			  float VMGuess = 4.9;
+			  float thetaMGuess = .1;
+			  VMx = VMGuess*cos(thetaMGuess);
+			  VMy = VMGuess*sin(thetaMGuess);
+			  //LastMeanWind = VMGuess;
+			}
+			else{
+			  VMx = Xgradient;
+			  VMy = Ygradient;
+			}
+			
+
+			//Pondering Convergence....
+			NewMeanWind = sqrt( VMx*VMx + VMy*VMy);
+			float thetaM = atan2(VMy,VMx);
+			//check to make sure we're not diverging
+			if (stdnew > stdold) {
+			  //diverging, lets reverse the direction of dVm
+			  float ITdifference = LastMeanWind-NewMeanWind;
+			  if (ITdifference > 0) {NewMeanWind = LastMeanWind + .01;}
+			  if (ITdifference < 0) {NewMeanWind = LastMeanWind - .01;}
+			  if (ITdifference == 0) {NewMeanWind = LastMeanWind;}
+			  thetaM = lastthetaM;
+			}
+			stdold = stdnew;
+			MeanWindDiff = abs((LastMeanWind-NewMeanWind)*10000);
+			LastMeanWind = NewMeanWind; 
+			if (MeanWindDiff <= 10) {break;}
+
+			//send Vm to GVTD
+			VMx = NewMeanWind*cos(thetaM);
+			VMy = NewMeanWind*sin(thetaM);
+			vtd->setGVTD(VMx,VMy);
+
+			//now call meanwind GVTD
+			for (float radius = firstRing; radius <= lastRing; radius++) {
+			  
+			  // Get the data
+			  int numData = gridData->getCylindricalAzimuthLength(radius, height);
+			  float* ringData = new float[numData];
+			  float* ringAzimuths = new float[numData];
+			  gridData->getCylindricalAzimuthData(velField, numData, radius, height, ringData);
+			  gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);
+			  
+			  // Call gvtd		  
+			  VMCosCheck = vtd->analyzeMeanWind(xCenter, yCenter, radius, height, numData, ringData,
+							     ringAzimuths, vtdCoeffs, vtdStdDev);  
+			  //update vortexData with new values
+			  archiveWinds(radius, storageIndex, maxCoeffs);
+		// 	  NewVt = NewWinds[0];
+// 			  NewVr = NewWinds[1];
+
+			  delete[] ringData;
+			  delete[] ringAzimuths;
+			}
+			//	FirstIteration = false;
+			//repeat while loop
+		      } //ends 'while' loop
+		      
+		      // All done with this radius and height, archive it
+		      //archiveWinds(radius, storageIndex, maxCoeffs);
+		      
+		      //printing meanwind to log
+		      float thetaM = atan2(VMy,VMx);
+		      thetaM = vtd->fixAngle(thetaM);
+		      float Vm = sqrt(VMx*VMx + VMy*VMy);
+		      float Vmsin = Vm * sin(thetaT - thetaM);
+		      float Vmcos = Vm * cos(thetaT - thetaM);
+		      // Shorten message for HVVP Results in Log File
+		      //QFile HVVPLogFile;
+		      //HVVPLogFile.setFileName(workingDirectoryPath.filePath("HVVP_output.txt"));
+		      QString shortMessage;
+		      //			shortMessage += "Layer, variance-weighted, average Vm_Sin = ";
+		      //			shortMessage += QString().setNum(av_VmSin)+" +-";
+		      //			shortMessage += QString().setNum(stdErr_VmSin)+" (m/s).";
+		      //			shortMessage += "\n";
+		      //shortMessage += "Vm_Sin value closest to 2 km altitude is ";
+		      //shortMessage += QString().setNum(vm_sin[ifoundit])+" +- ";
+		      //shortMessage += QString().setNum(sqrt(var[ifoundit]))+" m/s at ";
+		      //shortMessage += QString().setNum(z[ifoundit])+" km altitude.";
+		      //shortMessage += "\n";
+		      //shortMessage += "Z (km)     VMx (m/s)     VMy (m/s)     Mag.Vm (m/s)     ThetaM (rad)     VmSin (m/s)    VmCos (m/s)";
+		      //		shortMessage += "   Stderr_Vm_Sin (m/s)  Xt\n";
+		      //shortMessage += "   Vt\t   Vr\t    Xr\n\n";
+		      shortMessage +=QString().setNum(height)+"\t   "+QString().setNum(VMx);
+		      shortMessage +="\t   "+QString().setNum(VMy)+"\t   "+QString().setNum(Vm);
+		      shortMessage +="\t   "+QString().setNum(thetaM)+"\t   "+QString().setNum(Vmsin);
+		      shortMessage += "\t   "+QString().setNum(Vmcos)+ "\t   "+QString().setNum(VMCosCheck)+ "\n";
+		      //shortMessage += "\t   "+QString().setNum(xr[i])+"\n";
+		      
+		      if(HVVPLogFile.isOpen()) {
+			HVVPLogFile.close();
+		      }
+		      if(HVVPLogFile.open(QIODevice::Append)) {
+			HVVPLogFile.write(shortMessage.toAscii());
+			HVVPLogFile.close();
+		      }
+		      
+		      //deleting arrays
+		      for (int i=0; i < ydim; i++) {
+			delete [] MeanWindField[i];
+			delete [] vmx[i];
+			delete [] vmy[i];
+			delete [] CappiWindField[i];
+			delete [] goodData[i];
+		      }
+		      delete [] MeanWindField;
+		      delete [] vmx;
+		      delete [] vmy;
+		      delete [] CappiWindField;
+		      delete [] goodData;
+		  }
+
+
+		}
+
+	       	
 		emit log(Message(QString(),endPercent,this->objectName()));
 
 		mutex.lock();
@@ -1233,6 +1558,168 @@ void VortexThread::writeAsi(float*** propGrid,float& kdim)
 	}	
 
 	Message::toScreen("\n ***Write ASI complete*** \n");
+
+}     
+
+void VortexThread::writeANAsi(float** MeanWindField,float& IT,float& kdim, int& xdim, int& ydim)
+{
+
+  Message::toScreen("\n ***Beginning Write_AN_ASI*** \n");
+
+	// Write out the CAPPI to an asi file
+
+	// Set the initial fields
+        QStringList fieldNames;
+        fieldNames << "VE";
+	//	QString iteration = QString(IT);
+	float latReference = 0;
+	float lonReference = 0;
+	float rmin = 0;
+	float rmax = (float)xdim;
+	float rDim = (float)xdim+1;
+	float rGridsp = 1;
+	float zmin = 1;
+	float zmax = kdim;
+      	float kDim = kdim;
+	float tDim = 0;
+	//float iDim = lastRing;
+	float jDim = (float)ydim+1;
+	float kGridsp = 1;
+	float xmin = 0;
+	//float xmax = 0;
+	float ymin = 0;
+	float ymax = ydim;
+	
+	QDomElement vtdConfig = configData->getConfig("vtd");
+	QDomElement vortexElem = configData->getConfig("vortex");
+	QDomElement radarElem = configData->getConfig("radar");
+	QString vortexName = configData->getParam(vortexElem, "name");
+	QString radarName = configData->getParam(radarElem,"name");
+	QString timeString = vortexData->getTime().toString("yyyy_MM_ddThh_mm_ss");
+	geometry = configData->getParam(vtdConfig,QString("geometry"));
+	// name_radr_date_description.asi
+
+	const QString& outFileName = "/h/eol/baldwins/vortrac/research/ResOut/ANCappi/" + vortexName + "_" + radarName + "_"  + geometry + "_AnalyticCappi" + "_Iteration" + QString().setNum(IT) + ".asi";
+  
+	Message::toScreen("Writing file: /h/eol/baldwins/vortrac/research/ResOut/ANCappi/" + vortexName + "_" + radarName  + "_"  + geometry + "_AnalyticCappi" + "_Iteration" + QString().setNum(IT) + ".asi \n");
+
+	// Initialize header
+	int id[511];
+	for (int n = 1; n <= 510; n++) {
+		id[n]=-999;
+	}
+
+	// Calculate headers
+	id[175] = fieldNames.size();
+    for(int n = 0; n < id[175]; n++) {
+		QString name_1 = fieldNames.at(n).left(1);
+        QString name_2 = fieldNames.at(n).mid(1,1);
+		int int_1 = *name_1.toAscii().data();
+		int int_2 = *name_2.toAscii().data();
+		id[176 + (5 * n)] = (int_1 * 256) + int_2;
+		id[177 + (5 * n)] = 8224;
+		id[178 + (5 * n)] = 8224;
+		id[179 + (5 * n)] = 8224;
+		id[180 + (5 * n)] = 1;
+	}
+
+	// Cartesian file
+	id[16] = 17217;
+	id[17] = 21076;
+  
+	// Lat and Lon
+	id[33] = (int)latReference;
+	id[34] = (int)((latReference - (float)id[33]) * 60.);
+	id[35] = (int)((((latReference - (float)id[33]) * 60.) - (float)id[34]) * 60.) * 100;
+	if (lonReference < 0) {
+		lonReference += 360.;
+	}
+	id[36] = (int)lonReference;
+	id[37] = (int)((lonReference - (float)id[36]) * 60.);
+	id[38] = (int)((((lonReference - (float)id[36]) * 60.) - (float)id[37]) * 60.) * 100;
+	id[40] = 90;
+
+	// Scale factors
+	id[68] = 100;
+	id[69] = 64;
+
+	// X Header
+	id[160] = (int)(rmin+1 * 100);
+	id[161] = (int)(rmax * 100);
+	id[162] = (int)rDim-1;
+	id[163] = (int)rGridsp * 1000;
+	id[164] = 1;
+  
+	// Y Header
+	id[165] = (int)(ymin+1 * 100);
+	id[166] = (int)(ymax * 100);
+	id[167] = (int)jDim-1;
+	id[168] = (int)rGridsp * 1000;
+	id[169] = 2;
+  
+	// Z Header
+	id[170] = (int)1;
+	id[171] = (int)1;
+	id[172] = (int)1;
+	id[173] = (int)1;
+	id[174] = 3;
+
+	// Number of radars
+	id[303] = 1;
+  
+	// Index of center
+	id[309] = (int)((1 - xmin) * 1000);
+	id[310] = (int)((1 - ymin) * 1000);
+	id[311] = 0;
+	
+	// Write ascii file for grid2ps
+	//Message::toScreen("Trying to write cappi to "+outFileName);
+	//outFileName += ".asi";
+	QFile asiFile(outFileName);
+	if(!asiFile.open(QIODevice::WriteOnly)) {
+	  Message::toScreen("Can't open .asi file for writing");
+	}
+
+	QTextStream out(&asiFile);
+	
+	// Write header
+    int line = 0;
+	for (int n = 1; n <= 510; n++) {
+		line++;
+		out << qSetFieldWidth(8) << id[n];
+		if (line == 10) {
+			out << endl;
+            line = 0;
+		}
+	}
+
+	// Write data
+
+
+	for(int k = 0; k <= int(tDim); k++) {
+		out << reset << "level" << qSetFieldWidth(2) << k+1 << endl;
+		for(int j = 1; j <= int(jDim); j++) {
+			out << reset << "azimuth" << qSetFieldWidth(3) << j << endl;
+
+			for(int n = 0; n < fieldNames.size(); n++) {
+				out << reset << left << fieldNames.at(n) << endl;
+				int line = 0;
+				for (int i = 1; i < int(rDim-1);  i++){
+				    out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << MeanWindField[i][j]/108;
+					line++;
+					if (line == 8) {
+						out << endl;
+						line = 0;
+					}
+				}
+				if (line != 0) {
+					out << endl;
+				}
+			}
+		}
+	}	
+
+	Message::toScreen("\n ***Write ANALYTIC Cappi ASI complete*** \n");
 
 }     
 
