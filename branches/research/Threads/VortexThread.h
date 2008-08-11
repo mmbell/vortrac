@@ -25,6 +25,7 @@
 #include "DataObjects/VortexData.h"
 #include "Pressure/PressureList.h"
 #include "Radar/RadarData.h"
+//#include "HVVP/Hvvp.h"
 
 class VortexThread : public QThread
 {
@@ -35,7 +36,9 @@ class VortexThread : public QThread
   ~VortexThread();
   void getWinds(Configuration *wholeConfig, GriddedData *dataPtr, RadarData *radarPtr, VortexData *vortexPtr, PressureList *pressurePtr);
   void writeAsi(float*** propGrid,float& kdim);
-  void writeANAsi(float** MeanWindField,float& IT,float& kdim, int& xdim, int& ydim);
+  void writeANAsi(float** DataField,float& IT,int& kdim, int& xdim, int& ydim);
+  //  void setHVVPangle(float HVVPThetaM);
+  //  void setvmcos(float vmcos);
   // bool writeAsi(const QString& fileName);
 
  public slots:
@@ -50,6 +53,7 @@ class VortexThread : public QThread
      void log(const Message& message);
  
  private:
+     float ThetaM;
      QMutex mutex;
      QWaitCondition waitForData;
      bool abort;
@@ -58,6 +62,7 @@ class VortexThread : public QThread
      VortexData *vortexData;
      PressureList *pressureList;
      Configuration *configData;
+     //Hvvp* hvvp;
      
      float* dataGaps;
      GBVTD* vtd;
@@ -104,6 +109,21 @@ class VortexThread : public QThread
      void storePressureUncertaintyData(QString& fileLocation);
      void readInConfig();
      bool calcHVVP(bool printOutput);
+
+     float IT;
+     float VMx, VMy, thetaT, Vmsin, Vmcos, VMCosCheck, height;
+     float** vertex; 
+     float* STD;
+     float* vertexSum;
+     float**  MeanWindField;
+     int xdim, ydim, zdim;
+     float maxCoeffs;
+     int storageIndex;
+
+     float simplexTest(int& low, float factor, int h);
+     inline void getVertexSum();
+     float IterateMeanWind(int h);
+     void DownSimplex(float Vmguess, float thetaMguess, int h);
 
 };
 

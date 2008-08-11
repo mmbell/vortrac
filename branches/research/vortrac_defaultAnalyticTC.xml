@@ -7,7 +7,7 @@
   <wind_field>
      <rmw>10</rmw>
      <vt0>40</vt0>
-     <vr0>0</vr0>        
+     <vr0>5</vr0>        
      <vt1>0</vt1>
      <vt1angle>0</vt1angle>
      <vr1>0</vr1>
@@ -16,7 +16,7 @@
      <vt2angle>0</vt2angle>
      <vr2>0</vr2>
      <vr2angle>0</vr2angle>
-     <env_speed>5</env_speed>
+     <env_speed>0</env_speed>
      <env_dir>270</env_dir>
      <force_center>true</force_center>
   </wind_field>
@@ -30,7 +30,7 @@
      <dialation_axis>45</dialation_axis>
   </deformation>
   <analytic_radar>
-     <sample>false</sample>
+     <sample>true</sample>
      <velgatesp>1</velgatesp>
      <refgatesp>1</refgatesp>
      <beamwidth>1</beamwidth>

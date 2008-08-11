@@ -268,10 +268,10 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
 			
 }
 
-float GBVTD::analyzeMeanWind(float& xCenter, float& yCenter, float& radius, float& height, int& numData, 
-						float*& ringData, float*& ringAzimuths, Coefficient*& vtdCoeffs, float& vtdStdDev)
+bool GBVTD::analyzeMeanWind(float& xCenter, float& yCenter, float& radius, float& height, int& numData, 
+						float*& ringData, float*& ringAzimuths, Coefficient*& vtdCoeffs, float& vtdStdDev, float* vmcos, float* b1b3)
 {
-        float VMCOS;
+  // float* vars = new float[2];
 
         // Analyze a ring of data for the GVTD method
 	if (geometry == "GVTD") {
@@ -331,7 +331,7 @@ float GBVTD::analyzeMeanWind(float& xCenter, float& yCenter, float& radius, floa
 				FourierCoeffs[i] = 0.;
 			}
 			vtdStdDev = -999;
-			setMeanWindCoefficients(radius, height, numCoeffs, FourierCoeffs, vtdCoeffs, xCenter, yCenter);
+			setMeanWindCoefficients(radius, height, numCoeffs, FourierCoeffs, vtdCoeffs, xCenter, yCenter, vmcos, b1b3);
 			delete[] ringthetaP;
 			delete[] vel;
 			delete[] thetaP;		
@@ -369,7 +369,7 @@ float GBVTD::analyzeMeanWind(float& xCenter, float& yCenter, float& radius, floa
 		}
 		
 		// Convert Fourier coefficients into wind coefficients
-		VMCOS = setMeanWindCoefficients(radius, height, numCoeffs, FourierCoeffs, vtdCoeffs, xCenter, yCenter);
+		setMeanWindCoefficients(radius, height, numCoeffs, FourierCoeffs, vtdCoeffs, xCenter, yCenter, vmcos, b1b3);
 		for (int i = 0; i<=numCoeffs-1; i++) 
 			delete[] xLLS[i];
 		delete[] xLLS;
@@ -381,9 +381,11 @@ float GBVTD::analyzeMeanWind(float& xCenter, float& yCenter, float& radius, floa
 		
 	}
 	
-	return VMCOS;
+	return true;
 			
 }
+
+
 
 void GBVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, float*& FourierCoeffs, Coefficient*& vtdCoeffs, float xcenter, float ycenter)
 {
@@ -666,10 +668,12 @@ void GBVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, flo
 	
 }
 
-float GBVTD::setMeanWindCoefficients(float& radius, float& level, int& numCoeffs, float*& FourierCoeffs, Coefficient*& vtdCoeffs, float xCenter, float yCenter)
+void GBVTD::setMeanWindCoefficients(float& radius, float& level, int& numCoeffs, float*& FourierCoeffs, Coefficient*& vtdCoeffs, float xCenter, float yCenter,float* vmcos, float* b1b3)
 {
 	
-        float VMCosCheck;
+  //      float VMCosCheck;
+  //	float b1b3;
+  //	float* vars = new float[2];
 
 	// Allocate and initialize the A & B coefficient arrays
 	float* A;
@@ -798,13 +802,19 @@ float GBVTD::setMeanWindCoefficients(float& radius, float& level, int& numCoeffs
 			value = 2*A[i/2+1];
 			vtdCoeffs[i+1].setValue(value);				
 		}
-		VMCosCheck = VMC0;
+		//VMCosCheck = VMC0;
+		*b1b3 = B[1]+B[3];
+		*vmcos = A[0] - radius/centerDistance*VRC0 + .5*VTS1;
 
 		//}
 	}	
 	delete[] A;
 	delete[] B;
-	return VMCosCheck;
+
+	//vars[0] = b1b3;
+	//vars[1] = VMCosCheck;
+
+	//return* vars;
 }
 
 // int GBVTD::getNumCoefficients(int& numData,float& r, float& z)

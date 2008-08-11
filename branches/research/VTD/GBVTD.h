@@ -27,8 +27,8 @@ public:
 	
 	bool analyzeRing(float& xCenter, float& yCenter, float& radius, float& height, int& numData,
 			 float*& ringData, float*& ringAzimuths, Coefficient*& vtdCoeffs, float& stdDev);
-	float analyzeMeanWind(float& xCenter, float& yCenter, float& radius, float& height, int& numData, 
-			     float*& ringData, float*& ringAzimuths, Coefficient*& vtdCoeffs, float& vtdStdDev);
+	bool analyzeMeanWind(float& xCenter, float& yCenter, float& radius, float& height, int& numData, 
+			     float*& ringData, float*& ringAzimuths, Coefficient*& vtdCoeffs, float& vtdStdDev, float* vmcos, float* b1b3);
 	void setHVVP(const float& meanWind);
 	void setGVTD(const float& X,const float& Y);
 	void setHVVPangle(const float& angle);
@@ -62,7 +62,7 @@ private:
 	
 	void setWindCoefficients(float& radius, float& height, int& numCoefficients, float*& FourierCoeffs, Coefficient*& vtdCoeffs, float xcenter, float ycenter);
 	//void setMeanWindCoefficients(float& radius, float& level, int& numCoeffs, float*& FourierCoeffs, Coefficient*& vtdCoeffs);
-	float setMeanWindCoefficients(float& radius, float& level, int& numCoeffs, float*& FourierCoeffs, Coefficient*& vtdCoeffs, float xCenter, float yCenter);
+	void setMeanWindCoefficients(float& radius, float& level, int& numCoeffs, float*& FourierCoeffs, Coefficient*& vtdCoeffs, float xCenter, float yCenter,float* vmcos, float* b1b3);
 	int getNumCoefficients(int& numData);
 	//int getNumCoefficients(int& numData,float& r, float& z);
 	

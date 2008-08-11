@@ -15,6 +15,7 @@
 #include "Message.h"
 #include "Configuration.h"
 #include "VTD/GBVTD.h"
+//#include "Threads/VortexThread.h"
 
 
 class Hvvp : public QObject
@@ -45,6 +46,7 @@ public slots:
    void catchLog(const Message& message);
 
 private:
+// VortexThread* vortexThread;
    GBVTD* vtd;
    RadarData *volume;
    Configuration* configData;

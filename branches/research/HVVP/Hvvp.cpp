@@ -639,6 +639,7 @@ bool Hvvp::findHVVPWinds(bool both)
   }
   ThetaM = thetaMsum/numthetaM;
   vtd->setHVVPangle(ThetaM);
+  //  vortexThread->setHVVPangle(ThetaM);
 
   // if(u(i)!=velNull) {   ---- This is how it was in Pauls code
   // the for loop extended to the outside of the else bracket below.. 

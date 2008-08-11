@@ -125,7 +125,7 @@ void VortexThread::run()
 		// Set the output directory??
 		//vortexResults.setNewWorkingDirectory(vortexPath);
 	     
-		float maxCoeffs = maxWave*2 + 3;
+		 maxCoeffs = maxWave*2 + 3;
 
 		// Find & Set Average RMW
 		float rmw = 0;
@@ -172,13 +172,13 @@ void VortexThread::run()
 
 		int loopPercent = int(7.0/float(gridData->getKdim()));
 		int endPercent = 7-int(gridData->getKdim()*loopPercent);
-		int storageIndex = -1;
+		storageIndex = -1;
 
 
 		//get some boundary values
-		int xdim = gridData->getIdim();
-		int ydim = gridData->getJdim();
-		float zdim = gridData->getKdim();
+		xdim = gridData->getIdim();
+		ydim = gridData->getJdim();
+		zdim = gridData->getKdim();
 
 		for(int h = 0; h < gridData->getKdim(); h++) {
 		  emit log(Message(QString(),loopPercent,this->objectName()));
@@ -248,8 +248,7 @@ void VortexThread::run()
 		}
 		storageIndex = -1;
 
-		//printing meanwind header in log		
-		// Shorten message for HVVP Results in Log File
+		//printing meanwind header in HVVPoutput.txt log		
 		QFile HVVPLogFile;
 		QDir workingDirectoryPath(configData->getParam(configData->getConfig("vortex"),"dir"));
 		HVVPLogFile.setFileName(workingDirectoryPath.filePath("HVVP_output.txt"));
@@ -264,16 +263,89 @@ void VortexThread::run()
 		  HVVPLogFile.close();
 		}
 
-		//now find mean wind using GVTD
+		
 		for (int h = 0; h < gridData->getKdim(); h++) {
-		  float height = gridData->getCartesianPointFromIndexK(h);
+		  height = gridData->getCartesianPointFromIndexK(h);
 		  if((height<firstLevel)||(height>lastLevel)) { continue; }
 		  storageIndex++;
 
 		  if (closure.contains(QString("MeanWind"),Qt::CaseInsensitive)) {
-		  
-		    //find mean wind by finding gradient of mean wind field
+
+
+		    
+
+		    //now find mean wind using GVTD
+		    //by finding gradient of Vd*D
 	    
+
+
+
+		    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		    //initial guess for simplex search routine (finds minimum standard deviation of gradient Vd*D)
+		    calcHVVP(false);
+		    float radiusTemp = 10;
+		    float heightTemp = 1;
+		    int numData = gridData->getCylindricalAzimuthLength(radiusTemp, heightTemp);
+		    float* ringData = new float[numData];
+		    float* ringAzimuths = new float[numData];
+		    gridData->getCylindricalAzimuthData(velField, numData, radiusTemp, heightTemp, ringData);
+		    gridData->getCylindricalAzimuthPosition(numData, radiusTemp, heightTemp, ringAzimuths);
+		    //float* vars = new float[2]; 
+		    float vmcos = -999;
+		    float b1b3 = -999;
+		    vtd->analyzeMeanWind(xCenter, yCenter, radiusTemp, heightTemp, numData, ringData,
+						 ringAzimuths, vtdCoeffs, vtdStdDev, &vmcos, &b1b3);
+		    //float vmcos = vars[1];
+		    //hvvp->findHVVPWinds(true);
+		    float thetaT = atan2(yCenter,xCenter);
+		    thetaT = vtd->fixAngle(thetaT);
+		    float HVVPvm = sqrt(hvvpResult*hvvpResult + vmcos*vmcos);
+		    ThetaM = thetaT - atan2(hvvpResult,vmcos);
+		    float vmxguess = HVVPvm*cos(ThetaM);
+		    float vmyguess = HVVPvm*sin(ThetaM);
+		    
+		    Message::toScreen("HVVP initial guess for GVTD-simplex is "+QString().setNum(vmxguess)+"-"+QString().setNum(vmyguess));
+
+		    MeanWindField = new float*[xdim];
+		    for (int x =0; x < xdim; x++) {
+		      MeanWindField[x] = new float[ydim];
+		    }
+
+		    //plot the simplex phase space
+		    /*
+		    Message::toScreen("***Generating Phase Space***");
+		    float** PhaseSpace = new float*[31];
+		    for (int i = 0;i<=30;i++) {
+		      PhaseSpace[i] = new float[31];
+		    }
+
+		    for (int x = 15;x <=25;x++) {
+		      for (int y = 10;y <=20;y++) {
+			IT = 998;
+			VMx = x-15;
+			VMy = y-15;
+			PhaseSpace[x][y] = IterateMeanWind(0);
+		      }
+		    }
+		    int q = 0;
+		    int w = 11;
+		    int e = 9;
+		    writeANAsi(PhaseSpace,IT,q, w, e);
+		    Message::toScreen("***Phase Space Complete***");
+		    */
+
+		    IT = 0;
+		    //call simplex to find Vm
+		    DownSimplex(vmxguess, vmyguess, h);
+
+		    //deleting arrays
+		    for (int i=0; i < xdim; i++) {
+		      delete [] MeanWindField[i];
+		    }
+		    delete [] MeanWindField;
+
+/*
 		      QString fieldName = "VE";	
   		      float** CappiWindField = new float*[xdim];
 		      bool** goodData = new bool*[xdim];
@@ -314,6 +386,7 @@ void VortexThread::run()
 		      float VMy;
 		      float IT = 0;
 		      float stdold = 999999999; //very large!
+		      float lastthetaM;
 
 		      if (h == 0) {
 			writeANAsi(CappiWindField,IT,zdim, xdim, ydim);
@@ -322,6 +395,64 @@ void VortexThread::run()
 		      while (MeanWindDiff > 10) {
 			IT += 1;
 			
+
+			if (IT == 1) {
+			  //QDomElement meanwind = configData->getConfig("meanwind");
+			  //float VMGuess = configData->getParam(meanwind,"VMGuess").toFloat();
+			  //float thetaMGuess = configData->getParam(meanwind,"ThetaMGuess").toFloat();
+			  float VMGuess = 4.60;
+			  float thetaMGuess = 0;
+			  VMx = VMGuess*cos(thetaMGuess);
+			  VMy = VMGuess*sin(thetaMGuess);
+			  lastthetaM = atan2(VMy,VMx);
+			  NewMeanWind = VMGuess;
+			  LastMeanWind = VMGuess-.05;
+			}
+			else{
+			  //if (thetaConverged) {
+			  // VMx = Xgradient;
+			  // VMy = Ygradient;
+			    //}
+			    //else{
+			    //;
+			    //}
+			}
+			
+
+			//Pondering Convergence....
+			//NewMeanWind = sqrt( VMx*VMx + VMy*VMy);
+			//float thetaM = atan2(VMy,VMx);
+			float thetaM = 0;
+			//check to make sure we're not diverging
+			float ITdifference = LastMeanWind-NewMeanWind;
+			/*if (stdnew > stdold) {
+			  //diverging, lets reverse the direction of dVm
+			  if (ITdifference > 0) {NewMeanWind += .01; LastMeanWind -= .01;}
+			  if (ITdifference < 0) {NewMeanWind -= .01; LastMeanWind += .01;}
+			  if (ITdifference == 0) {NewMeanWind = LastMeanWind;}
+			  thetaM = lastthetaM;
+			}
+			else {
+			  //converging, lets keep incrementing
+			  if (ITdifference > 0) {NewMeanWind -= .01; LastMeanWind -= .01;}
+			  if (ITdifference < 0) {NewMeanWind += .01; LastMeanWind += .01;}
+			  if (ITdifference == 0) {NewMeanWind = LastMeanWind;}
+			  thetaM = lastthetaM;
+			  }
+
+		    	NewMeanWind += .05;
+			LastMeanWind += .05;
+			//thetaM = lastthetaM;
+			thetaM = 0;
+
+			//MeanWindDiff = abs((stdnew-stdold));
+			MeanWindDiff = 1000;
+			
+
+		        
+			//if (MeanWindDiff <= 500) {break;}
+
+
 			//find the mean wind field
 			float xpos;float ypos;float D;float xp;float yp;float theta;float R;float Vt;float Vr;float VTC0;float VRC0;float VTC1; float VTS1;
 			float radius;
@@ -350,7 +481,7 @@ void VortexThread::run()
 			    }
 
 
-			    if (radius < lastRing) {
+			    if ((radius < lastRing) && (radius > 0)) {
 			      // these values depend on NumWaveNum, set in AnalysisThread.cpp. 
 			      //        i.e. if NumWaveNum = 2, VTC1 and VTS1 return -999
 			      VTC0 = vortexData->getCoefficient(height, radius, QString("VTC0")).getValue();
@@ -392,20 +523,16 @@ void VortexThread::run()
 			  }
 			}
 
-			//writing ANALYTIC CAPPI ASI for first level only
-			if (h == 0) {
-			  writeANAsi(MeanWindField,IT,zdim, xdim, ydim);
-			}
 			
 			//Perform the gradient:
-			float dx = 1;
-			float dy = 1;
+			float dx = 2;
+			float dy = 2;
 			int numGradValues = 0;
 			float gradYsum = 0;
 			for (int x = 1; x < xdim; x++) {
-			  for (int y = 1; y < ydim-1; y++) {
+			  for (int y = 2; y < ydim-1; y++) {
 			    if (goodData[x][y] && goodData[x][y+1]) {
-			      vmy[x][y] = (MeanWindField[x][y+1] - MeanWindField[x][y])/dy;
+			      vmy[x][y] = (MeanWindField[x][y+1] - MeanWindField[x][y-1])/dy;
 			      gradYsum += vmy[x][y];
 			      numGradValues += 1;
 			    }
@@ -415,9 +542,9 @@ void VortexThread::run()
 			numGradValues = 0;
 			float gradXsum = 0;
 			for (int y = 1; y < ydim; y++) {
-			  for (int x = 1; x < xdim-1; x++) {
+			  for (int x = 2; x < xdim-1; x++) {
 			    if (goodData[x][y]  && goodData[x+1][y]) {
-			      vmx[x][y] += (MeanWindField[x+1][y] - MeanWindField[x][y])/dx;
+			      vmx[x][y] = (MeanWindField[x+1][y] - MeanWindField[x-1][y])/dx;
 			      gradXsum += vmx[x][y];
 			      numGradValues += 1;
 			    }
@@ -425,57 +552,124 @@ void VortexThread::run()
 			}
 			float Xgradient = gradXsum/numGradValues;
 
-			//find standard deviation of Vm, used to point the iteration in a particular direction
-			float Vmbar = sqrt( Xgradient*Xgradient + Ygradient*Ygradient );
-			float Thetambar = atan2(Ygradient,Xgradient);
-			float stdnew;
+	
+
+
+			//find standard dev., then remove outliers
+			//float Vmbar = sqrt( Xgradient*Xgradient + Ygradient*Ygradient );
+			float Vmbar = NewMeanWind;
+			//float Thetambar = atan2(Ygradient,Xgradient);
+			float Thetambar = 0;
+			float stdnew = 0;
+			float stdbad = 0;
+			float stdgood = 0;
+			float numthrownout = 0;
+			float n = 0;
 			for (int y = 1; y < ydim; y++) {
 			  for (int x = 1; x < xdim-1; x++) {
-			    if (goodData[x][y]  && goodData[x+1][y]) {
+			    if (goodData[x][y]) {
 			      float Vm = sqrt( vmx[x][y]*vmx[x][y] + vmy[x][y]*vmy[x][y] );
 			      float Thetam = atan2(vmy[x][y],vmx[x][y]);
 			      stdnew +=  (Vm - Vmbar)*(Vm - Vmbar) + (Thetam - Thetambar)*(Thetam - Thetambar);
+			      n++;
 			    }
 			  }
 			}
-		       
-			if (IT == 1) {
-			  //QDomElement meanwind = configData->getConfig("meanwind");
-			  //float VMGuess = configData->getParam(meanwind,"VMGuess").toFloat();
-			  //float thetaMGuess = configData->getParam(meanwind,"ThetaMGuess").toFloat();
-			  float VMGuess = 4.9;
-			  float thetaMGuess = .1;
-			  VMx = VMGuess*cos(thetaMGuess);
-			  VMy = VMGuess*sin(thetaMGuess);
-			  //LastMeanWind = VMGuess;
+			if (n != 0) {
+			  stdbad = sqrt(stdnew/n);
 			}
-			else{
-			  VMx = Xgradient;
-			  VMy = Ygradient;
-			}
-			
 
-			//Pondering Convergence....
-			NewMeanWind = sqrt( VMx*VMx + VMy*VMy);
-			float thetaM = atan2(VMy,VMx);
-			//check to make sure we're not diverging
-			if (stdnew > stdold) {
-			  //diverging, lets reverse the direction of dVm
-			  float ITdifference = LastMeanWind-NewMeanWind;
-			  if (ITdifference > 0) {NewMeanWind = LastMeanWind + .01;}
-			  if (ITdifference < 0) {NewMeanWind = LastMeanWind - .01;}
-			  if (ITdifference == 0) {NewMeanWind = LastMeanWind;}
-			  thetaM = lastthetaM;
+			for (int y = 1; y < ydim; y++) {
+			  for (int x = 1; x < xdim-1; x++) {
+			    float Vm = sqrt( vmx[x][y]*vmx[x][y] + vmy[x][y]*vmy[x][y] );
+			    float Thetam = atan2(vmy[x][y],vmx[x][y]);
+			    float variance = sqrt( (Vm - Vmbar)*(Vm - Vmbar) + (Thetam - Thetambar)*(Thetam - Thetambar) );
+			    if (variance > stdbad) {
+			      //throw out values greater than one standard Dev.
+			      goodData[x][y] = 0;
+			      numthrownout++;
+			    }
+			  }
 			}
+		      
+			//find new, improved standard deviation
+			stdnew = 0;
+			n = 0;
+			for (int y = 1; y < ydim; y++) {
+			  for (int x = 1; x < xdim-1; x++) {
+			    if (goodData[x][y]) {
+			      float Vm = sqrt( vmx[x][y]*vmx[x][y] + vmy[x][y]*vmy[x][y] );
+			      float Thetam = atan2(vmy[x][y],vmx[x][y]);
+			      stdnew +=  (Vm - Vmbar)*(Vm - Vmbar) + (Thetam - Thetambar)*(Thetam - Thetambar);
+			      n++;
+			    }
+			  }
+			}
+			if (n != 0) {
+			  stdgood = sqrt(stdnew/n);
+			}
+
+			//Perform the gradient again, this time with outliers removed:
+		        numGradValues = 0;
+			gradYsum = 0;
+			for (int x = 1; x < xdim; x++) {
+			  for (int y = 2; y < ydim-1; y++) {
+			    if (goodData[x][y]) {
+			      gradYsum += vmy[x][y];
+			      numGradValues += 1;
+			    }
+			  }
+			}
+			Ygradient = gradYsum/numGradValues;
+			numGradValues = 0;
+			gradXsum = 0;
+			for (int y = 1; y < ydim; y++) {
+			  for (int x = 2; x < xdim-1; x++) {
+			    if (goodData[x][y]  && goodData[x+1][y]) {
+			      gradXsum += vmx[x][y];
+			      numGradValues += 1;
+			    }
+			  }
+			}
+			Xgradient = gradXsum/numGradValues;
+
+
+
+			if (( (NewMeanWind < 5.02) && (NewMeanWind > 4.98) ) || ((NewMeanWind < 5.47) && (NewMeanWind > 5.43)) ) {
+			  Message::toScreen( "MeanWind: " + QString().setNum(NewMeanWind) + "\n" );
+			  for (int y = 1; y < ydim; y++) {
+			    for (int x = 1; x < xdim-1; x++) {
+			      if (vmx[x][y] >= 100 or vmy[x][y] >= 50) {
+				xpos = gridData->getCartesianPointFromIndexI(x);
+				ypos = gridData->getCartesianPointFromIndexJ(y);
+				//				D = sqrt( xpos*xpos + ypos*ypos );
+				xp = xpos - xCenter;
+				yp = ypos - yCenter;
+// 				theta = atan2(yp,xp);
+// 				theta = vtd->fixAngle(theta);
+				R = sqrt( xp*xp + yp*yp );
+				
+				if ( R-(int)R < .5 ) {
+				  radius = (int)R;
+				} else {
+				  radius = (int)R + 1;
+				}
+				Message::toScreen(QString().setNum(x) + " "+QString().setNum(y)+ " "+QString().setNum(radius) + " "+ QString().setNum(vmx[x][y]) + " "+ QString().setNum(vmy[x][y]) );
+			      }
+			    }
+			  }
+			  Message::toScreen( "\n----------------------------------------------------------------\n" );
+			  }
+
+
 			stdold = stdnew;
-			MeanWindDiff = abs((LastMeanWind-NewMeanWind)*10000);
-			LastMeanWind = NewMeanWind; 
-			if (MeanWindDiff <= 10) {break;}
 
 			//send Vm to GVTD
 			VMx = NewMeanWind*cos(thetaM);
 			VMy = NewMeanWind*sin(thetaM);
 			vtd->setGVTD(VMx,VMy);
+
+			Message::toScreen(QString().setNum(NewMeanWind) + " " + QString().setNum(stdbad)+ " "+ QString().setNum(stdgood)+ " "+ QString().setNum(numthrownout) );
 
 			//now call meanwind GVTD
 			for (float radius = firstRing; radius <= lastRing; radius++) {
@@ -497,36 +691,32 @@ void VortexThread::run()
 
 			  delete[] ringData;
 			  delete[] ringAzimuths;
+
+			
 			}
 			//	FirstIteration = false;
 			//repeat while loop
-		      } //ends 'while' loop
+			//break;
+		  } //ends 'while' loop
+
+*/
 		      
+		      //writing ANALYTIC CAPPI ASI for first level only
+
 		      // All done with this radius and height, archive it
 		      //archiveWinds(radius, storageIndex, maxCoeffs);
+
+
 		      
+
 		      //printing meanwind to log
+		      float Vm = sqrt( (VMx)*(VMx) + (VMy)*(VMy) );
 		      float thetaM = atan2(VMy,VMx);
-		      thetaM = vtd->fixAngle(thetaM);
-		      float Vm = sqrt(VMx*VMx + VMy*VMy);
-		      float Vmsin = Vm * sin(thetaT - thetaM);
-		      float Vmcos = Vm * cos(thetaT - thetaM);
-		      // Shorten message for HVVP Results in Log File
+		      Vmsin = Vm * sin(thetaT - thetaM);
+		      Vmcos = Vm * cos(thetaT - thetaM);
 		      //QFile HVVPLogFile;
 		      //HVVPLogFile.setFileName(workingDirectoryPath.filePath("HVVP_output.txt"));
 		      QString shortMessage;
-		      //			shortMessage += "Layer, variance-weighted, average Vm_Sin = ";
-		      //			shortMessage += QString().setNum(av_VmSin)+" +-";
-		      //			shortMessage += QString().setNum(stdErr_VmSin)+" (m/s).";
-		      //			shortMessage += "\n";
-		      //shortMessage += "Vm_Sin value closest to 2 km altitude is ";
-		      //shortMessage += QString().setNum(vm_sin[ifoundit])+" +- ";
-		      //shortMessage += QString().setNum(sqrt(var[ifoundit]))+" m/s at ";
-		      //shortMessage += QString().setNum(z[ifoundit])+" km altitude.";
-		      //shortMessage += "\n";
-		      //shortMessage += "Z (km)     VMx (m/s)     VMy (m/s)     Mag.Vm (m/s)     ThetaM (rad)     VmSin (m/s)    VmCos (m/s)";
-		      //		shortMessage += "   Stderr_Vm_Sin (m/s)  Xt\n";
-		      //shortMessage += "   Vt\t   Vr\t    Xr\n\n";
 		      shortMessage +=QString().setNum(height)+"\t   "+QString().setNum(VMx);
 		      shortMessage +="\t   "+QString().setNum(VMy)+"\t   "+QString().setNum(Vm);
 		      shortMessage +="\t   "+QString().setNum(thetaM)+"\t   "+QString().setNum(Vmsin);
@@ -541,19 +731,7 @@ void VortexThread::run()
 			HVVPLogFile.close();
 		      }
 		      
-		      //deleting arrays
-		      for (int i=0; i < ydim; i++) {
-			delete [] MeanWindField[i];
-			delete [] vmx[i];
-			delete [] vmy[i];
-			delete [] CappiWindField[i];
-			delete [] goodData[i];
-		      }
-		      delete [] MeanWindField;
-		      delete [] vmx;
-		      delete [] vmy;
-		      delete [] CappiWindField;
-		      delete [] goodData;
+		      
 		  }
 
 
@@ -1561,7 +1739,7 @@ void VortexThread::writeAsi(float*** propGrid,float& kdim)
 
 }     
 
-void VortexThread::writeANAsi(float** MeanWindField,float& IT,float& kdim, int& xdim, int& ydim)
+void VortexThread::writeANAsi(float** DataField,float& IT,int& kdim, int& xdim, int& ydim)
 {
 
   Message::toScreen("\n ***Beginning Write_AN_ASI*** \n");
@@ -1578,13 +1756,13 @@ void VortexThread::writeANAsi(float** MeanWindField,float& IT,float& kdim, int& 
 	float rmax = (float)xdim;
 	float rDim = (float)xdim+1;
 	float rGridsp = 1;
-	float zmin = 1;
-	float zmax = kdim;
-      	float kDim = kdim;
+	//float zmin = 1;
+	//float zmax = (float)kdim;
+      	//float kDim = (float)kdim;
 	float tDim = 0;
 	//float iDim = lastRing;
 	float jDim = (float)ydim+1;
-	float kGridsp = 1;
+	//float kGridsp = 1;
 	float xmin = 0;
 	//float xmax = 0;
 	float ymin = 0;
@@ -1705,7 +1883,12 @@ void VortexThread::writeANAsi(float** MeanWindField,float& IT,float& kdim, int& 
 				out << reset << left << fieldNames.at(n) << endl;
 				int line = 0;
 				for (int i = 1; i < int(rDim-1);  i++){
-				    out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << MeanWindField[i][j]/108;
+				  if ((IT == 0) or (IT == 999)) {
+				    out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << DataField[i][j];
+				  }
+				  else {
+				    out << reset << qSetRealNumberPrecision(3) << scientific << qSetFieldWidth(10) << DataField[i][j]/108;
+				  }
 					line++;
 					if (line == 8) {
 						out << endl;
@@ -2238,4 +2421,480 @@ bool VortexThread::calcHVVP(bool printOutput)
   
   return hasHVVP;
 }
+
+
+void VortexThread::DownSimplex(float vmxguess, float vmyguess, int h) {
+  // Allocate memory for the simplex vertices	
+  vertex = new float*[3];
+  vertex[0] = new float[2];
+  vertex[1] = new float[2];
+  vertex[2] = new float[2];
+
+  STD = new float[2];
+  vertexSum = new float[2];
+  
+
+  //parameters are VMx and VMy
+  //set the initial simplex vertices
+
+	vertex[0][0] = vmxguess;
+	vertex[0][1] = vmyguess;
+
+	vertex[1][0] = vmxguess + 4;
+	vertex[1][1] = vmyguess;
+
+	vertex[2][0] = vmxguess;
+	vertex[2][1] = vmyguess + 4;
+
+
+	
+	vertexSum[0] = 0;
+	vertexSum[1] = 0;
+
+	//find standard deviation of gradVd*D for each vertex
+	for (int v=0; v <= 2; v++) {	
+	  //VT[v] = getS2(vertex[v][0],vertex[v][1]);
+	  VMx = vertex[v][0];
+	  VMy = vertex[v][1];
+	  STD[v] = IterateMeanWind(h);
+	}
+	/////////////////////////////////////////////////
+	// Run the simplex search loop
+	getVertexSum();
+	int numIterations = 0;
+	int low = 0;
+	int mid = 0;
+	int high = 0;
+	
+	for(;;) {
+		
+		low = 0;
+		// Sort the initial guesses
+		high = STD[0] > STD[1] ? (mid = 1,0) : (mid = 0,1);
+		for (int v=0; v<=2; v++) {
+			if (STD[v] <= STD[low]) low = v;
+			if (STD[v] > STD[high]) {
+				mid = high;
+				high = v;
+			} else if (STD[v] > STD[mid] && v != high) mid = v;
+		}
+		
+		// Check convergence
+		float epsilon = 2.0 * fabs(STD[high]-STD[low])/(fabs(STD[high]) + fabs(STD[low]) + 1.0e-10);
+		Message::toScreen(QString().setNum(IT)+" "+QString().setNum(h)+" "+QString().setNum(vertex[high][0])+"-"+QString().setNum(vertex[high][1])+":"+QString().setNum(STD[high])+" "+QString().setNum(vertex[mid][0])+"-"+QString().setNum(vertex[mid][1])+":"+QString().setNum(STD[mid])+" "+QString().setNum(vertex[low][0])+"-"+QString().setNum(vertex[low][1])+":"+QString().setNum(STD[low]));
+		if (epsilon < 0.05) {
+		  VMx = vertex[high][0];
+		  VMy = vertex[high][1];
+
+		  //print the best mean wind field for level 1
+		  if (h == 0) {
+		    writeANAsi(MeanWindField,IT,zdim, xdim, ydim);
+		  }
+
+		  break;
+		}
+		
+		// Check iterations
+		if (numIterations > 100) {
+			std::cout << "Too many iterations (>100)";
+			
+			break;
+		}
+		
+		numIterations += 2;
+		// Reflection
+		float STDtest = simplexTest(low, -1.0, h);
+		if (STDtest >= STD[high])
+			// Better point than highest, so try expansion
+			STDtest = simplexTest(low, 2.0, h);
+		else if (STDtest <= STD[mid]) { 
+			// Worse point than second highest, so try contraction
+			float STDsave = STD[low];
+			STDtest = simplexTest(low, 0.5, h);
+			if (STDtest <= STDsave) {
+				for (int v=0; v<=3; v++) {
+					if (v != high) {
+						for (int i=0; i<=2; i++)
+							vertex[v][i] = vertexSum[i] = 0.5*(vertex[v][i] + vertex[high][i]);
+						VMx = vertex[v][0];
+						VMy = vertex[v][1];
+						STD[v] = IterateMeanWind(h);
+					}
+				}
+				numIterations += 2;
+				getVertexSum();
+			}
+		} else --numIterations;
+		
+	}
+
+
+	
+
+}
+
+
+
+
+float VortexThread::IterateMeanWind(int h) {
+
+
+		      QString fieldName = "VE";	
+  		      float** CappiWindField = new float*[xdim];
+		      bool** goodData = new bool*[xdim];
+		      //float** MeanWindField = new float*[xdim];
+		      float** vmx = new float*[xdim];
+		      float** vmy = new float*[xdim];
+		      for (int x =0; x < xdim; x++) {
+			CappiWindField[x] = new float[ydim];
+			//MeanWindField[x] = new float[ydim];
+			vmx[x] = new float[ydim];
+			vmy[x] = new float[ydim];
+			goodData[x] = new bool[ydim];
+		      }	      
+
+		      // Get the cartesian center
+		      float xCenter = gridData->getCartesianRefPointI();
+		      float yCenter = gridData->getCartesianRefPointJ();
+		      float centerDistance = sqrt(xCenter*xCenter + yCenter*yCenter);
+		      		      
+		      // Get thetaT
+		      float thetaT = atan2(yCenter,xCenter);
+		      thetaT = vtd->fixAngle(thetaT);
+		      
+		      //retrieve the cappi wind field
+		      float xref;
+		      for (int i = 1; i < xdim; i++) {
+			xref = gridData->getCartesianPointFromIndexI(i);
+			CappiWindField[i] = gridData->getCartesianYslice(fieldName,xref,h+1);
+		      }
+		      //float MeanWindDiff = 100;
+		      //   bool FirstIteration = true;
+		      //float LastMeanWind = 0;
+		      //float NewMeanWind = -999;
+		      QString vtc0 = "VTCO";
+		      QString vrc0 = "VRCO";
+		      //float VMCosCheck;
+		      //float VMx;
+		      //float VMy;
+
+		      //float stdold = 999999999; //very large!
+		      //float lastthetaM;
+
+		      //write out the cappi field as asi
+		      if (h == 0 && IT == 0) {
+			writeANAsi(CappiWindField,IT,zdim, xdim, ydim);
+		      }
+
+			IT += 1;
+
+
+			
+			//	VMx = Vm*cos(thetaM);
+			//VMy = Vm*sin(thetaM);
+
+			vtd->setGVTD(VMx,VMy);
+
+			//Message::toScreen(QString().setNum(NewMeanWind) + " " + QString().setNum(stdbad)+ " "+ QString().setNum(stdgood)+ " "+ QString().setNum(numthrownout) );
+
+			float* B1B3 = new float[(int)(lastRing-firstRing)+1];
+			float* slopeiness = new float[(int)(lastRing-firstRing)+1];
+
+			//find new VT and VR wind field
+			for (float radius = firstRing; radius <= lastRing; radius++) {
+			  
+			  // Get the data
+			  int numData = gridData->getCylindricalAzimuthLength(radius, height);
+			  float* ringData = new float[numData];
+			  float* ringAzimuths = new float[numData];
+			  gridData->getCylindricalAzimuthData(velField, numData, radius, height, ringData);
+			  gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);
+			  
+			  // Call gvtd		  
+			  //float* vars = new float[2]; 
+			  float vmcos = -999;
+			  float b1b3 = -999;
+			  vtd->analyzeMeanWind(xCenter, yCenter, radius, height, numData, ringData,
+						       ringAzimuths, vtdCoeffs, vtdStdDev, &vmcos, &b1b3); 
+			  
+			  VMCosCheck = vmcos;
+			  B1B3[(int)radius] = b1b3;
+			  slopeiness[(int)radius] = -999;
+
+			  //update vortexData with new values
+			  archiveWinds(radius, storageIndex, maxCoeffs);
+
+			  delete[] ringData;
+			  delete[] ringAzimuths;
+
+			
+			}
+
+			//find outer vortex VT slope parameter
+			float thetaM = atan2(VMy,VMx);
+			float Vmsin = sqrt(VMx*VMx + VMy*VMy)*sin(thetaT - thetaM);
+			for (int radius = firstRing+1; radius <= lastRing-1; radius++) {
+			  float dB1B3dr = ( B1B3[radius+1] - B1B3[radius-1] )/2;
+			  float weight = 1;
+			  slopeiness[radius] = weight*(Vmsin + centerDistance*dB1B3dr);
+			}
+
+			//printing sample values
+			/*
+			if (height == 1 && IT == 17) {
+			  for (int i = 0; i <= lastRing; i++) {
+			    float radius = i;
+			    if ((radius < lastRing) && (radius > 0)) {
+			      float Vter = vortexData->getCoefficient(height, radius, QString("VTC0")).getValue();
+			      float Vrer = vortexData->getCoefficient(height, radius, QString("VRC0")).getValue();
+			      Message::toScreen(QString().setNum(IT) + " "+QString().setNum(radius) + " "+QString().setNum(Vter) + " "+ QString().setNum(Vrer)+ " " + QString().setNum(slopeiness[i]) );
+			    }
+			  }
+			}
+			*/
+
+			//find the mean wind field from new VTC0 and VRC0
+			float xpos;float ypos;float D;float xp;float yp;float theta;float R;float Vt;float Vr;float VTC0;float VRC0;float VTC1; float VTS1;
+			float radius;
+		
+			for (int i = 1; i < xdim; i++) {
+			  for (int j = 1; j < ydim; j++) {
+			    goodData[i][j] = false; //for now...
+			    xpos = gridData->getCartesianPointFromIndexI(i);
+			    ypos = gridData->getCartesianPointFromIndexJ(j);
+			    D = sqrt( xpos*xpos + ypos*ypos );
+			    xp = xpos - xCenter;
+			    yp = ypos - yCenter;
+			    theta = atan2(yp,xp);
+			    theta = vtd->fixAngle(theta);
+			    R = sqrt( xp*xp + yp*yp );
+
+			    if ( R-(int)R < .5 ) {
+			    radius = (int)R;
+			    } else {
+			      radius = (int)R + 1;
+			    }
+			  
+
+			    if ((radius < lastRing) && (radius > 0)) {
+			      // these values depend on NumWaveNum, set in AnalysisThread.cpp. 
+			      //        i.e. if NumWaveNum = 2, VTC1 and VTS1 return -999
+			      VTC0 = vortexData->getCoefficient(height, radius, QString("VTC0")).getValue();
+			      VTC1 = vortexData->getCoefficient(height, radius, QString("VTC1")).getValue();
+			      VTS1 = vortexData->getCoefficient(height, radius, QString("VTS1")).getValue();
+			      VRC0 = vortexData->getCoefficient(height, radius, QString("VRC0")).getValue();
+			      if (VTC0 == -999) { VTC0 = 0;}
+			      if (VTC1 == -999) { VTC1 = 0;}
+			      if (VTS1 == -999) { VTS1 = 0;}
+			      if (VRC0 == -999) { VRC0 = 0;}
+			      //			      Vt = VTC0 + VTC1*cos(theta - thetaT) + VTS1*sin(theta - thetaT);
+			      Vt = VTC0;
+			      Vr = VRC0;
+
+			      if ( (Vt != -999) ) {
+				goodData[i][j] = true;
+			      }
+			    }
+			    else { Vt = 0; Vr = 0;}
+
+			    
+
+			    //   float meanVTx1 = vortexData->getCoefficient((int)h, (int)radius, QString("VTC0")).getValue();
+			    // float meanVTx2 = vortexData->getCoefficient((int)h, (int)radius+1, QString("VTC0")).getValue();
+		      
+			      //			    }
+	// 		    else{
+// 			      Vt = NewVt;
+// 			      Vr = NewVr;
+// 			    }
+			    // if (radius < 10){
+			      //float thetaLAME = theta;
+			    // }
+			    MeanWindField[i][j] = CappiWindField[i][j]*D + centerDistance*Vt*sin(theta - thetaT) - centerDistance*Vr*(R/centerDistance + cos(theta - thetaT));
+			    // if ( height == 1 ) {
+			      // Message::toScreen("VT or VR NOT ZERO>>> Iteration=" + QString().setNum(IT) + ", level=" + QString().setNum(h) + ", Radius=" + QString().setNum(radius) + ", i="+ QString().setNum(i) + ", j="+ QString().setNum(j) + ", Vt="+ QString().setNum(Vt) + ", Vr="+ QString().setNum(Vr) );
+			      //  Message::toScreen(QString().setNum(Vt) + " "+ QString().setNum(Vr) ); 
+ 			    //}
+			    //MeanWindField[i][j] = (  CappiWindField[i][j] + Vt*sin(theta - thetaT)*centerDistance/D 
+			    //			     - Vr/D*centerDistance*(R/centerDistance + cos(theta - thetaT))   ) * D;
+			  }
+			}
+
+			
+			//Perform the gradient using center difference:
+			float dx = 2;
+			float dy = 2;
+			int numGradValues = 0;
+			float gradYsum = 0;
+			for (int x = 1; x < xdim; x++) {
+			  for (int y = 2; y < ydim-1; y++) {
+			    if (goodData[x][y] && goodData[x][y+1]) {
+			      vmy[x][y] = (MeanWindField[x][y+1] - MeanWindField[x][y-1])/dy;
+			      gradYsum += vmy[x][y];
+			      numGradValues += 1;
+			    }
+			  }
+			}
+			float Ygradient = gradYsum/numGradValues;
+			numGradValues = 0;
+			float gradXsum = 0;
+			for (int y = 1; y < ydim; y++) {
+			  for (int x = 2; x < xdim-1; x++) {
+			    if (goodData[x][y]  && goodData[x+1][y]) {
+			      vmx[x][y] = (MeanWindField[x+1][y] - MeanWindField[x-1][y])/dx;
+			      gradXsum += vmx[x][y];
+			      numGradValues += 1;
+			    }
+			  }
+			}
+			float Xgradient = gradXsum/numGradValues;
+
+	
+
+
+			//find standard dev., then remove outliers
+			//float Vmbar = sqrt( Xgradient*Xgradient + Ygradient*Ygradient );
+			float vmxbar = VMx;
+			//float Thetambar = atan2(Ygradient,Xgradient);
+			float vmybar = VMy;
+			float stdnew = 0;
+			float stdbad = 0;
+			float stdgood = 0;
+			float numthrownout = 0;
+			float n = 0;
+			int rad;
+			for (int y = 2; y < ydim; y++) {
+			  for (int x = 2; x < xdim-1; x++) {
+			    if (goodData[x][y]) {
+			      xpos = gridData->getCartesianPointFromIndexI(x);
+			      ypos = gridData->getCartesianPointFromIndexJ(y);
+			      xp = xpos - xCenter;
+			      yp = ypos - yCenter;
+			      R = sqrt( xp*xp + yp*yp );
+			      if ( R-(int)R < .5 ) {
+				rad = (int)R;
+			      } else {
+				rad = (int)R + 1;
+			      }
+			      //float Vm = sqrt( vmx[x][y]*vmx[x][y] + vmy[x][y]*vmy[x][y] );
+			      //float Thetam = atan2(vmy[x][y],vmx[x][y]);
+			      float VMX = vmx[x][y];
+			      float VMY = vmy[x][y];
+			      stdnew +=  (VMX - vmxbar)*(VMX - vmxbar) + (VMY - vmybar)*(VMY - vmybar);
+			      n++;
+			      
+			    }
+			  }
+			}
+			if (n != 0) {
+			  stdbad = sqrt(stdnew/n);
+			}
+		       	
+			//find new, improved standard deviation
+			stdnew = 0;
+			n = 0;	
+			for (int y = 2; y < ydim; y++) {
+			  for (int x = 2; x < xdim-1; x++) {
+			    if (goodData[x][y]) {
+			      xpos = gridData->getCartesianPointFromIndexI(x);
+			      ypos = gridData->getCartesianPointFromIndexJ(y);
+			      xp = xpos - xCenter;
+			      yp = ypos - yCenter;
+			      R = sqrt( xp*xp + yp*yp );
+			      if ( R-(int)R < .5 ) {
+				rad = (int)R;
+			      } else {
+				rad = (int)R + 1;
+			      }
+			      //float Vm = sqrt( vmx[x][y]*vmx[x][y] + vmy[x][y]*vmy[x][y] );
+			      //float Thetam = atan2(vmy[x][y],vmx[x][y]);
+			      float VMX = vmx[x][y];
+			      float VMY = vmy[x][y];
+			      
+			      //quality control:
+			      float variance = sqrt( (VMX - vmxbar)*(VMX - vmxbar) + (VMY - vmybar)*(VMY - vmybar) );
+			      if (variance > stdbad) {
+				//throw out values greater than one standard Dev.
+				goodData[x][y] = 0;
+				numthrownout++;
+			      }
+			      else {
+				//if ( (IT == 1) && (h == 0) ) {
+				  // Message::toScreen(QString().setNum(VMX)+" "+QString().setNum(VMY));
+				//}
+				if (rad < 100) {
+				  stdnew +=  (VMX - vmxbar)*(VMX - vmxbar) + (VMY - vmybar)*(VMY - vmybar);
+				}
+				else {
+				  stdnew +=  (VMX - vmxbar)*(VMX - vmxbar) + (VMY - vmybar)*(VMY - vmybar) + slopeiness[rad]*slopeiness[rad];
+				}
+				n++;
+			      }
+			    }
+			  }
+			}
+			//	Message::toScreen("NumThrownOut: " + QString().setNum(numthrownout));
+      			if (n != 0) {
+			  stdgood = sqrt(stdnew/n);
+			}
+
+
+			//deleting arrays
+			for (int i=0; i < ydim; i++) {
+			  // delete [] MeanWindField[i];
+			  delete [] vmx[i];
+			  delete [] vmy[i];
+			  delete [] CappiWindField[i];
+			  delete [] goodData[i];
+			}
+			//delete [] MeanWindField;
+			delete [] vmx;
+			delete [] vmy;
+			delete [] CappiWindField;
+			delete [] goodData;
+
+			float returnstd = stdgood*(-1);
+
+			return returnstd;
+}
+
+inline void VortexThread::getVertexSum()
+{
+  
+  float sum;
+  int v;
+  for (int i=0; i<=1; i++) {
+    for (sum = 0.0, v=0; v<=2; v++)
+      sum += vertex[v][i];
+    vertexSum[i] = sum;
+  }
+}
+
+float VortexThread::simplexTest(int& low, float factor, int h)
+{
+	
+	// Test a simplex vertex
+	float STDtest = -999;
+	float* vertexTest = new float[2];
+	float factor1 = (1.0 - factor)/2;
+	float factor2 = factor1 - factor;
+	for (int i=0; i<=1; i++)
+		vertexTest[i] = vertexSum[i]*factor1 - vertex[low][i]*factor2;
+	VMx = vertexTest[0];
+	VMy = vertexTest[1];
+	STDtest = IterateMeanWind(h);
+	
+	// If its a better point than the worst, replace it
+	if (STDtest > STD[low]) {
+		STD[low] = STDtest;
+		for (int i=0; i<=1; i++) {
+			vertexSum[i] += vertexTest[i]-vertex[low][i];
+			vertex[low][i] = vertexTest[i];
+		}
+	}
+	delete[] vertexTest;
+	return STDtest;
+	
+}
+
 
