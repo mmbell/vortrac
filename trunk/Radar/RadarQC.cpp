@@ -51,14 +51,14 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
   
   // Used to determine how the reflectivity data should be interpolated based
   // on the vcp of the radar volume
-  if( (vcp < 33) || (vcp==211) || (vcp==212) ) {
+  if( (vcp < 33) || (vcp==211) || (vcp==212) || (vcp==221) ) {
     q = 3;
     if( (vcp == 12) || (vcp==212) ) {
       q = 5;
     }
     qinc = 2;
   }
-  if( (vcp == 121) || (vcp==221) ) {
+  if( (vcp == 121) ) {
     q = 5;
     qinc = 4;
   }

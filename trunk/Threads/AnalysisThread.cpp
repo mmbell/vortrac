@@ -446,13 +446,13 @@ void AnalysisThread::run()
 	 //bool closeToEdge = false;
 	 for(int i = 0; i < radarVolume->getNumSweeps(); i++) {	   
 	   if (radarVolume->getSweep(i)->getVel_numgates()> 0) {
-	     float range = radarVolume->getSweep(i)->getUnambig_range();
+	     float range = radarVolume->getSweep(i)->getUnambig_range()*2;
 	     if (range > unambigRange) {
 	       unambigRange = range;
 	     }
 	   } 
 	   int rangeBuffer = 5;
-	   if((relDist < (radarVolume->getSweep(i)->getUnambig_range()+rangeBuffer))
+	   if((relDist < (radarVolume->getSweep(i)->getUnambig_range()*2+rangeBuffer))
 	      &&(radarVolume->getSweep(i)->getVel_numgates()> 0)){
 	     beyondRadar = false;
 	   }
@@ -610,7 +610,7 @@ void AnalysisThread::run()
 			  SLOT(catchLog(const Message&)), Qt::DirectConnection);
 		  dealiaser->getConfig(configData->getConfig("qc"));
 		  
-		  if(dealiaser->dealias()) {
+/*		  if(dealiaser->dealias()) {
 		    emit log(Message("Finished QC and Dealiasing", 
 				     1, this->objectName()));  // 10 %
 		    radarVolume->isDealiased(true);
@@ -619,7 +619,7 @@ void AnalysisThread::run()
 		    analysisGood = false;
 		    // Something went wrong
 		    // We should probably add a return here of some sort...
-		  }
+		  } */
 		  delete dealiaser;
 		}
 		else

@@ -157,7 +157,7 @@ struct rda_status_info {
    short alarm_codes[14];	/* (27-40) */
 };
 
-struct digital_radar_data_header {
+struct message_1_data_header {
     long milliseconds_past_midnight; /* (15-16) */
     short julian_date;          /* (17) from 1/1/70 */
     short unamb_range_x10;      /* (18) km. */
@@ -270,6 +270,76 @@ struct nexrad_prf_set {
     short bytes_in_this_header;
     short ptr_to_next_prf_set;	/* byte count from start of drdh */
     unsigned short prf_in_hz_x100;
+};
+
+struct message_31_data_header {
+	char radar_id[4];
+	long milliseconds_past_midnight; 
+    short julian_date;          /* (17) from 1/1/70 */
+    short azimuth_num;      /* (18) */
+    float azimuth;     /* (19) binary angle */
+	unsigned char compression;
+	unsigned char spare;
+    short block_length;           /* (20) */
+    unsigned char azimuth_resolution;        /* (21) */
+    unsigned char radial_status;
+    unsigned char elev_num;             /* (23) */
+	unsigned char cut_sector_num;
+    float elevation;
+	unsigned char spot_blanking_status;
+	unsigned char azimuth_index_mode;
+	short num_data_blocks;
+	long vol_ptr;
+	long elev_ptr;
+	long radial_ptr;
+    long ref_ptr;              /* (33) byte count from start of drdh */
+    long vel_ptr;              /* (34) byte count from start of drdh */
+    long sw_ptr;               /* (35) byte count from start of drdh */
+	long zdr_ptr;
+	long phi_ptr;
+	long rho_ptr;
+};
+
+struct volume_data_block {
+	char block_type[4];
+	short block_size;
+	unsigned char maj_version_num;
+	unsigned char min_version_num;
+	float latitude;
+	float longitude;
+	short altitude;
+	unsigned short feedhorn_height;
+	float calibration_constant;
+	float tx_power_h;
+	float tx_power_v;
+	float zdr_calibration;
+	float initial_phidp;
+	short vol_coverage_pattern;
+	short spare;
+};
+
+struct radial_data_block {
+	char block_type[4];
+	short block_size;
+	short unambig_range;
+	float h_noise;
+	float v_noise;
+	short nyquist_vel;
+	short spare;
+};
+
+struct moment_data_block {
+	char block_type[4];
+	long reserved;
+	short num_gates;
+	short gate1;
+	short gate_width;
+	short tover;
+	short snr_threshold;
+	unsigned char control_flags;
+	unsigned char word_size;
+	long scale;
+	long doffset;
 };
 
 # ifndef S100

@@ -425,11 +425,17 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
       if (vel == -999) {
 	color = 0;
       } else {
-	color = (int)((vel - minVel)/velIncr) + 2;
+		color = (int)((vel - minVel)/velIncr) + 2;
+		if ((color < 0) or (color > 43)) {
+			// Bad color
+			color = 1;
+		}
       }
       int x = (int)i;
       int y = (int)(jDim-j-1);
-      image.setPixel(x,y,color);
+	  if (image.valid(x,y)) {
+		image.setPixel(x,y,color);
+	  }
     }
   }
   image = image.scaled((int)500,(int)500);

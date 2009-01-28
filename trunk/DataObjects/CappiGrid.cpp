@@ -103,7 +103,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   
   //  Message::toScreen("Xmin = "+QString().setNum(xmin)+" Xmax = "+QString().setNum(xmax)+" Ymin = "+QString().setNum(ymin)+" Ymax = "+QString().setNum(ymax));
   
-  // Adjust the cappi so that it doesn't waste space on areas without velocity data
+  /* Adjust the cappi so that it doesn't waste space on areas without velocity data
   if (xmin < -180) {
     float adjust = -xmin - 180;
     xmin += adjust;
@@ -121,7 +121,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
     float adjust = -ymax + 180;
     ymin += adjust;
     ymax += adjust;
-  }
+  }*/
   
   latReference = *radarData->getRadarLat();
   lonReference = *radarData->getRadarLon();
@@ -194,10 +194,11 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
   bool abort = returnExitNow();
   
   // Calculate radius of influence
-  float ROI = 1.5;
-  float xRadius = (iGridsp * iGridsp) * (ROI*ROI);
-  float yRadius = (jGridsp * jGridsp) * (ROI*ROI);
-  float zRadius = (kGridsp * kGridsp) * (ROI*ROI);
+  float hROI = 2.0;
+  float vROI = 1.5;
+  float xRadius = (iGridsp * iGridsp) * (hROI*hROI);
+  float yRadius = (jGridsp * jGridsp) * (hROI*hROI);
+  float zRadius = (kGridsp * kGridsp) * (vROI*vROI);
   float RSquare = xRadius + yRadius + zRadius;
   int maxIplus = (int)(RSquare/iGridsp);
   int maxJplus = (int)(RSquare/jGridsp);
@@ -225,8 +226,10 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
   float maxUnambig_range = 0;
   for (int n = 0; n < radarData->getNumSweeps(); n++) {
 	  Sweep* currentSweep = radarData->getSweep(n);
-	  float range = currentSweep->getUnambig_range();
-	  if ((currentSweep->getVel_numgates() > 0) and (range > maxUnambig_range)) {
+	  float range = currentSweep->getUnambig_range() * 2;
+	  if ((currentSweep->getVel_numgates() > 0) 
+		and (range > maxUnambig_range)
+		and (currentSweep->getElevation() < 1.0)) {
 		  maxUnambig_range = range;
 	  }
   }
@@ -295,8 +298,10 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 		  }
 		  
 	  }
-	  if ((currentRay->getVel_numgates() > 0) and
-		  (currentRay->getUnambig_range() == maxUnambig_range)) {
+	  if ((currentRay->getVel_numgates() > 0)
+		  // Modified to deal with VCP 212 & 221 -MMB
+		  // Uncomment this running on slower system
+		  and (currentRay->getUnambig_range() == maxUnambig_range/2)) {
 		  float* velData = currentRay->getVelData();
 		  float* swData = currentRay->getSwData();
 		  for (int g = 0; g <= (currentRay->getVel_numgates()-1); g++) {
@@ -387,9 +392,9 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
       }
       for (int i = 0; i < int(iDim); i++) {
 
-		  dataGrid[0][i][j][k] = -999.;
-		  dataGrid[1][i][j][k] = -999.;
-		  dataGrid[2][i][j][k] = -999.;
+		  dataGrid[0][i][j][k] = -999;
+		  dataGrid[1][i][j][k] = -999;
+		  dataGrid[2][i][j][k] = -999;
 	
 		  if (refValues[i][j][k].weight > 0) {
 			  dataGrid[0][i][j][k] = refValues[i][j][k].sumRef/refValues[i][j][k].weight;
@@ -401,6 +406,55 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
       }
     }
   }
+	
+  
+/*	for (int k = 0; k < int(kDim); k++) { 
+		// float sumtexture = 0;
+		// float maxtexture = 0;
+		for (int j = 1; j < int(jDim)-1; j++) {
+			abort = returnExitNow();
+			if(abort){
+				//Message::toScreen("ExitNow in Cressmand Interpolation in CappiGrid");
+				return;
+			}
+			for (int i = 1; i < int(iDim)-1; i++) {
+				float c = (dataGrid[1][i][j][k] != -999) ? dataGrid[1][i][j][k] : 0;
+				float l = (dataGrid[1][i-1][j][k] != -999) ? dataGrid[1][i-1][j][k] : 0;
+				float r = (dataGrid[1][i+1][j][k] != -999) ? dataGrid[1][i+1][j][k] : 0;
+				float t = (dataGrid[1][i][j-1][k] != -999) ? dataGrid[1][i][j-1][k] : 0;
+				float b = (dataGrid[1][i][j+1][k] != -999) ? dataGrid[1][i][j+1][k] : 0;
+				
+				float meanVel = (c + l + r + t + b)/5;
+				float stdDevVel = ((c - meanVel) * (c - meanVel))
+					+ ((l - meanVel) * (l - meanVel))
+					+ ((r - meanVel) * (r - meanVel))
+					+ ((t - meanVel) * (t - meanVel))
+					+ ((b - meanVel) * (b - meanVel));
+				stdDevVel /= 6;
+				if ((abs(c - meanVel) > (stdDevVel * 2.))) {
+					dataGrid[1][i][j][k] = meanVel;
+				}
+				
+				// Texture could be used to further remove outliers, but not sure what
+				// thresholds to use for all situations
+				float texture = ((c - l) * (c - l))
+				+ ((c - r) * (c - r))
+				+ ((c - t) * (c - t))
+				+ ((c - b) * (c - b));
+				if (texture > 1000) {
+					dataGrid[1][i][j][k] = -999;
+				}
+
+				sumtexture += texture;
+				if (texture > maxtexture) maxtexture = texture; 
+			}
+		}
+		sumtexture /= (iDim-2)*(jDim -2);
+		QString tex;
+		Message::toScreen(tex.setNum(sumtexture));
+		Message::toScreen(tex.setNum(maxtexture)); 
+	} */
+
 }
 /*
 void CappiGrid::ClosestPointInterpolation()

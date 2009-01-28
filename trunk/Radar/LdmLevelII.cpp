@@ -43,6 +43,7 @@ bool LdmLevelII::readVolume()
 
   // Read in blocks of data
   char* nexBuffer = new char[2432];
+  int recNum = 0;
   while (!dataIn.atEnd()) {
 	  
 	  // Try to read 4 bytes for size
@@ -79,32 +80,40 @@ bool LdmLevelII::readVolume()
 	  }	
 
 	  delete compressed;
-	  
-	  for (unsigned int i = 0; i < uncompSize; i += 2432) {
-		  // Extract a packet
-		  nexBuffer = (uncompressed + i);
+	  recNum++;
+	  // Skip the metadata at the beginning
+	  if ((recNum == 1) and (uncompSize == 325888)) { continue; }
+	   
+	  unsigned int msgIncr = 0;
+	  //for (unsigned int i = 0; i < uncompSize; i += 2432) {
+	  while (msgIncr < uncompSize) {
+		  // Extract a packet, skipping metadata
+		  nexBuffer = (uncompressed + msgIncr);
 
 		  // Skip the CTM info
 		  //char *readPtr = nexBuffer + sizeof(CTM_info);
 		  char *readPtr = nexBuffer + 12;
 		  // Read in the message header
 		  msgHeader = (nexrad_message_header *)readPtr;
-
+		  if (swap_bytes) {
+			  swapMsgHeader();
+		  }
 		  if (msgHeader->message_type == 1) {
-			  // Got some data
-			  radarHeader = (digital_radar_data_header *)(readPtr + sizeof(nexrad_message_header));
+			  // Got some fixed length data
+			  sweepMsgType = 1;
+			  msg1Header = (message_1_data_header *)(readPtr + sizeof(nexrad_message_header));
 			  if (swap_bytes) {
-				  swapRadarHeader();
+				  swapMsg1Header();
 			  }
 
-			  vcp = radarHeader->vol_coverage_pattern;
+			  vcp = msg1Header->vol_coverage_pattern;
 
 			  // Is this a new sweep? Check radial status
-			  if (radarHeader->radial_status == 3) {
+			  if (msg1Header->radial_status == 3) {
 
 				  // Beginning of volume
-				  volumeTime = radarHeader->milliseconds_past_midnight;
-				  volumeDate = radarHeader->julian_date;
+				  volumeTime = msg1Header->milliseconds_past_midnight;
+				  volumeDate = msg1Header->julian_date;
 				  QDate initDate(1970,1,1);
 				  radarDateTime.setDate(initDate);
 				  radarDateTime.setTimeSpec(Qt::UTC);
@@ -115,7 +124,7 @@ bool LdmLevelII::readVolume()
 				  addSweep(Sweeps);
 				  Sweeps[0].setFirstRay(0);
 
-			  } else if (radarHeader->radial_status == 0) {
+			  } else if (msg1Header->radial_status == 0) {
 
 				  // New sweep
 				  // Use Dennis' stuff here eventually
@@ -128,30 +137,152 @@ bool LdmLevelII::readVolume()
 			  }
 			  
 			  // Read ray of data
-			  if (radarHeader->ref_ptr) {
-				  char* const ref_buffer = readPtr + sizeof(nexrad_message_header) + radarHeader->ref_ptr;
+			  if (msg1Header->ref_ptr) {
+				  char* const ref_buffer = readPtr + sizeof(nexrad_message_header) + msg1Header->ref_ptr;
 				  ref_data = decode_ref(ref_buffer,
-										radarHeader->ref_num_gates);
+										msg1Header->ref_num_gates);
 			  }
-			  if (radarHeader->vel_ptr) {
-				  char* const vel_buffer = readPtr + sizeof(nexrad_message_header) + radarHeader->vel_ptr;
+			  if (msg1Header->vel_ptr) {
+				  char* const vel_buffer = readPtr + sizeof(nexrad_message_header) + msg1Header->vel_ptr;
 				  vel_data = decode_vel(vel_buffer,
-										radarHeader->vel_num_gates,
-										radarHeader->velocity_resolution);
+										msg1Header->vel_num_gates,
+										msg1Header->velocity_resolution);
 			  }
-			  if (radarHeader->sw_ptr) {
-				  char* const sw_buffer = readPtr + sizeof(nexrad_message_header) + radarHeader->sw_ptr;
+			  if (msg1Header->sw_ptr) {
+				  char* const sw_buffer = readPtr + sizeof(nexrad_message_header) + msg1Header->sw_ptr;
 				  sw_data = decode_sw(sw_buffer,
-									  radarHeader->vel_num_gates);
+									  msg1Header->vel_num_gates);
 			  }
 			  
 			  // Put more rays in the volume, associated with the current Sweep;
 			  addRay(&Rays[numRays]);
 			  
+		  } else if (msgHeader->message_type == 31) {
+		  
+		      // Got some variable length data
+			  sweepMsgType = 31;
+			  
+			  msg31Header = (message_31_data_header *)(readPtr + sizeof(nexrad_message_header));
+			  if (swap_bytes) {
+				  swapMsg31Header();
+			  }
+
+			  // Read volume and radial data
+			  if (msg31Header->vol_ptr) {
+				  volume_block = (volume_data_block *)(readPtr + sizeof(nexrad_message_header) + msg31Header->vol_ptr);
+				  if (swap_bytes) {
+					swapVolumeBlock();
+				  }
+				  vcp = volume_block->vol_coverage_pattern;
+			  }
+
+			  if (msg31Header->radial_ptr) {
+				  radial_block = (radial_data_block *)(readPtr + sizeof(nexrad_message_header) + msg31Header->radial_ptr);
+				  if (swap_bytes) {
+					swapRadialBlock();
+				  }
+			  }
+
+			  if (msg31Header->ref_ptr) {
+				  ref_block = (moment_data_block *)(readPtr + sizeof(nexrad_message_header) + msg31Header->ref_ptr);
+				  if (swap_bytes) {
+					swapMomentDataBlock(ref_block);
+				  }
+				  QString blockID(ref_block->block_type);
+				  if (blockID != QString("DREF")) { 
+					// Skip this ray
+					//continue;
+				  }
+				  char* const ref_buffer = (char *)ref_block + sizeof(moment_data_block);
+				  ref_data = decode_ref(ref_buffer,
+										ref_block->num_gates);
+				  ref_num_gates = ref_block->num_gates;
+				  ref_gate1 = ref_block->gate1;
+				  ref_gate_width = ref_block->gate_width;
+			  } else {
+			      ref_data = NULL;
+				  ref_num_gates = 0;
+				  ref_gate1 = 0;
+				  ref_gate_width = 0;
+			  }
+			  
+			  if (msg31Header->vel_ptr) {
+				  vel_block = (moment_data_block *)(readPtr + sizeof(nexrad_message_header) + msg31Header->vel_ptr);
+				  if (swap_bytes) {
+					swapMomentDataBlock(vel_block);
+				  }
+				  QString blockID(ref_block->block_type);
+				  if (blockID != QString("DVEL")) { 
+					// Skip this ray
+					//continue;
+				  }
+				  char* const vel_buffer = (char *)vel_block + sizeof(moment_data_block);
+				  vel_data = decode_vel(vel_buffer,
+										vel_block->num_gates,
+										vel_block->scale);
+				  vel_num_gates = vel_block->num_gates;
+				  vel_gate1 = vel_block->gate1;
+				  vel_gate_width = vel_block->gate_width;
+			  } else {
+				  vel_data = NULL;
+				  vel_num_gates = 0;
+				  vel_gate1 = 0;
+				  vel_gate_width = 0;
+			  }
+
+			  if (msg31Header->sw_ptr) {
+			      sw_block = (moment_data_block *)(readPtr + sizeof(nexrad_message_header) + msg31Header->sw_ptr);
+				  if (swap_bytes) {
+					swapMomentDataBlock(sw_block);
+				  }
+				  char* const sw_buffer = (char *)sw_block + sizeof(moment_data_block);
+				  sw_data = decode_sw(sw_buffer,
+									  sw_block->num_gates);
+			  }
+
+			  
+
+			  // Is this a new sweep? Check radial status
+			  if (msg31Header->radial_status == 3) {
+
+				  // Beginning of volume
+				  volumeTime = msg31Header->milliseconds_past_midnight;
+				  volumeDate = msg31Header->julian_date;
+				  QDate initDate(1970,1,1);
+				  radarDateTime.setDate(initDate);
+				  radarDateTime.setTimeSpec(Qt::UTC);
+				  radarDateTime = radarDateTime.addDays(volumeDate - 1);
+				  radarDateTime = radarDateTime.addMSecs((qint64)volumeTime);
+	
+				  // First sweep and ray
+				  addSweep(Sweeps);
+				  Sweeps[0].setFirstRay(0);
+
+			  } else if (msg31Header->radial_status == 0) {
+
+				  // New sweep
+				  // Use Dennis' stuff here eventually
+				  // Count up rays in sweep
+				  Sweeps[numSweeps-1].setLastRay(numRays-1);
+				  // Increment array
+				  addSweep(&Sweeps[numSweeps]);
+				  // Sweeps[numSweeps].setFirstRay(numRays);
+
+			  } else if (msg31Header->radial_status == 4) {
+			      // Bail out?
+				  //break;
+			  }
+			  			  
+			  // Put more rays in the volume, associated with the current Sweep;
+			  addRay(&Rays[numRays]);
+				
 		  } else {
-			  // Some other junk, no need to skip
-			  // nexBuffer += (msgHeader->message_len) * 2;
+			  // Message Length is too short for binary segment
+			  msgHeader->message_len = 1210;
 		  }
+		  
+		  // Skip a variable # of bytes
+		  msgIncr += (msgHeader->message_len)*2 + 12;
 		  
 	  }
 	  

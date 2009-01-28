@@ -92,7 +92,6 @@ RadarData* RadarFactory::getUnprocessedData()
 	newFilesize = radarFile.size();
   }
   sleep(1);
-
   emit log(Message(QString("Reading file:"+fileName), 0, this->objectName()));
   // Mark it as processed
   fileAnalyzed[fileName] = true;
