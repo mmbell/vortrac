@@ -80,7 +80,6 @@ RadarData* RadarFactory::getUnprocessedData()
 
   // Get the files off the queue
   QString fileName = dataPath.filePath(radarQueue->dequeue());
-  emit log(Message(QString("Waiting for file:"+fileName), 0, this->objectName()));
 
   // Test file to make sure it is not growing
   QFile radarFile(fileName);
@@ -91,8 +90,9 @@ RadarData* RadarFactory::getUnprocessedData()
 	sleep(1);
 	newFilesize = radarFile.size();
   }
+  //sleep(1);
+  //emit log(Message(QString("Reading file:"+fileName), 0, this->objectName()));
   sleep(1);
-  emit log(Message(QString("Reading file:"+fileName), 0, this->objectName()));
   // Mark it as processed
   fileAnalyzed[fileName] = true;
     

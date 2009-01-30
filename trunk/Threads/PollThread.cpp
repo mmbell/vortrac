@@ -339,13 +339,15 @@ void PollThread::run()
 	        
 	    // Select a volume off the queue
 	    RadarData *newVolume = dataSource->getUnprocessedData();
-	    
 	    if(newVolume == NULL) {
 	      delete newVolume;
 	      mutex.unlock();
 	      continue;
 	    }
-	    emit log(Message(QString(),1,this->objectName()));
+		  QString fileName = "Found file:" + newVolume->getFileName();  
+		emit log(Message(fileName, 1, this->objectName()));
+
+	    //emit log(Message(QString(),1,this->objectName()));
 	    
 	    // Check to makes sure that the file still exists and is readable
 	    

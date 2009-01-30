@@ -298,10 +298,10 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 		  }
 		  
 	  }
-	  if ((currentRay->getVel_numgates() > 0)
+	  if ((currentRay->getVel_numgates() > 0)) {
 		  // Modified to deal with VCP 212 & 221 -MMB
 		  // Uncomment this running on slower system
-		  and (currentRay->getUnambig_range() == maxUnambig_range/2)) {
+		  //and (currentRay->getUnambig_range() == maxUnambig_range/2)) {
 		  float* velData = currentRay->getVelData();
 		  float* swData = currentRay->getSwData();
 		  for (int g = 0; g <= (currentRay->getVel_numgates()-1); g++) {

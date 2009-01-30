@@ -610,7 +610,7 @@ void AnalysisThread::run()
 			  SLOT(catchLog(const Message&)), Qt::DirectConnection);
 		  dealiaser->getConfig(configData->getConfig("qc"));
 		  
-/*		  if(dealiaser->dealias()) {
+		  if(dealiaser->dealias()) {
 		    emit log(Message("Finished QC and Dealiasing", 
 				     1, this->objectName()));  // 10 %
 		    radarVolume->isDealiased(true);
@@ -619,7 +619,7 @@ void AnalysisThread::run()
 		    analysisGood = false;
 		    // Something went wrong
 		    // We should probably add a return here of some sort...
-		  } */
+		  }
 		  delete dealiaser;
 		}
 		else
