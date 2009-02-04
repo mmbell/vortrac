@@ -11,7 +11,7 @@
 #include "Configuration.h"
 
 #include <QDomText>
-
+#include <QMutex>
 
 Configuration::Configuration(QObject *parent, const QString &filename)
   :QObject(parent)
@@ -549,7 +549,6 @@ const QDomElement Configuration::getElementWithAttrib(const QDomElement &element
    *   desired element, with the correct attribute and attribute value.
    *
    */
-
   QDomElement elementWithAttribute;
   elementWithAttribute.clear();
   QDomElement sibling = getElement(element, paramName);

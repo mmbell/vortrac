@@ -12,7 +12,7 @@
 #include "Message.h"
 #include <QTextStream>
 
-Message::Message(const char *errormsg, int newProgress, 
+/*Message::Message(const char *errormsg, int newProgress, 
 		 const char *newLocation, 
 		 StopLightColor newColor, const char *newStopLightMessage, 
 		 StormSignalStatus newStatus, 
@@ -25,7 +25,7 @@ Message::Message(const char *errormsg, int newProgress,
   stopLightMessage = QString(newStopLightMessage);
   status = newStatus;
   stormSignalMessage = QString(newStormSignalMessage);
-}
+} */
 
 Message::Message(const QString errormsg, int newProgress,
 		 const QString newLocation, 
@@ -42,7 +42,18 @@ Message::Message(const QString errormsg, int newProgress,
   status = newStatus;
   stormSignalMessage = newStormSignalMessage;
 }
-  
+
+Message::Message(const Message& other)
+{
+	this->logMessage = other.logMessage;
+	this->progress = other.progress;
+	this->location = other.location;
+	this->color = other.color;
+	this->stopLightMessage = other.stopLightMessage;
+	this->status = other.status;
+	this->stormSignalMessage = other.stormSignalMessage;
+}
+
 Message::~Message()
 {
 }

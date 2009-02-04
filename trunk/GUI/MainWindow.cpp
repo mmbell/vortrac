@@ -32,7 +32,7 @@ MainWindow::MainWindow()
     updateMenus();
 
     readSettings();
-
+    qRegisterMetaType<Message>("Message");
     setWindowTitle(tr("VORTRAC"));
 }
 

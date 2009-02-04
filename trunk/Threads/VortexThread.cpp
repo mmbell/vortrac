@@ -543,7 +543,7 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
   Configuration* vortexConfig = new Configuration(0, file);
   vortexConfig->setLogChanges(false);
   connect(vortexConfig, SIGNAL(log(const Message&)), 
-	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+	  this, SLOT(catchLog(const Message&)));
   VortexList* errorVertices = new VortexList(vortexConfig);
   errorVertices->open();
 
@@ -651,12 +651,12 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
 	  emit log(Message(QString("CalcPressureUncertainty:Error retrieving VTC0 in vortex!"),0,this->objectName()));
 	} 
       } else {
-	QString err("Insufficient data for VTD winds at radius ");
+	/*QString err("Insufficient data for VTD winds at radius ");
 	QString loc;
 	err.append(loc.setNum(radius));
 	err.append(", height ");
 	err.append(loc.setNum(height));
-	emit log(Message(err));
+	emit log(Message(err)); */
       }
       
       // All done with this radius and height, archive it
@@ -887,8 +887,7 @@ bool VortexThread::calcHVVP(bool printOutput)
   envWindFinder->setConfig(configData);
   envWindFinder->setPrintOutput(printOutput);
   connect(envWindFinder, SIGNAL(log(const Message)), 
-	  this, SLOT(catchLog(const Message)), 
-	  Qt::DirectConnection);
+	  this, SLOT(catchLog(const Message)));
   envWindFinder->setRadarData(radarVolume,rt, cca, vortexData->getAveRMW());
   emit log(Message(QString(), 1,this->objectName()));
   //envWindFinder->findHVVPWinds(false); for first fit only

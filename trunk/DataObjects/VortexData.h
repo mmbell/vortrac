@@ -20,7 +20,7 @@ class VortexData
  public:
   VortexData();
   VortexData(int availLevels, int availRadii, int availWaveNum);
-  //VortexData(const VortexData &other);
+  VortexData(const VortexData &other);
   ~VortexData();
   void printString();
 
@@ -102,8 +102,8 @@ class VortexData
   static int getMaxWaveNum() {return maxWaveNum; }
 
  private:
-  static const int maxLevels = 15;
-  static const int maxRadii = 150;
+  static const int maxLevels = 3;
+  static const int maxRadii = 101;
   static const int maxWaveNum = 5;
 
   int numLevels;

@@ -48,25 +48,18 @@ PollThread::~PollThread()
   this->abortThread();
   /* Deleting Members
 	  - Causes crash when explicitly deleting -MB */
-  
+    
+  delete simplexThread; // This goes first so it can break the cycle which will
+	 // allow us a change to lock if we are in simplexThread
+	 // Otherwise we could wait a while for a lock
+  simplexThread = NULL;
+	 
+  delete vortexThread;    
+  vortexThread = NULL;
+
   delete analysisThread;
   analysisThread = NULL;
-  
-  /* delete configData;
-  configData = NULL; 
 
-  delete vortexConfig;
-  vortexConfig = NULL;
-  
-  delete simplexConfig;
-  simplexConfig = NULL;
-  
-  delete pressureConfig;
-  pressureConfig = NULL;
-  
-  delete dropSondeConfig;
-  dropSondeConfig = NULL; */
-  
   delete vortexList;
   vortexList = NULL;
   
@@ -144,11 +137,11 @@ void PollThread::run()
   emit log(Message(QString("Polling for data..."), 0, this->objectName()));
   dataSource = new RadarFactory(configData);
   connect(dataSource, SIGNAL(log(const Message&)),
-  	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+  	  this, SLOT(catchLog(const Message&)));
 
   PressureFactory *pressureSource = new PressureFactory(configData);
   connect(pressureSource, SIGNAL(log(const Message&)),
-		  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+		  this, SLOT(catchLog(const Message&)));
 
   if(!continuePreviousRun) {
     QString file("vortrac_defaultVortexListStorage.xml");
@@ -156,7 +149,7 @@ void PollThread::run()
     vortexConfig->setObjectName("Vortex Configuration");
     vortexConfig->setLogChanges(false);
     connect(vortexConfig, SIGNAL(log(const Message&)), 
-	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+	    this, SLOT(catchLog(const Message&)));
     vortexList = new VortexList(vortexConfig);
     vortexList->open();
   
@@ -166,7 +159,7 @@ void PollThread::run()
     simplexConfig->setObjectName("Simplex Configuration");
     simplexConfig->setLogChanges(false);
     connect(simplexConfig, SIGNAL(log(const Message&)), 
-	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+	    this, SLOT(catchLog(const Message&)));
     simplexList = new SimplexList(simplexConfig);
     simplexList->open();
     
@@ -176,7 +169,7 @@ void PollThread::run()
     pressureConfig->setObjectName("Pressure Configuration");
     pressureConfig->setLogChanges(false);
     connect(pressureConfig, SIGNAL(log(const Message&)), 
-	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+	    this, SLOT(catchLog(const Message&)));
     pressureList = new PressureList(pressureConfig);
     pressureList->open();
 
@@ -184,7 +177,7 @@ void PollThread::run()
     dropSondeConfig->setObjectName("Dropsonde Configuration");
     dropSondeConfig->setLogChanges(false);
     connect(dropSondeConfig, SIGNAL(log(const Message&)), 
-	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+	    this, SLOT(catchLog(const Message&)));
     dropSondeList = new PressureList(dropSondeConfig);
     dropSondeList->open();
   
@@ -211,7 +204,7 @@ void PollThread::run()
     vortexConfig->setObjectName("vortexConfig");
     vortexConfig->setLogChanges(false);
     connect(vortexConfig, SIGNAL(log(const Message&)), 
-	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+	    this, SLOT(catchLog(const Message&)));
     vortexList = new VortexList(vortexConfig);
     vortexList->open();
     
@@ -229,7 +222,7 @@ void PollThread::run()
     simplexConfig->setObjectName("simplexConfig");
     simplexConfig->setLogChanges(false);
     connect(simplexConfig, SIGNAL(log(const Message&)), 
-	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+	    this, SLOT(catchLog(const Message&)));
     simplexList = new SimplexList(simplexConfig);
     
     simplexList->open();
@@ -256,7 +249,7 @@ void PollThread::run()
     pressureConfig->setObjectName("pressureConfig");
     pressureConfig->setLogChanges(false);
     connect(pressureConfig, SIGNAL(log(const Message&)), 
-	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+	    this, SLOT(catchLog(const Message&)));
     pressureList = new PressureList(pressureConfig);
     pressureList->open();
     emit log(Message(QString("Number of pressure obs loaded: "+QString().setNum(pressureList->count()))));
@@ -279,7 +272,7 @@ void PollThread::run()
     dropSondeConfig->setObjectName("dropSondeConfig");
     dropSondeConfig->setLogChanges(false);
     connect(dropSondeConfig, SIGNAL(log(const Message&)), 
-	    this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+	    this, SLOT(catchLog(const Message&)));
     dropSondeList = new PressureList(dropSondeConfig);
     dropSondeList->open();
 
@@ -300,19 +293,18 @@ void PollThread::run()
   connect(analysisThread, SIGNAL(doneProcessing()), 
   	  this, SLOT(analysisDoneProcessing()));
   connect(analysisThread, SIGNAL(log(const Message&)),
-  	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+  	  this, SLOT(catchLog(const Message&)));
   connect(this, SIGNAL(terminated()),
 	  analysisThread, SLOT(terminate()));
   connect(analysisThread, SIGNAL(newVCP(const int)),
-	  this, SLOT(catchVCP(const int)), Qt::DirectConnection);
+	  this, SLOT(catchVCP(const int)));
   connect(analysisThread, SIGNAL(newCappi(const GriddedData*)),
-	  this, SLOT(catchCappi(const GriddedData*)), Qt::DirectConnection);
+	  this, SLOT(catchCappi(const GriddedData*)));
   connect(analysisThread, SIGNAL(newCappiInfo(const float&, const float&, 
 					      const float&, const float&, 
 					      const float&, const float&, const float&)),
 	  this, SLOT(catchCappiInfo(const float&, const float&, const float&,
-				    const float&, const float&, const float&, const float&)),
-	  Qt::DirectConnection);
+				    const float&, const float&, const float&, const float&)));
   
   analysisThread->setVortexList(vortexList);
   analysisThread->setSimplexList(simplexList);
@@ -320,7 +312,20 @@ void PollThread::run()
   analysisThread->setDropSondeList(dropSondeList);
   analysisThread->setAnalyticRun(runOnce);
 
-  
+    simplexThread = new SimplexThread;
+	connect(simplexThread, SIGNAL(log(const Message&)), this, 
+			SLOT(catchLog(const Message&)));
+	connect(simplexThread, SIGNAL(centerFound()), 
+			analysisThread, SLOT(foundCenter()),Qt::DirectConnection);
+	vortexThread = new VortexThread;
+	connect(vortexThread, SIGNAL(log(const Message&)), this, 
+			SLOT(catchLog(const Message&)));
+	connect(vortexThread, SIGNAL(windsFound()), 
+			analysisThread, SLOT(foundWinds()),Qt::DirectConnection);
+	
+	analysisThread->setSimplexThread(simplexThread);
+	analysisThread->setVortexThread(vortexThread);
+	
 	// Begin polling loop
 	forever {
 	  //Message::toScreen("PollThread: Begining Again In Forever");

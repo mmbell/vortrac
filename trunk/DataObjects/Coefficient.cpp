@@ -27,7 +27,16 @@ Coefficient::Coefficient(float newLevel, float newRadius, float newValue,
   parameter = name;
 
 }
-  
+
+Coefficient::Coefficient(const Coefficient &other)
+{
+	this->level = other.level;
+	this->radius = other.radius;
+	this->value = other.value;
+	this->parameter = other.parameter;
+}
+	
+
 void Coefficient::setLevel(const float &newLevel)
 {
   level = newLevel;

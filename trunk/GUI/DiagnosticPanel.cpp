@@ -135,7 +135,7 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
   dummy = 0;
   
   connect(timer, SIGNAL(timeout()), 
-	  this, SLOT(updateClock()), Qt::DirectConnection);
+	  this, SLOT(updateClock()));
   
   updateClock();
 }

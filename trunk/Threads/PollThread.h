@@ -77,7 +77,9 @@ class PollThread : public QThread
 	Configuration *simplexConfig;
 	Configuration *pressureConfig;
 	Configuration *dropSondeConfig;
-	
+	SimplexThread *simplexThread;
+	VortexThread *vortexThread;
+
 	void checkIntensification();
 	void checkListConsistency();
 	

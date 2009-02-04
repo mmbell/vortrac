@@ -555,7 +555,7 @@ void SimplexThread::run()
 						  vortexData);
     
     connect(centerFinder, SIGNAL(errorlog(const Message&)),
-	    this, SLOT(catchLog(const Message&)),Qt::DirectConnection);
+	    this, SLOT(catchLog(const Message&)));
     foundCenter = centerFinder->findCenter();
     
     // Save again to keep mean values found in chooseCenter
@@ -779,8 +779,7 @@ bool SimplexThread::calcHVVP(float& lat, float& lon)
   envWindFinder->setConfig(configData);
   envWindFinder->setPrintOutput(false);
   connect(envWindFinder, SIGNAL(log(const Message)), 
-	  this, SLOT(catchLog(const Message)), 
-	  Qt::DirectConnection);
+	  this, SLOT(catchLog(const Message)));
   envWindFinder->setRadarData(radarData, rt, cca, rmw);
   //envWindFinder->findHVVPWinds(false); for first fit only
   bool hasHVVP = envWindFinder->findHVVPWinds(true);

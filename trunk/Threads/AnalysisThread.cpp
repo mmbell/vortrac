@@ -24,16 +24,16 @@ AnalysisThread::AnalysisThread(QObject *parent)
   this->setObjectName("Analysis");
   //Message::toScreen("AnalysisThread Constructor");
   abort = false;
-  simplexThread = new SimplexThread;
+  /* simplexThread = new SimplexThread;
   connect(simplexThread, SIGNAL(log(const Message&)), this, 
-		  SLOT(catchLog(const Message&)), Qt::DirectConnection);
+		  SLOT(catchLog(const Message&)));
   connect(simplexThread, SIGNAL(centerFound()), 
-		  this, SLOT(foundCenter()), Qt::DirectConnection);
+		  this, SLOT(foundCenter()),Qt::DirectConnection);
   vortexThread = new VortexThread;
   connect(vortexThread, SIGNAL(log(const Message&)), this, 
-		  SLOT(catchLog(const Message&)), Qt::DirectConnection);
+		  SLOT(catchLog(const Message&)));
   connect(vortexThread, SIGNAL(windsFound()), 
-		  this, SLOT(foundWinds()), Qt::DirectConnection);
+		  this, SLOT(foundWinds()),Qt::DirectConnection); */
 
   numVolProcessed = 0;
   analyticRun = false;
@@ -55,13 +55,13 @@ AnalysisThread::~AnalysisThread()
   if(this->isRunning())
     this->abortThread();
 
-  delete simplexThread; // This goes first so it can break the cycle which will
+/*  delete simplexThread; // This goes first so it can break the cycle which will
 						// allow us a change to lock if we are in simplexThread
 						// Otherwise we could wait a while for a lock
   simplexThread = NULL;
   
   delete vortexThread;    
-  vortexThread = NULL;  
+  vortexThread = NULL; */ 
 
   delete radarVolume;
   radarVolume = NULL;
@@ -104,6 +104,20 @@ void AnalysisThread::setDropSondeList(PressureList *archivePtr)
 
         dropSondeList = archivePtr;
 
+}
+
+void AnalysisThread::setSimplexThread(SimplexThread *threadPtr)
+{
+	
+	simplexThread = threadPtr;
+
+}
+
+void AnalysisThread::setVortexThread(VortexThread *threadPtr)
+{
+	
+	vortexThread = threadPtr;
+	
 }
 
 void AnalysisThread::abortThread()
@@ -607,7 +621,7 @@ void AnalysisThread::run()
 		  RadarQC *dealiaser = new RadarQC(radarVolume);
 
 		  connect(dealiaser, SIGNAL(log(const Message&)), this, 
-			  SLOT(catchLog(const Message&)), Qt::DirectConnection);
+			  SLOT(catchLog(const Message&)));
 		  dealiaser->getConfig(configData->getConfig("qc"));
 		  
 		  if(dealiaser->dealias()) {
@@ -624,81 +638,7 @@ void AnalysisThread::run()
 		}
 		else
 		  emit log(Message(QString("RadarVolume is Dealiased"),0,this->objectName()));
-		
-		/*
-			 // Using this for running FORTRAN version
-			 QString name("fchar1824Verify.dat");
-			 Message::toScreen("Writing Vortrac Input "+name);
-			 radarVolume->writeToFile(name);
-			 Message::toScreen("Wrote Vortrac Input "+name);
-	    
-			 // Testing HVVP before Cappi to save time 
-			 // only good for Charley 1824
-			 
-			 float rt1 = 167.928;
-			 float cca1 = 177.204;
-			 float rmw1 = 11;
-			 
-			 // Testing HVVP before Cappi to save time 
-			 // only good for Charley 140007
-			 
-			 float rt1 = 87.7712;
-			 float cca1 = 60.1703;
-			 float rmw1 = 16.667;
-			 
-			 
-			 // Testing HVVP before Cappi to save time 
-			 // only good for Charley 140007
-			 
-			 float rt1 = 88.8294;
-			 float cca1 = 63.466;
-			 float rmw1 = 15.667;
-			 
-			 
-			 // Testing HVVP before Cappi to save time 
-			 // only good for Katrina 0933
-			 
-			 float rt1 = 164.892;
-			 float cca1 = 172.037;
-			 float rmw1 = 31;
-			 
-			 
-			 // Testing HVVP before Cappi to save time 
-			 // only good for Katrina 1044
-			 
-			 float rt1 = 131.505;
-			 float cca1 = 168.458;
-			 float rmw1 = 25;
-		
-			 
-			 // Testing HVVP before Cappi to save time 
-			 // only good for Analytic Charley
-			 
-			 float rt1 = 70.60;
-			 float cca1 = 45.19;
-			 float rmw1 = 7;
-			
-			 Message::toScreen("Vortex (Lat,Lon): ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+")");
-			 Message::toScreen("Hvvp Parameters: Distance to Radar "+QString().setNum(rt1)+" angel to vortex center in degrees ccw from north "+QString().setNum(cca1)+" rmw "+QString().setNum(rmw1));
-			 
-			 Hvvp *envWindFinder1 = new Hvvp;
-			 connect(envWindFinder1, SIGNAL(log(const Message&)),
-				 this, SLOT(catchLog(const Message&)), 
-				 Qt::DirectConnection);
-			 envWindFinder1->setConfig(configData);
-			 envWindFinder1->setPrintOutput(true);
-			 envWindFinder1->setRadarData(radarVolume,
-						      rt1, cca1, rmw1);
-			 if(!envWindFinder1->findHVVPWinds(true)){
-			   
-			 }
-			 float missingLink1 = envWindFinder1->getAvAcrossBeamWinds();
-			 Message::toScreen("Hvvp gives "+QString().setNum(missingLink1));
-			 delete envWindFinder1;
-			 
-			 return;
-		*/ // comments end here
-		
+				
 		mutex.unlock();
 		if(abort)
 		  return;
@@ -753,10 +693,6 @@ void AnalysisThread::run()
 		if(abort)
 		  return;
 		mutex.lock();
-
-		/* GriddedData not currently a QObject so this will fail
-		   connect(gridData, SIGNAL(log(const Message&)),this,
-		   SLOT(catchLog(const Message&)), Qt::DirectConnection); */
 		
 		// Output Radar data to check if dealias worked
 

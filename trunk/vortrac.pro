@@ -108,6 +108,6 @@ SOURCES += main.cpp \
            Pressure/HWind.cpp \
            Pressure/AWIPS.cpp
 RESOURCES += vortrac.qrc
-LIBS += -lbz2
+LIBS += -lbz2 
 QT += xml
 //CONFIG += release

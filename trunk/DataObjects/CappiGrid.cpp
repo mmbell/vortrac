@@ -195,7 +195,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
   
   // Calculate radius of influence
   float hROI = 2.0;
-  float vROI = 1.5;
+  float vROI = 5;
   float xRadius = (iGridsp * iGridsp) * (hROI*hROI);
   float yRadius = (jGridsp * jGridsp) * (hROI*hROI);
   float zRadius = (kGridsp * kGridsp) * (vROI*vROI);
@@ -298,10 +298,9 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 		  }
 		  
 	  }
-	  if ((currentRay->getVel_numgates() > 0)) {
-		  // Modified to deal with VCP 212 & 221 -MMB
-		  // Uncomment this running on slower system
-		  //and (currentRay->getUnambig_range() == maxUnambig_range/2)) {
+	  if ((currentRay->getVel_numgates() > 0)
+		  // Just grab the lowest elevation sweeps
+		  and (currentRay->getElevation() < 0.55)) {
 		  float* velData = currentRay->getVelData();
 		  float* swData = currentRay->getSwData();
 		  for (int g = 0; g <= (currentRay->getVel_numgates()-1); g++) {

@@ -19,7 +19,8 @@ class Coefficient
  public:
   Coefficient();
   Coefficient(float newLevel, float newRadius, float newValue, QString name);
-  
+  Coefficient(const Coefficient &other);
+	
   float getLevel() const { return level; }
   void setLevel(const float &newLevel);
 

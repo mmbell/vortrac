@@ -1613,7 +1613,8 @@ bool RadarQC::BB()
       delete vGates;
       currentRay = NULL;
     }
-  delete currentRay;
+  // delete here seems suspect -MB
+  //delete currentRay;
   //Message::toScreen("Getting out of dealias");
   return true;
 }

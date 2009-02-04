@@ -17,7 +17,7 @@ Log::Log(QWidget *parent)
 {
   this->setObjectName("Log");
   connect(this, SIGNAL(log(const Message&)),
-	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+	  this, SLOT(catchLog(const Message&)));
   
   workingDirectory = QDir::current();
   logFileName = QString("autoLog");
@@ -199,6 +199,8 @@ bool Log::saveLogFile(const QString& fileName)
 
 void Log::catchLog(const Message& logEntry)
 {
+	QMutex mutex;
+   mutex.lock();
   Message* logg = new Message(logEntry);
   QString message = logg->getLogMessage();
   int progress = logg->getProgress();
@@ -246,6 +248,7 @@ void Log::catchLog(const Message& logEntry)
    }
 
   delete logg;
+  mutex.unlock();
 }
 
 bool Log::writeToFile()

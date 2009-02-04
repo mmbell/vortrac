@@ -78,6 +78,37 @@ VortexData::VortexData(int availLevels, int availRadii, int availWaveNum)
   aveRMWUncertainty = -999.0;
 }
 
+VortexData::VortexData(const VortexData &other)
+{
+	this->numLevels = other.numLevels;
+	this->numRadii = other.numRadii;
+	this->numWaveNum = other.numWaveNum;
+	
+	for(int i = 0; i < numLevels; i++)
+    {
+		this->centerLatitude[i] = other.centerLatitude[i];
+		this->centerLongitude[i] = other.centerLongitude[i];
+		this->centerAltitude[i] = other.centerAltitude[i];
+		this->RMW[i] = other.RMW[i];
+		this->RMWUncertainty[i] = other.RMWUncertainty[i];
+		this->numConvergingCenters[i] = other.numConvergingCenters[i];
+		this->centerStdDeviation[i] = other.centerStdDeviation[i];
+		for(int j = 0; j < numRadii; j++) {
+			for(int k = 0; k < numWaveNum; k++) {
+				this->coefficients[i][j][k] = coefficients[i][j][k];
+			}
+		}
+    }
+	
+	this->time = other.time;
+	
+	this->centralPressure = other.centralPressure;
+	this->centralPressureUncertainty = other.centralPressureUncertainty;
+	this->pressureDeficit = other.pressureDeficit;
+	this->pressureDeficitUncertainty = other.pressureDeficitUncertainty;
+	this->aveRMW = other.aveRMW;
+	this->aveRMWUncertainty = other.aveRMWUncertainty;
+}
 
 VortexData::~VortexData()
 {

@@ -23,7 +23,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   statusLog = new Log();
   
   connect(this, SIGNAL(log(const Message&)),
-	  statusLog, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+	  statusLog, SLOT(catchLog(const Message&)));
   connect(statusLog, SIGNAL(redLightAbort()),
 	  this, SLOT(abortThread()));
 
@@ -34,13 +34,11 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   connect(diagPanel, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)));
   connect(statusLog, SIGNAL(newStopLightColor(StopLightColor, const QString)),
-	  diagPanel, SLOT(changeStopLight(StopLightColor, const QString)), 
-	  Qt::DirectConnection);
+	  diagPanel, SLOT(changeStopLight(StopLightColor, const QString)));
   connect(statusLog, SIGNAL(newStormSignalStatus(StormSignalStatus, 
 						 const QString)),
   	  diagPanel, SLOT(changeStormSignal(StormSignalStatus, 
-  					    const QString)),
-  	  Qt::DirectConnection);
+  					    const QString)));
   
   // Create a new configuration instance
   configData = new Configuration;
@@ -121,8 +119,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 	  graph,SLOT(manualParameter(const QString&,const float)));
   connect(configDialog, 
 	  SIGNAL(changeGraphicsParameter(const QString&, const QString&)),
-	  graph, SLOT(manualParameter(const QString&, const QString&)), 
-	  Qt::DirectConnection);
+	  graph, SLOT(manualParameter(const QString&, const QString&)));
  
   subLayout->addWidget(legend);
   //subLayout->addWidget(example);
@@ -571,27 +568,25 @@ void AnalysisPage::runThread()
   pollThread = new PollThread();
  
   connect(pollThread, SIGNAL(log(const Message&)),
-	  this, SLOT(catchLog(const Message&)), Qt::DirectConnection);
+	  this, SLOT(catchLog(const Message&)));
   connect(pollThread, SIGNAL(newVCP(const int)),
-	  this, SLOT(catchVCP(const int)), Qt::DirectConnection);
+	  this, SLOT(catchVCP(const int)));
   connect(this, SIGNAL(newVCP(const int)),
-	  diagPanel, SLOT(updateVCP(const int)), Qt::DirectConnection);  
+	  diagPanel, SLOT(updateVCP(const int)));  
   connect(pollThread, SIGNAL(newCappi(const GriddedData*)),
-	  this, SLOT(updateCappi(const GriddedData*)), Qt::DirectConnection);
+	  this, SLOT(updateCappi(const GriddedData*)));
   connect(this, SIGNAL(newCappi(const GriddedData*)), 
 	  cappiDisplay, SLOT(constructImage(const GriddedData*)));
   connect(pollThread, SIGNAL(newCappiInfo(const float&, const float&, 
 					  const float&, const float&, 
 					  const float&, const float &, const float&)), 
 	  this, SLOT(updateCappiInfo(const float&, const float&, const float&,
-				     const float&, const float&, const float &, const float&)),
-	  Qt::DirectConnection);
+				     const float&, const float&, const float &, const float&)));
   connect(this, SIGNAL(newCappiInfo(const float&, const float&, const float&,
 				    const float&, const float&)),
 	  cappiDisplay, SLOT(setGBVTDResults(const float&,const float&, 
 					     const float&, const float&, 
-					     const float&)),
-	  Qt::DirectConnection);
+					     const float&)));
 
   // Check to see if there are old list files that we want to start from in
   // the working directory. We have to do this here because we cannot create 

@@ -42,12 +42,12 @@ class Message
 
  public:
 
-  Message(const char *errormsg = 0, int newProgress = 0, 
+/*  Message(const char *errormsg = 0, int newProgress = 0, 
 	  const char *newLocation = 0, 
 	  StopLightColor newColor = AllOff, 
 	  const char *newStopLightMessage = 0,
 	  StormSignalStatus newStatus = Nothing, 
-	  const char *newStormSignalMessage = 0);
+	  const char *newStormSignalMessage = 0); */
 
   Message(const QString errormsg = QString(), int newProgress = 0,
 	  const QString newLocation = QString(), 
@@ -55,7 +55,9 @@ class Message
 	  const QString newStopLightMessage = QString(), 
 	  StormSignalStatus newStatus = Nothing, 
 	  const QString newStormSignalMessage = QString());
-
+  
+  Message(const Message& other);
+	
   ~Message();
 
   QString getLogMessage() { return logMessage; }

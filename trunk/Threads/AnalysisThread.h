@@ -38,6 +38,8 @@ class AnalysisThread : public QThread
      void setSimplexList(SimplexList *archivePtr);
      void setPressureList(PressureList *archivePtr);
      void setDropSondeList(PressureList *archivePtr);
+     void setSimplexThread(SimplexThread *threadPtr);
+	 void setVortexThread(VortexThread *threadPtr);
      void setNumVolProcessed(const float& num);
      void setAnalyticRun(const bool& runOnce);
 	 
