@@ -46,7 +46,7 @@ class VortexPanel:public AbstractPanel
   QLineEdit *vortexName;   
   // Widget used to receive/display hurricane name
   
-  QDoubleSpinBox *latBox, *longBox, *directionBox, *speedBox;
+  QDoubleSpinBox *latBox, *longBox, *directionBox, *speedBox, *rmwBox;
   /*
    * latBox & lonBox are used to adjust the starting latitude and longitude
    *   of the storm of interest. This only needs to be initialized for the 
@@ -58,6 +58,9 @@ class VortexPanel:public AbstractPanel
    *   required. If this information is supplied it will be used to 
    *   extrapolate a starting point if the program is initialized when the
    *   storm is still out of radar range.
+   *
+   *  rmwBox sets an initial estimate of the Radius of Maximum Wind for 
+   *  centerfinding purposes
    *
    */
 

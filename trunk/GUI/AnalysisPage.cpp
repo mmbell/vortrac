@@ -148,32 +148,48 @@ AnalysisPage::AnalysisPage(QWidget *parent)
   QLabel* recMaxLabel2 = new QLabel(tr("Receding Wind (m/s)"));
   QLabel* emptyLabel = new QLabel();
   QLabel* emptyLabel2 = new QLabel();
-  QLabel* emptyLabel3 = new QLabel();
+  //QLabel* emptyLabel3 = new QLabel();
   lcdCenterLat = new QLCDNumber();
   lcdCenterLat->setSegmentStyle(QLCDNumber::Flat);
   lcdCenterLat->resize(100,100);
   lcdCenterLat->display(0);
-  QLabel* lcdCenterLatLabel = new QLabel(tr("TC Latitude"));
+  QLabel* lcdCenterLatLabel = new QLabel(tr("VORTRAC TC Latitude"));
   lcdCenterLon = new QLCDNumber();
   lcdCenterLon->setSegmentStyle(QLCDNumber::Flat);
   lcdCenterLon->resize(100,100);
   lcdCenterLon->display(0);
-  QLabel* lcdCenterLonLabel = new QLabel(tr("TC Longitude"));
+  QLabel* lcdCenterLonLabel = new QLabel(tr("VORTRAC TC Longitude"));
+  lcdUserCenterLat = new QLCDNumber();
+  lcdUserCenterLat->setSegmentStyle(QLCDNumber::Flat);
+  lcdUserCenterLat->resize(100,100);
+  lcdUserCenterLat->display(0);
+  QLabel* lcdUserCenterLatLabel = new QLabel(tr("User Estimated TC Latitude"));
+  lcdUserCenterLon = new QLCDNumber();
+  lcdUserCenterLon->setSegmentStyle(QLCDNumber::Flat);
+  lcdUserCenterLon->resize(100,100);
+  lcdUserCenterLon->display(0);
+  QLabel* lcdUserCenterLonLabel = new QLabel(tr("User Estimated TC Longitude"));
+	
   QVBoxLayout *appRecLayout = new QVBoxLayout();
   appRecLayout->addStretch();
-  appRecLayout->addWidget(emptyLabel, 100, Qt::AlignHCenter);
+  //appRecLayout->addWidget(emptyLabel, 100, Qt::AlignHCenter);
   appRecLayout->addWidget(appMaxLabel, 0, Qt::AlignHCenter);
   appRecLayout->addWidget(appMaxLabel2, 0, Qt::AlignHCenter);
   appRecLayout->addWidget(appMaxWind, 0, Qt::AlignHCenter);
   appRecLayout->addWidget(recMaxLabel, 0, Qt::AlignHCenter);
   appRecLayout->addWidget(recMaxLabel2, 0, Qt::AlignHCenter);
   appRecLayout->addWidget(recMaxWind, 0, Qt::AlignHCenter);
-  appRecLayout->addWidget(emptyLabel2, 100, Qt::AlignHCenter);
+  appRecLayout->addWidget(emptyLabel, 100, Qt::AlignHCenter);
   appRecLayout->addWidget(lcdCenterLatLabel, 0, Qt::AlignHCenter);
   appRecLayout->addWidget(lcdCenterLat, 0, Qt::AlignHCenter);
   appRecLayout->addWidget(lcdCenterLonLabel, 0, Qt::AlignHCenter);
   appRecLayout->addWidget(lcdCenterLon, 0, Qt::AlignHCenter);
-  appRecLayout->addWidget(emptyLabel3, 100, Qt::AlignHCenter);
+  appRecLayout->addWidget(emptyLabel2, 100, Qt::AlignHCenter);
+  appRecLayout->addWidget(lcdUserCenterLatLabel, 0, Qt::AlignHCenter);
+  appRecLayout->addWidget(lcdUserCenterLat, 0, Qt::AlignHCenter);
+  appRecLayout->addWidget(lcdUserCenterLonLabel, 0, Qt::AlignHCenter);
+  appRecLayout->addWidget(lcdUserCenterLon, 0, Qt::AlignHCenter);
+	
   appRecLayout->addStretch();
 
   connect(cappiDisplay, SIGNAL(hasImage(bool)), 
@@ -266,8 +282,6 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 			    QDateTime::currentDateTime().toUTC().toString()
 			    + " UTC"));
   
-  // Do I need this?
-  //pollThread = new PollThread;
   pollThread = NULL;
 
   connect(this, SIGNAL(saveGraphImage(const QString&)),
@@ -578,15 +592,15 @@ void AnalysisPage::runThread()
   connect(this, SIGNAL(newCappi(const GriddedData*)), 
 	  cappiDisplay, SLOT(constructImage(const GriddedData*)));
   connect(pollThread, SIGNAL(newCappiInfo(const float&, const float&, 
-					  const float&, const float&, 
+					  const float&, const float&, const float&, const float&, const float&,
 					  const float&, const float &, const float&)), 
-	  this, SLOT(updateCappiInfo(const float&, const float&, const float&,
-				     const float&, const float&, const float &, const float&)));
+	  this, SLOT(updateCappiInfo(const float&, const float&, const float&, const float&,
+				     const float&, const float&, const float &, const float&,
+					 const float&, const float&)));
   connect(this, SIGNAL(newCappiInfo(const float&, const float&, const float&,
-				    const float&, const float&)),
-	  cappiDisplay, SLOT(setGBVTDResults(const float&,const float&, 
-					     const float&, const float&, 
-					     const float&)));
+				    const float&, const float&, const float&)),
+  cappiDisplay, SLOT(setGBVTDResults(const float&,const float&, 
+					const float&, const float&, const float&, const float&)));
 
   // Check to see if there are old list files that we want to start from in
   // the working directory. We have to do this here because we cannot create 
@@ -702,12 +716,15 @@ void AnalysisPage::updateCappi(const GriddedData* cappi)
 }
 
 void AnalysisPage::updateCappiInfo(const float& x, const float& y, 
-				   const float& sMin, const float& sMax, 
-				   const float& vMax, const float& centerLat, const float& centerLon)
+				   const float& rmwEstimate, const float& sMin, const float& sMax, const float& vMax,
+				   const float& userCenterLat, const float& userCenterLon, 
+				   const float& centerLat, const float& centerLon)
 {
 	lcdCenterLat->display(centerLat);
 	lcdCenterLon->display(centerLon);
-    emit newCappiInfo(x, y, sMin, sMax, vMax);
+	lcdUserCenterLat->display(userCenterLat);
+	lcdUserCenterLon->display(userCenterLon);
+    emit newCappiInfo(x, y, rmwEstimate, sMin, sMax, vMax);
 }
 
 void AnalysisPage::updateCappiDisplay(bool hasImage)

@@ -6,6 +6,7 @@
      <lon>0.00</lon>
      <direction>0</direction>
      <speed>0</speed>
+     <rmw>25</rmw>
      <obsdate></obsdate>
      <obstime></obstime>
      <dir>default</dir>
@@ -26,7 +27,7 @@
      <dir>default</dir>
      <xdim>150.0</xdim>
      <ydim>150.0</ydim>
-     <zdim>3.0</zdim>
+     <zdim>1.0</zdim>
      <xgridsp>1.0</xgridsp>
      <ygridsp>1.0</ygridsp>
      <zgridsp>1.0</zgridsp>
@@ -39,9 +40,9 @@
      <reflectivity>DZ</reflectivity>
      <velocity>VE</velocity>
      <bottomlevel>1</bottomlevel>
-     <toplevel>3</toplevel>
+     <toplevel>1</toplevel>
      <innerradius>10</innerradius>
-     <outerradius>35</outerradius>
+     <outerradius>40</outerradius>
      <ringwidth>1.0</ringwidth>
      <search>MAXVT0</search>
      <influenceradius>4.0</influenceradius>
@@ -75,7 +76,7 @@
      <reflectivity>DZ</reflectivity>
      <velocity>VE</velocity>
      <bottomlevel>1</bottomlevel>
-     <toplevel>3</toplevel>
+     <toplevel>1</toplevel>
      <innerradius>1</innerradius>
      <outerradius>60</outerradius>
      <ringwidth>1.0</ringwidth>

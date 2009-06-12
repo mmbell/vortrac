@@ -109,6 +109,8 @@ bool ConfigurationDialog::readConfig()
 
   connect(vortex, SIGNAL(workingDirectoryChanged()),
 	  this, SLOT(setPanelDirectories()));
+  connect(vortex, SIGNAL(rmwChanged()),
+		  this, SLOT(setSimplexRadii()));
   QDir* newMaster = new QDir(*workingDirectory);
   vortex->setDefaultDirectory(newMaster);
   vortex->setPanelChanged(true);
@@ -376,6 +378,22 @@ void ConfigurationDialog::setPanelDirectories()
   }
 }
 
+void ConfigurationDialog::setSimplexRadii()
+{
+	float rmw = configData->getParam(configData->getConfig(panelForString.key(vortex)), QString("rmw")).toFloat();
+	float sMin = rmw - 15;
+	if (sMin < 1) sMin = 1;
+	float sMax = rmw + 15;
+	QString radii;
+	radii.setNum(sMin);
+	configData->setParam(configData->getConfig(panelForString.key(center)), QString("innerradius"), radii);
+	radii.setNum(sMax);
+	configData->setParam(configData->getConfig(panelForString.key(center)), QString("outerradius"), radii);
+	center->updatePanel(center->getPanelElement());
+	center->setPanelChanged(true);
+	center->updateConfig();
+	
+}
 bool ConfigurationDialog::checkPanels()
 {
   bool noErrors = true;

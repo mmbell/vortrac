@@ -79,6 +79,15 @@ VortexPanel::VortexPanel()
   speed->addStretch();
   speed->addWidget(speedBox);
 
+  QLabel *rmwLabel = new QLabel(tr("Radius of Maximum Wind Estimate (km)"));
+  rmwBox = new QDoubleSpinBox();
+  rmwBox->setRange(0,100);
+  rmwBox->setDecimals(2);
+  QHBoxLayout *rmwLayout = new QHBoxLayout;
+  rmwLayout->addWidget(rmwLabel);
+  rmwLayout->addStretch();
+  rmwLayout->addWidget(rmwBox);
+		
   QLabel *obsLabel = new QLabel(tr("Time of Above Observations"));
   obsDateTime = new QDateTimeEdit();
   obsDateTime->setDisplayFormat("MMM-dd-yyyy hh:mm:ss");
@@ -106,6 +115,7 @@ VortexPanel::VortexPanel()
   layout->addLayout(direction);
   layout->addLayout(speed);
   layout->addLayout(obs);
+  layout->addLayout(rmwLayout);
   layout->addLayout(dirLayout);
   layout->addStretch(1);
   setLayout(layout);
@@ -126,6 +136,8 @@ VortexPanel::VortexPanel()
 	  this, SLOT(valueChanged()));
   connect(speedBox, SIGNAL(valueChanged(const QString&)),
 	  this, SLOT(valueChanged()));
+  connect(rmwBox, SIGNAL(valueChanged(const QString&)),
+	  this, SLOT(valueChanged()));
   connect(dir, SIGNAL(textChanged(const QString&)),
 	  this, SLOT(valueChanged()));
   connect(obsDateTime, SIGNAL(dateTimeChanged(const QDateTime&)),
@@ -144,6 +156,7 @@ VortexPanel::~VortexPanel()
   delete longBox;
   delete directionBox;
   delete speedBox;
+  delete rmwBox;
   delete obsDateTime;
 }
     
@@ -171,6 +184,8 @@ void VortexPanel::updatePanel(const QDomElement panelElement)
 	directionBox->setValue(parameter.toDouble()); }
       if(name == "speed") {
 	speedBox->setValue(parameter.toDouble()); }
+	  if(name == "rmw") {
+	rmwBox->setValue(parameter.toDouble()); }		
       if(name == "obsdate") {
 	obsDateTime->setDate(QDate::fromString(parameter, "yyyy-MM-dd")); }
       if(name == "obstime") {
@@ -217,6 +232,11 @@ bool VortexPanel::updateConfig()
 	emit changeDom(element, QString("speed"), 
 		       QString().setNum(speedBox->value()));
       }
+	  if(fabs(getFromElement("rmw").toDouble()-rmwBox->value())>=0.01) {
+	emit changeDom(element, QString("rmw"), 
+				QString().setNum(rmwBox->value()));
+		  emit rmwChanged();
+	  }
       if(getFromElement("dir")!=dir->text()) {
 	emit changeDom(element, QString("dir"), dir->text());
 	emit workingDirectoryChanged();
@@ -244,6 +264,8 @@ bool VortexPanel::checkValues()
   emit log(Message(QString(), 0, this->objectName(), Green));
   return true;
 }
+
+
 
 RadarPanel::RadarPanel()
   :AbstractPanel()
@@ -574,7 +596,7 @@ CappiPanel::CappiPanel()
   yDimBox->setValue(150);
   zDimBox = new QDoubleSpinBox;
   zDimBox->setDecimals(1);
-  zDimBox->setRange(0,GriddedData::getMaxKDim());
+  zDimBox->setRange(1,1);
   zDimBox->setValue(3);
 
   QLabel *xGrid = new QLabel(tr("X Grid Spacing (km)"));
@@ -1002,12 +1024,12 @@ CenterPanel::CenterPanel()
 
   QLabel *bottomLevel = new QLabel(tr("Bottom Level (km)"));
   bLBox = new QDoubleSpinBox;
-  bLBox->setRange(1,5);
+  bLBox->setRange(1,1);
   bLBox->setDecimals(2);
   bLBox->setValue(1);
   QLabel *topLevel = new QLabel(tr("Top Level (km)"));
   tLBox = new QDoubleSpinBox;
-  tLBox->setRange(2,20);
+  tLBox->setRange(1,1);
   tLBox->setDecimals(2);
   tLBox->setValue(3);
   QLabel *innerRad = new QLabel(tr("Inner Radius (km)"));
@@ -1985,12 +2007,12 @@ VTDPanel::VTDPanel()
   QGridLayout *search = new QGridLayout;
   QLabel *bottomLevel = new QLabel(tr("Bottom Level (km)"));
   bLBox = new QDoubleSpinBox;
-  bLBox->setRange(1,5);
+  bLBox->setRange(1,1);
   bLBox->setDecimals(2);
   bLBox->setValue(1);
   QLabel *topLevel = new QLabel(tr("Top Level (km)"));
   tLBox = new QDoubleSpinBox;
-  tLBox->setRange(2,20);
+  tLBox->setRange(1,1);
   tLBox->setDecimals(2);
   tLBox->setValue(3);
   QLabel *innerRad = new QLabel(tr("Inner Radius (km)"));

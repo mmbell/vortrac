@@ -57,8 +57,8 @@ class AnalysisThread : public QThread
      void log(const Message& message);
      void newVCP(const int);
      void newCappi(const GriddedData*);
-     void newCappiInfo(const float& x, const float& y, const float& sMin,
-		       const float& sMax, const float& vMax, const float& lat, const float& lon);
+     void newCappiInfo(const float& x, const float& y, const float& rmwEstimate, const float& sMin, const float& sMax,
+		       const float& vMax,  const float& userLat, const float& userLon, const float& lat, const float& lon);
      void abortChanged(volatile bool *abortStatus);
 	 
  private:

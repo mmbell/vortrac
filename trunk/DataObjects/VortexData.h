@@ -102,8 +102,8 @@ class VortexData
   static int getMaxWaveNum() {return maxWaveNum; }
 
  private:
-  static const int maxLevels = 3;
-  static const int maxRadii = 101;
+  static const int maxLevels = 5;
+  static const int maxRadii = 151;
   static const int maxWaveNum = 5;
 
   int numLevels;

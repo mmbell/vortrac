@@ -1614,7 +1614,7 @@ bool RadarQC::BB()
       currentRay = NULL;
     }
   // delete here seems suspect -MB
-  //delete currentRay;
+  delete currentRay;
   //Message::toScreen("Getting out of dealias");
   return true;
 }

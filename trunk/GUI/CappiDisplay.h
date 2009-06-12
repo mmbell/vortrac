@@ -37,8 +37,7 @@ public slots:
   void clearImage();
   void constructImage(const GriddedData* cappi);
   void setGBVTDResults(const float& xP, const float& yP, 
-		       const float& sMin, const float& sMax, 
-		       const float& vMax);
+		       const float& rmwEstimate, const float& sMin, const float& sMax, const float& vMax);
   void exit();
 	
 signals:
@@ -67,6 +66,7 @@ private:
     float velIncr;
     bool hasGBVTDInfo;
     float xPercent, yPercent;
+	float radiusMaximumWind;
     float simplexMin, simplexMax;
     float vortexMax;
     float minVelXpercent, minVelYpercent;

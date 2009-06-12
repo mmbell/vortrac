@@ -285,9 +285,6 @@ class AbstractPanel:public QWidget
      // creates a directory in the filesystem based on the current directory
      // held in member dir
 
-   
- 
-
  signals:
    void log(const Message& message);
    void changeDom(const QDomElement &element, const QString &name, 
@@ -318,6 +315,9 @@ class AbstractPanel:public QWidget
 
    void workingDirectoryChanged();
      // emitted whenever the working directory is changed 
+
+	void rmwChanged();
+	// emitted when the user changes the estimated rmw
 };
 
 #endif

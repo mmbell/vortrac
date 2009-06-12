@@ -230,7 +230,8 @@ bool VortexList::openNodeFile(const QDomNode &newNode)
 	    highestLevel = n;}
 
 	}
-	newData.setNumLevels(highestLevel+1);
+    // Why do we set an extra level here? MB
+	newData.setNumLevels(highestLevel + 1);
 
 	QDomElement coeff = childElement.firstChildElement("coefficient");
 	int num[newData.getMaxLevels()][newData.getMaxRadii()];

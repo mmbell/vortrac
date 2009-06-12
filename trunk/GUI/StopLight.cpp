@@ -66,7 +66,8 @@ void StopLight::paintEvent(QPaintEvent *event)
   painter->setRenderHint(QPainter::Antialiasing);
   painter->scale(width()/31, height()/11);
   painter->setPen(pen);
-  painter->setBrush(QColor(255,217,0));
+  //painter->setBrush(QColor(255,217,0));
+	painter->setBrush(QColor(255,255,255));
   painter->drawRect(QRectF(QPointF(0,0),QSize(31,11)));
   
   if(red && on)

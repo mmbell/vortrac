@@ -63,8 +63,8 @@ AnalysisThread::~AnalysisThread()
   delete vortexThread;    
   vortexThread = NULL; */ 
 
-  delete radarVolume;
-  radarVolume = NULL;
+  //delete radarVolume;
+  //radarVolume = NULL;
   
   this->quit();
   
@@ -133,7 +133,7 @@ void AnalysisThread::abortThread()
     //Message::toScreen("This is running - analysisThread");
     waitForData.wakeOne();
     // Message::toScreen("WaitForData.wakeAll() - passed");
-    wait();
+    //wait();
     //Message::toScreen("Got past wait - AnalysisThread");
     // Got rid of wait because it was getting stuck when aborted in simplex cycle
 	/* Done in Destructor now
@@ -736,13 +736,13 @@ void AnalysisThread::run()
 		//Message::toScreen("xPercent is "+QString().setNum(xPercent));
 		float yPercent = float(gridData->getIndexFromCartesianPointJ(xyValues[1])+1)/gridData->getJdim();
 		//Message::toScreen("yPercent is "+QString().setNum(yPercent));
-		float sMin = configData->getParam(simplex, "innerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
+		float rmwEstimate = vortexData->getRMW(vortexIndex)/(gridData->getIGridsp()*gridData->getIdim());
 		//Message::toScreen("sMin is "+QString().setNum(sMin));
+		float sMin = configData->getParam(simplex, "innerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
 		float sMax = configData->getParam(simplex, "outerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
-		//Message::toScreen("sMax is "+QString().setNum(sMax));
 		float vMax = configData->getParam(vtd, "outerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
 		//Message::toScreen("vMax is "+QString().setNum(vMax));
-		emit newCappiInfo(xPercent, yPercent, sMin, sMax, vMax, levelLat, levelLon);
+		emit newCappiInfo(xPercent, yPercent, rmwEstimate, sMin, sMax, vMax, vortexLat, vortexLon, levelLat, levelLon);
 		delete [] xyValues;
 		
 
@@ -815,9 +815,9 @@ void AnalysisThread::run()
 		
 		// Delete CAPPI and RadarData objects
 		
-		RadarData *temp = radarVolume;
-		radarVolume = NULL;
-		delete temp;
+		//RadarData *temp = radarVolume;
+		//radarVolume = NULL;
+		delete radarVolume;
 		
 		delete gridData;
 		delete vortexData;

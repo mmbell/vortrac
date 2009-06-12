@@ -301,10 +301,11 @@ void PollThread::run()
   connect(analysisThread, SIGNAL(newCappi(const GriddedData*)),
 	  this, SLOT(catchCappi(const GriddedData*)));
   connect(analysisThread, SIGNAL(newCappiInfo(const float&, const float&, 
-					      const float&, const float&, 
-					      const float&, const float&, const float&)),
-	  this, SLOT(catchCappiInfo(const float&, const float&, const float&,
-				    const float&, const float&, const float&, const float&)));
+					      const float&, const float&, const float&, const float&,  
+					      const float&, const float&, const float&, const float& )),
+	  this, SLOT(catchCappiInfo(const float&, const float&, const float&, const float&, 
+				    const float&, const float&, const float&, const float&,
+					const float&, const float& )));
   
   analysisThread->setVortexList(vortexList);
   analysisThread->setSimplexList(simplexList);
@@ -641,8 +642,8 @@ void PollThread::checkListConsistency()
 }
   
 void PollThread::catchCappiInfo(const float& x, const float& y, 
-				const float& sMin, const float& sMax, 
-				const float& vMax, const float& lat, const float& lon)
+				const float& rmwEstimate, const float& sMin,const float& sMax,const float& vMax, 
+				const float& userLat, const float& userLon, const float& lat, const float& lon)
 {
-  emit newCappiInfo(x,y,sMin,sMax,vMax,lat,lon);
+  emit newCappiInfo(x,y,rmwEstimate,sMin,sMax,vMax,userLat,userLon,lat,lon);
 }

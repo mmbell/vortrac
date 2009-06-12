@@ -273,7 +273,7 @@ bool SimplexList::openNodeFile(const QDomNode &newNode)
     // get functions in SimplexData will be able to iterate correctly
 
     if(currentMaxLevel+1 < newData.getMaxLevels())
-      newData.setNumLevels(currentMaxLevel+1);
+      newData.setNumLevels(currentMaxLevel);
     else
       newData.setNumLevels(newData.getMaxLevels());
     

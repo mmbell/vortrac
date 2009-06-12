@@ -246,6 +246,9 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
     QPen vtdPen(Qt::white);
     vtdPen.setWidth(3);
 	vtdPen.setStyle(Qt::DotLine);
+	  QPen rmwPen(Qt::darkRed);
+	  rmwPen.setWidth(1);
+	  
     painter.setPen(xPen);
     // Draw a small X in the vortex center
     painter.save();
@@ -268,12 +271,20 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
 		     QPointF((minVelXpercent+.01)*w,(1-(minVelYpercent))*h));
     painter.restore();
 
+	painter.setPen(rmwPen);
+	painter.save();
+	QRectF rmwRect((xPercent-radiusMaximumWind)*w, (1-(yPercent+radiusMaximumWind))*h, 
+					 2*radiusMaximumWind*w, 2*radiusMaximumWind*h);
+	painter.drawEllipse(rmwRect);
+	painter.restore();  
+
     // Draw the circles about this center
     painter.setPen(simplexPen);
     painter.save();
     QRectF sMinRect((xPercent-simplexMin)*w, (1-(yPercent+simplexMin))*h, 
 			2*simplexMin*w, 2*simplexMin*h);
     painter.drawEllipse(sMinRect);
+	  
     painter.restore();
     painter.save();
     QRectF sMaxRect((xPercent-simplexMax)*w, (1-(yPercent+simplexMax))*h, 
@@ -462,13 +473,13 @@ void CappiDisplay::exit()
 
 void CappiDisplay::setGBVTDResults(const float& xP, 
 				    const float& yP, 
-				    const float& sMin, 
-				    const float& sMax, 
+				    const float& rmw,const float& sMin, const float& sMax,
 				    const float& vMax)
 {
   imageHolder.lock();
   xPercent = xP;
   yPercent = yP;
+  radiusMaximumWind= rmw;
   simplexMin = sMin;
   simplexMax = sMax;
   vortexMax = vMax;

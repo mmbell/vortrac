@@ -60,8 +60,8 @@ class AnalysisPage : public QWidget
     void catchLog(const Message& message); 
     void catchVCP(const int vcp); 
     void updateCappi(const GriddedData* cappi);
-    void updateCappiInfo(const float& x, const float& y, const float& sMin, 
-			 const float& sMax, const float& vMax, const float& centerLat, const float& centerLon);
+    void updateCappiInfo(const float& x, const float& y, const float& rmwEstimate, const float& sMin,const float& sMax, const float& vMax,
+			 const float& userCenterLat, const float& userCenterLon, const float& centerLat, const float& centerLon);
     void updateCappiDisplay(bool hasImage);
 
     // void changeStopLight(StopLightColor color, const QString message);
@@ -74,8 +74,8 @@ class AnalysisPage : public QWidget
     void vortexListChanged(VortexList* list);
     void newVCP(const int vcp);
     void newCappi(const GriddedData* cappi);
-    void newCappiInfo(const float& x, const float& y, const float& sMin, 
-		      const float& sMax, const float& vMax);
+    void newCappiInfo(const float& x, const float& y, const float& rmwEstimate, 
+					  const float& sMin,const float& sMax, const float& vMax);
 
     //void newStormSignalStatus(StormSignalStatus status, const QString message);
     //void newStopLightColor(StopLightColor color, const QString message);
@@ -119,6 +119,9 @@ class AnalysisPage : public QWidget
   QLCDNumber *recMaxWind;
   QLCDNumber *lcdCenterLat;
   QLCDNumber *lcdCenterLon;
+  QLCDNumber *lcdUserCenterLat;
+  QLCDNumber *lcdUserCenterLon;
+
   QLabel* deficitLabel;
   QPushButton *runButton;
   QPushButton *abortButton;

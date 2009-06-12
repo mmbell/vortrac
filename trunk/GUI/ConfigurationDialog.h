@@ -41,7 +41,7 @@ public slots:
        void catchLog(const Message& message);
        bool checkPanels();
        void turnOffMembers(const bool& off);
-         
+
 private:
        QListWidget *selection;
        QStackedWidget *panels;
@@ -70,7 +70,8 @@ private:
 private slots:
        void applyChanges();
        void setPanelDirectories(); 
- 
+	   void setSimplexRadii();
+	
 signals:
        void log(const Message& message); 
        void updatePanels();

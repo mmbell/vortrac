@@ -744,7 +744,7 @@ bool Hvvp::findHVVPWinds(bool both)
   }
   else {
     if(printOutput) {
-      message = "No Hvvp Results Found";
+      message = "No Hvvp Results Found\n";
       emit log(Message(message,0,this->objectName()));
 	  if(HVVPLogFile.isOpen()) {
 		  HVVPLogFile.close();

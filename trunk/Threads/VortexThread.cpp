@@ -57,7 +57,7 @@ VortexThread::~VortexThread()
   waitForData.wakeOne();
   mutex.unlock();
 
-  gridData = NULL;
+  /* gridData = NULL;
   radarVolume = NULL;
   vortexData = NULL;
   pressureList = NULL;
@@ -66,12 +66,12 @@ VortexThread::~VortexThread()
   delete gridData;
   delete vortexData;
   delete pressureList;
-  delete configData;
+  delete configData; */
 
   delete [] dataGaps;
  
   // Wait for the thread to finish running if it is still processing
-  wait();
+  //wait();
 
 }
 
