@@ -424,6 +424,7 @@ bool AnalysisPage::loadFile(const QString &fileName)
   //Message::toScreen("2"+workingDirectory.path());
   statusLog->setWorkingDirectory(workingDirectory);
   //graph->setWorkingDirectory(workingDirectory);
+  isUntitled = false;
   return true;
 }
 

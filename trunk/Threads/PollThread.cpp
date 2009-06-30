@@ -323,7 +323,6 @@ void PollThread::run()
 			SLOT(catchLog(const Message&)));
 	connect(vortexThread, SIGNAL(windsFound()), 
 			analysisThread, SLOT(foundWinds()),Qt::DirectConnection);
-	
 	analysisThread->setSimplexThread(simplexThread);
 	analysisThread->setVortexThread(vortexThread);
 	
@@ -479,8 +478,12 @@ void PollThread::run()
 	  // Check to see if the new volume affects the storm trend
 	  checkIntensification();
 	  emit log(Message(QString(),100,this->objectName()));  // 100 % 
+	  // Delete the radar volume here, not in AnalysisThread
+	  delete newVolume;
+
 	  }
 	  
+		
 	  // Check to see if we should quit
 	  if (abort) {
 	    delete dataSource;

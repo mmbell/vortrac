@@ -49,16 +49,31 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
     validBinCount[i] = new float[numBins];
   }
   
+  // (Paul Harasti 4/2009) 
+  // Reflectivity does not need to be interpolated if 
+  // the super resolution vcp is not recombined to legacy,
+  // (i.e., reflectivity already exists on all radial velocity tilts)
+  // so skip to line number 256 if that is the case. 
+  // Tests for this by comparing gate spacings of tilts 1 and 2.
+
+    Sweep *currentSweep = radarData->getSweep(0);
+    float gatesp_sweep1 = currentSweep->getRef_gatesp();
+    currentSweep = radarData->getSweep(1);
+    float gatesp_sweep2 = currentSweep->getVel_gatesp();
+
+  if( (gatesp_sweep1 != gatesp_sweep2) ) { 
+
   // Used to determine how the reflectivity data should be interpolated based
   // on the vcp of the radar volume
-  if( (vcp < 33) || (vcp==211) || (vcp==212) || (vcp==221) ) {
+
+  if( (vcp < 33)  || (vcp==211) || (vcp==212) ) {
     q = 3;
     if( (vcp == 12) || (vcp==212) ) {
       q = 5;
     }
     qinc = 2;
   }
-  if( (vcp == 121) ) {
+  if( (vcp == 121) || (vcp==221) ) {
     q = 5;
     qinc = 4;
   }
@@ -233,6 +248,10 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
       delete refValues1;
       delete refValues2;
     }
+  }
+
+  // (Paul Harasti 4/2009) 
+  // End skip reflectivity interpolation for super resolution case.
   }
 
   // Get maximum number of velocity gates in each sweep to get
@@ -478,7 +497,6 @@ void RadarQC::thresholdData()
 }
 
 
-
 bool RadarQC::terminalVelocity()
 {
 
@@ -509,14 +527,13 @@ bool RadarQC::terminalVelocity()
 //		  float range = j*currentRay->getVel_gatesp()/1000.0;
                   float range = float(currentRay->getFirst_vel_gate()+(j*currentRay->getVel_gatesp()))/1000.;
                   if (range<0.) range=0.;
-		  float rgatesp = currentRay->getRef_gatesp()/1000.0;
 		  float elevAngle = currentRay->getElevation();
 		  float height = aveVADHeight[currentRay->getSweepIndex()][j];
 		  // height is in km from sea level here
 		  
 		  float rho = 1.1904*exp(-1*height/9.58);
 		  float theta = elevAngle*deg2rad+asin(range*cos(deg2rad*elevAngle)/(ae+height-radarHeight));
-		  
+		  int zgate = 0;
 		  /* I think this next step makes assumptions about
 		   * the reflectivity of the gate spacing
 		   */
@@ -524,23 +541,26 @@ bool RadarQC::terminalVelocity()
 // PH 10/2007.  Previous logic not accurate enough. 
 // The objective is to use the Z datum that is within +- 0.5 km of the 
 // current radial velocity datum's range - previous accuracy was only 1 km. 
-// This logic will not be necessary though when vgatesp=rgatesp in future VCPs
-// - just combine velocity and reflectivity gates directly when 
-// vgatesp=rgatesp in future.
 //                 int zgate = int(floor(range/rgatesp)+1);
 
-		  int zgate = int(floor(0.5+range/rgatesp));
+// Paul Harasti 3/2009: Add logic for Super Resolution Z gate spacing 
+//					float rgatesp = currentRay->getRef_gatesp()/1000.0;
+//                  int zgate = int(floor(0.5+range/rgatesp));
+// Ref_gatesp = 1 km at all times when not super resolution
+// and division by rgatesp does not work for super resolution case
+// since range is offset by first gate distance rendering range
+// unevenly divisible by rgatesp.
 
-		  // Paul's code skips the first gate zgate = 1 and moves on
-		  // the second I so I will skip the zeroth index and move on 
-		  // to the first (May corrections ln 290 - LM). If it
-		  // exceeds the # of bins in a ray we drop back to 
-		  // the last one.
-
-		  if(zgate<1)
-		    zgate = 1;   // CHECK CHECK 
+      if(currentRay->getRef_gatesp()!=currentRay->getVel_gatesp()) {
+		  zgate = int(floor(0.5+range));
+		  if(zgate<1) zgate = 1;   
 		  // Why don't we use the first gate? -LM
 // PH 10/2007.  Because it is at range = 0 km for current 88D VCPs.
+      }
+      else {
+// Ref_gatesp = Vel_gatesp at all times when  super resolution
+		  zgate = j;
+      }
 		  if(zgate >= currentRay->getRef_numgates())
 		    zgate = currentRay->getRef_numgates()-1;
 		  float zData = rGates[zgate];
@@ -572,8 +592,9 @@ bool RadarQC::terminalVelocity()
 		      terminalV = a*v1+b*v2;
 		    }
 		  }
-		  if(!isnan(terminalV))
+		  if(!isnan(terminalV)) {
 		    vGates[j] -= terminalV;
+                  }
 		  else {
 		    QString trap = "Ray = "+QString().setNum(i)+" j = "+QString().setNum(j)+" terminal vel "+QString().setNum(terminalV)+" ISNAN";
 		    //Message::toScreen(trap);
@@ -1613,7 +1634,6 @@ bool RadarQC::BB()
       delete vGates;
       currentRay = NULL;
     }
-  // delete here seems suspect -MB
   delete currentRay;
   //Message::toScreen("Getting out of dealias");
   return true;

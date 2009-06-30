@@ -261,25 +261,27 @@ void AnalysisThread::run()
 	     float relDist = GriddedData::getCartesianDistance(&extrapLatLon[0],&extrapLatLon[1],&newLatLon[0],&newLatLon[1]);
 
 		 // Check if Simplex is out to lunch
-	     if (relDist > 150) {
+	     if (relDist > 100) {
 			 QString distString;
-			 QString M1 = "Simplex center "+distString.setNum((int)relDist)+" (>150 km) from User estimated center, probably lost or estimate is ";
+			 QString M1 = "Simplex center "+distString.setNum((int)relDist)+" (>100 km) from User estimated center, probably lost or estimate is ";
 			 QString M2 = "Simplex Center/Estimate "+distString.setNum((int)relDist)+" km apart";
-			 emit log(Message(M1,0,this->objectName(),Red, M2));
+			 emit log(Message(M1,0,this->objectName(),Yellow, M2));
 			 mutex.unlock();
 			 abort = true;
 			 return;
-		 } else if (relDist > 75) {
+		 } else if (relDist > 10) {
 			 QString distString;
-			 QString M1 = "Simplex center "+distString.setNum((int)relDist)+" (>75 km) from User estimated center, may be lost or need to update estimate";
+			 QString M1 = "Simplex center "+distString.setNum((int)relDist)+" (>10 km) from User estimated center, may be lost or need to update estimate";
 			 QString M2 = "Simplex Center/Estimate "+distString.setNum((int)relDist)+" km apart";
 			 emit log(Message(M1,0,this->objectName(),Yellow, M2));
-		 }
+			 vortexLat = extrapLatLon[0];
+			 vortexLon = extrapLatLon[1];
+		 } else {
 	     // Message::toScreen("Old vortexLat = "+QString().setNum(vortexLat)+" Old vortexLon = "+QString().setNum(vortexLon));
 	     // Message::toScreen("New vortexLat = "+QString().setNum(newLatLon[0])+" New vortexLon = "+QString().setNum(newLatLon[1]));
-		 
-	     vortexLat = newLatLon[0];
-	     vortexLon = newLatLon[1];
+			 vortexLat = newLatLon[0];
+			 vortexLon = newLatLon[1];
+		 }
 	     delete [] newLatLon;
 	     delete [] extrapLatLon;
 	   }
@@ -708,8 +710,6 @@ void AnalysisThread::run()
 		vortexData->setLat(0,vortexLat);
 		vortexData->setLon(0,vortexLon);
 		
-		
-	      
 		//Find Center 
 		simplexThread->findCenter(configData, gridData, radarVolume, 
 					  simplexList, vortexData);
@@ -719,14 +719,31 @@ void AnalysisThread::run()
 		simplexTime.setNum((float)analysisTime.elapsed() / 60000);
 		simplexTime.append(" minutes elapsed");
 		emit log(Message(simplexTime));
-
-		// Send info about simplex search to cappiDisplay 
-		
 		int vortexIndex = vortexData->getHeightIndex(1);
 		if(vortexIndex == -1)
-		  vortexIndex = 0;
+			vortexIndex = 0;
 		float levelLat = vortexData->getLat(vortexIndex);
 		float levelLon = vortexData->getLon(vortexIndex);
+		   
+		relDist = GriddedData::getCartesianDistance(&vortexLat,&vortexLon,&levelLat,&levelLon);
+		   
+		if (relDist > 25) {
+			QString distString;
+			QString M1 = "Simplex center "+distString.setNum((int)relDist)+" (> 25 km) from User estimate, probably lost or need to update estimate";
+			QString M2 = "Center/Estimate "+distString.setNum((int)relDist)+" km apart";
+			emit log(Message(M1,0,this->objectName(),Yellow, M2));
+			vortexData->setLat(vortexIndex, vortexLat);
+			vortexData->setLon(vortexIndex, vortexLon);
+			levelLat = vortexLat;
+			levelLon = vortexLon;
+		} else if (relDist > 10) {
+			QString distString;
+			QString M1 = "Simplex center "+distString.setNum((int)relDist)+" (> 10 km) from User estimated center, may be lost or need to update estimate";
+			QString M2 = "Center/Estimate "+distString.setNum((int)relDist)+" km apart";
+			emit log(Message(M1,0,this->objectName(),Yellow, M2));
+		}
+		   
+		// Send info about simplex search to cappiDisplay 
 		QDomElement radar = configData->getConfig("radar");
 		QDomElement simplex = configData->getConfig("center");
 		float radarLat = configData->getParam(radar,"lat").toFloat();
@@ -745,110 +762,109 @@ void AnalysisThread::run()
 		emit newCappiInfo(xPercent, yPercent, rmwEstimate, sMin, sMax, vMax, vortexLat, vortexLon, levelLat, levelLon);
 		delete [] xyValues;
 		
-
-		mutex.unlock();  	
-		
-		if (!abort) {
-		  
-		  mutex.lock();
-		  // Get the GBVTD winds
-		  emit log(Message(QString(), 2,this->objectName()));
-		  vortexThread->getWinds(configData, gridData, radarVolume, 
-					 vortexData, pressureList);
-		  waitForWinds.wait(&mutex); 
-		  mutex.unlock();
-		}
-		
-		if(abort)
-		  return;  
-				 
-		// Should have all relevant variables now
-		// Update timeline and output
-
-
-		// Check to see if the vortex data is valid
-		// Threshold on std deviation of parameters in
-		// conjuction with distance or something
-
-		mutex.lock();
-
-		QString vortexTime;
-		vortexTime.setNum((float)analysisTime.elapsed() / 60000);
-		vortexTime.append(" minutes elapsed");
-		emit log(Message(vortexTime));
-
-				// Easiest Thresholding
-
 		bool hasConvergingCenters = false;
 		for(int l = 0; (l < vortexData->getNumLevels())
-		      &&(hasConvergingCenters==false); l++) {
-		  if(vortexData->getNumConvergingCenters(l)>0)
-		    hasConvergingCenters = true;
-		}
-
-		emit log(Message(QString(),2,this->objectName())); // 97 %
-		
-		if(hasConvergingCenters) {
-		  vortexList->append(*vortexData);	
-		  vortexList->save();
-		  
-		  // Print out summary information to log
-		  QString summary = "VORTRAC ATCF,";
-		  QString values;
-		  summary += vortexData->getTime().toString(Qt::ISODate) + ",";
-		  summary += values.setNum(vortexData->getLat()) + ",";
-		  summary += values.setNum(vortexData->getLon()) + ",";
-		  summary += values.setNum(vortexData->getPressure()) + ",";
-		  summary += values.setNum(vortexData->getPressureUncertainty()) + ",";
-		  summary += values.setNum(vortexData->getRMW()) + ",";
-		  summary += values.setNum(vortexData->getRMWUncertainty());
-		  emit log(Message(summary,0,this->objectName()));
-		}
-		else {
-		  emit log(Message(QString("Insufficient Convergence of Simplex Centers"),0,this->objectName(),AllOff,QString(),SimplexError,QString("Could Not Obtain Center Convergence")));
-		}
-		  
-		if(!hasConvergingCenters && (vortexList->count() > 0)){
-		  emit log(Message(QString("Simplex Analysis Found No Converging Centers in this volume"),0,this->objectName(),Green, QString("No Center Found!"),OutOfRange, QString("No Converging Centers")));
-		  analysisGood = false;
+			&&(hasConvergingCenters==false); l++) {
+			if(vortexData->getNumConvergingCenters(l)>0)
+				hasConvergingCenters = true;
 		}
 		
-		// Delete CAPPI and RadarData objects
-		
-		//RadarData *temp = radarVolume;
-		//radarVolume = NULL;
-		delete radarVolume;
-		
-		delete gridData;
-		delete vortexData;
-		
-		//Message::toScreen("Deleted vortex data.... ???");
-		
-		if(!analysisGood)
-		{
-			// Some error occurred, notify the user
-			emit log(Message("Radar volume processing error!"));
-			emit log(Message(
-			   QString("Radar volume processing error!!"), 2,
-			   this->objectName()));
-			//Message::toScreen("AnalysisThread: Analysis BAD, Done Processing");
+		if(!hasConvergingCenters) { // && (vortexList->count() > 0)){
+			//emit log(Message(QString("Simplex Analysis Found No Converging Centers in this volume"),0,this->objectName(),Yellow, QString("No Center Found!"),OutOfRange, QString("No Converging Centers")));
+			emit log(Message(QString("Insufficient Convergence of Simplex Centers"),0,this->objectName(),AllOff,QString(),SimplexError,QString("No Center Convergence")));
+			//analysisGood = false;
 			emit(doneProcessing());
-		       
-			//return; // I got rid of this
-			// do we need to fail if the 
-			// volume is bad? -LM 1/20/07
-		} else {
-			// Store the resulting analysis in the vortex list
-			archiveAnalysis();
+		} else {		   
 			
-			// Complete the progress bar and log that we're done
-			emit log(Message(QString("Analysis complete!"),2,
-					 this->objectName(), AllOff, 
-					 QString(),Ok, QString()));
-
-			// Let the poller know we're done
-			//Message::toScreen("AnalysisThread: Analysis GOOD, Done Processing");
-			emit(doneProcessing());
+			mutex.unlock();  	
+			
+			if (!abort) {
+				
+				mutex.lock();
+				// Get the GBVTD winds
+				emit log(Message(QString(), 2,this->objectName()));
+				vortexThread->getWinds(configData, gridData, radarVolume, 
+									   vortexData, pressureList);
+				waitForWinds.wait(&mutex); 
+				mutex.unlock();
+			}
+			
+			if(abort)
+				return;  
+			
+			// Should have all relevant variables now
+			// Update timeline and output
+			
+			
+			// Check to see if the vortex data is valid
+			// Threshold on std deviation of parameters in
+			// conjuction with distance or something
+			
+			mutex.lock();
+			
+			QString vortexTime;
+			vortexTime.setNum((float)analysisTime.elapsed() / 60000);
+			vortexTime.append(" minutes elapsed");
+			emit log(Message(vortexTime));
+			
+			emit log(Message(QString(),2,this->objectName())); // 97 %
+			
+			
+			vortexList->append(*vortexData);	
+			vortexList->save();
+			
+			// Print out summary information to log
+			QString summary = "VORTRAC ATCF,";
+			QString values;
+			summary += vortexData->getTime().toString(Qt::ISODate) + ",";
+			summary += values.setNum(vortexData->getLat()) + ",";
+			summary += values.setNum(vortexData->getLon()) + ",";
+			summary += values.setNum(vortexData->getPressure()) + ",";
+			summary += values.setNum(vortexData->getPressureUncertainty()) + ",";
+			summary += values.setNum(vortexData->getRMW()) + ",";
+			summary += values.setNum(vortexData->getRMWUncertainty());
+			emit log(Message(summary,0,this->objectName()));
+			
+			
+			
+			
+			// Delete CAPPI and RadarData objects
+			
+			//RadarData *temp = radarVolume;
+			//radarVolume = NULL;
+			// Shouldn't this be done by PollThread?   
+			//delete radarVolume;
+			delete gridData;
+			delete vortexData;
+			
+			//Message::toScreen("Deleted vortex data.... ???");
+			
+			if(!analysisGood)
+			{
+				// Some error occurred, notify the user
+				emit log(Message("Radar volume processing error!"));
+				emit log(Message(
+								 QString("Radar volume processing error!!"), 2,
+								 this->objectName()));
+				//Message::toScreen("AnalysisThread: Analysis BAD, Done Processing");
+				emit(doneProcessing());
+				
+				//return; // I got rid of this
+				// do we need to fail if the 
+				// volume is bad? -LM 1/20/07
+			} else {
+				// Store the resulting analysis in the vortex list
+				archiveAnalysis();
+				
+				// Complete the progress bar and log that we're done
+				emit log(Message(QString("Analysis complete!"),2,
+								 this->objectName(), AllOff, 
+								 QString(),Ok, QString()));
+				
+				// Let the poller know we're done
+				//Message::toScreen("AnalysisThread: Analysis GOOD, Done Processing");
+				emit(doneProcessing());
+			}
 		}
 		mutex.unlock();
 		

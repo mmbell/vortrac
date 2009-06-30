@@ -75,7 +75,8 @@ void StormSignal::paintEvent(QPaintEvent *event)
   QString stormMessage;
   painter->setBrush(QBrush(QColor(0,100,0)));
   QRectF wordBox(25,25,50,50);
-  QRectF wordBox1(30,30,40,40);
+  //QRectF wordBox1(30,30,40,40);
+  QRectF wordBox1(25,25,50,50);	
   painter->setFont(QFont(QString("Ariel"),14));
 
   switch(currentStatus)
@@ -97,7 +98,7 @@ void StormSignal::paintEvent(QPaintEvent *event)
       break;
     case SimplexError:
       wordBox = wordBox1;
-      stormMessage = QString("Simplex Error");
+      stormMessage = QString("Center Error");
       break;
     }
   while(stormMessage!=QString()) {
