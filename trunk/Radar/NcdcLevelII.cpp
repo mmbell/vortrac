@@ -53,7 +53,7 @@ bool NcdcLevelII::readVolume()
 	
 	// Read in blocks of data
 	char* const headBuffer = new char[28];
-	char* const nexBuffer = new char[2432];
+	char* const nexBuffer = new char[131054];
 	int recNum = 0;
 	//int recSize, headSize;
 	while (!dataIn.atEnd()) {

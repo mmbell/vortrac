@@ -321,9 +321,9 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 					  //int kIndex = (int)(k+kplus);
 					  // Hard-code single level only
 					  int kIndex = 0;
-					  if ((iIndex < 0) or (iIndex > (int)iDim)) { continue; }
-					  if ((jIndex < 0) or (jIndex > (int)jDim)) { continue; }
-					  if ((kIndex < 0) or (kIndex > (int)kDim)) { continue; }
+					  if ((iIndex < 0) or (iIndex >= (int)iDim)) { continue; }
+					  if ((jIndex < 0) or (jIndex >= (int)jDim)) { continue; }
+					  if ((kIndex < 0) or (kIndex >= (int)kDim)) { continue; }
 					  
 					  float dx = (i - (int)(i+iplus))*iGridsp;
 					  float dy = (j - (int)(j+jplus))*jGridsp;
@@ -421,9 +421,9 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 							//int kIndex = (int)(k+kplus);
 							// Hard-code single level only
 							int kIndex = 0;
-							if ((iIndex < 0) or (iIndex > (int)iDim)) { continue; }
-							if ((jIndex < 0) or (jIndex > (int)jDim)) { continue; }
-							if ((kIndex < 0) or (kIndex > (int)kDim)) { continue; }
+							if ((iIndex < 0) or (iIndex >= (int)iDim)) { continue; }
+							if ((jIndex < 0) or (jIndex >= (int)jDim)) { continue; }
+							if ((kIndex < 0) or (kIndex >= (int)kDim)) { continue; }
 							
 							float dx = (i - (int)(i+iplus))*iGridsp;
 							float dy = (j - (int)(j+jplus))*jGridsp;
@@ -433,8 +433,8 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 							float quadcount = 0;
 							for (int quadi = iIndex-1; quadi <= iIndex+1; quadi++) {
 								for (int quadj = jIndex-1; quadj <= jIndex+1; quadj++) {
-									if ((quadi < 0) or (quadi > (int)iDim)) { continue; }
-									if ((quadj < 0) or (quadj > (int)jDim)) { continue; }
+									if ((quadi < 0) or (quadi >= (int)iDim)) { continue; }
+									if ((quadj < 0) or (quadj >= (int)jDim)) { continue; }
 									if (dataGrid[1][quadi][quadj][kIndex] != -999) {
 										avgCappi += dataGrid[1][quadi][quadj][kIndex];
 										quadcount++;
@@ -514,8 +514,8 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 				float quadcount = 0;
 				for (int quadi = i-2; quadi <= i+2; quadi++) {
 					for (int quadj = j-2; quadj <= j+2; quadj++) {
-						if ((quadi < 0) or (quadi > (int)iDim)) { continue; }
-						if ((quadj < 0) or (quadj > (int)jDim)) { continue; }
+						if ((quadi < 0) or (quadi >= (int)iDim)) { continue; }
+						if ((quadj < 0) or (quadj >= (int)jDim)) { continue; }
 						if (dataGrid[1][quadi][quadj][k] != -999) {
 							avgCappi += dataGrid[1][quadi][quadj][k];
 							quadcount++;
@@ -527,8 +527,8 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 					float stdVel = 0;
 					for (int quadi = i-2; quadi <= i+2; quadi++) {
 						for (int quadj = j-2; quadj <= j+2; quadj++) {
-							if ((quadi < 0) or (quadi > (int)iDim)) { continue; }
-							if ((quadj < 0) or (quadj > (int)jDim)) { continue; }
+							if ((quadi < 0) or (quadi >= (int)iDim)) { continue; }
+							if ((quadj < 0) or (quadj >= (int)jDim)) { continue; }
 							if (dataGrid[1][quadi][quadj][k] != -999) {
 								stdVel += (dataGrid[1][quadi][quadj][k]-avgCappi)*
 									(dataGrid[1][quadi][quadj][k]-avgCappi);
