@@ -478,8 +478,6 @@ void PollThread::run()
 	  // Check to see if the new volume affects the storm trend
 	  checkIntensification();
 	  emit log(Message(QString(),100,this->objectName()));  // 100 % 
-	  // Delete the radar volume here, not in AnalysisThread
-	  delete newVolume;
 
 	  }
 	  

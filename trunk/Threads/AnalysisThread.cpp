@@ -773,6 +773,10 @@ void AnalysisThread::run()
 			//emit log(Message(QString("Simplex Analysis Found No Converging Centers in this volume"),0,this->objectName(),Yellow, QString("No Center Found!"),OutOfRange, QString("No Converging Centers")));
 			emit log(Message(QString("Insufficient Convergence of Simplex Centers"),0,this->objectName(),AllOff,QString(),SimplexError,QString("No Center Convergence")));
 			//analysisGood = false;
+			// Delete CAPPI and RadarData objects			
+			delete radarVolume;
+			delete gridData;
+			delete vortexData;			
 			emit(doneProcessing());
 		} else {		   
 			
@@ -824,16 +828,9 @@ void AnalysisThread::run()
 			summary += values.setNum(vortexData->getRMW()) + ",";
 			summary += values.setNum(vortexData->getRMWUncertainty());
 			emit log(Message(summary,0,this->objectName()));
-			
-			
-			
-			
-			// Delete CAPPI and RadarData objects
-			
-			//RadarData *temp = radarVolume;
-			//radarVolume = NULL;
-			// Shouldn't this be done by PollThread?   
-			//delete radarVolume;
+
+			// Delete CAPPI and RadarData objects			
+			delete radarVolume;
 			delete gridData;
 			delete vortexData;
 			
