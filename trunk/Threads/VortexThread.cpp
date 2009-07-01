@@ -138,7 +138,9 @@ void VortexThread::run()
 		    }
 		  }
 		}
-		rmw = rmw/(1.0*goodrmw);
+		if (goodrmw) {
+			rmw = rmw/(1.0*goodrmw);
+		}
 		vortexData->setAveRMW(rmw);
 		// RMW is the average rmw taken over all levels of the vortexData
 		

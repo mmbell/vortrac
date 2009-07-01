@@ -271,13 +271,6 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
 		     QPointF((minVelXpercent+.01)*w,(1-(minVelYpercent))*h));
     painter.restore();
 
-	painter.setPen(rmwPen);
-	painter.save();
-	QRectF rmwRect((xPercent-radiusMaximumWind)*w, (1-(yPercent+radiusMaximumWind))*h, 
-					 2*radiusMaximumWind*w, 2*radiusMaximumWind*h);
-	painter.drawEllipse(rmwRect);
-	painter.restore();  
-
     // Draw the circles about this center
     painter.setPen(simplexPen);
     painter.save();
@@ -290,7 +283,14 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
     QRectF sMaxRect((xPercent-simplexMax)*w, (1-(yPercent+simplexMax))*h, 
 			2*simplexMax*w, 2*simplexMax*h);
     painter.drawEllipse(sMaxRect);
-    
+
+	painter.setPen(rmwPen);
+	painter.save();
+	QRectF rmwRect((xPercent-radiusMaximumWind)*w, (1-(yPercent+radiusMaximumWind))*h, 
+					2*radiusMaximumWind*w, 2*radiusMaximumWind*h);
+	painter.drawEllipse(rmwRect);
+	painter.restore();  
+	  
     painter.restore();
     painter.setPen(vtdPen);
     painter.save();

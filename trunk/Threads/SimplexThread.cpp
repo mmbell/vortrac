@@ -539,32 +539,52 @@ void SimplexThread::run()
     
     //Message::toScreen("SimplexRun Complete");
     
-    // Simplex run complete! Save the results to a file
-    
-    simplexResults->append(*simplexData);
-    simplexResults->save();
-    SimplexData *oldData = simplexData;
-    simplexData = NULL;
-    delete oldData;
-    
-    emit log(Message(QString(),1+endPercent,this->objectName()));
-    
-    //Now pick the best center
-    simplexResults->timeSort();
-    ChooseCenter *centerFinder = new ChooseCenter(configData,simplexResults,
-						  vortexData);
-    
-    connect(centerFinder, SIGNAL(errorlog(const Message&)),
-	    this, SLOT(catchLog(const Message&)));
-    foundCenter = centerFinder->findCenter();
-    
-    // Save again to keep mean values found in chooseCenter
-    simplexResults->save();
-    
+    // Simplex run complete! Save the results to a file if not null
+	int centercount = 0;
+	for (float radius = firstRing; radius <= lastRing; radius++) {
+		// We must have some reasonable definition of convergence here -- how many radii and how many centers?
+		if (simplexData->getNumConvergingCenters(0, radius-firstRing) > 0)
+			centercount++;
+	}
+	// Go with at least a third for now
+	if (centercount >= newNumRings/3) {
+		
+		simplexResults->append(*simplexData);
+		simplexResults->save();
+		SimplexData *oldData = simplexData;
+		simplexData = NULL;
+		delete oldData;
+		
+		emit log(Message(QString(),1+endPercent,this->objectName()));
+		
+		//Now pick the best center
+		simplexResults->timeSort();
+		ChooseCenter *centerFinder = new ChooseCenter(configData,simplexResults,
+							  vortexData);
+		
+		connect(centerFinder, SIGNAL(errorlog(const Message&)),
+			this, SLOT(catchLog(const Message&)));
+		foundCenter = centerFinder->findCenter();
+		
+		// Save again to keep mean values found in chooseCenter
+		simplexResults->save();
+		
+		// Clean up
+		delete centerFinder;
+	}  else {
+		foundCenter = false;
+		// Set some null vortexData here instead of ChooseCenter
+		vortexData->setLat(0, -999.);
+		vortexData->setLon(0, -999.);
+		vortexData->setHeight(0, 1.);
+		vortexData->setRMW(0, -999.);
+		vortexData->setRMWUncertainty(0, -999.);
+		vortexData->setCenterStdDev(0, -999.);
+		vortexData->setNumConvergingCenters(0, 0);
+		
+	}
     emit log(Message(QString(),4,this->objectName()));
-
-    // Clean up
-    delete centerFinder;
+	  
     delete[] dataGaps;
     for(int i = 2; i >=0; i--)
       delete [] vertex[i];
@@ -576,15 +596,15 @@ void SimplexThread::run()
     
     if(!foundCenter)
       {
-	// Some error occurred, notify the user
-	emit log(Message(QString("Failed to Indentify Center!"),0,this->objectName(),AllOff,QString(),SimplexError,QString("Simplex Failed")));
-	return;
+		  // Some error occurred, notify the user
+		  emit log(Message(QString("Failed to Identify Center"),0,this->objectName(),AllOff,QString(),SimplexError,QString("Simplex Failed")));
+		  // Let the poller know we're done regardless
+		  emit(centerFound());
       } else {
-	// Update the vortex list
-	emit log(Message(QString("Done with Simplex"),0, this->objectName()));
-	
-	// Let the poller know we're done
-	emit(centerFound());
+		  // Update the vortex list
+		  emit log(Message(QString("Done with Simplex"),0, this->objectName()));
+		  // Let the poller know we're done
+		  emit(centerFound());
       }
     mutex.unlock();
     

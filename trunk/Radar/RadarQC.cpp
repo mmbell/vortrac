@@ -812,9 +812,12 @@ bool RadarQC::findVADStart(bool useGVAD)
 			  int index = 0;
 			  for(int r = start; r <= stop; r++) {
 			    float* vel = radarData->getRay(r)->getVelData();
-				  lowLevelVel[index] = vel[lowestGate];
-				  highLevelVel[index] = vel[highestGate];
-				  index++;
+				  // Need to check this due to potential mismatch between Sweep and Ray
+				  if (vel != NULL) {
+					  lowLevelVel[index] = vel[lowestGate];
+					  highLevelVel[index] = vel[highestGate];
+					  index++;
+				  }
 				  vel = NULL;
 				  delete vel;
 			  }
