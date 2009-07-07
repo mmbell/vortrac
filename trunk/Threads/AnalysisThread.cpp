@@ -260,19 +260,10 @@ void AnalysisThread::run()
 	     float *extrapLatLon = GriddedData::getAdjustedLatLon(initLat,initLon, changeInX, changeInY);
 	     float relDist = GriddedData::getCartesianDistance(&extrapLatLon[0],&extrapLatLon[1],&newLatLon[0],&newLatLon[1]);
 
-		 // Check if Simplex is out to lunch
-	     if (relDist > 100) {
+		 if (relDist > 10) {
 			 QString distString;
-			 QString M1 = "Simplex center "+distString.setNum((int)relDist)+" (>100 km) from User estimated center, probably lost or estimate is ";
-			 QString M2 = "Simplex Center/Estimate "+distString.setNum((int)relDist)+" km apart";
-			 emit log(Message(M1,0,this->objectName(),Yellow, M2));
-			 mutex.unlock();
-			 abort = true;
-			 return;
-		 } else if (relDist > 10) {
-			 QString distString;
-			 QString M1 = "Simplex center "+distString.setNum((int)relDist)+" (>10 km) from User estimated center, may be lost or need to update estimate";
-			 QString M2 = "Simplex Center/Estimate "+distString.setNum((int)relDist)+" km apart";
+			 QString M1 = "Previous Simplex center "+distString.setNum((int)relDist)+" (>10 km) from User estimated center, may be lost or need to update estimate";
+			 QString M2 = "Last Simplex & Estimate "+distString.setNum((int)relDist)+" km apart";
 			 emit log(Message(M1,0,this->objectName(),Yellow, M2));
 			 vortexLat = extrapLatLon[0];
 			 vortexLon = extrapLatLon[1];
@@ -389,200 +380,61 @@ void AnalysisThread::run()
 	   QDateTime volDateTime = radarVolume->getDateTime();
 	   //Message::toScreen("vol: "+volDateTime.toString(Qt::ISODate));
 	   
-	   // If the volume time is with 15 minutes of the start time
-	   // for accepting radar observations then we will use the 
-	   // given vortex center for our center
-	   // Message::toScreen(" secs between start and this one "+QString().setNum(obsDateTime.secsTo(volDateTime)));
-	   
-	   if((abs(obsDateTime.secsTo(volDateTime))<15*60)
-	      ||(analyticRun)) {
-	     // Message::toScreen("Using lat lon in Config");
-	     vortexLat = configData->getParam(vortex,"lat").toFloat();
-	     vortexLon = configData->getParam(vortex,"lon").toFloat();
+	   if(analyticRun) {
+		   // Message::toScreen("Using lat lon in Config");
+		   vortexLat = configData->getParam(vortex,"lat").toFloat();
+		   vortexLon = configData->getParam(vortex,"lon").toFloat();
 	   } else {
-	     //Message::toScreen("Using Velocity");
-	     // Use the starting position in conjunction with the storm
-	     // velocity to find a current guess for the vortex center
-	     
-	     // Get direction (degrees cw from north) and speed (m/s)
-	     // of initial storm position
-	     
-	     float stormSpeed = configData->getParam(vortex, 
-						     "speed").toFloat();
-	     float stormDirection = configData->getParam(vortex, 
-							 "direction").toFloat();
-	     
-	     // Put the storm direction in math coordinates 
-	     // radians ccw from east
-	     
-	     stormDirection = 450-stormDirection;
-	     if(stormDirection > 360)
-	       stormDirection -=360;
-	     stormDirection*=acos(-1)/180.;
-	     
-	     // Get initial lat and lon
-	     vortexLat = configData->getParam(vortex,"lat").toFloat();
-	     vortexLon = configData->getParam(vortex,"lon").toFloat();
-		    
-	     int elapsedSeconds =obsDateTime.secsTo(volDateTime);
-	     //Message::toScreen("Seconds since start "+QString().setNum(elapsedSeconds)+" in AnalysisThread");
-	     if(isnan(elapsedSeconds)) {
-	       emit log(Message(QString("Cannot calculate time until storm is in range of radar, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Yellow,QString("Can not calculate time until storm in range")));
-	       beyondRadar = false;
-		    }
-	     float distanceMoved = elapsedSeconds*stormSpeed/1000.0;
-	     float changeInX = distanceMoved*cos(stormDirection);
-	     float changeInY = distanceMoved*sin(stormDirection);
-	     QString message("changeInX = "+QString().setNum(changeInX)+" changeInY = "+QString().setNum(changeInY));
-	     //emit(log(Message(message,0,this->objectName())));
-	     float *newLatLon = GriddedData::getAdjustedLatLon(vortexLat,vortexLon, changeInX, changeInY);
-
-	     vortexLat = newLatLon[0];
-	     vortexLon = newLatLon[1];
-	     delete [] newLatLon;
-	     //Message::toScreen("New vortexLat = "+QString().setNum(vortexLat)+" New vortexLon = "+QString().setNum(vortexLon));
+		   //Message::toScreen("Using Velocity");
+		   // Use the starting position in conjunction with the storm
+		   // velocity to find a current guess for the vortex center
+		   
+		   // Get direction (degrees cw from north) and speed (m/s)
+		   // of initial storm position
+		   
+		   float stormSpeed = configData->getParam(vortex, 
+												   "speed").toFloat();
+		   float stormDirection = configData->getParam(vortex, 
+													   "direction").toFloat();
+		   
+		   // Put the storm direction in math coordinates 
+		   // radians ccw from east
+		   stormDirection = 450-stormDirection;
+		   if(stormDirection > 360)
+			   stormDirection -=360;
+		   stormDirection*=acos(-1)/180.;
+		   
+		   // Get initial lat and lon
+		   vortexLat = configData->getParam(vortex,"lat").toFloat();
+		   vortexLon = configData->getParam(vortex,"lon").toFloat();
+		   
+		   int elapsedSeconds =obsDateTime.secsTo(volDateTime);
+		   //Message::toScreen("Seconds since start "+QString().setNum(elapsedSeconds)+" in AnalysisThread");
+		   if(isnan(elapsedSeconds)) {
+			   emit log(Message(QString("Error extrapolating user center, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Red,QString("Error extrapolating center")));
+			   beyondRadar = false;
+		   } else if (elapsedSeconds < 0) {
+			   // Problem, most likely being run in post-analysis mode
+			   emit log(Message(QString("Negative time extrapolation, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Yellow,QString("Negative extrapolation of center")));
+		   }
+		   float distanceMoved = elapsedSeconds*stormSpeed/1000.0;
+		   float changeInX = distanceMoved*cos(stormDirection);
+		   float changeInY = distanceMoved*sin(stormDirection);
+		   QString message("changeInX = "+QString().setNum(changeInX)+" changeInY = "+QString().setNum(changeInY));
+		   //emit(log(Message(message,0,this->objectName())));
+		   float *newLatLon = GriddedData::getAdjustedLatLon(vortexLat,vortexLon, changeInX, changeInY);
+		   
+		   vortexLat = newLatLon[0];
+		   vortexLon = newLatLon[1];
+		   delete [] newLatLon;
+		   //Message::toScreen("New vortexLat = "+QString().setNum(vortexLat)+" New vortexLon = "+QString().setNum(vortexLon));
 	   }
 	 }
-	 
+		   
 	 QString currentCenter("Using ("+QString().setNum(vortexLat)+", "+QString().setNum(vortexLon)+") for storm center estimate");
 
 	 emit log(Message(currentCenter,1,this->objectName())); // 5 %
 	 
-	 // Check to see if the center is beyond 174 km
-	 // If so, tell the user to wait!
-	 //Message::toScreen("RLat = "+QString().setNum(*radarVolume->getRadarLat())+" RLon = "+QString().setNum(*radarVolume->getRadarLon())+" VLat = "+QString().setNum(vortexLat)+" VLon = "+QString().setNum(vortexLon));
-	 float relDist = GriddedData::getCartesianDistance(
-				             radarVolume->getRadarLat(), 
-					     radarVolume->getRadarLon(),
-					     &vortexLat, &vortexLon);
-		
-	 //Message::toScreen("Distance Between Radar and Storm "+QString().setNum(relDist));
-	 beyondRadar = true;
-	 float unambigRange = 0;
-	 //bool closeToEdge = false;
-	 for(int i = 0; i < radarVolume->getNumSweeps(); i++) {	   
-	   if (radarVolume->getSweep(i)->getVel_numgates()> 0) {
-	     float range = radarVolume->getSweep(i)->getUnambig_range()*2;
-	     if (range > unambigRange) {
-	       unambigRange = range;
-	     }
-	   } 
-	   int rangeBuffer = 5;
-	   if((relDist < (radarVolume->getSweep(i)->getUnambig_range()*2+rangeBuffer))
-	      &&(radarVolume->getSweep(i)->getVel_numgates()> 0)){
-	     beyondRadar = false;
-	   }
-	   //  if((relDist > radarVolume->getSweep(i)->getUnambig_range()-20)&&(relDist < radarVolume->getSweep(i)->getUnambig_range()+20)) {
-	   //closeToEdge = true;
-	   //}
-	 }
-	 
-	 // Used for analytic runs only
-	 if(analyticRun)
-	   beyondRadar = false;
-	 
-	 if (beyondRadar) {
-	   // Too far away for Doppler, need to send a signal
-	   // Calculate the estimated time of arrival
-	   float* distance;
-
-	   distance = GriddedData::getCartesianPoint(
-					    &vortexLat,&vortexLon,
-					    radarVolume->getRadarLat(), 
-					    radarVolume->getRadarLon());
-	   float cca = atan2(distance[0], distance[1]);
-	   
-	   QDomElement vortex = configData->getConfig("vortex");
-	   float stormSpeed = configData->getParam(vortex, 
-						   "speed").toFloat()/1000.0;
-	   float stormDirection = configData->getParam(vortex, 
-				       "direction").toFloat()*acos(-1)/180.;
-	   // Message::toScreen("Storm Direction .."+QString().setNum(stormDirection));
-	   //Message::toScreen("cca = "+QString().setNum(cca));
-	   //float palpha = (relDist*sin(stormDirection-cca)/unambigRange);
-	   float palpha = -1*(relDist*sin(stormDirection-cca)/unambigRange);
-	   //Message::toScreen(" palpha = "+QString().setNum(palpha));
-	   //Message::toScreen(" relDist = "+QString().setNum(relDist));
-	   //float alpha = acos(-1)-asin(palpha);
-	   float alpha = asin(palpha);
-	   //Message::toScreen(" alpha = "+QString().setNum(alpha));
-	   float dist2go = 0;
-	   if(fabs(stormDirection-cca)<=1) {
-	     dist2go = fabs(relDist)-unambigRange;
-	   }
-	   else {
-	     //dist2go = unambigRange*sin(acos(-1)+cca-stormDirection-alpha)/sin(stormDirection-cca);
-	     dist2go = sqrt(relDist*relDist*(1-2*sin(stormDirection-cca)*sin(stormDirection-cca))+unambigRange*unambigRange-2*relDist*unambigRange*cos(alpha)*cos(stormDirection-cca));
-	   }
-	   
-	   // Report distance from Doppler Radar Range
-	   
-	   QString distanceLeft("Circulation Center is "+QString().setNum(relDist)+" km from the radar - Skipping Analysis On This Volume");
-	   emit log(Message(distanceLeft,0,this->objectName()));
-	   if (relDist > 500) {
-		   emit log(Message(QString("Storm position is beyond 500 km from radar, Please check observation parameters"),0,this->objectName(),Red, QString("Storm > 500 km from radar")));
-		   mutex.unlock();
-		   abort = true;
-		   return;
-	   }
-	   
-	   //Message::toScreen(" dist2go = "+QString().setNum(dist2go));
-	   
-	   if((stormSpeed ==0)||isnan(stormSpeed)||isinf(stormSpeed)) {
-	     // Can not calculate time to radar edge estimate
-	     // Send Message....
-	     QString noTime("Unable to calculate circulation center arrival time, check circulation speed and direction");
-	     emit log(Message(noTime, 0,this->objectName(),AllOff,QString(),
-			      OutOfRange,QString("Storm Out Of Range")));
-	   }
-	   else { 
-	     
-	     float eta = (dist2go/stormSpeed)/60;
-	     //Message::toScreen("minutes till radar"+QString().setNum(eta));
-	     
-	     // These is something wrong with our calculation of time
-	     // until storm is in range, stop processing
-		   
-	     if((eta < 0)||(isnan(eta))||isinf(eta)) {
-			 QString ETA;
-			 if(eta < 0)
-				 ETA = "ETA < 0";
-			 if(isnan(eta))
-				 ETA = "ETA is NAN";
-			 if(isinf(eta))
-				 ETA = "ETA is infinite";
-	       emit log(Message(QString("Difficulties Processing Time Until Radar is in Range, Please check observation parameters"),0,this->objectName(),Red, ETA));
-		   mutex.unlock();
-		   abort = true;
-		   return;
-	     }
-	     
-	     emit log(Message(
-		      QString(),
-		      -1,this->objectName(),AllOff,QString(),OutOfRange, 
-		      QString("Storm in range in "+QString().setNum(eta, 
-						  'f', 0)+" min")));
-	     //Message::toScreen("Estimated center is out of Doppler range!");
-	     // We are now deleting the volume here
-	     // but keeping the pointer live for future iterations
-	     // have to delete here, erasing address from pollThread
-	   }
-	   RadarData *temp = radarVolume;
-	   radarVolume = NULL;
-	   delete temp;
-	   
-	   //Message::toScreen("AnalysisThread: Volume Not In Range - Sending Done Processing Signal");
-	   
-	   emit doneProcessing();
-	   //Message::toScreen("AnalysisThread sent doneProcessing");
-	   waitForData.wait(&mutex);
-	   //Message::toScreen("AnalysisThread: Got Mutex Back For Data - Continuing");
-	   mutex.unlock();
-	   delete [] distance;
-	   continue;
-	 }
-
-	 // Volume is valid and in range
 	 // Prepare to process volume....
 	 
 	 //Message::toScreen("gets to create vortexData analysisThread");
@@ -602,7 +454,6 @@ void AnalysisThread::run()
 	 int numWaveNum = configData->getParam(vtd,"maxwavenumber").toInt();
 	 VortexData *vortexData = new VortexData(numLevels,numRings,
 						 numWaveNum);
-	 //VortexData *vortexData = new VortexData(); 
 	 vortexData->setTime(radarVolume->getDateTime());
 	 for(int i = 0; i < vortexData->getNumLevels(); i++) {
 	   vortexData->setLat(i,vortexLat);
@@ -714,7 +565,14 @@ void AnalysisThread::run()
 		simplexThread->findCenter(configData, gridData, radarVolume, 
 					  simplexList, vortexData);
 		waitForCenter.wait(&mutex); 
-					 
+
+		bool hasConvergingCenters = false;
+		for(int l = 0; (l < vortexData->getNumLevels())
+			&&(hasConvergingCenters==false); l++) {
+			if(vortexData->getNumConvergingCenters(l)>0)
+				hasConvergingCenters = true;
+		}
+		   
 		QString simplexTime;
 		simplexTime.setNum((float)analysisTime.elapsed() / 60000);
 		simplexTime.append(" minutes elapsed");
@@ -725,17 +583,19 @@ void AnalysisThread::run()
 		float levelLat = vortexData->getLat(vortexIndex);
 		float levelLon = vortexData->getLon(vortexIndex);
 		   
-		relDist = GriddedData::getCartesianDistance(&vortexLat,&vortexLon,&levelLat,&levelLon);
-		   
-		if (relDist > 25) {
-			QString distString;
-			QString M1 = "Simplex center "+distString.setNum((int)relDist)+" (> 25 km) from User estimate, probably lost or need to update estimate";
-			QString M2 = "Center/Estimate "+distString.setNum((int)relDist)+" km apart";
+		float relDist = GriddedData::getCartesianDistance(&vortexLat,&vortexLon,&levelLat,&levelLon);
+		if (relDist > 999) relDist = 999; 
+		if (relDist > 50) {
+			QString distString, latString, lonString;
+			QString M1 = "Simplex center ("+latString.setNum(levelLat)+", "+lonString.setNum(levelLon)+ ")"
+				" > 50 km ("+distString.setNum((int)relDist)+" km) from user estimate, assuming Simplex is lost and attempting user center";
+			QString M2 = "Simplex center "+distString.setNum((int)relDist)+" km away rejected";
 			emit log(Message(M1,0,this->objectName(),Yellow, M2));
 			vortexData->setLat(vortexIndex, vortexLat);
 			vortexData->setLon(vortexIndex, vortexLon);
 			levelLat = vortexLat;
 			levelLon = vortexLon;
+			hasConvergingCenters = false;
 		} else if (relDist > 10) {
 			QString distString;
 			QString M1 = "Simplex center "+distString.setNum((int)relDist)+" (> 10 km) from User estimated center, may be lost or need to update estimate";
@@ -762,12 +622,6 @@ void AnalysisThread::run()
 		emit newCappiInfo(xPercent, yPercent, rmwEstimate, sMin, sMax, vMax, vortexLat, vortexLon, levelLat, levelLon);
 		delete [] xyValues;
 		
-		bool hasConvergingCenters = false;
-		for(int l = 0; (l < vortexData->getNumLevels())
-			&&(hasConvergingCenters==false); l++) {
-			if(vortexData->getNumConvergingCenters(l)>0)
-				hasConvergingCenters = true;
-		}
 		
 		if(!hasConvergingCenters) { // && (vortexList->count() > 0)){
 			//emit log(Message(QString("Simplex Analysis Found No Converging Centers in this volume"),0,this->objectName(),Yellow, QString("No Center Found!"),OutOfRange, QString("No Converging Centers")));

@@ -323,6 +323,12 @@ void VortexThread::archiveWinds(float& radius, int& hIndex, float& maxCoeffs)
 	
   for (int coeff = 0; coeff < (int)(maxCoeffs); coeff++) {
     vortexData->setCoefficient(level, ring, coeff, vtdCoeffs[coeff]);
+	Coefficient current = vtdCoeffs[coeff];
+	  if((current.getValue()!=-999)&&(current.getValue()!=0)) {
+		  if(current.getRadius()>vortexData->getMaxValidRadius())
+			  vortexData->setMaxValidRadius(current.getRadius());
+	  }
+	  
   }
 	
 }

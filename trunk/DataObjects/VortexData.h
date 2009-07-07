@@ -56,6 +56,9 @@ class VortexData
   float getAveRMWUncertainty() const;
   void setAveRMWUncertainty(const float& newUncertainty);
 
+  float getMaxValidRadius() const;
+  void setMaxValidRadius(const float& validRadius);
+	
   float getPressure() const;
   void setPressure(const float& pressure);
   float getPressureUncertainty() const;
@@ -115,7 +118,7 @@ class VortexData
   float centerAltitude[maxLevels];
   
   QDateTime time;
-  
+  float maxValidRadius;
   float aveRMW;
   float aveRMWUncertainty;
   float RMW[maxLevels];

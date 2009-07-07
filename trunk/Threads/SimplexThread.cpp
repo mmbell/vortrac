@@ -116,7 +116,7 @@ void SimplexThread::run()
     mutex.lock();
     
     bool foundCenter = true;
-    emit log(Message(QString("Simplex search started"),0,this->objectName()));
+    emit log(Message(QString("Center search started"),0,this->objectName()));
     
     // Initialize variables
     QString simplexPath = configData->getParam(simplexConfig, 

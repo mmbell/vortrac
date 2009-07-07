@@ -826,16 +826,7 @@ void AnalysisPage::pollVortexUpdate(VortexList* list)
   if((list!=NULL)&&(list->count() > 0)) {
     
     // Find the outermost vtd mean wind coefficient that is not equal to -999
-    float maxRadius = 0;
-    for(int level = 0; level < list->last().getNumLevels(); level++) {
-      for(int rad = 0; rad < list->last().getNumRadii(); rad++) {
-	Coefficient current = list->last().getCoefficient(level,rad,QString("VTC0"));
-	if((current.getValue()!=-999)&&(current.getValue()!=0)) {
-	  if(current.getRadius()>maxRadius)
-	    maxRadius = current.getRadius();
-	}
-      }
-    }
+    float maxRadius = list->last().getMaxValidRadius();
     currPressure->display((int)list->last().getPressure());
 
     if(list->last().getAveRMW()==-999.0)

@@ -141,7 +141,8 @@ void ChooseCenter::setSimplexList(const SimplexList* newList)
 
 bool ChooseCenter::findCenter()
 {
-  
+	
+   emit errorlog(Message(QString("Statistically selecting center"),0,this->objectName()));
    initialize();
    if(!chooseMeanCenters()) {
      emit errorlog(Message(QString("Failed in ChooseMeanCenters!"),
