@@ -360,20 +360,6 @@ void AnalysisThread::run()
 				QTime::fromString(startTime, Qt::ISODate), 
 				Qt::UTC);
 
-	   if (obsDateTime.secsTo(radarStart)>(3600*6)) {
-	     // Trying to extrapolate too far, bail out
-		   emit log(Message(QString("Extrapolation time exceeds six hours, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Red,QString("Excess extrapolation time")));
-		   mutex.unlock();
-		   abort = true;
-		   return;
-	   } else if (obsDateTime.secsTo(radarStart)<0) {
-	     // Trying to extrapolate into the past, bail out
-		   emit log(Message(QString("Extrapolation time exceeds six hours, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Red,QString("Negative extrapolation time")));
-		   mutex.unlock();
-		   abort = true;
-		   return;
-	   }
-
 	   // Get this volume's time
 	   //Message::toScreen("obs: "+obsDateTime.toString(Qt::ISODate));
 	   
@@ -413,6 +399,9 @@ void AnalysisThread::run()
 		   if(isnan(elapsedSeconds)) {
 			   emit log(Message(QString("Error extrapolating user center, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Red,QString("Error extrapolating center")));
 			   beyondRadar = false;
+		   } else if (elapsedSeconds > (3600*6)) {
+			   // Trying to extrapolate too far, warn
+			   emit log(Message(QString("Extrapolation time exceeds six hours, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Yellow,QString("Extrapolation time > 6 hrs")));
 		   } else if (elapsedSeconds < 0) {
 			   // Problem, most likely being run in post-analysis mode
 			   emit log(Message(QString("Negative time extrapolation, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Yellow,QString("Negative extrapolation of center")));

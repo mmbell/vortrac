@@ -384,6 +384,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 	}
 	
 	int maxfoldpasses = 1;
+	int localArea = 10;
 	for (int foldpass = 0; foldpass < maxfoldpasses; foldpass++) {
 		// Find good values
 		for (int n = 0; n < radarData->getNumRays(); n++) {
@@ -431,8 +432,8 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 							if (rSquare > RSquareLinear) { continue; }
 							float avgCappi = 0;
 							float quadcount = 0;
-							for (int quadi = iIndex-1; quadi <= iIndex+1; quadi++) {
-								for (int quadj = jIndex-1; quadj <= jIndex+1; quadj++) {
+							for (int quadi = iIndex-localArea; quadi <= iIndex+localArea; quadi++) {
+								for (int quadj = jIndex-localArea; quadj <= jIndex+localArea; quadj++) {
 									if ((quadi < 0) or (quadi >= (int)iDim)) { continue; }
 									if ((quadj < 0) or (quadj >= (int)jDim)) { continue; }
 									if (dataGrid[1][quadi][quadj][kIndex] != -999) {
@@ -457,7 +458,8 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 									}
 								}
 							}
-							float newVel = velData[g]+2*minfold*nyquist;
+							velData[g] += 2*minfold*nyquist;
+							float newVel = velData[g];
 							float weight = (100*nyquist) * (RSquareLinear - rSquare) / (RSquareLinear + rSquare);
 							velValues[iIndex][jIndex][kIndex].weight += weight;
 							velValues[iIndex][jIndex][kIndex].sumVel += weight*newVel;
@@ -480,6 +482,90 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 			}
 		}
 		
+		/* 2nd round of BB?
+		Ray* currentRay = NULL;
+		float velNull = -999.;
+		int numVGatesAveraged = 15;
+		int maxFold = 4;
+		float numRays = radarData->getNumRays();
+		for(int i = 0; i < numRays; i++) 
+		{
+			currentRay = radarData->getRay(i);
+			float *vGates = currentRay->getVelData();
+			float startVelocity = velNull;
+			for(int j = 0; j < currentRay->getVel_numgates(); j++) {
+				if (vGates[j] != velNull) {
+					startVelocity = vGates[j];
+					break;
+				}
+			}
+			float nyquistVelocity = currentRay->getNyquist_vel();
+			int numVelocityGates = currentRay->getVel_numgates();
+			if((numVelocityGates!=0)&&(startVelocity!=velNull))
+			{
+				float sum = float(numVGatesAveraged)*startVelocity;
+				float nyquistSum = float(numVGatesAveraged)*nyquistVelocity;
+				int n = 0;
+				int overMaxFold = 0;
+				bool dealiased;
+				float segVelocity[numVGatesAveraged];
+				for(int k = 0; k < numVGatesAveraged; k++)
+				{
+					segVelocity[k] = startVelocity;
+				}
+				for(int j = 0; j < numVelocityGates; j++)
+				{
+					//Message::toScreen("Gate "+QString().setNum(j));
+					if(vGates[j]!=velNull)
+					{
+						//Message::toScreen("has data");
+						n = 0;
+						dealiased = false;
+						while(dealiased!=true)
+						{
+							float tryVelocity = numVGatesAveraged*(vGates[j]+(2.0*n*nyquistVelocity));
+							if((sum+nyquistSum >= tryVelocity)&&
+							   (tryVelocity >= sum-nyquistSum))
+							{
+								dealiased=true;
+							} 
+							else 
+							{
+								if(tryVelocity > sum+nyquistSum){
+									n--;
+									//Message::toScreen("n--");
+								}
+								if(tryVelocity < sum-nyquistSum){
+									n++;
+									//Message::toScreen("n++");
+								}
+								if(abs(n) >= maxFold) {
+									//emit log(Message(QString("Ray #")+QString().setNum(i)+QString(" Gate# ")+QString().setNum(j)+QString(" exceeded maxfolds")));
+									overMaxFold++;
+									dealiased=true;
+									vGates[j]=velNull;
+								}
+							}
+							//Message::toScreen("Ray = "+QString().setNum(i)+" j = "+QString().setNum(j)+" with "+QString().setNum(n)+" folds");
+						}
+						if(vGates[j]!=velNull) 
+						{
+							vGates[j]+= 2.0*n*(nyquistVelocity);
+							sum -= segVelocity[0];
+							sum += vGates[j];
+							for(int m = 0; m < numVGatesAveraged-1; m++)
+							{
+								segVelocity[m] = segVelocity[m+1];
+							}
+							segVelocity[numVGatesAveraged-1]= vGates[j];
+						}
+					}
+				}
+			}
+			vGates = NULL;
+			currentRay = NULL;
+		} */
+		
 		for (int k = 0; k < int(kDim); k++) { 
 			for (int j = 0; j < int(jDim); j++) {
 				abort = returnExitNow();
@@ -499,7 +585,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 		}
 	}
 	
-	// Remove outliers
+	// Smooth local outliers
 	for (int k = 0; k < int(kDim); k++) { 
 		// float sumtexture = 0;
 		// float maxtexture = 0;
@@ -512,8 +598,8 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 			for (int i = 1; i < int(iDim)-1; i++) {
 				float avgCappi = 0;
 				float quadcount = 0;
-				for (int quadi = i-2; quadi <= i+2; quadi++) {
-					for (int quadj = j-2; quadj <= j+2; quadj++) {
+				for (int quadi = i-localArea; quadi <= i+localArea; quadi++) {
+					for (int quadj = j-localArea; quadj <= j+localArea; quadj++) {
 						if ((quadi < 0) or (quadi >= (int)iDim)) { continue; }
 						if ((quadj < 0) or (quadj >= (int)jDim)) { continue; }
 						if (dataGrid[1][quadi][quadj][k] != -999) {
@@ -525,8 +611,8 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 				if (quadcount != 0) {
 					avgCappi /= quadcount;
 					float stdVel = 0;
-					for (int quadi = i-2; quadi <= i+2; quadi++) {
-						for (int quadj = j-2; quadj <= j+2; quadj++) {
+					for (int quadi = i-localArea; quadi <= i+localArea; quadi++) {
+						for (int quadj = j-localArea; quadj <= j+localArea; quadj++) {
 							if ((quadi < 0) or (quadi >= (int)iDim)) { continue; }
 							if ((quadj < 0) or (quadj >= (int)jDim)) { continue; }
 							if (dataGrid[1][quadi][quadj][k] != -999) {
@@ -545,6 +631,100 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 		}
 	}
 
+	/* Remove global outliers
+	for (int k = 0; k < int(kDim); k++) { 
+		// float sumtexture = 0;
+		// float maxtexture = 0;
+		float posCappi = 0;
+		float poscount = 0;
+		float negCappi = 0;
+		float negcount = 0;
+		for (int j = 1; j < int(jDim)-1; j++) {
+			abort = returnExitNow();
+			if(abort){
+				//Message::toScreen("ExitNow in Cressmand Interpolation in CappiGrid");
+				return;
+			}
+			for (int i = 1; i < int(iDim)-1; i++) {
+				if (dataGrid[1][i][j][k] != -999) {
+					if (dataGrid[1][i][j][k] > 0) {
+						posCappi += dataGrid[1][i][j][k];
+						QString pos;
+						poscount++;
+					} else {
+						negCappi += dataGrid[1][i][j][k];
+						negcount++;
+					}
+				}
+			}
+		}
+		if (poscount != 0) {
+			posCappi /= poscount;
+			float stdVel = 0;
+			for (int j = 1; j < int(jDim)-1; j++) {
+				abort = returnExitNow();
+				if(abort){
+					//Message::toScreen("ExitNow in Cressmand Interpolation in CappiGrid");
+					return;
+				}
+				for (int i = 1; i < int(iDim)-1; i++) {				
+					if ((dataGrid[1][i][j][k] != -999) and (dataGrid[1][i][j][k] > 0)) {
+						stdVel += (dataGrid[1][i][j][k]-posCappi)*
+						(dataGrid[1][i][j][k]-posCappi);
+					}
+				}
+			}
+			stdVel = sqrt(stdVel/poscount);
+			for (int j = 1; j < int(jDim)-1; j++) {
+				abort = returnExitNow();
+				if(abort){
+					//Message::toScreen("ExitNow in Cressmand Interpolation in CappiGrid");
+					return;
+				}
+				for (int i = 1; i < int(iDim)-1; i++) {
+					float diffCappi = fabs(dataGrid[1][i][j][k] - posCappi);
+					if ((diffCappi > stdVel*2) and (dataGrid[1][i][j][k] != -999)
+						and (dataGrid[1][i][j][k] > 0)) {
+						dataGrid[1][i][j][k] = -999;
+					}
+				}
+			}
+		}
+		if (negcount != 0) {
+			negCappi /= negcount;
+			float stdVel = 0;
+			for (int j = 1; j < int(jDim)-1; j++) {
+				abort = returnExitNow();
+				if(abort){
+					//Message::toScreen("ExitNow in Cressmand Interpolation in CappiGrid");
+					return;
+				}
+				for (int i = 1; i < int(iDim)-1; i++) {				
+					if ((dataGrid[1][i][j][k] != -999) and (dataGrid[1][i][j][k] < 0)) {
+						stdVel += (dataGrid[1][i][j][k]-negCappi)*
+						(dataGrid[1][i][j][k]-negCappi);
+					}
+				}
+			}
+			stdVel = sqrt(stdVel/negcount);
+			for (int j = 1; j < int(jDim)-1; j++) {
+				abort = returnExitNow();
+				if(abort){
+					//Message::toScreen("ExitNow in Cressmand Interpolation in CappiGrid");
+					return;
+				}
+				for (int i = 1; i < int(iDim)-1; i++) {		
+					float diffCappi = fabs(dataGrid[1][i][j][k] - negCappi);
+					if ((diffCappi > stdVel*2) and (dataGrid[1][i][j][k] != -999)
+						and (dataGrid[1][i][j][k] < 0)) {
+						dataGrid[1][i][j][k] = -999;
+					}
+				}
+			}
+		} 
+	} */
+
+	
 }
 /*
 void CappiGrid::ClosestPointInterpolation()
