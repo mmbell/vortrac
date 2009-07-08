@@ -1,0 +1,274 @@
+/*
+ * PressureList.cpp
+ * VORTRAC
+ *
+ * Created by Lisa Mauger on 5/23/06
+ *  Copyright 2006 University Corporation for Atmospheric Research.
+ *  All rights reserved.
+ *
+ *
+ */
+
+#include "PressureList.h"
+#include <QDomNodeList>
+
+PressureList::PressureList(const QString &newFileName)
+{
+  fileName = newFileName;
+  workingDir = QString("");
+  if(fileName.isEmpty())
+    fileName = QString("vortrac_defaultPressureDataStorage.xml");
+
+  config = new Configuration(0, newFileName);
+  pressureDataConfigs = new QList<Configuration*>;
+  configFileNames = new QList<QString>;
+  QList<PressureData>::QList<PressureData>();
+}
+
+PressureList::PressureList(Configuration* newConfig)
+{
+  config = newConfig;
+
+  pressureDataConfigs = new QList<Configuration*>;
+  configFileNames = new QList<QString>;
+}
+
+PressureList::~PressureList()
+{
+}
+
+
+bool PressureList::save()
+{
+  if(config->write(fileName)) {
+    int fileSaves = 0;
+    for(int i = 0; i < pressureDataConfigs->count(); i++) {
+      Configuration *currConfig= pressureDataConfigs->value(i);
+      if(currConfig->write(configFileNames->value(i)))
+	fileSaves++;
+    }
+    if(fileSaves == QList<PressureData>::count())
+      return true;
+  }
+
+  Message::toScreen("PRESSURELIST FAIL:Failed to save to file");
+  return false;
+}
+
+bool PressureList::open()
+{
+
+  int numConfigsOpened = 0;
+  // Message::toScreen("num in Config groupList ="+QString().setNum(config->getGroupList()->count()));
+
+  for(int i = 0; i < config->getGroupList()->count(); i++) {
+
+    QDomNode node = config->getGroupList()->item(i);
+    QDomElement currElement = node.toElement();
+    if(!currElement.tagName().startsWith(QString("vol"))) {
+      vortexName = config->getParam(currElement, "name");
+      radarName = config->getParam(currElement, "radar");
+      productType = config->getParam(currElement, "product");
+      numConfigsOpened++;
+    }
+    else {
+      // Has information about a pressureData
+      if(openNodeFile(node)) {
+	numConfigsOpened++;
+      }
+    }
+  }
+  if(numConfigsOpened == config->getGroupList()->count())
+    return true;
+  Message::toScreen("PRESSURELIST FAIL: Could Not Open All Volume Configuration Files");
+  return false;
+}
+
+bool PressureList::openNodeFile(const QDomNode &newNode)
+{
+  if(!newNode.isNull()) {
+    QDomElement nodeElement = newNode.toElement();
+    QString nodeTimeString = config->getParam(nodeElement, "time");
+    QDateTime nodeTime = QDateTime::fromString(nodeTimeString,Qt::ISODate);
+    QString nodeFileName = config->getParam(nodeElement, "file");
+    if(!QFile::exists(nodeFileName)) {
+      Message::toScreen("PRESSURELIST FAIL: File not found for pressuredata: "+nodeFileName);
+      return false;
+    }
+    Configuration *newConfig = new Configuration(0, nodeFileName);
+    PressureData newData;
+
+    for(int i = 0; i < newConfig->getGroupList()->count(); i++) {
+      QDomNode child = newConfig->getGroupList()->item(i);
+      QDomElement childElement = child.toElement();
+      QString newName, newRadar, newType;
+      if(!childElement.tagName().startsWith(QString("vol"))) {
+	newName = newConfig->getParam(childElement, "name");
+	newRadar = newConfig->getParam(childElement, "radar");
+	newType = newConfig->getParam(childElement, "product");
+	// Check to make sure these line up........
+      }
+      else {
+	// Has information about a pressureData;
+	QString newStation = newConfig->getParam(childElement, "station");
+	newData.setStationName(newStation);
+	
+	QString newTimeString = newConfig->getParam(childElement, "time");
+	QDateTime newTime = QDateTime::fromString(newTimeString,Qt::ISODate);
+	newData.setTime(newTime);
+
+	float newPressure = newConfig->getParam(childElement,"pressure").toFloat();
+	newData.setPressure(newPressure);
+     
+	float newLat = newConfig->getParam(childElement, "latitude").toFloat();
+	newData.setLat(newLat);
+	  
+	float newLon = newConfig->getParam(childElement, "longitude").toFloat();
+	newData.setLon(newLon);
+
+	float newAlt = newConfig->getParam(childElement, "altitude").toFloat();
+	newData.setAltitude(newAlt);
+	
+	float newWS = newConfig->getParam(childElement, "windspeed").toFloat();
+	newData.setWindSpeed(newWS);
+
+	float newWD = newConfig->getParam(childElement, "winddir").toFloat();
+	newData.setWindDirection(newWD);
+
+	
+	QList<PressureData>::append(newData);
+	pressureDataConfigs->append(newConfig);
+	configFileNames->append(nodeFileName);
+      }
+    }
+    return true;
+  }
+  return false;
+}
+
+void PressureList::setFileName(const QString &newFileName)
+{
+  fileName = newFileName;
+}
+
+void PressureList::setRadarName(const QString &newRadarName)
+{
+	radarName = newRadarName;
+}
+
+void PressureList::setVortexName(const QString &newVortexName)
+{
+	vortexName = newVortexName;
+}
+
+void PressureList::setNewWorkingDirectory(const QString &newDirectory)
+{
+  workingDir = newDirectory;
+}
+
+void PressureList::createDomPressureDataEntry(const PressureData &newData)
+
+  /* 
+   * This is used to keep the configuration Dom tree consistant
+   *   with the pressureData stored in the list. This function commits 
+   *   non-null information from the pressureData to the appropriate 
+   *   element in its configuration node counterpart.
+   *
+   */
+
+{
+
+  // Get time for identification
+
+  QString timeString = newData.getTime().toString(Qt::ISODate);
+  timeString.replace(QString("-"), QString("_"));
+  timeString.replace(QString(":"), QString("_"));
+ 
+  // Add element to main xml identifing specific file
+
+  QDomElement root = config->getRoot();
+  config->addDom(root, QString("ob_"+timeString), QString(""));
+  
+  QDomElement parent = config->getConfig(QString("ob_"+timeString));
+  
+  // Create a filename and configuration for the volume information
+  
+  QString defaultFile = QString("vortrac_defaultPressureDataStorage.xml");
+  
+  //QString nodeFile = vortexName+timeString+QString(".xml");
+  //  QFile fileCheck(workingDir+nodeFile);
+  //if(QFile::exists(workingDir+nodeFile))
+  QString nodeFile = vortexName+"_"+radarName+"_"+timeString+"_"
+	  +newData.getStationName()+"_pressure.xml";
+
+  Configuration *newConfig = new Configuration(0,workingDir+defaultFile);
+
+  config->addDom(parent, QString("time"), 
+		 newData.getTime().toString(Qt::ISODate)); 
+  config->addDom(parent, QString("file"), workingDir+nodeFile);
+
+  pressureDataConfigs->append( newConfig);
+  configFileNames->append(workingDir+nodeFile);
+
+  // Add this information to the new catelog entry
+
+  QDomElement volRoot = newConfig->getRoot();
+
+  QDomElement header = newConfig->getConfig("pressure");
+  if(!vortexName.isEmpty())
+    newConfig->setParam(header, QString("vortexName"), vortexName);
+  if(!radarName.isEmpty())
+    newConfig->setParam(header, QString("radar"), radarName);
+  if(!productType.isEmpty())
+    newConfig->setParam(header, QString("product"), productType);
+  
+  newConfig->addDom(volRoot, QString("volume_"+timeString), QString(""));
+  QDomElement volParent =newConfig->getConfig(QString("volume_"+timeString));
+
+  if(newData.getStationName().isNull()) {
+	  newConfig->addDom(volParent, QString("station"), 
+						newData.getStationName()); }
+  if(!newData.getTime().isNull()) {
+    newConfig->addDom(volParent, QString("time"), 
+		   newData.getTime().toString(Qt::ISODate)); }
+  if(newData.getPressure()!=-999) {
+    newConfig->addDom(volParent, QString("pressure"), 
+		   QString().setNum(newData.getPressure())); }
+  if(newData.getLat()!=-999) {
+    newConfig->addDom(volParent, QString("latitude"), 
+					  QString().setNum(newData.getLat())); }
+  if(newData.getLon()!=-999) {
+	  newConfig->addDom(volParent, QString("longitude"), 
+					  QString().setNum(newData.getLon())); }
+  if(newData.getPressure()!=-999) {
+    newConfig->addDom(volParent, QString("altitude"), 
+					  QString().setNum(newData.getAltitude())); }
+  if(newData.getWindSpeed()!=-999) {
+    newConfig->addDom(volParent, QString("windspeed"), 
+					  QString().setNum(newData.getWindSpeed())); }
+  if(newData.getWindDirection()!=-999) {
+    newConfig->addDom(volParent, QString("winddir"), 
+					  QString().setNum(newData.getWindDirection())); }
+
+  
+}
+
+void PressureList::append(const PressureData &value)
+{
+  createDomPressureDataEntry(value);
+  QList<PressureData>::append(value);
+}
+
+void PressureList::timeSort()
+{
+  for(int i = 0; i < this->count(); i++) {
+    for(int j = 0; j < this->count()-1; j++) {
+      if(this->value(j)>this->value(j+1)) {
+	this->swap(j+1,j);
+	pressureDataConfigs->swap(j+1,j);
+	configFileNames->swap(j+1,j);
+      }
+    }
+  }
+  
+}
