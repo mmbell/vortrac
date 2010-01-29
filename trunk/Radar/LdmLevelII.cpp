@@ -69,7 +69,7 @@ bool LdmLevelII::readVolume()
 		  if (error == BZ_OUTBUFF_FULL) {
 			  // Double the array
 			  uncompSize += 262144;
-			  delete uncompressed;
+			  delete[] uncompressed;
 			  uncompressed = new char[uncompSize];
 		  } else if (!error) {
 			  // Uncompress worked!
@@ -79,7 +79,7 @@ bool LdmLevelII::readVolume()
 		  }
 	  }	
 
-	  delete compressed;
+	  delete[] compressed;
 	  recNum++;
 	  // Skip the metadata at the beginning
 	  if ((recNum == 1) and (uncompSize == 325888)) { continue; }
@@ -286,7 +286,7 @@ bool LdmLevelII::readVolume()
 		  
 	  }
 	  
-	  delete uncompressed;
+	  delete[] uncompressed;
   }  
   // Record the number of rays in the last sweep
   Sweeps[numSweeps-1].setLastRay(numRays-1);
