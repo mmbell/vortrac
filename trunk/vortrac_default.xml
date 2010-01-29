@@ -25,8 +25,8 @@
   </radar>
   <cappi>
      <dir>default</dir>
-     <xdim>150.0</xdim>
-     <ydim>150.0</ydim>
+     <xdim>250.0</xdim>
+     <ydim>250.0</ydim>
      <zdim>1.0</zdim>
      <xgridsp>1.0</xgridsp>
      <ygridsp>1.0</ygridsp>
@@ -115,7 +115,7 @@
      <endtime></endtime>
    </graphics>
    <qc>
-      <wind_method>vad</wind_method>
+      <wind_method>gvad</wind_method>
       <vel_min>1.5</vel_min>
       <vel_max>100</vel_max>
       <ref_max>65</ref_max>
