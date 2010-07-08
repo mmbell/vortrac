@@ -25,7 +25,7 @@ CappiGrid::CappiGrid()
   
   // To make the cappi bigger but still compute it in a reasonable amount of time,
   // skip the reflectivity grid, otherwise set this to true
-  gridReflectivity = false;
+  gridReflectivity = true;
   exitNow = NULL;
 }
 
@@ -265,7 +265,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 			  float i = (x - xmin)/iGridsp;
 			  float j = (y - ymin)/jGridsp;
 			  float k = (z - zmin)/kGridsp;
-			  float RSquareLinear = RSquare*range*range / 30276.0;
+			  float RSquareLinear = RSquare;; //*range*range / 30276.0;
 			  //for (int kplus = -maxKplus; kplus <= maxKplus; kplus++) { 
 				  for (int jplus = -maxJplus; jplus <= maxJplus; jplus++) {
 					  for (int iplus = -maxIplus; iplus <= maxIplus; iplus++) {
@@ -1130,21 +1130,21 @@ void CappiGrid::writeAsi()
 	id[160] = (int)(xmin * 100);
 	id[161] = (int)(xmax * 100);
 	id[162] = (int)iDim;
-	id[163] = (int)iGridsp * 1000;
+	id[163] = (int)(iGridsp * 1000);
 	id[164] = 1;
   
 	// Y Header
 	id[165] = (int)(ymin *  100);
 	id[166] = (int)(ymax * 100);
 	id[167] = (int)jDim;
-	id[168] = (int)jGridsp * 1000;
+	id[168] = (int)(jGridsp * 1000);
 	id[169] = 2;
   
 	// Z Header
 	id[170] = (int)(zmin * 1000);
 	id[171] = (int)(zmax * 1000);
 	id[172] = (int)kDim;
-	id[173] = (int)kGridsp * 1000;
+	id[173] = (int)(kGridsp * 1000);
 	id[174] = 3;
 
 	// Number of radars

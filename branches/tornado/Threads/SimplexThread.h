@@ -94,7 +94,7 @@ class SimplexThread : public QThread
 	 float simplexTest(float**& vertex, float*& VT, float*& vertexSum, 
 			   float& radius, float& height, float& RefK,
 			   QString& velField, int& high,double factor);
-	 bool calcHVVP(float& lat = 0, float& lon = 0);
+	 bool calcHVVP(float& lat, float& lon);
 	 
 	 // Choosecenter variables
 	 float velNull;

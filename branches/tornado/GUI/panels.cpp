@@ -1035,13 +1035,13 @@ CenterPanel::CenterPanel()
   tLBox->setValue(3);
   QLabel *innerRad = new QLabel(tr("Inner Radius (km)"));
   iRBox = new QDoubleSpinBox;
-  iRBox->setDecimals(2);
-  iRBox->setRange(1,120);
+  iRBox->setDecimals(3);
+  iRBox->setRange(0.05,120);
   iRBox->setValue(10);
   QLabel *outerRad = new QLabel(tr("Outer Radius (km)"));
   oRBox = new QDoubleSpinBox;
-  oRBox->setDecimals(2);
-  oRBox->setRange(2,150);
+  oRBox->setDecimals(3);
+  oRBox->setRange(0.1,150);
   oRBox->setValue(40);
 
   search->addWidget(bottomLevel, 0,0);
@@ -1099,8 +1099,8 @@ CenterPanel::CenterPanel()
 
   QLabel *influenceRadius = new QLabel(tr("Radius of Influence (km)"));
   influenceBox = new QDoubleSpinBox;
-  influenceBox->setDecimals(1);
-  influenceBox->setRange(2,10);
+  influenceBox->setDecimals(3);
+  influenceBox->setRange(0.1,10);
   influenceBox->setValue(4);
 
   QLabel *convergence = new QLabel(tr("Convergence Requirements"));
@@ -1979,6 +1979,8 @@ VTDPanel::VTDPanel()
   reflectivityOptions = new QHash<QString, QString>;
   reflectivityOptions->insert(QString("DZ"),
 			      QString("DZ"));
+  reflectivityOptions->insert(QString("DM"),
+							  QString("DM"));
   reflectivityOptions->insert(QString("Select Reflectivity"),
 			      QString(""));
   // Add additional options here
@@ -1993,6 +1995,8 @@ VTDPanel::VTDPanel()
   QLabel *velocity = new QLabel(tr("Velocity"));
   velocityOptions = new QHash<QString, QString>;
   velocityOptions->insert(QString("VE"), QString("VE"));
+  velocityOptions->insert(QString("VG"), QString("VG"));
+  velocityOptions->insert(QString("VR"), QString("VR"));
   velocityOptions->insert(QString("Select Velocity"),
 			  QString(""));
   // Add additional options here
@@ -2018,13 +2022,13 @@ VTDPanel::VTDPanel()
   tLBox->setValue(3);
   QLabel *innerRad = new QLabel(tr("Inner Radius (km)"));
   iRBox = new QDoubleSpinBox;
-  iRBox->setDecimals(2);
-  iRBox->setRange(1,100);
+  iRBox->setDecimals(3);
+  iRBox->setRange(0.05,100);
   iRBox->setValue(3);
   QLabel *outerRad = new QLabel(tr("Outer Radius (km)"));
   oRBox = new QDoubleSpinBox;
-  oRBox->setDecimals(2);
-  oRBox->setRange(2,150);
+  oRBox->setDecimals(3);
+  oRBox->setRange(.1,150);
   oRBox->setValue(80);
   search->addWidget(bottomLevel, 0,0);
   search->addWidget(bLBox, 0, 1);

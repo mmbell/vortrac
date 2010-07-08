@@ -224,6 +224,7 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
   // Paint the image and the legend onto this wigit
 
   QPainter painter(this);
+  painter.setRenderHint(QPainter::Antialiasing);
   backColor = painter.background().color();
   //Message::toScreen("background Color r = "+QString().setNum(backColor.red())+" g = "+QString().setNum(backColor.green())+" b = "+QString().setNum(backColor.blue()));
   imageHolder.lock();
