@@ -194,15 +194,15 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
   bool abort = returnExitNow();
   
   // Calculate radius of influence
-  float hROI = 1.0;
-  //float vROI = 2.0;
+  float hROI = 2.0;
+  float vROI = 2.0;
   float xRadius = (iGridsp * iGridsp) * (hROI*hROI);
   float yRadius = (jGridsp * jGridsp) * (hROI*hROI);
-  //float zRadius = (kGridsp * kGridsp) * (vROI*vROI);
-	float RSquare = xRadius + yRadius; // + zRadius;
+  float zRadius = (kGridsp * kGridsp) * (vROI*vROI);
+  float RSquare = xRadius + yRadius + zRadius;
   int maxIplus = (int)(RSquare/iGridsp);
   int maxJplus = (int)(RSquare/jGridsp);
-  //int maxKplus = (int)(RSquare/kGridsp);
+  int maxKplus = (int)(RSquare/kGridsp);
   
   // Initialize weights
   for (int k = 0; k < int(kDim); k++) { 
@@ -265,37 +265,36 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 			  float i = (x - xmin)/iGridsp;
 			  float j = (y - ymin)/jGridsp;
 			  float k = (z - zmin)/kGridsp;
-			  float RSquareLinear = RSquare;; //*range*range / 30276.0;
-			  //for (int kplus = -maxKplus; kplus <= maxKplus; kplus++) { 
+			  float RSquareLinear = RSquare; //*range*range / 30276.0;
+			  for (int kplus = -maxKplus; kplus <= maxKplus; kplus++) { 
 				  for (int jplus = -maxJplus; jplus <= maxJplus; jplus++) {
 					  for (int iplus = -maxIplus; iplus <= maxIplus; iplus++) {
 						  int iIndex = (int)(i+iplus);
 						  int jIndex = (int)(j+jplus);
-						  //int kIndex = (int)(k+kplus);
-						  // Hard-code single level only
-						  int kIndex = 0;
+						  int kIndex = (int)(k+kplus);
+
 						  if ((iIndex < 0) or (iIndex > (int)iDim)) { continue; }
 						  if ((jIndex < 0) or (jIndex > (int)jDim)) { continue; }
 						  if ((kIndex < 0) or (kIndex > (int)kDim)) { continue; }
 							  
 						  float dx = (i - (int)(i+iplus))*iGridsp;
 						  float dy = (j - (int)(j+jplus))*jGridsp;
-						  //float dz = (k - (int)(k+kplus))*kGridsp;
-						  float rSquare = (dx*dx) + (dy*dy); // + (dz*dz);
+						  float dz = (k - (int)(k+kplus))*kGridsp;
+						  float rSquare = (dx*dx) + (dy*dy) + (dz*dz);
 						  if (rSquare > RSquareLinear) { continue; }
 						  float weight = (RSquareLinear - rSquare) / (RSquareLinear + rSquare);
 						  refValues[iIndex][jIndex][kIndex].weight += weight;
 						  refValues[iIndex][jIndex][kIndex].sumRef += weight*refData[g];
 					  }
 				  }
-			  //}
+			  }
 		  } 
 		  
 	  }
-	  if ((currentRay->getVel_numgates() > 0)
+	  if (currentRay->getVel_numgates() > 0) {
 		  // Just grab the lowest elevation sweeps
 		  //and (currentRay->getElevation() < 0.75)) {
-		  and (fabs(currentRay->getNyquist_vel() - maxNyquist) < 0.1)) {
+		  //and (fabs(currentRay->getNyquist_vel() - maxNyquist) < 0.1)) {
 		  float* velData = currentRay->getVelData();
 		  float* swData = currentRay->getSwData();
 		  float nyquist = currentRay->getNyquist_vel();
@@ -316,27 +315,28 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 			  // Looks like a good point, find its closest Cartesian index 
 			  float i = (x - xmin)/iGridsp;
 			  float j = (y - ymin)/jGridsp;
+			  float k = (z - zmin)/kGridsp;
 			  float RSquareLinear = RSquare; //* range*range / 30276.0;
-			  for (int jplus = -maxJplus; jplus <= maxJplus; jplus++) {
-				  for (int iplus = -maxIplus; iplus <= maxIplus; iplus++) {
-					  int iIndex = (int)(i+iplus);
-					  int jIndex = (int)(j+jplus);
-					  //int kIndex = (int)(k+kplus);
-					  // Hard-code single level only
-					  int kIndex = 0;
-					  if ((iIndex < 0) or (iIndex >= (int)iDim)) { continue; }
-					  if ((jIndex < 0) or (jIndex >= (int)jDim)) { continue; }
-					  if ((kIndex < 0) or (kIndex >= (int)kDim)) { continue; }
-					  
-					  float dx = (i - (int)(i+iplus))*iGridsp;
-					  float dy = (j - (int)(j+jplus))*jGridsp;
-					  //float dz = (k - (int)(k+kplus))*kGridsp;
-					  float rSquare = (dx*dx) + (dy*dy); // + (dz*dz);
-					  if (rSquare > RSquareLinear) { continue; }
-					  float weight = (100*nyquist) *(RSquareLinear - rSquare) / (RSquareLinear + rSquare);
-					  velValues[iIndex][jIndex][kIndex].weight += weight;
-					  velValues[iIndex][jIndex][kIndex].sumVel += weight*velData[g];
-					  velValues[iIndex][jIndex][kIndex].sumSw += weight*swData[g];
+			  for (int kplus = -maxKplus; kplus <= maxKplus; kplus++) {
+				  for (int jplus = -maxJplus; jplus <= maxJplus; jplus++) {
+					  for (int iplus = -maxIplus; iplus <= maxIplus; iplus++) {
+						  int iIndex = (int)(i+iplus);
+						  int jIndex = (int)(j+jplus);
+						  int kIndex = (int)(k+kplus);
+						  if ((iIndex < 0) or (iIndex >= (int)iDim)) { continue; }
+						  if ((jIndex < 0) or (jIndex >= (int)jDim)) { continue; }
+						  if ((kIndex < 0) or (kIndex >= (int)kDim)) { continue; }
+						  
+						  float dx = (i - (int)(i+iplus))*iGridsp;
+						  float dy = (j - (int)(j+jplus))*jGridsp;
+						  float dz = (k - (int)(k+kplus))*kGridsp;
+						  float rSquare = (dx*dx) + (dy*dy)+ (dz*dz);
+						  if (rSquare > RSquareLinear) { continue; }
+						  float weight = (100*nyquist) *(RSquareLinear - rSquare) / (RSquareLinear + rSquare);
+						  velValues[iIndex][jIndex][kIndex].weight += weight;
+						  velValues[iIndex][jIndex][kIndex].sumVel += weight*velData[g];
+						  velValues[iIndex][jIndex][kIndex].sumSw += weight*swData[g];
+					  }
 				  }
 			  }
 		  }			  
@@ -417,59 +417,62 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 					// Looks like a good point, find its closest Cartesian index 
 					float i = (x - xmin)/iGridsp;
 					float j = (y - ymin)/jGridsp;
+					float k = (z - zmin)/kGridsp;
 					float RSquareLinear = RSquare; //* range*range / 30276.0;
-					for (int jplus = -maxJplus; jplus <= maxJplus; jplus++) {
-						for (int iplus = -maxIplus; iplus <= maxIplus; iplus++) {
-							int iIndex = (int)(i+iplus);
-							int jIndex = (int)(j+jplus);
-							//int kIndex = (int)(k+kplus);
-							// Hard-code single level only
-							int kIndex = 0;
-							if ((iIndex < 0) or (iIndex >= (int)iDim)) { continue; }
-							if ((jIndex < 0) or (jIndex >= (int)jDim)) { continue; }
-							if ((kIndex < 0) or (kIndex >= (int)kDim)) { continue; }
-							
-							float dx = (i - (int)(i+iplus))*iGridsp;
-							float dy = (j - (int)(j+jplus))*jGridsp;
-							float rSquare = (dx*dx) + (dy*dy); // + (dz*dz);
-							if (rSquare > RSquareLinear) { continue; }
-							float avgCappi = 0;
-							float quadcount = 0;
-							for (int quadi = iIndex-localArea; quadi <= iIndex+localArea; quadi++) {
-								for (int quadj = jIndex-localArea; quadj <= jIndex+localArea; quadj++) {
-									if ((quadi < 0) or (quadi >= (int)iDim)) { continue; }
-									if ((quadj < 0) or (quadj >= (int)jDim)) { continue; }
-									if (dataGrid[1][quadi][quadj][kIndex] != -999) {
-										avgCappi += dataGrid[1][quadi][quadj][kIndex];
-										quadcount++;
-									}
-								}
-							}
-							int minfold = 0;
-							if (quadcount != 0) { // Need at least one seed from the higher nyquist, otherwise use original
-								avgCappi /= quadcount;
-								float velDiff = velData[g] - avgCappi;
-								if (fabs(velDiff) > nyquist) {
-									// Potential folding problem
-									float mindiff = 999999;							
-									for (int fold=-2; fold <=2; fold++) {
-										velDiff = velData[g]+2*fold*nyquist - avgCappi;
-										if (fabs(velDiff) < mindiff) {
-											mindiff = fabs(velDiff);
-											minfold = fold;
+					for (int kplus = -maxKplus; kplus <= maxKplus; kplus++) {
+						for (int jplus = -maxJplus; jplus <= maxJplus; jplus++) {
+							for (int iplus = -maxIplus; iplus <= maxIplus; iplus++) {
+								int iIndex = (int)(i+iplus);
+								int jIndex = (int)(j+jplus);
+								//int kIndex = (int)(k+kplus);
+								// Hard-code single level only
+								int kIndex = 0;
+								if ((iIndex < 0) or (iIndex >= (int)iDim)) { continue; }
+								if ((jIndex < 0) or (jIndex >= (int)jDim)) { continue; }
+								if ((kIndex < 0) or (kIndex >= (int)kDim)) { continue; }
+								
+								float dx = (i - (int)(i+iplus))*iGridsp;
+								float dy = (j - (int)(j+jplus))*jGridsp;
+								float dz = (k - (int)(k+kplus))*kGridsp;
+								float rSquare = (dx*dx) + (dy*dy)+ (dz*dz);
+								if (rSquare > RSquareLinear) { continue; }
+								float avgCappi = 0;
+								float quadcount = 0;
+								for (int quadi = iIndex-localArea; quadi <= iIndex+localArea; quadi++) {
+									for (int quadj = jIndex-localArea; quadj <= jIndex+localArea; quadj++) {
+										if ((quadi < 0) or (quadi >= (int)iDim)) { continue; }
+										if ((quadj < 0) or (quadj >= (int)jDim)) { continue; }
+										if (dataGrid[1][quadi][quadj][kIndex] != -999) {
+											avgCappi += dataGrid[1][quadi][quadj][kIndex];
+											quadcount++;
 										}
 									}
 								}
+								int minfold = 0;
+								if (quadcount != 0) { // Need at least one seed from the higher nyquist, otherwise use original
+									avgCappi /= quadcount;
+									float velDiff = velData[g] - avgCappi;
+									if (fabs(velDiff) > nyquist) {
+										// Potential folding problem
+										float mindiff = 999999;							
+										for (int fold=-2; fold <=2; fold++) {
+											velDiff = velData[g]+2*fold*nyquist - avgCappi;
+											if (fabs(velDiff) < mindiff) {
+												mindiff = fabs(velDiff);
+												minfold = fold;
+											}
+										}
+									}
+								}
+								velData[g] += 2*minfold*nyquist;
+								float newVel = velData[g];
+								float weight = (100*nyquist) * (RSquareLinear - rSquare) / (RSquareLinear + rSquare);
+								velValues[iIndex][jIndex][kIndex].weight += weight;
+								velValues[iIndex][jIndex][kIndex].sumVel += weight*newVel;
 							}
-							velData[g] += 2*minfold*nyquist;
-							float newVel = velData[g];
-							float weight = (100*nyquist) * (RSquareLinear - rSquare) / (RSquareLinear + rSquare);
-							velValues[iIndex][jIndex][kIndex].weight += weight;
-							velValues[iIndex][jIndex][kIndex].sumVel += weight*newVel;
 						}
-					}
-				}			  
-				
+					}			  
+				}
 				velData = NULL;
 				swData = NULL;
 				//delete velData;
