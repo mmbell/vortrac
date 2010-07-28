@@ -115,7 +115,7 @@ bool Matrix::lls(const int &numCoeff,const long &numData,
   //printMatrix(BB, numCoeff, 1);
   
   /* 
-  Message::toScreen("CHECK: coeff[0] = "+QString().setNum(coeff[0])+" coeff[1] = "
+  Message::toScreen("Check: coeff[0] = "+QString().setNum(coeff[0])+" coeff[1] = "
 		 +QString().setNum(coeff[1])+" coeff[2] = "
 		 +QString().setNum(coeff[2]));
   Message::toScreen("     : BB[0][0] = "+QString().setNum(BB[0][0])+" BB[1][0] = "
@@ -146,6 +146,7 @@ bool Matrix::lls(const int &numCoeff,const long &numData,
   else
     stDeviation = sqrt(sum);
 
+
   // Added this to avoid getting bad numbers, don't know if it is statistically
   // correct, made note of it and will check later - LM (Aug 13)
   
@@ -154,6 +155,10 @@ bool Matrix::lls(const int &numCoeff,const long &numData,
   for(int i = 0; i < numCoeff; i++) {
     stError[i] = stDeviation*sqrt(fabs(Ainv[i][i]));
   }
+
+  /* Message::toScreen("Std Dev: "+QString().setNum(stDeviation)
+		    +" VTCO: "+QString().setNum(coeff[1])
+		    +" VTC0 Error: "+QString().setNum(stError[1])); */
 
   // Clean up
    for(int row = 0; row < numCoeff; row++) {

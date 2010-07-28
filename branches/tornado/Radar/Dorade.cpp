@@ -521,11 +521,12 @@ bool Dorade::sweepread(const char swp_fname[],struct sswb_info *ssptr, struct vo
 		printf("Can't open %s\n",swp_fname);
 		return false;
 	}
-	
+        //desc_len=read_long(fp);	
 	while ( !feof(fp) ) {
 		
 		/* READ THE DESCRIPTOR IDENTIFIER */
 		//printf ("at %d\n",ftell(fp));
+                //desc_len=read_long(fp);
 		if ( (fread(identifier,sizeof(char),IDENT_LEN,fp)) != IDENT_LEN) {
 			printf("sweep file read error..can't read identifier\n");
 			return false;
@@ -651,7 +652,7 @@ bool Dorade::sweepread(const char swp_fname[],struct sswb_info *ssptr, struct vo
 		} else {
 			skip_bytes(fp,desc_len-(IDENT_LEN+sizeof(long)));
 		} /* endif */
-
+                //desc_len=read_long(fp);
 	} /* endwhile */
 
 	fclose(fp);
@@ -1212,8 +1213,8 @@ void Dorade::read_rdat(FILE *fp,int fld_num,
 	int datasize,arrsize;
 	datasize = arrsize = 0;
 	char tempname[PARM_NAME_LEN];
-	QString ref_fld = "DM";
-	QString vel_fld = "VE";
+	QString ref_fld = "DZ";
+	QString vel_fld = "VR";
 	QString sw_fld =  "SW";
 	memset(rdat->parm_name,' ',PARM_NAME_LEN);
 	memset(tempname,' ',PARM_NAME_LEN);

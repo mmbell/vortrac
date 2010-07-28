@@ -597,8 +597,8 @@ CappiPanel::CappiPanel()
   yDimBox->setValue(150);
   zDimBox = new QDoubleSpinBox;
   zDimBox->setDecimals(1);
-  zDimBox->setRange(1,1);
-  zDimBox->setValue(3);
+  zDimBox->setRange(1,20);
+  zDimBox->setValue(1);
 
   QLabel *xGrid = new QLabel(tr("X Grid Spacing (km)"));
   xGridBox = new QDoubleSpinBox;

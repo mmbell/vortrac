@@ -296,6 +296,7 @@ bool RadarFactory::hasUnprocessedData()
 				timestamp[1].remove(0,1);
 			}
 			fileDate = QDate::fromString(timestamp.at(1).left(6), "yyMMdd");
+			if (fileDate.year() < 1950) fileDate = fileDate.addYears(100);
 			fileTime = QTime::fromString(timestamp.at(1).right(6), "hhmmss");
 			QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
 			QString datetimeString = fileDateTime.toString(Qt::ISODate);

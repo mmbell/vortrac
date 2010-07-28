@@ -39,6 +39,8 @@ HEADERS += Threads/AnalysisThread.h \
            HVVP/Hvvp.h \
            IO/Message.h \
            IO/Log.h \
+           Radar/Dorade.h \
+           Radar/read_dorade.h \
            Radar/RadarFactory.h \
            Radar/LevelII.h \
            Radar/NcdcLevelII.h \
@@ -90,6 +92,7 @@ SOURCES += main.cpp \
            HVVP/Hvvp.cpp \
            IO/Message.cpp \
            IO/Log.cpp \
+           Radar/Dorade.cpp \
            Radar/RadarFactory.cpp \
            Radar/LevelII.cpp \
            Radar/NcdcLevelII.cpp \

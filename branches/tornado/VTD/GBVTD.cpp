@@ -140,6 +140,18 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
 			return false;
 		}
 		
+                // Check the standard deviation of the fit for at most 25% of the VTC0 Magnitude
+		if (vtdStdDev > 3.) {
+		  /* Message::toScreen("Std Dev: "+QString().setNum(vtdStdDev)
+				    +" VTCO: "+QString().setNum(FourierCoeffs[1])
+				    +" VTC0 Error: "+QString().setNum(stdError[1]));*/
+		  // Too much missing data, set everything to 0 and return
+		  for (int i=0; i<=(maxWavenumber*2 + 2); i++) {
+		    // Message::toScreen(QString().setNum(FourierCoeffs[i]));
+		    FourierCoeffs[i] = 0.;
+		  }
+		}
+
 		// Convert Fourier coefficients into wind coefficients
 		setWindCoefficients(radius, height, numCoeffs, FourierCoeffs, vtdCoeffs);
 		for (int i = 0; i<=numCoeffs-1; i++) 
