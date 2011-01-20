@@ -743,7 +743,7 @@ float SimplexThread::simplexTest(float**& vertex,float*& VT,float*& vertexSum,
 }
 
 
-bool SimplexThread::calcHVVP(float& lat, float& lon)
+bool SimplexThread::calcHVVP(double lat, double lon)
 {
   // Get environmental wind
   /*

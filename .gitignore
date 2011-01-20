@@ -1,0 +1,9 @@
+build/*
+libs/*
+vortrac.xcodeproj/*
+moc_*
+qrc_*
+Info.plist
+.svn
+.DS_Store
+profile
