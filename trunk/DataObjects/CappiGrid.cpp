@@ -292,7 +292,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 	  } */
 	  if ((currentRay->getVel_numgates() > 0)
 		  // Just grab the lowest elevation sweeps
-		  //and (currentRay->getElevation() < 0.75)
+		  //and (currentRay->getElevation() < 0.75)) {
 		  and (fabs(currentRay->getNyquist_vel() - maxNyquist) < 0.1)) {
 		  float* velData = currentRay->getVelData();
 		  float* swData = currentRay->getSwData();

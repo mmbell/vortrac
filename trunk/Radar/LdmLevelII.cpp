@@ -75,11 +75,36 @@ bool LdmLevelII::readVolume()
 			  // Uncompress worked!
 			  break;
 		  } else {
-			  Message::report("Error uncompressing LDM Level II block");
+			  /* Some other error, but log functionality not currently available in this class
+			  if (error == BZ_CONFIG_ERROR)
+				  emit log(Message(QString("The BZ2 library has been miscompiled"),0,
+							   this->objectName(),Red,QString("Error reading Level II File")));
+			  if (error == BZ_PARAM_ERROR)
+				  emit log(Message(QString("Parameter Error in BZ2 Decompression"),0,
+							   this->objectName(),Yellow,QString("Error reading Level II File")));
+			  if (error == BZ_MEM_ERROR)
+				  emit log(Message(QString("Insufficient memory for BZ2 Decompression"),0,
+								   this->objectName(),Red,QString("Error reading Level II File")));
+			  if (error == BZ_DATA_ERROR)
+				  emit log(Message(QString("Compressed data exceeds destLen in BZ2 unzip"),0,
+								   this->objectName(),Yellow,QString("Error reading Level II File")));
+			  if (error == BZ_DATA_ERROR_MAGIC)
+				  emit log(Message(QString("Compressed data doesn't begin with right magic bytes"),0,
+								   this->objectName(),Yellow,QString("Error reading Level II File")));
+			  if (error == BZ_UNEXPECTED_EOF)
+				  emit log(Message(QString("Compressded data ended unexpectedly"),0,
+								   this->objectName(),Yellow,QString("Error reading Level II File")));
+			  */
+			  break;
 		  }
 	  }	
-
 	  delete[] compressed;
+	  if (error) {
+		  // Didn't uncompress the data properly
+		  delete[] uncompressed;
+		  continue;
+	  }
+	  
 	  recNum++;
 	  // Skip the metadata at the beginning
 	  if ((recNum == 1) and (uncompSize == 325888)) { continue; }
