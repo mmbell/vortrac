@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<vortrac xmnls = 'http://www.eol.ucar.edu/ns/vortrac'>
- <pressure>
-	<name>TC_Name</name>
-	<radar>Radar_Name</radar>
-        <product>GBVTD</product>
- </pressure>
-</vortrac>
