@@ -149,11 +149,11 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,
   //Message::toScreen("Using "+interpolation+" interpolation ");
   if (interpolation == "cressman") {
     CressmanInterpolation(radarData);
-  }
-   /* else if (interpolation == "barnes") {
-    BarnesInterpolation();
   }  else if (interpolation == "closestpoint") {
-	  ClosestPointInterpolation();
+	  ClosestPointInterpolation(radarData);
+  } /*
+   else if (interpolation == "barnes") {
+   BarnesInterpolation(); 
   } else if (interpolation == "bilinear") {
 	  BilinearInterpolation(radarData);
   } */
@@ -194,8 +194,8 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
   bool abort = returnExitNow();
   
   // Calculate radius of influence
-  float hROI = 2.0;
-  float vROI = 2.0;
+  float hROI = 1.25;
+  float vROI = 1.;
   float xRadius = (iGridsp * iGridsp) * (hROI*hROI);
   float yRadius = (jGridsp * jGridsp) * (hROI*hROI);
   float zRadius = (kGridsp * kGridsp) * (vROI*vROI);
@@ -386,7 +386,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 		}
 	}
 	
-	int maxfoldpasses = 1;
+	int maxfoldpasses = -1;
 	int localArea = 10;
 	for (int foldpass = 0; foldpass < maxfoldpasses; foldpass++) {
 		// Find good values
@@ -591,7 +591,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 		}
 	}
 	
-	// Smooth local outliers
+	/* Smooth local outliers
 	for (int k = 0; k < int(kDim); k++) { 
 		// float sumtexture = 0;
 		// float maxtexture = 0;
@@ -635,7 +635,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 				}
 			}
 		}
-	}
+	} */
 
 	/* Remove global outliers
 	for (int k = 0; k < int(kDim); k++) { 
@@ -732,8 +732,8 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 
 	
 }
-/*
-void CappiGrid::ClosestPointInterpolation()
+
+void CappiGrid::ClosestPointInterpolation(RadarData *radarData)
 {
 	
 	// Closest Point Interpolation
@@ -742,7 +742,7 @@ void CappiGrid::ClosestPointInterpolation()
 	float xRadius = (iGridsp * iGridsp);
 	float yRadius = (jGridsp * jGridsp);
 	float zRadius = (kGridsp * kGridsp);
-	float gridsp = xRadius + yRadius + zRadius;	
+	float gridsp = xRadius + yRadius; // + zRadius;	
 	
 	// Create local abort variable
 	bool abort = returnExitNow();
@@ -751,7 +751,6 @@ void CappiGrid::ClosestPointInterpolation()
 		for (int j = 0; j < int(jDim); j++) {
 			abort = returnExitNow();
 			if(abort){
-				//Message::toScreen("ExitNow in Cressmand Interpolation in CappiGrid");
 				return;
 			}
 			for (int i = 0; i < int(iDim); i++) {
@@ -761,46 +760,78 @@ void CappiGrid::ClosestPointInterpolation()
 				dataGrid[2][i][j][k] = -999.;
 				
 				float minR = sqrt(iDim*iGridsp*iDim*iGridsp + jDim*jGridsp*jDim*jGridsp);
-
-				for (long n = 0; n <= maxRefIndex; n++) {
-					float dx = refValues[n].x - (xmin + i*iGridsp);
-					float dy = refValues[n].y - (ymin + j*jGridsp);
-					float dz = refValues[n].z - (zmin + k*kGridsp);
-					float r = sqrt((dx*dx) + (dy*dy) + (dz*dz));
-					if (r > gridsp) { continue; }
-					if (r < minR) {
-						minR = r;
-						dataGrid[0][i][j][k] = refValues[n].refValue;
-					}
-					if (minR < gridsp/10) {
-						// Close enough
-						break;
-					}
-				}
-				
-				minR = sqrt(iDim*iGridsp*iDim*iGridsp + jDim*jGridsp*jDim*jGridsp);
-				for (long n = 0; n <= maxVelIndex; n++) {
-					float dx = velValues[n].x - (xmin + i*iGridsp);
-					float dy = velValues[n].y - (ymin + j*jGridsp);
-					float dz = velValues[n].z - (zmin + k*kGridsp);
-					float r = sqrt((dx*dx) + (dy*dy) + (dz*dz));
-					if (r > gridsp) { continue; }
-					if (r < minR) {
-						minR = r;
-						dataGrid[1][i][j][k] = velValues[n].velValue;
-						dataGrid[2][i][j][k] = velValues[n].swValue;
-					}
-					if (minR < gridsp/3) {
-						// Close enough
-						break;
+				for (int n = 0; n < radarData->getNumRays(); n++) {
+					Ray* currentRay = radarData->getRay(n);
+					float theta = deg2rad * fmodf((450. - currentRay->getAzimuth()),360.);
+					float phi = deg2rad * (90. - (currentRay->getElevation()));
+							
+					float* refData = currentRay->getRefData();
+					for (int g = 0; g <= (currentRay->getRef_numgates()-1); g++) {
+						if (refData[g] == -999.) { continue; }
+						float range = float(currentRay->getFirst_ref_gate() +
+											(g * currentRay->getRef_gatesp()))/1000.;
+						
+						float x = range*sin(phi)*cos(theta);
+						if ((x < (xmin - iGridsp)) or x > (xmax + iGridsp)) { continue; }
+						float y = range*sin(phi)*sin(theta);
+						if ((y < (ymin - jGridsp)) or y > (ymax + jGridsp)) { continue; }
+						float z = radarData->radarBeamHeight(range,
+															 currentRay->getElevation() );
+						//if ((z < (zmin - kGridsp)) or z > (zmax + kGridsp)) { continue; }
+						
+						float dx = x - (xmin + i*iGridsp);
+						float dy = y - (ymin + j*jGridsp);
+						float dz = z - (zmin + k*kGridsp);
+						float r = sqrt((dx*dx) + (dy*dy)) ; //+ (dz*dz));
+						if (r > gridsp) { continue; }
+						if (r < minR) {
+							minR = r;
+							dataGrid[0][i][j][k] = refData[g];
+						}
+						if (minR < gridsp/10) {
+							// Close enough
+							break;
+						}
 					}
 					
+					minR = sqrt(iDim*iGridsp*iDim*iGridsp + jDim*jGridsp*jDim*jGridsp);
+					float* velData = currentRay->getVelData();
+					float* swData = currentRay->getSwData();
+					for (int g = 0; g <= (currentRay->getVel_numgates()-1); g++) {
+						if (velData[g] == -999.) { continue; }
+						float range = float(currentRay->getFirst_vel_gate() +
+											(g * currentRay->getVel_gatesp()))/1000.;
+						
+						float x = range*sin(phi)*cos(theta);
+						if ((x < (xmin - iGridsp)) or x > (xmax + iGridsp)) { continue; }
+						float y = range*sin(phi)*sin(theta);
+						if ((y < (ymin - jGridsp)) or y > (ymax + jGridsp)) { continue; }
+						float z = radarData->radarBeamHeight(range,
+															 currentRay->getElevation() );
+						if ((z < (zmin - kGridsp)) or z > (zmax + kGridsp)) { continue; }
+						
+						float dx = x - (xmin + i*iGridsp);
+						float dy = y - (ymin + j*jGridsp);
+						float dz = z - (zmin + k*kGridsp);
+						float r = sqrt((dx*dx) + (dy*dy) + (dz*dz));
+						if (r > gridsp) { continue; }
+						if (r < minR) {
+							minR = r;
+							dataGrid[1][i][j][k] = velData[g];
+							dataGrid[2][i][j][k] = swData[g];
+						}
+						if (minR < gridsp/10) {
+							// Close enough
+							break;
+						}
+					}
 				}
 			}
 		}
 	}
 }
 
+/*
 void CappiGrid::BilinearInterpolation(RadarData *radarData)
 {
 	

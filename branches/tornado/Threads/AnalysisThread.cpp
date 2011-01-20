@@ -522,11 +522,11 @@ void AnalysisThread::run()
 		  
 		}
 		
+		if(abort)
+			return;   
+		   
 		emit log(Message("Done with Cappi",15,this->objectName()));
 
-		if(abort)
-		  return;
-		
 		// Pass Cappi to display
 		emit newCappi(gridData);
 		//emit newCappiInfo(.3,.3,.1,.2,.3);

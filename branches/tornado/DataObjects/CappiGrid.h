@@ -26,7 +26,7 @@ class CappiGrid : public GriddedData
 		float *vortexLat, float *vortexLon);
   //void BarnesInterpolation();
   void CressmanInterpolation(RadarData *radarData);
-  //void ClosestPointInterpolation();
+  void ClosestPointInterpolation(RadarData *radarData);
   //void BilinearInterpolation(RadarData *radarData);
   float trilinear(const float &x, const float &y,
 		 const float &z, const int &param);
