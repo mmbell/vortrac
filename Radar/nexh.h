@@ -94,7 +94,7 @@
 # define          NEX_RAW_VALS 0x0020
 # define     NEX_NCDC_BLOCKING 0x0040
 
-
+#pragma pack(4)
 struct nexrad_id_rec {          /* "ARCHIVE2" */
     char filename[8];
 };
@@ -102,8 +102,8 @@ struct nexrad_id_rec {          /* "ARCHIVE2" */
 struct nexrad_vol_scan_title {  /* "ARCHIVE2.001,..." */
     char filename[9];
     char extension[3];
-    long julian_date;           /* from 1/1/70 */
-    long milliseconds_past_midnight;
+    int julian_date;           /* from 1/1/70 */
+    int milliseconds_past_midnight;
     char radarid[4];
 };
 
@@ -122,7 +122,7 @@ struct nexrad_message_header {
     unsigned char message_type;
     short seq_num;              /* mod 0x7fff */
     short julian_date;          /* from 1/1/70 */
-    long milliseconds_past_midnight;
+    int milliseconds_past_midnight;
     short num_message_segs;
     short message_seg_num;
 };
@@ -158,7 +158,7 @@ struct rda_status_info {
 };
 
 struct message_1_data_header {
-    long milliseconds_past_midnight; /* (15-16) */
+    int milliseconds_past_midnight; /* (15-16) */
     short julian_date;          /* (17) from 1/1/70 */
     short unamb_range_x10;      /* (18) km. */
     unsigned short azimuth;     /* (19) binary angle */
@@ -220,8 +220,8 @@ struct nexrad_field_header {
     short data_ptr;             /* byte count from start of drdh */
     short bytes_per_gate;
 
-    long scale;                 /* might contain an IEEE float */
-    long bias;                  /* might contain an IEEE float */
+    int scale;                 /* might contain an IEEE float */
+    int bias;                  /* might contain an IEEE float */
     short scale_mult;		/* = 0 => scale is IEEE float
 				 * otherwise the scale has been multiplied
 				 * by this number */
@@ -249,8 +249,8 @@ struct nexrad_extended_header {
 struct nexrad_xtra_volume_info { /* maps SUPPLEMENTAL_VOLUME_DATA */
 
     char station_name[8];
-    long deg_latitude_x100000;
-    long deg_longitude_x100000;
+    int deg_latitude_x100000;
+    int deg_longitude_x100000;
 
     short meters_altitude_msl;
     short frequency_mhz;
@@ -274,7 +274,7 @@ struct nexrad_prf_set {
 
 struct message_31_data_header {
 	char radar_id[4];
-	long milliseconds_past_midnight; 
+	int milliseconds_past_midnight; 
     short julian_date;          /* (17) from 1/1/70 */
     short azimuth_num;      /* (18) */
     float azimuth;     /* (19) binary angle */
@@ -289,15 +289,15 @@ struct message_31_data_header {
 	unsigned char spot_blanking_status;
 	unsigned char azimuth_index_mode;
 	short num_data_blocks;
-	long vol_ptr;
-	long elev_ptr;
-	long radial_ptr;
-    long ref_ptr;              /* (33) byte count from start of drdh */
-    long vel_ptr;              /* (34) byte count from start of drdh */
-    long sw_ptr;               /* (35) byte count from start of drdh */
-	long zdr_ptr;
-	long phi_ptr;
-	long rho_ptr;
+	int vol_ptr;
+	int elev_ptr;
+	int radial_ptr;
+    int ref_ptr;              /* (33) byte count from start of drdh */
+    int vel_ptr;              /* (34) byte count from start of drdh */
+    int sw_ptr;               /* (35) byte count from start of drdh */
+	int zdr_ptr;
+	int phi_ptr;
+	int rho_ptr;
 };
 
 struct volume_data_block {
@@ -330,7 +330,7 @@ struct radial_data_block {
 
 struct moment_data_block {
 	char block_type[4];
-	long reserved;
+	int reserved;
 	short num_gates;
 	short gate1;
 	short gate_width;
@@ -338,8 +338,8 @@ struct moment_data_block {
 	short snr_threshold;
 	unsigned char control_flags;
 	unsigned char word_size;
-	long scale;
-	long doffset;
+	int scale;
+	int doffset;
 };
 
 # ifndef S100
@@ -457,3 +457,4 @@ struct nexrad_VCP_header {
     struct nexrad_VCP_items *swp_info;
     struct nexrad_VCP_header *next;
 };
+#pragma pack()
