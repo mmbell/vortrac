@@ -17,8 +17,6 @@
 #include <QDomElement>
 #include <QQueue>
 #include <QHash>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
 #include "Radar/RadarData.h"
 #include "Radar/LevelII.h"
 #include "Radar/NcdcLevelII.h"
@@ -39,14 +37,10 @@ class RadarFactory : public QObject
   RadarData* getUnprocessedData();
   bool hasUnprocessedData();
   int getNumProcessed() const;
-  void fetchRemoteData();
-
+  
  public slots:
    void catchLog(const Message& message);
    void updateDataQueue(const VortexList* list);
-   bool getRemoteData(QNetworkReply *catalog_reply);
-   bool saveRemoteData(QNetworkReply *datafile_reply);
-
  signals:
    void log(const Message& message);
 
@@ -71,9 +65,6 @@ class RadarFactory : public QObject
   QHash<QString, bool> fileAnalyzed;
   QDateTime radarDateTime;
   Configuration* mainConfig;
-  QNetworkAccessManager catalog_manager;
-  QNetworkAccessManager datafile_manager;
-
 };
   
 

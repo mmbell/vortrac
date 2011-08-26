@@ -9,11 +9,8 @@
  */
 
 #include "RadarFactory.h"
-#include "thredds_Config.h"
 #include <iostream>
 #include <QPushButton>
-#include <QUrl>
-#include <QNetworkRequest>
 
 RadarFactory::RadarFactory(Configuration* radarConfig, QObject *parent)
   : QObject(parent)
@@ -59,12 +56,6 @@ RadarFactory::RadarFactory(Configuration* radarConfig, QObject *parent)
     // Will implement more later but give error for now
     emit log(Message("Data format not supported"));
   }
-
-  // Connect the signals and slots
-  connect(&catalog_manager, SIGNAL(finished(QNetworkReply*)),
-	SLOT(getRemoteData(QNetworkReply*)));
-  connect(&datafile_manager, SIGNAL(finished(QNetworkReply*)),
-	SLOT(saveRemoteData(QNetworkReply*)));
 
 }
 
@@ -432,68 +423,5 @@ int RadarFactory::getNumProcessed() const
   // was simply too high to incorporate the analysis.
 
   return fileAnalyzed.keys(true).count();
-}
-
-void RadarFactory::fetchRemoteData()
-{
-	// Fetch the catalog of files
-	QString server = "http://shelf.rcac.purdue.edu:8080/thredds/";
-	QUrl catalog = QUrl(server + radarName + "/catalog.xml");
-	QNetworkRequest request(catalog);
-	catalog_manager.get(request);	
-}
-
-bool RadarFactory::getRemoteData(QNetworkReply *catalog_reply)
-{
-	QUrl url = catalog_reply->url();
-	if (catalog_reply->error()) {
-		emit log(Message(QString("Problem downloading THREDDS catalog"),0,this->objectName(),Yellow,QString("Problem with THREDDS")));
-	} else {
-		// Save then parse the file
-		QString filename("catalog.xml");
-		QFile file(filename);
-		if (!file.open(QIODevice::WriteOnly)) {
-			emit log(Message(QString("Problem saving THREDDS catalog"),0,this->objectName(),Yellow,QString("Problem with THREDDS")));
-			return false;
-		}
-		
-		file.write(catalog_reply->readAll());
-		file.close();
-		
-		thredds_Config* catalog = new thredds_Config(0, filename);
-		if (!catalog->validate()) return false;
-		
-		QDomElement dataset = catalog->getConfig("dataset");
-		QString datafile = catalog->getAttribute(dataset,"dataset", "name");
-
-		// Check to see if this file is already in the directory, or download it
-		if (!dataPath.exists(datafile)) {
-			QString dataurl = catalog->getAttribute(dataset,"dataset", "urlPath");
-			QString server = "http://shelf.rcac.purdue.edu:8080/thredds/fileServer/";
-			QUrl fileurl = QUrl(server + dataurl);
-			QNetworkRequest request(fileurl);
-			datafile_manager.get(request);
-		}
-	}
-	
-	catalog_reply->deleteLater();
-	return true;
-}
-
-bool RadarFactory::saveRemoteData(QNetworkReply *datafile_reply)
-{
-	QUrl url = datafile_reply->url();
-	QString path = url.path();
-	QString filename = QFileInfo(path).fileName();
-	QFile file(dataPath.absolutePath() + filename);
-	if (!file.open(QIODevice::WriteOnly)) {
-		emit log(Message(QString("Problem saving remote data"),0,this->objectName(),Yellow,QString("Problem with remote data")));
-		return false;
-	}
-	
-	file.write(datafile_reply->readAll());
-	file.close();
-	
-	return true;
 }
 

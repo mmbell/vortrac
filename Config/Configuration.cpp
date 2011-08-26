@@ -635,7 +635,7 @@ QString Configuration::findConfigNameStartsWith(const QString& name)
 bool Configuration::validate()
 {
 	//Basic check to see if this is really a configuration file
-	QDomElement root = domDoc.documentElement();
+	root = domDoc.documentElement();
 	if (root.tagName() != "vortrac") {
 		emit log(Message(QString("The file is not an VORTRAC configuration file."),0,this->objectName(),Red,QString("Not a VORTRAC file")));
 		return false;

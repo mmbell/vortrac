@@ -15,6 +15,8 @@
 #include <QWidget>
 #include <QTextEdit>
 #include <QFile>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 #include "Config/Configuration.h"
 #include "IO/Log.h"
 #include "ConfigTree.h"
@@ -47,7 +49,7 @@ class AnalysisPage : public QWidget
   void setVortexLabel();
   bool maybeSave();
   void saveDisplay();
-  
+	bool parseThredds(const QString &filename);
 
   GraphFace *getGraph() {return graph;}
   Log* getStatusLog(){ return statusLog;} 
@@ -89,7 +91,11 @@ class AnalysisPage : public QWidget
     void pollVortexUpdate(VortexList* list);
 	void popUpStatus();
 	void updateStatusLog(const QString& entry);
-
+	void fetchRemoteData();
+	bool getRemoteData();
+	bool saveRemoteData();
+	void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
+	
  protected:
   void closeEvent(QCloseEvent *event);
 
@@ -128,7 +134,12 @@ class AnalysisPage : public QWidget
   //  TestGraph *tester;
 
   bool analyticModel();
-
+	QNetworkAccessManager catalog_manager;
+	QNetworkAccessManager datafile_manager;
+	QNetworkReply* catalog_reply;
+	QNetworkReply* datafile_reply;
+	QStringList urlList;
+	
 };
 
 #endif

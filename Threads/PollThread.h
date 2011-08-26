@@ -38,6 +38,7 @@ class PollThread : public QThread
   public slots:
         void catchLog(const Message& message);
         void analysisDoneProcessing();
+	void remoteFileFetchDone();
 	void catchVCP(const int vcp);
 	void catchCappi(const GriddedData* cappi);
 	void catchCappiInfo(const float& x, const float& y, const float& rmwEstimate, const float& sMin,const float& sMax,
@@ -63,7 +64,8 @@ class PollThread : public QThread
 	bool runOnce;
 	bool processPressureData;
 	QWaitCondition waitForAnalysis;
-       	bool abort;
+	QWaitCondition waitForData;
+	bool abort;
 	bool continuePreviousRun;
 	RadarFactory *dataSource;
 	PressureFactory *pressureSource;

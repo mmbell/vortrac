@@ -130,6 +130,11 @@ void PollThread::analysisDoneProcessing()
   waitForAnalysis.wakeOne();
 }
 
+void PollThread::remoteFileFetchDone()
+{
+	waitForData.wakeOne();
+}
+
 void PollThread::run()
 {
 
@@ -138,7 +143,6 @@ void PollThread::run()
   dataSource = new RadarFactory(configData);
   connect(dataSource, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)));
-
   PressureFactory *pressureSource = new PressureFactory(configData);
   connect(pressureSource, SIGNAL(log(const Message&)),
 		  this, SLOT(catchLog(const Message&)));
@@ -325,8 +329,8 @@ void PollThread::run()
 			analysisThread, SLOT(foundWinds()),Qt::DirectConnection);
 	analysisThread->setSimplexThread(simplexThread);
 	analysisThread->setVortexThread(vortexThread);
-	
-	// Begin polling loop
+		
+	// Begin disk polling loop
 	forever {
 	  //Message::toScreen("PollThread: Begining Again In Forever");
 	  

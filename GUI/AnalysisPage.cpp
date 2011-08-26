@@ -10,8 +10,10 @@
  */
 
 #include <QtGui>
+#include <QtNetwork>
 #include "AnalysisPage.h"
 #include "Message.h"
+#include "thredds_Config.h"
 
 AnalysisPage::AnalysisPage(QWidget *parent)
   : QWidget(parent)
@@ -633,6 +635,12 @@ void AnalysisPage::runThread()
   
   pollThread->setContinuePreviousRun(continuePreviousRun);
 
+  // Try to fetch new radar data every 5 minutes
+  QTimer::singleShot(0, this, SLOT(fetchRemoteData()));
+  QTimer *fetchTimer = new QTimer(this);
+  connect(fetchTimer, SIGNAL(timeout()), this, SLOT(fetchRemoteData()));
+  fetchTimer->start(300000);
+	
   if(configData->getParam(configData->getConfig("radar"), "format")
      == QString("MODEL")){
     if(analyticModel()) {
@@ -891,3 +899,184 @@ void AnalysisPage::changeStormSignal(StormSignalStatus status,
   emit newStormSignalStatus(status, message);
 }
 */
+void AnalysisPage::fetchRemoteData()
+{
+	// Fetch the catalog of files
+	QString server = "http://shelf.rcac.purdue.edu:8080/thredds/";
+	QDomElement radar = configData->getConfig("radar");
+	QString radarName = configData->getParam(radar,"name");
+	QUrl catalog = QUrl(server + radarName + "/catalog.xml");
+	QString url = catalog.toString();
+	QNetworkRequest request(catalog);
+	catalog_reply = catalog_manager.get(request);
+	// Connect the signals and slots
+	connect(catalog_reply, SIGNAL(finished()), this,
+			SLOT(getRemoteData()));
+	//connect(catalog_reply, SIGNAL(downloadProgress(qint64,qint64)),
+	//		SLOT(downloadProgress(qint64,qint64)));
+	//while(catalog_reply->isRunning()) sleep (1);
+}
+
+bool AnalysisPage::getRemoteData()
+{
+	QUrl url = catalog_reply->url();
+	if (catalog_reply->error()) {
+		emit log(Message(QString("Problem downloading THREDDS catalog"),0,this->objectName(),Yellow,QString("Problem with THREDDS")));
+		return false;
+	}
+	// Save then parse the file
+	QDomElement radar = configData->getConfig("radar");
+	QString path = configData->getParam(radar,"dir");
+	QDir dataPath(path);		
+	QString filename(dataPath.absolutePath() + "/catalog.xml");
+	QFile file(filename);
+	if (!file.open(QIODevice::WriteOnly)) {
+		emit log(Message(QString("Problem saving THREDDS catalog"),0,this->objectName(),Yellow,QString("Problem with THREDDS")));
+		return false;
+	}
+	file.write(catalog_reply->readAll());
+	file.close();
+	catalog_reply->deleteLater();
+
+	if (!file.open(QIODevice::ReadOnly |  QIODevice::Text)) {
+		emit log(Message(QString("Error Opening Configuration File, Check Permissions on "+filename),0,this->objectName(),Red, QString("Check File Permissions")));
+		return false;
+	}
+	
+	// Clear the urlList
+	urlList.clear();
+	
+	QTextStream thredds(&file);
+	while (!thredds.atEnd()) {
+		QString line = thredds.readLine();
+		if (line.contains("urlPath")) {
+			QString url = line.right(25);
+			url.chop(2);
+			urlList << url;
+			if (urlList.size() == 1) {
+				break;
+			}
+		}
+	}
+	file.close();
+	
+	// Check to see if this file is already in the directory, or download it
+	for (int i = 0; i < urlList.size(); ++i) {
+		QString localfile = urlList.at(i);
+		localfile.remove(0,5);
+		if (!dataPath.exists(localfile)) {
+			QString dataurl = urlList.at(i);
+			QString server("http://shelf.rcac.purdue.edu:8080/thredds/fileServer/");
+			QString url = server + dataurl;
+			QUrl fileurl = QUrl(url);
+			QNetworkRequest request(fileurl);
+			datafile_reply = datafile_manager.get(request);
+			connect(datafile_reply, SIGNAL(finished()), this,
+					SLOT(saveRemoteData()));
+		}
+	}
+	
+	return true;
+}
+
+bool AnalysisPage::saveRemoteData()
+{
+	QUrl url = datafile_reply->url();
+	QString remotepath = url.path();
+	QString filename = QFileInfo(remotepath).fileName();
+	QDomElement radar = configData->getConfig("radar");
+	QString localpath = configData->getParam(radar,"dir");
+	QDir dataPath(localpath);
+	QFile file(dataPath.absolutePath() + "/" + filename);
+	if (!file.open(QIODevice::WriteOnly)) {
+		emit log(Message(QString("Problem saving remote data"),0,this->objectName(),Yellow,QString("Problem with remote data")));
+		return false;
+	}
+	
+	file.write(datafile_reply->readAll());
+	file.close();
+	datafile_reply->deleteLater();
+	//emit remoteFileSaved();
+	return true;
+}
+
+void AnalysisPage::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
+{
+	QString msg(bytesReceived + " bytes out of " + bytesTotal);
+	emit log(Message(msg,0,this->objectName()));
+}
+
+bool AnalysisPage::parseThredds(const QString &filename)
+{
+	// Clear the urlList
+	urlList.clear();
+
+	QFile file(filename);
+	if (!file.open(QIODevice::ReadOnly |  QIODevice::Text)) {
+		emit log(Message(QString("Error Opening Configuration File, Check Permissions on "+filename),0,this->objectName(),Red, QString("Check File Permissions")));
+		return false;
+	}
+	
+	QTextStream thredds(&file);
+	while (!thredds.atEnd()) {
+		QString line = thredds.readLine();
+		if (line.contains("urlPath")) {
+			QString url = line.right(20);
+			url.chop(2);
+			urlList << url;
+			if (urlList.size() == 5) {
+				file.close();
+				return true;
+			}
+		}
+	}
+	/* QString errorStr;
+	int errorLine;
+	int errorColumn;
+	
+	QDomDocument domDoc;
+	// Set the DOM document contents to those of the file
+	if (!domDoc.setContent(&file, true, &errorStr, &errorLine, &errorColumn)) {
+		QString errorReport = QString("XML Parse Error in "+filename+" at Line %1, Column %2:\n%3")
+		.arg(errorLine)
+		.arg(errorColumn)
+		.arg(errorStr);
+		emit log(Message(errorReport,0,this->objectName(),Yellow, QString("XML Parse Error")));
+		file.close();
+		return false;
+	}
+	file.close();
+	
+	QDomElement root = domDoc.documentElement();
+	if (root.tagName() != "catalog") {
+		emit log(Message(QString("The file is not an THREDDS configuration file."),0,this->objectName(),Yellow,QString("Not a THREDDS file")));
+		return false;
+		
+	}
+	
+	// Create a hash of indices and tag names
+	QDomNodeList groupList = root.childNodes();
+	for (int i = 0; i <= groupList.count()-1; i++) {
+		QDomNode currNode = groupList.item(i);
+		if (currNode.hasChildNodes()) {
+			QDomNodeList childList = currNode.childNodes();
+			for (int i = 0; i <= childList.count()-1; i++) {
+				QDomNode child = childList.item(i);
+				if (child.hasAttributes()) {
+					QDomNamedNodeMap map = child.attributes();
+					if (!map.namedItem("urlPath").isNull()) {
+						// We have a winner
+						QString url = child.toElement().attribute("urlPath");
+						urlList << url;
+						if (urlList.size() == 5) return true;
+					}
+				}
+			}
+		}
+	} */
+	file.close();
+	return false;
+}
+
+	
+
