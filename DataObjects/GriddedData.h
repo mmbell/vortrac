@@ -24,8 +24,8 @@ class GriddedData
   GriddedData();
   virtual ~GriddedData();
 
-  virtual void writeAsi() = 0;
-  virtual bool writeAsi(const QString& fileName) = 0;
+  virtual void writeAsi(); // = 0;
+  virtual bool writeAsi(const QString& fileName); // = 0;
   void setExit(volatile bool *exit);
   bool returnExitNow() const { return *exitNow; }
   

@@ -53,7 +53,7 @@ GriddedData::~GriddedData()
 
 void GriddedData::writeAsi()
 {
-
+   Message::toScreen("Using unimplemented functions from GriddedData to try to write to unnamed file ");
 }
 
 bool GriddedData::writeAsi(const QString& fileName)

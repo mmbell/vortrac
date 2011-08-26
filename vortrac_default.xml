@@ -17,7 +17,7 @@
      <lon>0.00</lon>
      <alt>0.00</alt>
      <dir>default</dir>
-     <format>LEVELII</format>
+     <format>LDMLEVELII</format>
      <startdate></startdate>
      <enddate></enddate>
      <starttime></starttime>
@@ -67,7 +67,7 @@
      <position_weight>0.40</position_weight>
      <rmw_weight>0.40</rmw_weight>
      <vt_weight>0.20</vt_weight>
-     <stats>99</stats>
+     <stats>95</stats>
    </choosecenter>
    <vtd>
      <dir>default</dir>
@@ -78,7 +78,7 @@
      <bottomlevel>1</bottomlevel>
      <toplevel>1</toplevel>
      <innerradius>1</innerradius>
-     <outerradius>60</outerradius>
+     <outerradius>100</outerradius>
      <ringwidth>1.0</ringwidth>
      <maxwavenumber>1</maxwavenumber>
      <maxdatagap wavenum="0">180</maxdatagap>

@@ -1,5 +1,6 @@
 build/*
 libs/*
+vortrac
 vortrac.xcodeproj/*
 moc_*
 qrc_*
@@ -9,3 +10,4 @@ Info.plist
 profile
 Makefile
 *.app
+*.o

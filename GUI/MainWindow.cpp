@@ -13,6 +13,8 @@
 #include <QtGui>
 
 #include "MainWindow.h"
+#include "DataObjects/GriddedData.h"
+#include "DataObjects/VortexList.h"
 
 MainWindow::MainWindow()
 {
@@ -33,6 +35,8 @@ MainWindow::MainWindow()
 
     readSettings();
     qRegisterMetaType<Message>("Message");
+    qRegisterMetaType<GriddedData>("GriddedData");
+    qRegisterMetaType<VortexList>("VortexList");
     setWindowTitle(tr("VORTRAC"));
 }
 
