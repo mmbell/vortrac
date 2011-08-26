@@ -18,6 +18,7 @@ HEADERS += Threads/AnalysisThread.h \
            DataObjects/Coefficient.h \
            DataObjects/Center.h \
            Config/Configuration.h \
+	   Config/thredds_Config.h \
            DataObjects/AnalyticGrid.h \
            DataObjects/CappiGrid.h \
            DataObjects/GriddedData.h \
@@ -69,6 +70,7 @@ SOURCES += main.cpp \
            DataObjects/Coefficient.cpp \
            DataObjects/Center.cpp \
            Config/Configuration.cpp \
+	   Config/thredds_Config.cpp \
            DataObjects/AnalyticGrid.cpp \
            DataObjects/CappiGrid.cpp \
            DataObjects/GriddedData.cpp \
@@ -109,5 +111,5 @@ SOURCES += main.cpp \
            Pressure/AWIPS.cpp
 RESOURCES += vortrac.qrc
 LIBS += -lbz2 
-QT += xml
+QT += xml network
 //CONFIG += release
