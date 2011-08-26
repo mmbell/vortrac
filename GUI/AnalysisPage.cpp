@@ -912,18 +912,18 @@ void AnalysisPage::fetchRemoteData()
 	// Connect the signals and slots
 	connect(catalog_reply, SIGNAL(finished()), this,
 			SLOT(getRemoteData()));
-	//connect(catalog_reply, SIGNAL(downloadProgress(qint64,qint64)),
-	//		SLOT(downloadProgress(qint64,qint64)));
-	//while(catalog_reply->isRunning()) sleep (1);
 }
 
 bool AnalysisPage::getRemoteData()
 {
 	QUrl url = catalog_reply->url();
 	if (catalog_reply->error()) {
-		emit log(Message(QString("Problem downloading THREDDS catalog"),0,this->objectName(),Yellow,QString("Problem with THREDDS")));
+		emit log(Message(QString("Problem downloading Remote Level II catalog"),0,this->objectName(),Yellow,QString("Problem with Remote Data")));
 		return false;
 	}
+	
+	emit log(Message(QString("Remote Level II catalog updated"),0,this->objectName()));
+					 
 	// Save then parse the file
 	QDomElement radar = configData->getConfig("radar");
 	QString path = configData->getParam(radar,"dir");
@@ -931,7 +931,7 @@ bool AnalysisPage::getRemoteData()
 	QString filename(dataPath.absolutePath() + "/catalog.xml");
 	QFile file(filename);
 	if (!file.open(QIODevice::WriteOnly)) {
-		emit log(Message(QString("Problem saving THREDDS catalog"),0,this->objectName(),Yellow,QString("Problem with THREDDS")));
+		emit log(Message(QString("Problem saving Remote Level II catalog"),0,this->objectName(),Yellow,QString("Problem with Remote Data")));
 		return false;
 	}
 	file.write(catalog_reply->readAll());
@@ -996,86 +996,9 @@ bool AnalysisPage::saveRemoteData()
 	file.write(datafile_reply->readAll());
 	file.close();
 	datafile_reply->deleteLater();
-	//emit remoteFileSaved();
-	return true;
-}
-
-void AnalysisPage::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
-{
-	QString msg(bytesReceived + " bytes out of " + bytesTotal);
+	QString msg = "Level II data file " + filename + " downloaded successfully";
 	emit log(Message(msg,0,this->objectName()));
-}
-
-bool AnalysisPage::parseThredds(const QString &filename)
-{
-	// Clear the urlList
-	urlList.clear();
-
-	QFile file(filename);
-	if (!file.open(QIODevice::ReadOnly |  QIODevice::Text)) {
-		emit log(Message(QString("Error Opening Configuration File, Check Permissions on "+filename),0,this->objectName(),Red, QString("Check File Permissions")));
-		return false;
-	}
-	
-	QTextStream thredds(&file);
-	while (!thredds.atEnd()) {
-		QString line = thredds.readLine();
-		if (line.contains("urlPath")) {
-			QString url = line.right(20);
-			url.chop(2);
-			urlList << url;
-			if (urlList.size() == 5) {
-				file.close();
-				return true;
-			}
-		}
-	}
-	/* QString errorStr;
-	int errorLine;
-	int errorColumn;
-	
-	QDomDocument domDoc;
-	// Set the DOM document contents to those of the file
-	if (!domDoc.setContent(&file, true, &errorStr, &errorLine, &errorColumn)) {
-		QString errorReport = QString("XML Parse Error in "+filename+" at Line %1, Column %2:\n%3")
-		.arg(errorLine)
-		.arg(errorColumn)
-		.arg(errorStr);
-		emit log(Message(errorReport,0,this->objectName(),Yellow, QString("XML Parse Error")));
-		file.close();
-		return false;
-	}
-	file.close();
-	
-	QDomElement root = domDoc.documentElement();
-	if (root.tagName() != "catalog") {
-		emit log(Message(QString("The file is not an THREDDS configuration file."),0,this->objectName(),Yellow,QString("Not a THREDDS file")));
-		return false;
-		
-	}
-	
-	// Create a hash of indices and tag names
-	QDomNodeList groupList = root.childNodes();
-	for (int i = 0; i <= groupList.count()-1; i++) {
-		QDomNode currNode = groupList.item(i);
-		if (currNode.hasChildNodes()) {
-			QDomNodeList childList = currNode.childNodes();
-			for (int i = 0; i <= childList.count()-1; i++) {
-				QDomNode child = childList.item(i);
-				if (child.hasAttributes()) {
-					QDomNamedNodeMap map = child.attributes();
-					if (!map.namedItem("urlPath").isNull()) {
-						// We have a winner
-						QString url = child.toElement().attribute("urlPath");
-						urlList << url;
-						if (urlList.size() == 5) return true;
-					}
-				}
-			}
-		}
-	} */
-	file.close();
-	return false;
+	return true;
 }
 
 	

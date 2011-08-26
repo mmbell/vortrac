@@ -49,7 +49,6 @@ class AnalysisPage : public QWidget
   void setVortexLabel();
   bool maybeSave();
   void saveDisplay();
-	bool parseThredds(const QString &filename);
 
   GraphFace *getGraph() {return graph;}
   Log* getStatusLog(){ return statusLog;} 
@@ -89,12 +88,11 @@ class AnalysisPage : public QWidget
     void autoScroll();
     void prepareToClose();
     void pollVortexUpdate(VortexList* list);
-	void popUpStatus();
-	void updateStatusLog(const QString& entry);
-	void fetchRemoteData();
-	bool getRemoteData();
-	bool saveRemoteData();
-	void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
+    void popUpStatus();
+    void updateStatusLog(const QString& entry);
+    void fetchRemoteData();
+    bool getRemoteData();
+    bool saveRemoteData();
 	
  protected:
   void closeEvent(QCloseEvent *event);
