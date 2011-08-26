@@ -7,3 +7,5 @@ Info.plist
 .svn
 .DS_Store
 profile
+Makefile
+*.app

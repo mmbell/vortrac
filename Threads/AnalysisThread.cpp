@@ -585,7 +585,7 @@ void AnalysisThread::run()
 			levelLat = vortexLat;
 			levelLon = vortexLon;
 			hasConvergingCenters = false;
-		} else if (relDist > 10) {
+		} else if (relDist > 25) {
 			QString distString;
 			QString M1 = "Simplex center "+distString.setNum((int)relDist)+" (> 10 km) from User estimated center, may be lost or need to update estimate";
 			QString M2 = "Center/Estimate "+distString.setNum((int)relDist)+" km apart";
