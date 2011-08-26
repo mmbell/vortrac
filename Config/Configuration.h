@@ -103,11 +103,13 @@ class Configuration:public QObject
 		     const QString &paramName,
 		     const QString &attribName,
 		     const QString &attibValue);
-   
-   
 
+protected:
+	// Validation is specific to each kind of configuration
+	virtual bool validate();
+	QDomDocument domDoc;
+	
  private:
-  QDomDocument domDoc;
   QDomElement root;
   QDomNodeList groupList;
   QHash<QString, int> indexForTagName;

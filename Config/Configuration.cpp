@@ -79,15 +79,10 @@ bool Configuration::read(const QString &filename)
   }
   file.close();
 
-  // Basic check to see if this is really a configuration file
-  QDomElement root = domDoc.documentElement();
-  if (root.tagName() != "vortrac") {
-      emit log(Message(QString("The file is not an VORTRAC configuration file."),0,this->objectName(),Red,QString("Not a VORTRAC file")));
-    return false;
+  // Make sure it is the right type of XML file
+  if (!validate()) return false;
 
-  }
-
-  // Creat a hash of indices and tag names
+  // Create a hash of indices and tag names
   groupList = root.childNodes();
   for (int i = 0; i <= groupList.count()-1; i++) {
     QDomNode currNode = groupList.item(i);
@@ -635,4 +630,16 @@ QString Configuration::findConfigNameStartsWith(const QString& name)
     }
   }
   return realName;
+}
+
+bool Configuration::validate()
+{
+	//Basic check to see if this is really a configuration file
+	QDomElement root = domDoc.documentElement();
+	if (root.tagName() != "vortrac") {
+		emit log(Message(QString("The file is not an VORTRAC configuration file."),0,this->objectName(),Red,QString("Not a VORTRAC file")));
+		return false;
+		
+	}
+	return true;
 }
