@@ -140,6 +140,9 @@ void PollThread::run()
 
   abort = false;
   emit log(Message(QString("Polling for data..."), 0, this->objectName()));
+  QString resources = QCoreApplication::applicationDirPath() + "/../Resources";
+  QDir resourceDir = QDir(resources);
+
   dataSource = new RadarFactory(configData);
   connect(dataSource, SIGNAL(log(const Message&)),
   	  this, SLOT(catchLog(const Message&)));
@@ -149,7 +152,7 @@ void PollThread::run()
 
   if(!continuePreviousRun) {
     QString file("vortrac_defaultVortexListStorage.xml");
-    vortexConfig = new Configuration(0, file);
+    vortexConfig = new Configuration(0, resourceDir.filePath(file));
     vortexConfig->setObjectName("Vortex Configuration");
     vortexConfig->setLogChanges(false);
     connect(vortexConfig, SIGNAL(log(const Message&)), 
@@ -159,7 +162,7 @@ void PollThread::run()
   
     file = QString("vortrac_defaultSimplexListStorage.xml");
     //simplexConfig = new Configuration(0,QString());
-    simplexConfig = new Configuration(0, file);
+    simplexConfig = new Configuration(0, resourceDir.filePath(file));
     simplexConfig->setObjectName("Simplex Configuration");
     simplexConfig->setLogChanges(false);
     connect(simplexConfig, SIGNAL(log(const Message&)), 
@@ -169,7 +172,7 @@ void PollThread::run()
     
     file = QString("vortrac_defaultPressureListStorage.xml");
     //pressureConfig = new Configuration(0,QString());
-    pressureConfig = new Configuration(0, file);
+    pressureConfig = new Configuration(0, resourceDir.filePath(file));
     pressureConfig->setObjectName("Pressure Configuration");
     pressureConfig->setLogChanges(false);
     connect(pressureConfig, SIGNAL(log(const Message&)), 
@@ -246,7 +249,7 @@ void PollThread::run()
     }
     else {
       file = QString("vortrac_defaultPressureListStorage.xml");
-      pressureConfig = new Configuration(0, QDir::current().filePath(file));
+      pressureConfig = new Configuration(0, resourceDir.filePath(file));
     }
    
     emit log(Message(QString("Loading Pressure List from File: "+file),0,this->objectName()));
@@ -270,7 +273,7 @@ void PollThread::run()
     }
     else {
       file = QString("vortrac_defaultPressureListStorage.xml");
-      dropSondeConfig = new Configuration(0, QDir::current().filePath(file));
+      dropSondeConfig = new Configuration(0, resourceDir.filePath(file));
     }
     //emit log(Message(file,0,this->objectName()));
     dropSondeConfig->setObjectName("dropSondeConfig");

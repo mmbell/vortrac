@@ -18,6 +18,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QDir>
+#include <QCoreApplication>
 
 RadarListDialog::RadarListDialog(QWidget *parent, Configuration *initialConfig)
   :QDialog(parent)
@@ -289,7 +290,9 @@ void RadarListDialog::savePressed()
 
   // Attempts to save changes made to the configuration perminant in the 
   // xml radar list
-  if(!radars->write(QDir::current().filePath(xmlFileName)))
+  QString resources = QCoreApplication::applicationDirPath() + "/../Resources";
+  QDir resourceDir = QDir(resources);
+  if(!radars->write(resourceDir.filePath(xmlFileName)))
     emit log(Message("Error Saving XML Radar List"));
 
   // Repopulates drop down menus with new information

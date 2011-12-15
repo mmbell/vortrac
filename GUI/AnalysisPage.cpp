@@ -314,8 +314,10 @@ AnalysisPage::~AnalysisPage()
 void AnalysisPage::newFile()
 {
   // Load the default configuration
-  if(QDir::current().exists("vortrac_default.xml")) {
-    if (!loadFile(QDir::current().filePath("vortrac_default.xml")))
+  QString resources = QCoreApplication::applicationDirPath() + "/../Resources";
+  QDir resourceDir = QDir(resources);
+  if(resourceDir.exists("vortrac_default.xml")) {
+    if (!loadFile(resourceDir.filePath("vortrac_default.xml")))
       emit log(Message(QString("Couldn't load default configuration - Please check the default file vortrac_default.xml and insure that it is accesible"),0,this->objectName(),Red));
   }
   else {
