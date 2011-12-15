@@ -25,7 +25,7 @@ CappiGrid::CappiGrid()
   
   // To make the cappi bigger but still compute it in a reasonable amount of time,
   // skip the reflectivity grid, otherwise set this to true
-  gridReflectivity = false;
+  gridReflectivity = true;
   exitNow = NULL;
 }
 
@@ -244,7 +244,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 	  float theta = deg2rad * fmodf((450. - currentRay->getAzimuth()),360.);
 	  float phi = deg2rad * (90. - (currentRay->getElevation()));
 	  
-	  /* if ((currentRay->getRef_numgates() > 0) and 
+	if ((currentRay->getRef_numgates() > 0) and 
 		  (gridReflectivity)) {
 		  
 		  float* refData = currentRay->getRefData();
@@ -266,30 +266,31 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 			  float j = (y - ymin)/jGridsp;
 			  float k = (z - zmin)/kGridsp;
 			  float RSquareLinear = RSquare*range*range / 30276.0;
-			  for (int kplus = -maxKplus; kplus <= maxKplus; kplus++) { 
+			  //for (int kplus = -maxKplus; kplus <= maxKplus; kplus++) { 
 				  for (int jplus = -maxJplus; jplus <= maxJplus; jplus++) {
 					  for (int iplus = -maxIplus; iplus <= maxIplus; iplus++) {
 						  int iIndex = (int)(i+iplus);
 						  int jIndex = (int)(j+jplus);
-						  int kIndex = (int)(k+kplus);
+						  //int kIndex = (int)(k+kplus);
+						  int kIndex = 0;
 						  if ((iIndex < 0) or (iIndex > (int)iDim)) { continue; }
 						  if ((jIndex < 0) or (jIndex > (int)jDim)) { continue; }
 						  if ((kIndex < 0) or (kIndex > (int)kDim)) { continue; }
 							  
 						  float dx = (i - (int)(i+iplus))*iGridsp;
 						  float dy = (j - (int)(j+jplus))*jGridsp;
-						  float dz = (k - (int)(k+kplus))*kGridsp;
-						  float rSquare = (dx*dx) + (dy*dy) + (dz*dz);
+						 // float dz = (k - (int)(k+kplus))*kGridsp;
+						  float rSquare = (dx*dx) + (dy*dy); // + (dz*dz);
 						  if (rSquare > RSquareLinear) { continue; }
 						  float weight = (RSquareLinear - rSquare) / (RSquareLinear + rSquare);
 						  refValues[iIndex][jIndex][kIndex].weight += weight;
 						  refValues[iIndex][jIndex][kIndex].sumRef += weight*refData[g];
 					  }
 				  }
-			  }
+			  //}
 		  } 
 		  
-	  } */
+	  }
 	  if ((currentRay->getVel_numgates() > 0)
 		  // Just grab the lowest elevation sweeps
 		  //and (currentRay->getElevation() < 0.75)) {

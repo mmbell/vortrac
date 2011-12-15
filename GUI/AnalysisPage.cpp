@@ -635,11 +635,11 @@ void AnalysisPage::runThread()
   
   pollThread->setContinuePreviousRun(continuePreviousRun);
 
-  // Try to fetch new radar data every 5 minutes
+  /* Try to fetch new radar data every 5 minutes
   QTimer::singleShot(0, this, SLOT(fetchRemoteData()));
   QTimer *fetchTimer = new QTimer(this);
   connect(fetchTimer, SIGNAL(timeout()), this, SLOT(fetchRemoteData()));
-  fetchTimer->start(300000);
+  fetchTimer->start(300000); */
 	
   if(configData->getParam(configData->getConfig("radar"), "format")
      == QString("MODEL")){
@@ -947,25 +947,22 @@ bool AnalysisPage::getRemoteData()
 	urlList.clear();
 	
 	QTextStream thredds(&file);
-	while (!thredds.atEnd()) {
+	while (!thredds.atEnd() and (urlList.size() <= 2)) {
 		QString line = thredds.readLine();
 		if (line.contains("urlPath")) {
 			QString url = line.right(25);
 			url.chop(2);
 			urlList << url;
-			if (urlList.size() == 1) {
-				break;
-			}
 		}
 	}
 	file.close();
 	
 	// Check to see if this file is already in the directory, or download it
-	for (int i = 0; i < urlList.size(); ++i) {
-		QString localfile = urlList.at(i);
+	//for (int i = 0; i < urlList.size(); ++i) {
+		QString localfile = urlList.at(1);
 		localfile.remove(0,5);
 		if (!dataPath.exists(localfile)) {
-			QString dataurl = urlList.at(i);
+			QString dataurl = urlList.at(1);
 			QString server("http://shelf.rcac.purdue.edu:8080/thredds/fileServer/");
 			QString url = server + dataurl;
 			QUrl fileurl = QUrl(url);
@@ -974,7 +971,7 @@ bool AnalysisPage::getRemoteData()
 			connect(datafile_reply, SIGNAL(finished()), this,
 					SLOT(saveRemoteData()));
 		}
-	}
+	//}
 	
 	return true;
 }

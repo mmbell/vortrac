@@ -617,11 +617,11 @@ void AnalysisThread::run()
 			emit log(Message(QString("Insufficient Convergence of Simplex Centers"),0,this->objectName(),AllOff,QString(),SimplexError,QString("No Center Convergence")));
 			//analysisGood = false;
 			// Delete CAPPI and RadarData objects			
-			delete radarVolume;
+			/*delete radarVolume;
 			delete gridData;
 			delete vortexData;			
-			emit(doneProcessing());
-		} else {		   
+			emit(doneProcessing()); */
+		} 		   
 			
 			mutex.unlock();  	
 			
@@ -705,7 +705,7 @@ void AnalysisThread::run()
 				//Message::toScreen("AnalysisThread: Analysis GOOD, Done Processing");
 				emit(doneProcessing());
 			}
-		}
+		
 		mutex.unlock();
 		
 		// Go to sleep, wait for more data
