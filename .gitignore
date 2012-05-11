@@ -3,6 +3,8 @@ libs/*
 deploy/*
 vortrac
 vortrac.xcodeproj/*
+src/build/*
+src/vortrac.xcodeproj/*
 moc_*
 qrc_*
 Info.plist
