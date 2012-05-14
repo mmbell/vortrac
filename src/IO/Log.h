@@ -22,61 +22,59 @@
 
 class Log : public QWidget
 {
-  Q_OBJECT
+    Q_OBJECT
 
- public:
-  Log(QWidget *parent = 0);
-  ~Log();
-  bool saveLogFile();
-  bool saveLogFile(const QString& fileName);
-  QString getLogFileName() { return logFileName; }
+public:
+    Log(QWidget *parent = 0);
+    ~Log();
+    bool saveLogFile();
+    bool saveLogFile(const QString& fileName);
+    QString getLogFileName() { return logFileName; }
 
- public slots:
-  void setWorkingDirectory(QDir& newDir);
-  void setLogFileName(QString& newName);
-  void catchLog(const Message& logEntry);
+public slots:
+    void setWorkingDirectory(QDir& newDir);
+    void setLogFileName(QString& newName);
+    void catchLog(const Message& logEntry);
 
     
- signals:
-  void newLogEntry(const QString & logEntry);
-  void newProgressEntry(int progress);
-  void newStopLightColor(StopLightColor newColor, const QString newMessage);
-  void newStormSignalStatus(StormSignalStatus newStatus, 
-			    const QString newMessage);
-  void log(const Message& message);
-  void redLightAbort();
+signals:
+    void newLogEntry(const QString & logEntry);
+    void newProgressEntry(int progress);
+    void newStopLightColor(StopLightColor newColor, const QString newMessage);
+    void newStormSignalStatus(StormSignalStatus newStatus,
+                              const QString newMessage);
+    void log(const Message& message);
+    void redLightAbort();
 
- private:
-  QString logFileName;
-  QFile *logFile;
-  QDir workingDirectory;
-  int absoluteProgress;
-  bool displayLocation;
-  QStringList messagesWaiting;
-  // bool usingFile;
-  QMutex usingFile;
+private:
+    QString logFileName;
+    QFile *logFile;
+    QDir workingDirectory;
+    int absoluteProgress;
+    bool displayLocation;
+    QStringList messagesWaiting;
+    // bool usingFile;
+    QMutex usingFile;
 
-  bool writeToFile();
+    bool writeToFile();
 
-  struct SLChange {
-    StopLightColor color;
-    QString message;
-    QString location;
-  };
+    struct SLChange {
+        StopLightColor color;
+        QString message;
+        QString location;
+    };
 
-  struct SSChange {
-    StormSignalStatus status;
-    QString message;
-    QString location;
-  };
-  
-  bool handleStopLightUpdate(StopLightColor newColor, QString message, 
-			      QString location);
-  QList<SLChange*> StopLightQueue;
+    struct SSChange {
+        StormSignalStatus status;
+        QString message;
+        QString location;
+    };
 
-  bool handleStormSignalUpdate(StormSignalStatus newStatus, QString message,
-			       QString location);
-  QList<SSChange*> StormStatusQueue;
+    bool handleStopLightUpdate(StopLightColor newColor, QString message,QString location);
+    QList<SLChange*> StopLightQueue;
+
+    bool handleStormSignalUpdate(StormSignalStatus newStatus, QString message,QString location);
+    QList<SSChange*> StormStatusQueue;
 
 };
 

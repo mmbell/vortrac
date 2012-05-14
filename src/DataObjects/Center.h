@@ -14,45 +14,41 @@
 
 class Center
 {
- public:
-
-    Center(const float& newX = -999, const float& newY = -999,  
-	   const float& maxVT = -999, const float& newLevel = -999, 
-	   const float& newRadius = -999);
+public:
+    Center();
+    Center(const float& startX, const float& startY, const float& endX, const float& endY,
+           const float& maxVT,  const float& level,  const float& radius);
     ~Center();
 
-    float getX() const { return x; }
-    void setX(const float &newX);
+    float getStartX() const            { return _startX; }
+    void  setStartX(const float& newX) { _startX=newX;}
+    float getStartY() const            { return _startY; }
+    void  setStartY(const float& newY) { _startY=newY;}
+    float getX() const                 { return _endX;}
+    void  setX(const float& newX)      { _endX=newX;  }
+    float getY() const                 { return _endY;}
+    void  setY(const float& newY)      { _endY=newY;  }
 
-    float getY() const { return y; }
-    void setY(const float &newY);
-
-    float getRadius() const {return radius; }
-    void setRadius(const float &newRadius);
-
-    float getLevel() const { return level; }
-    void setLevel(const float &newLevel);
-    
-    float getMaxVT() const { return maxVT; }
-    void setMaxVT(const float &newMaxVT);
+    float getRadius() const            { return _radius; }
+    void  setRadius(float Radius)      { _radius=Radius; }
+    float getLevel() const             { return _level; }
+    void  setLevel(float Level)        { _level=Level; }
+    float getMaxVT() const             { return _maxVT; }
+    void  setMaxVT(float maxVT)        { _maxVT=maxVT; }
 
     bool operator == (const Center &other);
+    bool isValid();
 
-    bool isNull();
+    static const float _fillv=-999.0f;
 
-
-
-
- private:
-
-    float velNull;
-
-    float x;
-    float y;
-    float radius;
-    float level;
-    float maxVT;
-
+private:
+    float _startX;
+    float _startY;
+    float _endX;
+    float _endY;
+    float _radius;
+    float _level;
+    float _maxVT;
 
 };
 #endif

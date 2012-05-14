@@ -22,104 +22,102 @@
 class Configuration:public QObject
 {
 
-  Q_OBJECT
- 
- public:
-  Configuration(QObject *parent = 0,const QString &filename = QString());
-  ~Configuration();
-  
-  QDomElement getRoot();
-  QDomNodeList* getGroupList();
-  bool read(const QString &filename);
-  bool write(const QString &filename);
-  bool isNull();
-  bool loggingChanges() { return logChanges; }
-  void setLogChanges(bool logStatus);
-  
-  QDomElement getConfig(const QString &configName);
-  QDomElement getConfig(const QString &configName,
-			const QString &attribName,
-			const QString &attribValue);
-  
-  const QString getParam(const QDomElement &element,
-			 const QString &paramName);
-  
-  const QString getParam(const QDomElement &element,
-			 const QString &paramName,
-			 const QString &attribName,
-			 const QString &attribValue);
+    Q_OBJECT
 
-  const QString getAttribute(const QDomElement &element,
-			     const QString &paramName,
-			     const QString &attribName);
-  bool checkModified() { return isModified; }
+public:
+    Configuration(QObject *parent = 0,const QString &filename = QString());
+    ~Configuration();
 
-  const QDomElement getElement(const QDomElement &element,
-			       const QString &paramName);
+    QDomElement getRoot();
+    QDomNodeList* getGroupList();
+    bool read(const QString &filename);
+    bool write(const QString &filename);
+    bool isNull();
+    bool loggingChanges() { return logChanges; }
+    void setLogChanges(bool logStatus);
 
-  const QDomElement getElementWithAttrib(const QDomElement &element,
-					 const QString &paramName,
-					 const QString &attribName,
-					 const QString &attribValue);
+    QDomElement getConfig(const QString &configName) const;
+    QDomElement getConfig(const QString &configName,
+                          const QString &attribName,
+                          const QString &attribValue) const;
 
-  Configuration& operator = (const Configuration &other);
+    const QString getParam(const QDomElement &element,
+                           const QString &paramName) const;
 
-  // bool operator == (const Configuration &other);
-  
-  QString findConfigNameStartsWith(const QString& name);
-  
- public slots:
-   void catchLog(const Message& message);
+    const QString getParam(const QDomElement &element,
+                           const QString &paramName,
+                           const QString &attribName,
+                           const QString &attribValue) const;
 
-   void setParam(const QDomElement &element,
-		 const QString &paramName, 
-		 const QString &paramValue);
-   
-   void setParam(const QDomElement &element,
-		 const QString &paramName, 
-		 const QString &paramValue,
-		 const QString &attribName,
-		 const QString &attribValue);
+    const QString getAttribute(const QDomElement &element,
+                               const QString &paramName,
+                               const QString &attribName);
+    bool checkModified() { return isModified; }
 
-   void addDom(const QDomElement &element,
-	       const QString &paramName,
-	       const QString &paramValue);
+    const QDomElement getElement(const QDomElement &element,const QString &paramName) const;
 
-   void addDom(const QDomElement &element,
-	       const QString &paramName,
-	       const QString &paramValue,
-	       const QString &attribName,
-	       const QString &attribValue);
+    const QDomElement getElementWithAttrib(const QDomElement &element,
+                                           const QString &paramName,
+                                           const QString &attribName,
+                                           const QString &attribValue) const;
 
-   void removeDom(const QDomElement &element,
-		  const QString &paramName);
+    Configuration& operator = (const Configuration &other);
 
-   void removeDom(const QDomElement &element,
-		  const QString &paramName,
-		  const QString &attribName,
-		  const QString &attribValue);
-   
-   void setAttribute(const QDomElement &element,
-		     const QString &paramName,
-		     const QString &attribName,
-		     const QString &attibValue);
+    // bool operator == (const Configuration &other);
+
+    QString findConfigNameStartsWith(const QString& name);
+
+public slots:
+    void catchLog(const Message& message);
+
+    void setParam(const QDomElement &element,
+                  const QString &paramName,
+                  const QString &paramValue);
+
+    void setParam(const QDomElement &element,
+                  const QString &paramName,
+                  const QString &paramValue,
+                  const QString &attribName,
+                  const QString &attribValue);
+
+    void addDom(const QDomElement &element,
+                const QString &paramName,
+                const QString &paramValue);
+
+    void addDom(const QDomElement &element,
+                const QString &paramName,
+                const QString &paramValue,
+                const QString &attribName,
+                const QString &attribValue);
+
+    void removeDom(const QDomElement &element,
+                   const QString &paramName);
+
+    void removeDom(const QDomElement &element,
+                   const QString &paramName,
+                   const QString &attribName,
+                   const QString &attribValue);
+
+    void setAttribute(const QDomElement &element,
+                      const QString &paramName,
+                      const QString &attribName,
+                      const QString &attibValue);
 
 protected:
-	// Validation is specific to each kind of configuration
-	virtual bool validate();
-	QDomDocument domDoc;
-	
- private:
-  QDomElement root;
-  QDomNodeList groupList;
-  QHash<QString, int> indexForTagName;
-  bool isModified;
-  bool logChanges;
-		
- signals:
-  void log(const Message& message);
-  void configChanged();
-  //  void configChanged(const QDomElement &element);
+    // Validation is specific to each kind of configuration
+    virtual bool validate();
+    QDomDocument domDoc;
+
+private:
+    QDomElement root;
+    QDomNodeList groupList;
+    QHash<QString, int> indexForTagName;
+    bool isModified;
+    bool logChanges;
+
+signals:
+    void log(const Message& message) const;
+    void configChanged();
 };
 
 #endif

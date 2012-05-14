@@ -15,35 +15,35 @@
 
 class Coefficient 
 {
-  
- public:
-  Coefficient();
-  Coefficient(float newLevel, float newRadius, float newValue, QString name);
-  Coefficient(const Coefficient &other);
-	
-  float getLevel() const { return level; }
-  void setLevel(const float &newLevel);
 
-  float getRadius() const {return radius; }
-  void setRadius(const float &newRadius);
+public:
+    Coefficient();
+    Coefficient(float newLevel, float newRadius, float newValue, QString name);
+    Coefficient(const Coefficient &other);
 
-  float getValue() const { return value; }
-  void setValue(const float &newValue);
+    float getLevel() const { return level; }
+    void setLevel(const float &newLevel);
 
-  QString getParameter() const { return parameter; }
-  void setParameter(const QString &newParameter);
+    float getRadius() const {return radius; }
+    void setRadius(const float &newRadius);
 
-  bool operator == (const Coefficient &other);
+    float getValue() const { return value; }
+    void setValue(const float &newValue);
 
-  bool isNull();
-  
+    QString getParameter() const { return parameter; }
+    void setParameter(const QString &newParameter);
 
- private:
-  float level;
-  float radius;
-  float value;
-  QString parameter;
-  
+    bool operator == (const Coefficient &other);
+
+    bool isNull();
+
+
+private:
+    float level;
+    float radius;
+    float value;
+    QString parameter;
+
 };
 
 #endif

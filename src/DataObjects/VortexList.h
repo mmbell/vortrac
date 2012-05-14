@@ -12,54 +12,25 @@
 #ifndef VORTEXLIST_H
 #define VORTEXLIST_H
 
-#include "VortexData.h"
 #include <QList>
-#include "Configuration.h"
-#include <QString>
-#include <QObject>
+#include "DataObjects/VortexData.h"
+
+class QString;
 
 class VortexList : public QList<VortexData>
 {
 
 public:
-     VortexList(const QString &newFileName = QString());
-     VortexList(Configuration* newConfig);
+     VortexList(QString filePath = QString());
      virtual ~VortexList();
      
-     bool save();
-     bool open();
-     bool openNodeFile(const QDomNode &newNode);
-     bool saveNodeFile(int index, const QString& newName);
-     void setFileName(const QString &newFileName);
-     void setRadarName(const QString &newRadarName);
-     void setVortexName(const QString &newVortexName);
-     void setProductType(const QString &newProductType);
-     void setIndividualProductType(int dataIndex, const QString& newType);
-     QString getVortexName() { return vortexName; }
-     void setNewWorkingDirectory(const QString &newDirectory);
-     QString getFileName() { return fileName; }
-     QString getWorkingDirectory() { return workingDir; }
+     bool saveXML();
+     bool restore();
+     void setFilePath(QString filePath);
      void timeSort();
-     
-     void append(const VortexData &value);
-     void removeAt(int i);
 
 private:
-     Configuration *config;
-     QString fileName;
-     QString workingDir;
-
-     QString vortexName;
-     QString radarName;
-     QString productType;
-     
-     QList<Configuration*>* vortexDataConfigs;
-     QList<QString>* configFileNames;
-     
-     void createDomVortexDataEntry(const VortexData &newData);
-     
-
-
+     QString _filePath;
 };
 
 #endif

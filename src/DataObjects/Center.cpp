@@ -10,65 +10,45 @@
  */
 
 #include "Center.h"
+const float Center::_fillv;
 
-Center::Center(const float& newX, const float& newY, const float& vel,
-	       const float& newLevel, const float& newRadius)
+Center::Center(const float& startX, const float& startY, const float& endX, const float& endY,
+               const float& maxVT,  const float& level,  const float& radius)
 {
-  velNull = -999.;
-  x = newX;
-  y = newY;
-  radius = newRadius;
-  level = newLevel;
-  maxVT = vel;
+    _startX=startX;
+    _startY=startY;
+    _endX  =endX;
+    _endY  =endY;
+    _maxVT =maxVT;
+    _level =level;
+    _radius=radius;
+}
 
+Center::Center()
+{
+    _startX=_fillv;
+    _startY=_fillv;
+    _endX  =_fillv;
+    _endY  =_fillv;
+    _maxVT =_fillv;
+    _level =_fillv;
+    _radius=_fillv;
 }
 
 Center::~Center()
 {
 
 }
-  
-void Center::setX(const float &newX)
-{
-  x = newX;
-}
-
-void Center::setY(const float &newY)
-{
-  y = newY;
-}
-
-void Center::setRadius(const float &newRadius)
-{
-  radius = newRadius;
-}
-
-void Center::setLevel(const float &newLevel)
-{
-  level = newLevel;
-}
-
-void Center::setMaxVT(const float &newMaxVT)
-{
-  maxVT = newMaxVT;
-}
 
 bool Center::operator == (const Center &other)
 {
-  if(x == other.getX())
-    if(y == other.getY())
-      if(radius == other.getRadius())
-	if(level == other.getLevel())
-	  if(maxVT == other.getMaxVT())
-	    return true;
-  return false;
+    return (_startX==other.getStartX())&&(_startY==other.getStartY())&&(_endX==other.getX())&&(_endY==other.getY())&&
+            (_radius == other.getRadius())&&(_level == other.getLevel());
 }
 
-bool Center::isNull()
+bool Center::isValid()
 {
-  if((x == velNull)||(y == velNull)||(radius == velNull)||(level == velNull)
-     ||(maxVT == velNull))
+    if((_endX==_fillv)||(_endY==_fillv))
+        return false;
     return true;
-  return false;
-
 }

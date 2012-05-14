@@ -17,31 +17,31 @@
 class GriddedFactory
 {
 
-	public:
-		GriddedFactory();
-		~GriddedFactory();
-		GriddedData* makeEmptyGrid();
-		GriddedData* makeCappi(RadarData *radarData, 
-				       Configuration* mainConfig,
-				       float *vortexLat, float *vortexLon);
-		GriddedData* makeAnalytic(RadarData *radarData,
-					  Configuration* mainConfig,
-					  Configuration* analyticConfig,
-					  float *vortexLat, float *vortexLon,
-					  float *radarLat, float *radarLon);
-		void setAbort(volatile bool* newAbort);
-							   
-	private:
-		/*	enum coordSystems {
-			cartesian,
-			cylindrical,
-			spherical
-		};
-		
-		coordSystems coordSystem;
-		*/
-		
-		volatile bool* abort;
+public:
+    GriddedFactory();
+    ~GriddedFactory();
+    GriddedData* makeEmptyGrid();
+    GriddedData* makeCappi(RadarData *radarData,
+                           Configuration* mainConfig,
+                           float *vortexLat, float *vortexLon);
+    GriddedData* makeAnalytic(RadarData *radarData,
+                              Configuration* mainConfig,
+                              Configuration* analyticConfig,
+                              float *vortexLat, float *vortexLon,
+                              float *radarLat, float *radarLon);
+    void setAbort(volatile bool* newAbort);
+
+private:
+    /*	enum coordSystems {
+   cartesian,
+   cylindrical,
+   spherical
+  };
+
+  coordSystems coordSystem;
+  */
+
+    volatile bool* abort;
 };
 
 #endif

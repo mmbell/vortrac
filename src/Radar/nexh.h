@@ -128,33 +128,33 @@ struct nexrad_message_header {
 };
 
 struct rda_status_info {
-   short rda_status;		/* ( 1) halfword location */
-   short oper_status;		/* ( 2) */
-   short cntrl_status;		/* ( 3) */
-   short aux_pwr_gen_state;	/* ( 4) */
-   short atp;			/* ( 5) */
-   short ref_cal_corr;		/* ( 6) */
-   short dte;			/* ( 7) */
-   short vcp;			/* ( 8) */
-   short rds_cntl_auth;		/* ( 9) */
-   short intefr_det_rate;	/* (10) */
-   short op_mode;		/* (11) */
-   short intefr_suppr_unit;	/* (12) */
-   short arch2status;		/* (13) */
-   short arch2vols;		/* (14) */
-   short rda_alarms;		/* (15) */
-   short command_ak;		/* (16) */
-   short ch_cntrl_stat;		/* (17) */
-   short spol_blnk_stat;	/* (18) */
-   short bypass_map_date;	/* (19) */
-   short bypass_map_time;	/* (20) */
-   short notch_map_date;	/* (21) */
-   short notch_map_time;	/* (22) */
-   short tps_stat;		/* (23) */
-   short spare1;		/* (24) */
-   short spare2;		/* (25) */
-   short spare3;		/* (26) */
-   short alarm_codes[14];	/* (27-40) */
+    short rda_status;		/* ( 1) halfword location */
+    short oper_status;		/* ( 2) */
+    short cntrl_status;		/* ( 3) */
+    short aux_pwr_gen_state;	/* ( 4) */
+    short atp;			/* ( 5) */
+    short ref_cal_corr;		/* ( 6) */
+    short dte;			/* ( 7) */
+    short vcp;			/* ( 8) */
+    short rds_cntl_auth;		/* ( 9) */
+    short intefr_det_rate;	/* (10) */
+    short op_mode;		/* (11) */
+    short intefr_suppr_unit;	/* (12) */
+    short arch2status;		/* (13) */
+    short arch2vols;		/* (14) */
+    short rda_alarms;		/* (15) */
+    short command_ak;		/* (16) */
+    short ch_cntrl_stat;		/* (17) */
+    short spol_blnk_stat;	/* (18) */
+    short bypass_map_date;	/* (19) */
+    short bypass_map_time;	/* (20) */
+    short notch_map_date;	/* (21) */
+    short notch_map_time;	/* (22) */
+    short tps_stat;		/* (23) */
+    short spare1;		/* (24) */
+    short spare2;		/* (25) */
+    short spare3;		/* (26) */
+    short alarm_codes[14];	/* (27-40) */
 };
 
 struct message_1_data_header {
@@ -223,8 +223,8 @@ struct nexrad_field_header {
     int scale;                 /* might contain an IEEE float */
     int bias;                  /* might contain an IEEE float */
     short scale_mult;		/* = 0 => scale is IEEE float
-				 * otherwise the scale has been multiplied
-				 * by this number */
+     * otherwise the scale has been multiplied
+     * by this number */
     short bias_mult;		/* = 0 => bias is IEEE float */
 
     short num_gates;
@@ -273,73 +273,73 @@ struct nexrad_prf_set {
 };
 
 struct message_31_data_header {
-	char radar_id[4];
-	int milliseconds_past_midnight; 
+    char radar_id[4];
+    int milliseconds_past_midnight;
     short julian_date;          /* (17) from 1/1/70 */
     short azimuth_num;      /* (18) */
     float azimuth;     /* (19) binary angle */
-	unsigned char compression;
-	unsigned char spare;
+    unsigned char compression;
+    unsigned char spare;
     short block_length;           /* (20) */
     unsigned char azimuth_resolution;        /* (21) */
     unsigned char radial_status;
     unsigned char elev_num;             /* (23) */
-	unsigned char cut_sector_num;
+    unsigned char cut_sector_num;
     float elevation;
-	unsigned char spot_blanking_status;
-	unsigned char azimuth_index_mode;
-	short num_data_blocks;
-	int vol_ptr;
-	int elev_ptr;
-	int radial_ptr;
+    unsigned char spot_blanking_status;
+    unsigned char azimuth_index_mode;
+    short num_data_blocks;
+    int vol_ptr;
+    int elev_ptr;
+    int radial_ptr;
     int ref_ptr;              /* (33) byte count from start of drdh */
     int vel_ptr;              /* (34) byte count from start of drdh */
     int sw_ptr;               /* (35) byte count from start of drdh */
-	int zdr_ptr;
-	int phi_ptr;
-	int rho_ptr;
+    int zdr_ptr;
+    int phi_ptr;
+    int rho_ptr;
 };
 
 struct volume_data_block {
-	char block_type[4];
-	short block_size;
-	unsigned char maj_version_num;
-	unsigned char min_version_num;
-	float latitude;
-	float longitude;
-	short altitude;
-	unsigned short feedhorn_height;
-	float calibration_constant;
-	float tx_power_h;
-	float tx_power_v;
-	float zdr_calibration;
-	float initial_phidp;
-	short vol_coverage_pattern;
-	short spare;
+    char block_type[4];
+    short block_size;
+    unsigned char maj_version_num;
+    unsigned char min_version_num;
+    float latitude;
+    float longitude;
+    short altitude;
+    unsigned short feedhorn_height;
+    float calibration_constant;
+    float tx_power_h;
+    float tx_power_v;
+    float zdr_calibration;
+    float initial_phidp;
+    short vol_coverage_pattern;
+    short spare;
 };
 
 struct radial_data_block {
-	char block_type[4];
-	short block_size;
-	short unambig_range;
-	float h_noise;
-	float v_noise;
-	short nyquist_vel;
-	short spare;
+    char block_type[4];
+    short block_size;
+    short unambig_range;
+    float h_noise;
+    float v_noise;
+    short nyquist_vel;
+    short spare;
 };
 
 struct moment_data_block {
-	char block_type[4];
-	int reserved;
-	short num_gates;
-	short gate1;
-	short gate_width;
-	short tover;
-	short snr_threshold;
-	unsigned char control_flags;
-	unsigned char word_size;
-	int scale;
-	int doffset;
+    char block_type[4];
+    int reserved;
+    short num_gates;
+    short gate1;
+    short gate_width;
+    short tover;
+    short snr_threshold;
+    unsigned char control_flags;
+    unsigned char word_size;
+    int scale;
+    int doffset;
 };
 
 # ifndef S100

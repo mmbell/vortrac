@@ -18,7 +18,7 @@
 
 MainWindow::MainWindow()
 {
-  this->setObjectName("Main Window");
+    this->setObjectName("Main Window");
     tabWidget = new QTabWidget();
     setCentralWidget(tabWidget);
     connect(tabWidget, SIGNAL(currentChanged(int)),
@@ -43,32 +43,32 @@ MainWindow::MainWindow()
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 
-    if (activeAnalysisPage()) 
-      {
-	tabWidget->setCurrentIndex(tabWidget->count()-1);
-	int numTabs = tabWidget->count();
-	int i = 0;
-	for(; i < numTabs; i++)
-	  {
-	    if (!closeActiveAnalysis())
-	      {
-		event->ignore();
-		break;
-	      }
-	  }
-	if(i == numTabs)
-	  {
-	    writeSettings();
-	    event->accept();
-	  }
-	else 
-	  event->ignore();
-      } 
-    else 
-      {
+    if (activeAnalysisPage())
+    {
+        tabWidget->setCurrentIndex(tabWidget->count()-1);
+        int numTabs = tabWidget->count();
+        int i = 0;
+        for(; i < numTabs; i++)
+        {
+            if (!closeActiveAnalysis())
+            {
+                event->ignore();
+                break;
+            }
+        }
+        if(i == numTabs)
+        {
+            writeSettings();
+            event->accept();
+        }
+        else
+            event->ignore();
+    }
+    else
+    {
         writeSettings();
         event->accept();
-      }
+    }
 }
 
 void MainWindow::newFile() 
@@ -78,8 +78,7 @@ void MainWindow::newFile()
     tabWidget->addTab(child,child->getVortexLabel());
     tabWidget->setCurrentIndex(tabWidget->count() - 1);
     
-    connect(this, SIGNAL(log(const Message&)), 
-	    child, SLOT(catchLog(const Message&)));
+    connect(this, SIGNAL(log(const Message&)),child, SLOT(catchLog(const Message&)));
 
     updateMenus();
     updateVortexMenu();
@@ -90,7 +89,7 @@ void MainWindow::newFile()
 void MainWindow::open()
 {
     QString fileName = QFileDialog::getOpenFileName(this, QString(tr("Select Configuration File")), QString(), QString("Vortrac Configuration Files (*.xml)"));
-  
+
     if (!fileName.isEmpty()) {
         AnalysisPage *existing = findAnalysisPage(fileName);
         if (existing) {
@@ -104,15 +103,15 @@ void MainWindow::open()
         } else {
             child->close();
         }
-	tabWidget->addTab(child,child->getVortexLabel());
-	tabWidget->setCurrentIndex(tabWidget->count() - 1);
+        tabWidget->addTab(child,child->getVortexLabel());
+        tabWidget->setCurrentIndex(tabWidget->count() - 1);
 
-	connect(this, SIGNAL(log(const Message&)), 
-		child, SLOT(catchLog(const Message&)));
+        connect(this, SIGNAL(log(const Message&)),
+                child, SLOT(catchLog(const Message&)));
 
-	updateMenus();
-	updateVortexMenu();
-	child->setVortexLabel();
+        updateMenus();
+        updateVortexMenu();
+        child->setVortexLabel();
     }
 }
 
@@ -130,8 +129,8 @@ void MainWindow::saveAs()
 
 void MainWindow::about()
 {
-   QMessageBox::about(this, tr("About VORTRAC"),
-		      tr("Vortex Objective Radar Tracking and Circulation Version 1.0\nDeveloped by Wen-Chau Lee, Paul Harasti, Michael Bell, and Lisa Mauger\nUniversity Corporation for Atmospheric Research"));
+    QMessageBox::about(this, tr("About VORTRAC"),
+                       tr("Vortex Objective Radar Tracking and Circulation Version 1.0\nDeveloped by Wen-Chau Lee, Paul Harasti, Michael Bell, and Lisa Mauger\nUniversity Corporation for Atmospheric Research"));
 }
 
 void MainWindow::updateMenus()
@@ -147,15 +146,15 @@ void MainWindow::updateMenus()
     separatorAct->setVisible(hasAnalysisPage);
     saveGraphAct->setEnabled(hasAnalysisPage);
     saveLogAct->setEnabled(hasAnalysisPage);
-    runAct->setEnabled(hasAnalysisPage && 
-		       !(activeAnalysisPage()->isRunning()));
+    runAct->setEnabled(hasAnalysisPage &&
+                       !(activeAnalysisPage()->isRunning()));
     abortAct->setEnabled(hasAnalysisPage &&
-			 activeAnalysisPage()->isRunning());
+                         activeAnalysisPage()->isRunning());
     if(hasAnalysisPage) {
-    connect(runAct, SIGNAL(triggered()), 
-	    this->activeAnalysisPage(), SLOT(runThread()));
-    connect(abortAct, SIGNAL(triggered()), 
-	    this->activeAnalysisPage(), SLOT(abortThread()));
+        connect(runAct, SIGNAL(triggered()),
+                this->activeAnalysisPage(), SLOT(runThread()));
+        connect(abortAct, SIGNAL(triggered()),
+                this->activeAnalysisPage(), SLOT(abortThread()));
     }
 
 }
@@ -174,38 +173,38 @@ void MainWindow::updateVortexMenu()
     vortexMenu->addAction(previousAct);
     vortexMenu->addAction(separatorAct);
 
-    for (int i = 0; i < tabWidget->count(); ++i) 
-      {
-	AnalysisPage *child = (AnalysisPage *)tabWidget->widget(i);
-	// TabPage *child = qobject_cast<TabPage *>tabWidget->widget(i);
-	QString text;
-	if (i < 9) 
-	  {
-	  text = tr("&%1. %2").arg(i + 1)
-	    .arg(child->getVortexLabel());
-	  }
-	else 
-	  {
-	    text = tr("%1. %2").arg(i + 1)
-	      .arg(child->getVortexLabel());
-	  }
-	QAction *action  = vortexMenu->addAction(text);
-	action->setCheckable(true);
-	action ->setChecked(child == activeAnalysisPage());
-	connect(action, SIGNAL(triggered()), tabMapper, SLOT(map()));
-	tabMapper->setMapping(action, i);
-      }
+    for (int i = 0; i < tabWidget->count(); ++i)
+    {
+        AnalysisPage *child = (AnalysisPage *)tabWidget->widget(i);
+        // TabPage *child = qobject_cast<TabPage *>tabWidget->widget(i);
+        QString text;
+        if (i < 9)
+        {
+            text = tr("&%1. %2").arg(i + 1)
+                    .arg(child->getVortexLabel());
+        }
+        else
+        {
+            text = tr("%1. %2").arg(i + 1)
+                    .arg(child->getVortexLabel());
+        }
+        QAction *action  = vortexMenu->addAction(text);
+        action->setCheckable(true);
+        action ->setChecked(child == activeAnalysisPage());
+        connect(action, SIGNAL(triggered()), tabMapper, SLOT(map()));
+        tabMapper->setMapping(action, i);
+    }
 }
 
 AnalysisPage *MainWindow::createAnalysisPage()
 {
-  AnalysisPage *child = new AnalysisPage;
-  
-  // Connect the configuration to the tab widget
-  connect(child, SIGNAL(tabLabelChanged(QWidget*, const QString&)), 
-	  this, SLOT(updateTabLabel(QWidget*, const QString&)));
-  
-  return child;
+    AnalysisPage *child = new AnalysisPage;
+
+    // Connect the configuration to the tab widget
+    connect(child, SIGNAL(tabLabelChanged(QWidget*, const QString&)),
+            this, SLOT(updateTabLabel(QWidget*, const QString&)));
+
+    return child;
 }
 
 void MainWindow::createActions()
@@ -285,45 +284,43 @@ void MainWindow::createActions()
 
 bool MainWindow::closeActiveAnalysis()
 {
-
-  if(tabWidget->count() > 0) 
+    if(tabWidget->count() > 0)
     {
-      if (!activeAnalysisPage()->maybeSave())
-	return false;
-      int newActiveIndex, indexToBeClosed = tabWidget->currentIndex();
-      if (tabWidget->count() != 1)
-	{
-	  if (indexToBeClosed == (tabWidget->count()-1))
-	    newActiveIndex = (indexToBeClosed-1);
-	  else
-	    newActiveIndex = (indexToBeClosed);
-	  delete tabWidget->currentWidget();
-	  tabWidget->setCurrentIndex(newActiveIndex);
-	}
-      else {
-	delete tabWidget->currentWidget();
-      }
+        if (!activeAnalysisPage()->maybeSave())
+            return false;
+        int newActiveIndex, indexToBeClosed = tabWidget->currentIndex();
+        if (tabWidget->count() != 1)
+        {
+            if (indexToBeClosed == (tabWidget->count()-1))
+                newActiveIndex = (indexToBeClosed-1);
+            else
+                newActiveIndex = (indexToBeClosed);
+            delete tabWidget->currentWidget();
+            tabWidget->setCurrentIndex(newActiveIndex);
+        }
+        else {
+            delete tabWidget->currentWidget();
+        }
     }
-  updateMenus();
-  return true;
-  
+    updateMenus();
+    return true;
 }
 
 void MainWindow::activateNextAnalysis()
 {
-  int nextIndex = tabWidget->currentIndex() + 1;
-  if( nextIndex <= (tabWidget->count() - 1)) {
-    tabWidget->setCurrentIndex(nextIndex);
-  }
+    int nextIndex = tabWidget->currentIndex() + 1;
+    if( nextIndex <= (tabWidget->count() - 1)) {
+        tabWidget->setCurrentIndex(nextIndex);
+    }
 
 }
 
 void MainWindow::activatePreviousAnalysis()
 {
-  int prevIndex = tabWidget->currentIndex() - 1;
-  if( prevIndex >= 0 ) {
-    tabWidget->setCurrentIndex(prevIndex);
-  }
+    int prevIndex = tabWidget->currentIndex() - 1;
+    if( prevIndex >= 0 ) {
+        tabWidget->setCurrentIndex(prevIndex);
+    }
 
 }
 
@@ -386,38 +383,38 @@ AnalysisPage *MainWindow::findAnalysisPage(const QString &fileName)
 {
     QString canonicalFilePath = QFileInfo(fileName).canonicalFilePath();
     for (int i = 0; i < tabWidget->count(); ++i) {
-      AnalysisPage *child = (AnalysisPage *)tabWidget->widget(i);
-      if (child->currentFile() == canonicalFilePath)
-	return child;
+        AnalysisPage *child = (AnalysisPage *)tabWidget->widget(i);
+        if (child->currentFile() == canonicalFilePath)
+            return child;
     }
     return 0;
 }
 
 void MainWindow::updateTabLabel(QWidget* labelWidget, 
-				const QString& new_Label)
+                                const QString& new_Label)
 {
-  tabWidget->setTabText(tabWidget->indexOf(labelWidget), new_Label);
+    tabWidget->setTabText(tabWidget->indexOf(labelWidget), new_Label);
 }
 
 void MainWindow::openConfigDialog()
 {
-  activeAnalysisPage()->getConfigDialog()->checkConfig();
-  activeAnalysisPage()->getConfigDialog()->show();
+    activeAnalysisPage()->getConfigDialog()->checkConfig();
+    activeAnalysisPage()->getConfigDialog()->show();
 }
 
 void MainWindow::saveGraph()
 {
-  //This will not work for me under any conditions.
+    //This will not work for me under any conditions.
 }
 
 void MainWindow::saveLog()
 {
-  activeAnalysisPage()->saveLog();
+    activeAnalysisPage()->saveLog();
 }
 
 void MainWindow::catchLog(const Message& message)
 {
-  emit log(message);
+    emit log(message);
 }
 
 

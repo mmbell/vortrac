@@ -16,48 +16,20 @@
 #include <QList>
 #include "Configuration.h"
 #include <QString>
-#include <QObject>
 
 class SimplexList : public QList<SimplexData>
 {
 
 public:
-     SimplexList(const QString &newFileName = QString());
-     SimplexList(Configuration* newConfig);
-     virtual ~SimplexList();
-     
-     bool save();
-     bool open();
-     bool openNodeFile(const QDomNode &newNode);
-     bool saveNodeFile(int index, const QString& newName);
-     void setFileName(const QString &newFileName);
-	 void setRadarName(const QString &newRadarName);
-	 void setVortexName(const QString &newVortexName);
-     void setNewWorkingDirectory(const QString &newDirectory);
-     QString getFileName() { return fileName; }
-     QString getWorkingDirectory() { return workingDir; }
-     void timeSort();
-     int getLatestIndex();
-     
-     void append(const SimplexData &value);
-     void removeAt(int i);
+    SimplexList(QString filePath = QString());
+    virtual ~SimplexList();
+    void setFilePath(QString filePath) {_filePath=filePath;}
+    void timeSort();
+    bool restore();
+    bool saveXML();
 
 private:
-     Configuration *config;
-     QString fileName;
-     QString workingDir;
-
-     QString vortexName;
-     QString radarName;
-     QString productType;
-
-     QList<Configuration*>* simplexDataConfigs;
-     QList<QString>* configFileNames;
-     
-     void createDomSimplexDataEntry(const SimplexData &newData);
-     
-
-
+    QString _filePath;
 };
 
 #endif

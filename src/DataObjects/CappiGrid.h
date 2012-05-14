@@ -18,48 +18,43 @@
 
 class CappiGrid : public GriddedData
 {
- 
- public:
-  CappiGrid();
-  ~CappiGrid();
-  void gridRadarData(RadarData *radarData, QDomElement cappiConfig,
-		float *vortexLat, float *vortexLon);
-  //void BarnesInterpolation();
-  void CressmanInterpolation(RadarData *radarData);
-  //void ClosestPointInterpolation();
-  //void BilinearInterpolation(RadarData *radarData);
-  float trilinear(const float &x, const float &y,
-		 const float &z, const int &param);
-  void writeAsi();
-  bool writeAsi(const QString& fileName);
-  
- private:
 
-  float latReference;
-  float lonReference;
+public:
+    CappiGrid();
+    ~CappiGrid();
+    void  gridRadarData(RadarData *radarData, QDomElement cappiConfig,float *vortexLat, float *vortexLon);
+    void  CressmanInterpolation(RadarData *radarData);
+    float trilinear(const float &x, const float &y,const float &z, const int &param);
+    void  writeAsi();
+    bool  writeAsi(const QString& fileName);
 
-  QString outFileName;
-  float* relDist;
-  
-  class goodRef {
-   public:
-    float sumRef;
-    float weight;
-  };
-  class goodVel {
-   public:
-    float sumVel;
-    float sumSw;
-    float weight;
-  };
+private:
 
-  bool gridReflectivity;
-  goodRef refValues[256][256][20];
-  goodVel velValues[256][256][20];
-  long maxRefIndex;
-  long maxVelIndex;
-  
+    float latReference;
+    float lonReference;
+
+    QString outFileName;
+    float* relDist;
+
+    class goodRef {
+    public:
+        float sumRef;
+        float weight;
+    };
+    class goodVel {
+    public:
+        float sumVel;
+        float sumSw;
+        float weight;
+    };
+
+    bool gridReflectivity;
+    long maxRefIndex;
+    long maxVelIndex;
+    goodRef refValues[maxIDim][maxJDim][maxKDim];
+    goodVel velValues[maxIDim][maxJDim][maxKDim];
+
 };
-               
+
 
 #endif

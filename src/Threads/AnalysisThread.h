@@ -37,9 +37,8 @@ class AnalysisThread : public QThread
      void setVortexList(VortexList *archivePtr);
      void setSimplexList(SimplexList *archivePtr);
      void setPressureList(PressureList *archivePtr);
-     void setDropSondeList(PressureList *archivePtr);
      void setSimplexThread(SimplexThread *threadPtr);
-	 void setVortexThread(VortexThread *threadPtr);
+     void setVortexThread(VortexThread *threadPtr);
      void setNumVolProcessed(const float& num);
      void setAnalyticRun(const bool& runOnce);
 	 
@@ -70,13 +69,13 @@ class AnalysisThread : public QThread
      Configuration *configData;
      RadarData *radarVolume;
      GriddedFactory gridFactory;
-     GriddedData *gridData;     
+     GriddedData *_gridData;
      SimplexThread *simplexThread;
      VortexThread *vortexThread;
      VortexList *vortexList;
      SimplexList *simplexList;
      PressureList *pressureList;
-     PressureList *dropSondeList;  
+
      // is this supposed to be type vortexList -LM
      void archiveAnalysis();
      float vortexLat, vortexLon;

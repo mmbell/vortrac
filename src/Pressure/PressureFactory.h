@@ -27,37 +27,37 @@
 class PressureFactory : public QObject
 {
 
-  Q_OBJECT
+    Q_OBJECT
 
- public:
-  PressureFactory(Configuration *wholeConfig, QObject *parent = 0);
-  ~PressureFactory();
-  QList<PressureData>* getUnprocessedData();
-  bool hasUnprocessedData();
+public:
+    PressureFactory(Configuration *wholeConfig, QObject *parent = 0);
+    ~PressureFactory();
+    QList<PressureData>* getUnprocessedData();
+    bool hasUnprocessedData();
 
- public slots:
-   void catchLog(const Message& message);
+public slots:
+    void catchLog(const Message& message);
 
- signals:
-   void log(const Message& message);
+signals:
+    void log(const Message& message);
 
- private:
-  enum dataFormat {
-	hwind,
-	awips,
-	netcdf
-  };
+private:
+    enum dataFormat {
+        hwind,
+        awips,
+        netcdf
+    };
 
-  QDir dataPath;
-  dataFormat pressureFormat;
-  QQueue<QString> *pressureQueue;
-  QDateTime startDateTime;
-  QDateTime endDateTime;
-  QHash<QString, bool> fileParsed;
-  float radarlat, radarlon;
+    QDir dataPath;
+    dataFormat pressureFormat;
+    QQueue<QString> *pressureQueue;
+    QDateTime startDateTime;
+    QDateTime endDateTime;
+    QHash<QString, bool> fileParsed;
+    float radarlat, radarlon;
 
 };
-  
+
 
 #endif
 

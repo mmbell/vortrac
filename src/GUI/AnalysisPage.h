@@ -20,7 +20,7 @@
 #include "Config/Configuration.h"
 #include "IO/Log.h"
 #include "ConfigTree.h"
-#include "Threads/PollThread.h"
+#include "Threads/workThread.h"
 #include "GraphFace.h"
 #include "ConfigurationDialog.h"
 #include "DiagnosticPanel.h"
@@ -31,57 +31,57 @@
 class AnalysisPage : public QWidget
 {
 
-  Q_OBJECT
+    Q_OBJECT
 
- public:
+public:
 
-  AnalysisPage(QWidget *parent = 0);
-  ~AnalysisPage();
+    AnalysisPage(QWidget *parent = 0);
+    ~AnalysisPage();
 
-  void newFile();
-  bool loadFile(const QString &fileName);
-  bool save();
-  bool saveAs();
-  bool saveFile(const QString &fileName);
-  QString getVortexLabel() { return vortexLabel; }
-  QString currentFile() { return configFileName; }
-  QDir getWorkingDirectory() { return workingDirectory; }
-  void setVortexLabel();
-  bool maybeSave();
-  void saveDisplay();
+    void newFile();
+    bool loadFile(const QString &fileName);
+    bool save();
+    bool saveAs();
+    bool saveFile(const QString &fileName);
+    QString getVortexLabel() { return vortexLabel; }
+    QString currentFile() { return configFileName; }
+    QDir getWorkingDirectory() { return workingDirectory; }
+    void setVortexLabel();
+    bool maybeSave();
+    void saveDisplay();
 
-  GraphFace *getGraph() {return graph;}
-  Log* getStatusLog(){ return statusLog;} 
-  ConfigurationDialog* getConfigDialog(){ return configDialog;}
-  Configuration* getConfiguration() {return configData;}
-  bool isRunning();
+    GraphFace *getGraph() {return graph;}
+    Log* getStatusLog(){ return statusLog;}
+    ConfigurationDialog* getConfigDialog(){ return configDialog;}
+    Configuration* getConfiguration() {return configData;}
+    bool isRunning();
 
-  public slots:
+public slots:
     void saveLog();
-    void catchLog(const Message& message); 
-    void catchVCP(const int vcp); 
-    void updateCappi(const GriddedData* cappi);
-    void updateCappiInfo(const float& x, const float& y, const float& rmwEstimate, const float& sMin,const float& sMax, const float& vMax,
-			 const float& userCenterLat, const float& userCenterLon, const float& centerLat, const float& centerLon);
+    void catchLog(const Message& message);
+    //void catchVCP(const int vcp);
+    //void updateCappi(const GriddedData* cappi);
+    void updateCappiInfo(float x, float y, float rmwEstimate, float sMin, float sMax, float vMax,
+                         float userCenterLat, float userCenterLon, float centerLat, float centerLon);
     void updateCappiDisplay(bool hasImage);
 
     // void changeStopLight(StopLightColor color, const QString message);
     // void changeStormSignal(StormSignalStatus status, const QString message);
-	
- signals:
+
+signals:
     void tabLabelChanged(QWidget* labelWidget, const QString& new_Label);
     void log(const Message& message);
     void saveGraphImage(const QString& name);
     void vortexListChanged(VortexList* list);
-    void newVCP(const int vcp);
-    void newCappi(const GriddedData* cappi);
-    void newCappiInfo(const float& x, const float& y, const float& rmwEstimate, 
-					  const float& sMin,const float& sMax, const float& vMax);
+//    void newVCP(const int vcp);
+//    void newCappi(const GriddedData* cappi);
+//    void newCappiInfo(const float& x, const float& y, const float& rmwEstimate,
+//                      const float& sMin,const float& sMax, const float& vMax);
 
     //void newStormSignalStatus(StormSignalStatus status, const QString message);
     //void newStopLightColor(StopLightColor color, const QString message);
-	
- private slots:
+
+private slots:
     void updatePage();
     void runThread();
     void abortThread();
@@ -93,51 +93,51 @@ class AnalysisPage : public QWidget
     void fetchRemoteData();
     bool getRemoteData();
     bool saveRemoteData();
-	
- protected:
-  void closeEvent(QCloseEvent *event);
 
- private:
-  QString vortexLabel;
-  QString configFileName;
-  Configuration *configData;
-  // ConfigTree *configTree;
-  DiagnosticPanel *diagPanel;
-  Log *statusLog;
-  QTextEdit *statusText;
-  QTextEdit *textPopUp;
-  QDialog *popUp;
-  int lastMax;
-  PollThread *pollThread;
-  bool isUntitled;
-  GraphFace* graph;
-  ConfigurationDialog *configDialog;
-  QDir workingDirectory;
-  QString imageFileName;
-  QLCDNumber *currPressure;
-  QLCDNumber *currRMW;
-  QLCDNumber *currDeficit;
-  QTabWidget* visuals;
-  CappiDisplay* cappiDisplay;
-  QLCDNumber *appMaxWind;
-  QLCDNumber *recMaxWind;
-  QLCDNumber *lcdCenterLat;
-  QLCDNumber *lcdCenterLon;
-  QLCDNumber *lcdUserCenterLat;
-  QLCDNumber *lcdUserCenterLon;
+protected:
+    void closeEvent(QCloseEvent *event);
 
-  QLabel* deficitLabel;
-  QPushButton *runButton;
-  QPushButton *abortButton;
-  //  TestGraph *tester;
+private:
+    QString vortexLabel;
+    QString configFileName;
+    Configuration *configData;
+    // ConfigTree *configTree;
+    DiagnosticPanel *diagPanel;
+    Log *statusLog;
+    QTextEdit *statusText;
+    QTextEdit *textPopUp;
+    QDialog *popUp;
+    int lastMax;
+    workThread *pollThread;
+    bool isUntitled;
+    GraphFace* graph;
+    ConfigurationDialog *configDialog;
+    QDir workingDirectory;
+    QString imageFileName;
+    QLCDNumber *currPressure;
+    QLCDNumber *currRMW;
+    QLCDNumber *currDeficit;
+    QTabWidget* visuals;
+    CappiDisplay* cappiDisplay;
+    QLCDNumber *appMaxWind;
+    QLCDNumber *recMaxWind;
+    QLCDNumber *lcdCenterLat;
+    QLCDNumber *lcdCenterLon;
+    QLCDNumber *lcdUserCenterLat;
+    QLCDNumber *lcdUserCenterLon;
 
-  bool analyticModel();
-	QNetworkAccessManager catalog_manager;
-	QNetworkAccessManager datafile_manager;
-	QNetworkReply* catalog_reply;
-	QNetworkReply* datafile_reply;
-	QStringList urlList;
-	
+    QLabel* deficitLabel;
+    QPushButton *runButton;
+    QPushButton *abortButton;
+    //  TestGraph *tester;
+
+    bool analyticModel();
+    QNetworkAccessManager catalog_manager;
+    QNetworkAccessManager datafile_manager;
+    QNetworkReply* catalog_reply;
+    QNetworkReply* datafile_reply;
+    QStringList urlList;
+
 };
 
 #endif

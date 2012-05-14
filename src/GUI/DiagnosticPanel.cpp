@@ -25,258 +25,256 @@
 #include <QColorDialog>
 
 DiagnosticPanel::DiagnosticPanel(QWidget *parent)
-  :QWidget(parent)
+    :QWidget(parent)
 
-  /*
-   * This panel is used to display widgets that provide diagnostic
-   * information on the operational state of the vortrac algorithm.
-   * This includes the vcp, problem indicator and messages, and the time.
-   */
+    /*
+       * This panel is used to display widgets that provide diagnostic
+       * information on the operational state of the vortrac algorithm.
+       * This includes the vcp, problem indicator and messages, and the time.
+       */
 
 {
-  this->setObjectName("Diagnostic Panel");
+    this->setObjectName("Diagnostic Panel");
 
-  // timer is used to create updates for the display clock
+    // timer is used to create updates for the display clock
 
-  timer = new QTimer(this);
-  timer->setSingleShot(false);
-  timer->setInterval(1000);
-  timer->start();
+    timer = new QTimer(this);
+    timer->setSingleShot(false);
+    timer->setInterval(1000);
+    timer->start();
 
-  QGroupBox *clockBox = new QGroupBox("Current Time UTC");
-  clockBox->setAlignment(Qt::AlignHCenter);
- 
-  clock = new QLCDNumber(clockBox);
-  clock->setSegmentStyle(QLCDNumber::Flat);
-  clock->resize(150,100);
+    QGroupBox *clockBox = new QGroupBox("Current Time UTC");
+    clockBox->setAlignment(Qt::AlignHCenter);
 
-  QGridLayout *clockLayout = new QGridLayout;
-  clockLayout->addWidget(clock,0,1,1,1);
-  //clockLayout->setRowMinimumHeight(1,100);
-  clockLayout->setRowStretch(0,8);
-  clockBox->setLayout(clockLayout);
-  //clockBox->resize(230,150);
+    clock = new QLCDNumber(clockBox);
+    clock->setSegmentStyle(QLCDNumber::Flat);
+    clock->resize(150,100);
 
-  //QPushButton *color = new QPushButton("color", this);
-  //connect(color, SIGNAL(pressed()), this, SLOT(pickColor()));
+    QGridLayout *clockLayout = new QGridLayout;
+    clockLayout->addWidget(clock,0,1,1,1);
+    //clockLayout->setRowMinimumHeight(1,100);
+    clockLayout->setRowStretch(0,8);
+    clockBox->setLayout(clockLayout);
+    //clockBox->resize(230,150);
 
-  //QPushButton *lightButton = new QPushButton("Next Signal Pattern");
-  //connect(lightButton, SIGNAL(pressed()), this, SLOT(testLight()));
+    //QPushButton *color = new QPushButton("color", this);
+    //connect(color, SIGNAL(pressed()), this, SLOT(pickColor()));
 
-  //QPushButton *stormButton = new QPushButton("Next Storm Signal");
-  //connect(stormButton, SIGNAL(pressed()), this, SLOT(testStormSignal()));
-  
-  // StormSignal is used to alert user to 
-  // noticable changes in vortex properties
+    //QPushButton *lightButton = new QPushButton("Next Signal Pattern");
+    //connect(lightButton, SIGNAL(pressed()), this, SLOT(testLight()));
 
-  stormSignal = new StormSignal(QSize(225,225), this);
-  connect(stormSignal, SIGNAL(log(const Message&)),
-	  this, SLOT(catchLog(const Message&)));
-  
-  QHBoxLayout *stormLayout = new QHBoxLayout;
-  stormLayout->addStretch();
-  stormLayout->addWidget(stormSignal);
-  stormLayout->addStretch();
+    //QPushButton *stormButton = new QPushButton("Next Storm Signal");
+    //connect(stormButton, SIGNAL(pressed()), this, SLOT(testStormSignal()));
 
-  // Stoplight used to show operational status of the vortrac GUI
+    // StormSignal is used to alert user to
+    // noticable changes in vortex properties
 
-  lights = new StopLight(QSize(225,80), this);
-  connect(lights, SIGNAL(log(const Message&)),
-	  this, SLOT(catchLog(const Message&)));
+    stormSignal = new StormSignal(QSize(225,225), this);
 
-  QHBoxLayout *lightsLayout = new QHBoxLayout;
-  lightsLayout->addStretch();
-  lightsLayout->addWidget(lights);
-  lightsLayout->addStretch();
+    QHBoxLayout *stormLayout = new QHBoxLayout;
+    stormLayout->addStretch();
+    stormLayout->addWidget(stormSignal);
+    stormLayout->addStretch();
 
-  // Displays current radar vcp
-  QHBoxLayout *vcpLayout = new QHBoxLayout;
-  QLabel *vcpLabel = new QLabel(tr("Current Radar VCP"));
-  vcpString = new QString(tr("N/A"));
-  vcp = new QLineEdit(*vcpString); 
-  vcp->setReadOnly(true);
-  vcpLayout->addWidget(vcpLabel);
-  vcpLayout->addWidget(vcp);
-  
-  // Displays warning message that may accompany the change in stoplight
-  // signal
+    // Stoplight used to show operational status of the vortrac GUI
 
-  stopLightWarning = new QLineEdit();
-  stopLightWarning->setReadOnly(true);
+    lights = new StopLight(QSize(225,80), this);
+    connect(lights, SIGNAL(log(const Message&)),
+            this, SLOT(catchLog(const Message&)));
 
-  // Displays meassage that may accompany the change in stormSignal
+    QHBoxLayout *lightsLayout = new QHBoxLayout;
+    lightsLayout->addStretch();
+    lightsLayout->addWidget(lights);
+    lightsLayout->addStretch();
 
-  stormSignalWarning = new QLineEdit();
-  stormSignalWarning->setReadOnly(true);
+    // Displays current radar vcp
+    QHBoxLayout *vcpLayout = new QHBoxLayout;
+    QLabel *vcpLabel = new QLabel(tr("Current Radar VCP"));
+    vcpString = new QString(tr("N/A"));
+    vcp = new QLineEdit(*vcpString);
+    vcp->setReadOnly(true);
+    vcpLayout->addWidget(vcpLabel);
+    vcpLayout->addWidget(vcp);
 
-  QVBoxLayout *main = new QVBoxLayout();
-  // main->addStretch();
-  main->addWidget(clockBox);
-  main->addStretch();
-  main->addLayout(vcpLayout);
-  main->addStretch();
-  main->addLayout(stormLayout);
-  main->addWidget(stormSignalWarning);
-  main->addStretch();
-  main->addLayout(lightsLayout);
-  main->addWidget(stopLightWarning);
+    // Displays warning message that may accompany the change in stoplight
+    // signal
 
-  //main->addWidget(color); // I use this when I need to select colors
-                            // for coding throw away in finished product -LM
-  //  main->addWidget(lightButton);
-  // main->addWidget(stormButton);
+    stopLightWarning = new QLineEdit();
+    stopLightWarning->setReadOnly(true);
 
-  setLayout(main);
-  
-  // Used to set the initial color of the stoplight
-  
-  lights->changeColor(Green);
+    // Displays meassage that may accompany the change in stormSignal
 
-  dummy = 0;
-  
-  connect(timer, SIGNAL(timeout()), 
-	  this, SLOT(updateClock()));
-  
-  updateClock();
+    stormSignalWarning = new QLineEdit();
+    stormSignalWarning->setReadOnly(true);
+
+    QVBoxLayout *main = new QVBoxLayout();
+    // main->addStretch();
+    main->addWidget(clockBox);
+    main->addStretch();
+    main->addLayout(vcpLayout);
+    main->addStretch();
+    main->addLayout(stormLayout);
+    main->addWidget(stormSignalWarning);
+    main->addStretch();
+    main->addLayout(lightsLayout);
+    main->addWidget(stopLightWarning);
+
+    //main->addWidget(color); // I use this when I need to select colors
+    // for coding throw away in finished product -LM
+    //  main->addWidget(lightButton);
+    // main->addWidget(stormButton);
+
+    setLayout(main);
+
+    // Used to set the initial color of the stoplight
+
+    lights->changeColor(Green);
+
+    dummy = 0;
+
+    connect(timer, SIGNAL(timeout()),
+            this, SLOT(updateClock()));
+
+    updateClock();
 }
 
 DiagnosticPanel::~DiagnosticPanel()
 {
-	delete vcpString;
-	//delete cappiDisplay;
+    delete vcpString;
+    //delete cappiDisplay;
 }
 
 void DiagnosticPanel::updateClock()
 {
-  // Updates display clock
-  QString displayTime;
-  displayTime = QDateTime::currentDateTime().toUTC().toString("hh:mm");
-  clock->display(displayTime);	
-  //if(hasNewCappi && !cappiLaunch->isEnabled()) {
-  //  cappiLaunch->setEnabled(true);
-  //}
-  update();
+    // Updates display clock
+    QString displayTime;
+    displayTime = QDateTime::currentDateTime().toUTC().toString("hh:mm");
+    clock->display(displayTime);
+    //if(hasNewCappi && !cappiLaunch->isEnabled()) {
+    //  cappiLaunch->setEnabled(true);
+    //}
+    update();
 
 }
 
 void DiagnosticPanel::catchLog(const Message& message)
 {
-  emit log(message);
+    emit log(message);
 }
 
 void DiagnosticPanel::pickColor()
 
 {
-  QColorDialog::getColor(); 
+    QColorDialog::getColor();
 }
 
 void DiagnosticPanel::updateVCP(const int newVCP)
 {
-	vcpString->setNum(newVCP);
-	// Still not fixed even though there is no direct connection across threads now
-	vcp->clear();
-	vcp->insert(*vcpString);
+    vcpString->setNum(newVCP);
+    // Still not fixed even though there is no direct connection across threads now
+    vcp->clear();
+    vcp->insert(*vcpString);
 }
 /*
 void DiagnosticPanel::updateCappi(const GriddedData* newCappi)
 {
         cappi=newCappi;
-	// Got a cappi now, turn on the button
-	cappiDisplay->constructImage(cappi);
-	hasNewCappi = true;
+ // Got a cappi now, turn on the button
+ cappiDisplay->constructImage(cappi);
+ hasNewCappi = true;
 }
 */
 void DiagnosticPanel::testLight()
 {
-  StopLightColor testColor;
-  switch(dummy) 
+    StopLightColor testColor;
+    switch(dummy)
     {
     case 1:
-      testColor = BlinkRed;
-      break;
+        testColor = BlinkRed;
+        break;
     case 2:
-      testColor = Red;
-      break;
+        testColor = Red;
+        break;
     case 3:
-      testColor = BlinkYellow;
-      break;
+        testColor = BlinkYellow;
+        break;
     case 4:
-      testColor = Yellow;
-      break;
+        testColor = Yellow;
+        break;
     case 5:
-      testColor = BlinkGreen;
-      break;
+        testColor = BlinkGreen;
+        break;
     case 6:
-      testColor = Green;
-      break;
+        testColor = Green;
+        break;
     case 7:
-      testColor = AllOn;
-      break;
+        testColor = AllOn;
+        break;
     default:
-      testColor = AllOff;
-      break;
+        testColor = AllOff;
+        break;
     }
-  lights->changeColor(testColor);
-  if(dummy < 7)
-    dummy++;
-  else 
-    dummy = 0;
+    lights->changeColor(testColor);
+    if(dummy < 7)
+        dummy++;
+    else
+        dummy = 0;
 }
 
 void DiagnosticPanel::testStormSignal()
 {
-  StormSignalStatus testStatus;
-  switch(stormDummy) 
+    StormSignalStatus testStatus;
+    switch(stormDummy)
     {
     case 1:
-      testStatus = RapidDecrease;
-      break;
+        testStatus = RapidDecrease;
+        break;
     case 2:
-      testStatus = RapidIncrease;
-      break;
+        testStatus = RapidIncrease;
+        break;
     case 3:
-      testStatus = OutOfRange;
-      break;
+        testStatus = OutOfRange;
+        break;
     case 4:
-      testStatus = SimplexError;
-      break;
+        testStatus = SimplexError;
+        break;
     case 5:
-      testStatus = Ok;
-      break;
+        testStatus = Ok;
+        break;
     default:
-      testStatus = Nothing;
-      break;
+        testStatus = Nothing;
+        break;
     }
-  stormSignal->changeStatus(testStatus);
-  if(stormDummy < 5)
-    stormDummy++;
-  else 
-    stormDummy = 0;
+    stormSignal->changeStatus(testStatus);
+    if(stormDummy < 5)
+        stormDummy++;
+    else
+        stormDummy = 0;
 }
 /*
 void DiagnosticPanel::launchCappi()
 {
-	// Fill the pixmap with the current cappi dat
-	//cappiDisplay->constructImage(cappi);
-	
-	// Open the floating widget to look at the Cappi
-	cappiDisplay->show();
-	
+ // Fill the pixmap with the current cappi dat
+ //cappiDisplay->constructImage(cappi);
+
+ // Open the floating widget to look at the Cappi
+ cappiDisplay->show();
+
 }
 */
 
 void DiagnosticPanel::changeStopLight(StopLightColor newColor,
-				      const QString newMessage)
+                                      const QString newMessage)
 {
-  lights->changeColor(newColor);
-  stopLightWarning->clear();
-  stopLightWarning->insert(newMessage);
+    lights->changeColor(newColor);
+    stopLightWarning->clear();
+    stopLightWarning->insert(newMessage);
 }
 
 void DiagnosticPanel::changeStormSignal(StormSignalStatus status, 
-					const QString newMessage)
+                                        const QString newMessage)
 {
-  stormSignal->changeStatus(status);
-  stormSignalWarning->clear();
-  stormSignalWarning->insert(newMessage);
+    stormSignal->changeStatus(status);
+    stormSignalWarning->clear();
+    stormSignalWarning->insert(newMessage);
 }

@@ -11,11 +11,9 @@
 #ifndef SIMPLEXTHREAD_H
 #define SIMPLEXTHREAD_H
 
-#include <QMutex>
 #include <QSize>
-#include <QThread>
-#include <QWaitCondition>
 #include <QList>
+#include <QObject>
 
 #include "IO/Message.h"
 #include "Config/Configuration.h"
@@ -25,80 +23,61 @@
 #include "DataObjects/SimplexList.h"
 #include "DataObjects/SimplexData.h"
 #include "DataObjects/VortexData.h"
-#include "ChooseCenter.h"
 
 
-class SimplexThread : public QThread
+class SimplexThread:public QObject
 {
-  Q_OBJECT
+    Q_OBJECT
     
- public:
-     SimplexThread(QObject *parent = 0);
-     ~SimplexThread();
-     void findCenter(Configuration *wholeConfig, GriddedData *dataPtr, 
-		     RadarData* radarPtr, SimplexList *simplexPtr, 
-		     VortexData *vortexPtr);
+public:
+    SimplexThread(QObject* parent=0);
+    ~SimplexThread();
+    void initParam(Configuration *wholeConfig, GriddedData *dataPtr,float latGuess, float lonGuess);
+    bool findCenter(SimplexList* simplexList);
 
- public slots:
-     void catchLog(const Message& message);
-   
- protected:
-     void run();
- 
- signals:
-     void centerFound();
-     void log(const Message& message);
- 
- private:
-     QMutex mutex;
-     QWaitCondition waitForData;
-     bool abort;
-	 GriddedData *gridData;
-	 RadarData *radarData;
-	 SimplexData *simplexData;
-	 SimplexList *simplexResults;
-	 VortexData *vortexData;
-	 Configuration *configData;
-	 QDomElement simplexConfig;
-	 float refLat;
-	 float refLon;
-	 float* dataGaps;
-	 GBVTD* vtd;
-	 Coefficient* vtdCoeffs; 
-	 float** vertex;
-	 float* VT;
-	 float* vertexSum;
-	 float firstLevel;
-	 float lastLevel;
-	 float firstRing;
-	 float lastRing;
-	 float vtdStdDev;
-	 float VTsolution;
-	 float Xsolution;
-	 float Ysolution;	 
-	 float meanXall, meanYall, meanVTall;
-	 float meanX, meanY, meanVT;
-	 float stdDevVertexAll, stdDevVTAll;
-	 float stdDevVertex, stdDevVT;
-	 float convergingCenters;
-	 float Xind[25],Yind[25],VTind[25];
-	 float Xconv[25],Yconv[25],VTconv[25];
-	 float initialX[25], initialY[25];
-	 float hvvpResult;
-	 float hvvpUncertainty;
+public slots:
+    void catchLog(const Message& message);
 
-	 
-	 void archiveCenters(float& radius,float& height,float& numPoints);
-	 void archiveNull(float& radius,float& height,float& numPoints);
-	 inline void getVertexSum(float**& vertex,float*& vertexSum);
-	 float simplexTest(float**& vertex, float*& VT, float*& vertexSum, 
-			   float& radius, float& height, float& RefK,
-			   QString& velField, int& high,double factor);
-	 bool calcHVVP(double lat=0.0, double lon = 0.0);
-	 
-	 // Choosecenter variables
-	 float velNull;
+signals:
+    void log(const Message& message);
 
+private:
+    GriddedData   *gridData;
+    Configuration *configData;
+    float _latGuess;
+    float _lonGuess;
+    float* _dataGaps;
+    GBVTD* _simplexVTD;
+    Coefficient* _vtdCoeffs;
+    float* VT;
+    float* vertexSum;
+    float firstLevel;
+    float lastLevel;
+    float firstRing;
+    float lastRing;
+    float vtdStdDev;
+    float meanXall, meanYall, meanVTall;
+    float meanX, meanY, meanVT;
+    float stdDevVertexAll, stdDevVTAll;
+    float stdDevVertex, stdDevVT;
+    float convergingCenters;
+    float endX[25],endY[25],VTind[25];
+    float Xconv[25],Yconv[25],VTconv[25];
+    float startX[25], startY[25];
+
+
+    void archiveCenters(SimplexData* simplexData,float radius,float height,float numPoints);
+    void archiveNull(SimplexData* simplexData,float& radius,float& height,float& numPoints);
+    inline void _getVertexSum(float** vertex,float* vertexSum);
+    float _simplexTest(float**& vertex, float*& VT, float*& vertexSum,
+                      float& radius, float& height, float& RefK,
+                      QString& velField, int& high,double factor);
+
+    // Choosecenter variables
+    float velNull;
+    float _getSymWind(float vertex_x,float vertex_y,int RefK,float radius,float height,QString velField);
+    void  _centerIterate(float** vertex,float* vertexSum, float* VT,int maxIterations,float convergeCriterion,
+                          float RefK,float radius,float height,QString velField,float& VTsolution,float& Xsolution,float& Ysolution);
 };
 
 #endif

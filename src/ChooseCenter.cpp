@@ -10,834 +10,758 @@
  */
 
 #include "ChooseCenter.h"
+#include "Math/Matrix.h"
 #include <math.h>
 #include <QDomElement>
 #include <QHash>
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
 
-ChooseCenter::ChooseCenter(Configuration* newConfig, 
-			   const SimplexList* newList, VortexData* vortexPtr,
-			   QObject *parent)
-  :QObject(parent)
+ChooseCenter::ChooseCenter(Configuration* newConfig,const SimplexList* newList, VortexData* vortexPtr):
+    MAX_ORDER(10),velNull(-999.0f)
 {
-  velNull = -999.;
-  config = newConfig;
-  simplexResults = NULL;
-  simplexResults = newList;
-  vortexData = vortexPtr;
-  score = NULL;
-  bestRadius = NULL;
-  centerDev = NULL;
-  radiusDev = NULL;
-  bestFitVariance = NULL;
-  bestFitDegree = NULL;
-  bestFitCoeff = NULL;
-  newBestRadius = NULL;
-  newBestCenter = NULL;
-  numHeights = NULL;
-  indexOfHeights = NULL;
-  setObjectName("Center Chooser");
+    _config = newConfig;
+    _simplexResults = newList;
+    _vortexData = vortexPtr;
+    _pppScore = NULL;
+    _ppBestRadius = NULL;
+    _ppBestFitVariance = NULL;
+    _ppBestFitDegree = NULL;
+    _pppBestFitCoeff = NULL;
+    _ppNewBestRadius = NULL;
+    _ppNewBestCenter = NULL;
+    numHeights = NULL;
+    indexOfHeights = NULL;
 }
 
 ChooseCenter::~ChooseCenter()
 {
-  config = NULL;
-  delete config;
-  vortexData = NULL;
-  delete vortexData;
-  
-  if(score!=NULL) {
-    for(int i = 0; i < simplexResults->count(); i++) {
-      for(int j = 0; j < simplexResults->at(i).getNumRadii(); j++) {
-	delete [] score[i][j];
-      }
-      delete [] score[i];
+    if(_pppScore!=NULL) {
+        for(int i = 0; i < _simplexResults->count(); i++) {
+            for(int j = 0; j < _simplexResults->at(i).getNumRadii(); j++) {
+                delete [] _pppScore[i][j];
+            }
+            delete [] _pppScore[i];
+        }
+        delete [] _pppScore;
     }
-    delete [] score;
-  }
-  else 
-    delete score;
+    else
+        delete _pppScore;
 
-  // We might not be able to delete these depending on weither they 
-  // are passed out for further use or not after the ChooseCenter object is
-  // distroyed
-  
-  if(bestRadius!=NULL) {
-    for(int i = 0; i < simplexResults->count(); i++) 
-      delete[] bestRadius[i];
-    delete[] bestRadius;   }
-  else
-    delete bestRadius;
-  
-  if(newBestRadius!=NULL) {
-    for(int i = 0; i < simplexResults->count(); i++)
-      delete[] newBestRadius[i];
-    delete[] newBestRadius; }
-  else
-      delete newBestRadius;
+    // We might not be able to delete these depending on weither they
+    // are passed out for further use or not after the ChooseCenter object is
+    // distroyed
 
-  if(newBestCenter!=NULL) {
-    for(int i = 0; i < simplexResults->count(); i++)
-      delete[] newBestCenter[i];    
-    delete[] newBestCenter;
-  }
-  else
-    delete newBestCenter;
-  if(bestFitCoeff!=NULL) {
-    for(int m = 0; m < 4; m++) {
-      for(int p = 0; p < numHeights->count(); p++) 
-	delete[] bestFitCoeff[m][p];
-      delete[] bestFitCoeff[m];
+    if(_ppBestRadius!=NULL) {
+        for(int i = 0; i < _simplexResults->count(); i++)
+            delete[] _ppBestRadius[i];
+        delete[] _ppBestRadius;   }
+    else
+        delete _ppBestRadius;
+
+    if(_ppNewBestRadius!=NULL) {
+        for(int i = 0; i < _simplexResults->count(); i++)
+            delete[] _ppNewBestRadius[i];
+        delete[] _ppNewBestRadius; }
+    else
+        delete _ppNewBestRadius;
+
+    if(_ppNewBestCenter!=NULL) {
+        for(int i = 0; i < _simplexResults->count(); i++)
+            delete[] _ppNewBestCenter[i];
+        delete[] _ppNewBestCenter;
     }
-    delete[] bestFitCoeff;
-  }
-  else
-    delete bestFitCoeff;
-      
-  if(bestFitDegree!=NULL) {
-    for(int m = 0; m < 4; m++) 
-      delete[] bestFitDegree[m];
-    delete[] bestFitDegree;
-  }
-  else 
-    delete bestFitCoeff;
-
-  if(bestFitVariance!=NULL) {
-    for(int m = 0; m < 4; m++) 
-      delete[] bestFitVariance[m];
-    delete[] bestFitVariance;
-  }
-  if(centerDev!=NULL)
-    delete[] centerDev;
-  else 
-    delete centerDev;
-  if(radiusDev!=NULL)
-    delete[] radiusDev;
-  else
-    delete radiusDev;
-  if(numHeights!=NULL)
-    numHeights->clear();
-  if(indexOfHeights!=NULL) {
-    for(int ii = indexOfHeights->count()-1; ii >= 0; ii++) {
-      int* trash = indexOfHeights->take(ii);
-      delete [] trash;
+    else
+        delete _ppNewBestCenter;
+    if(_pppBestFitCoeff!=NULL) {
+        for(int m = 0; m < 4; m++) {
+            for(int p = 0; p < numHeights->count(); p++)
+                delete[] _pppBestFitCoeff[m][p];
+            delete[] _pppBestFitCoeff[m];
+        }
+        delete[] _pppBestFitCoeff;
     }
-    indexOfHeights->clear();
-  }
-  delete numHeights;
-  delete indexOfHeights;
-}
+    else
+        delete _pppBestFitCoeff;
 
-void ChooseCenter::setConfig(Configuration* newConfig)
-{
-  config = NULL;
-  config = newConfig; 
-}
+    if(_ppBestFitDegree!=NULL) {
+        for(int m = 0; m < 4; m++)
+            delete[] _ppBestFitDegree[m];
+        delete[] _ppBestFitDegree;
+    }
+    else
+        delete _pppBestFitCoeff;
 
-void ChooseCenter::setSimplexList(const SimplexList* newList)
-{
-  simplexResults = NULL;
-  simplexResults = newList;
+    if(_ppBestFitVariance!=NULL) {
+        for(int m = 0; m < 4; m++)
+            delete[] _ppBestFitVariance[m];
+        delete[] _ppBestFitVariance;
+    }
+    if(numHeights!=NULL)
+        numHeights->clear();
+    if(indexOfHeights!=NULL) {
+        for(int ii = indexOfHeights->count()-1; ii >= 0; ii++) {
+            int* trash = indexOfHeights->take(ii);
+            delete [] trash;
+        }
+        indexOfHeights->clear();
+    }
+    delete numHeights;
+    delete indexOfHeights;
 }
 
 bool ChooseCenter::findCenter()
 {
-	
-   emit errorlog(Message(QString("Statistically selecting center"),0,this->objectName()));
-   initialize();
-   if(!chooseMeanCenters()) {
-     emit errorlog(Message(QString("Failed in ChooseMeanCenters!"),
-			   0,this->objectName(), Red,
-			   QString("Data Issues Could Not Find Mean Center")));
-     return false;
-   }
+    /*
+     * this function try to construct a polynomial fit of timeserial simplex data, at least 6 data points in
+     * the recent 2 hours is needed to do this fitting. before performing the fitting, a average center is
+     * compute, if the polynomial fitting fails or there is not enough history data, this average center is used.
+     */
+    _initialize();
 
-   // Check to see if there are an adequate number of volumes within
-   // the specified time range
-
-   int goodVolumes = 0;
-   for(int ii = 0; ii < simplexResults->count(); ii++) {
-     if((simplexResults->at(ii).getTime() >= startTime) &&
-	(simplexResults->at(ii).getTime() <= endTime)) 
-       goodVolumes++;
-   }
-  
-   if(goodVolumes > minVolumes) {
-     emit errorlog(Message(QString("Using Polynomial Fit to Determine Best Center"),0,this->objectName()));
-     if(constructPolynomial()) {
-       if(!fixCenters()) {
-	 QString fail("Failed to Find Polynomial Fit Center - Reverting To Mean");
-	 emit errorlog(Message(fail,0,this->objectName(),Yellow,
-			       QString("Center From Fit Not Found")));
-	 useLastMean();
-	 return true;
-       }
-       else {
-	 emit errorlog(Message(QString(),0,this->objectName(),Green));
-	 return true;
-       }
-     }
-     else {
-       QString fail("Failed to Find Polynomial Fit Center - Reverting To Mean");
-       emit errorlog(Message(fail,0,this->objectName(),Yellow,
-			     QString("Center From Fit Not Found")));
-       useLastMean();
-       return true;
-     }
-   }
-   else {
-     emit errorlog(Message(QString("Using Last Mean Center For Guess"),
-			   0,this->objectName()));
-     useLastMean();
-   }
-   return true;
-}
-
-void ChooseCenter::initialize()
-{
-  // Pulls all the necessary user parameters from the configuration panel
-  //  and initializes the array used for fTesting
-
-  QDomElement ccElement = config->getConfig("choosecenter");
-  minVolumes = config->getParam(ccElement, QString("min_volumes")).toInt();
-  windWeight = config->getParam(ccElement, QString("wind_weight")).toFloat();
-  stdWeight = config->getParam(ccElement, QString("stddev_weight")).toFloat();
-  ptsWeight = config->getParam(ccElement, QString("pts_weight")).toFloat();
-
-  positionWeight = config->getParam(ccElement, QString("position_weight")).toFloat();
-  rmwWeight = config->getParam(ccElement, QString("rmw_weight")).toFloat();
-  
-  velWeight = config->getParam(ccElement, QString("vt_weight")).toFloat();
-
-  int fPercent = config->getParam(ccElement, QString("stats")).toInt();
-  QDate sDate = QDate::fromString(config->getParam(ccElement, 
-						   QString("startdate")),
-				  Qt::ISODate);
-  QDate eDate = QDate::fromString(config->getParam(ccElement, 
-						   QString("enddate")),
-				  Qt::ISODate);
-  QTime sTime = QTime::fromString(config->getParam(ccElement, 
-						   QString("starttime")),
-				  Qt::ISODate);
-  QTime eTime = QTime::fromString(config->getParam(ccElement,
-						   QString("endtime")),
-				  Qt::ISODate);
- 
-  startTime = QDateTime(sDate, sTime, Qt::UTC);
-  endTime = QDateTime(eDate, eTime, Qt::UTC);
-
-  if(fPercent == 99) {
-    fCriteria[0] = 4052.2;  
-    fCriteria[1] = 98.50;  
-    fCriteria[2] = 34.12;  
-    fCriteria[3] = 21.20;  
-    fCriteria[4] = 16.26;  
-    fCriteria[5] = 13.75;  
-    fCriteria[6] = 12.25;  
-    fCriteria[7] = 11.26;  
-    fCriteria[8] = 10.56;  
-    fCriteria[9] = 10.04;  
-    fCriteria[10] = 9.65;  
-    fCriteria[11] = 9.33;  
-    fCriteria[12] = 9.07;  
-    fCriteria[13] = 8.86;  
-    fCriteria[14] = 8.68;  
-    fCriteria[15] = 8.53;  
-    fCriteria[16] = 8.40;  
-    fCriteria[17] = 8.29;  
-    fCriteria[18] = 8.18;  
-    fCriteria[19] = 8.10;  
-    fCriteria[20] = 8.02;  
-    fCriteria[21] = 7.95;  
-    fCriteria[22] = 7.88;  
-    fCriteria[23] = 7.82;  
-    fCriteria[24] = 7.77;  
-    fCriteria[25] = 7.72;  
-    fCriteria[26] = 7.68;  
-    fCriteria[27] = 7.64;  
-    fCriteria[28] = 7.60;  
-    fCriteria[29] = 7.56;
-
-  }
-  else {
-    // fPercent = 95 
-    // these are our two options for now
-    fCriteria[0] = 161.45;  
-    fCriteria[1] = 18.513;  
-    fCriteria[2] = 10.128;  
-    fCriteria[3] = 7.7086;  
-    fCriteria[4] = 6.6079;  
-    fCriteria[5] = 5.9874;  
-    fCriteria[6] = 5.5914;  
-    fCriteria[7] = 5.3177;  
-    fCriteria[8] = 5.1174;  
-    fCriteria[9] = 4.9646;  
-    fCriteria[10] = 4.8443;  
-    fCriteria[11] = 4.7472;  
-    fCriteria[12] = 4.6672;  
-    fCriteria[13] = 4.6001;  
-    fCriteria[14] = 4.5431;  
-    fCriteria[15] = 4.4940;  
-    fCriteria[16] = 4.4513;  
-    fCriteria[17] = 4.4139;  
-    fCriteria[18] = 4.3808;  
-    fCriteria[19] = 4.3513;  
-    fCriteria[20] = 4.3248;  
-    fCriteria[21] = 4.3009;  
-    fCriteria[22] = 4.2793;  
-    fCriteria[23] = 4.2597;  
-    fCriteria[24] = 4.2417;  
-    fCriteria[25] = 4.2252;  
-    fCriteria[26] = 4.2100;  
-    fCriteria[27] = 4.1960;  
-    fCriteria[28] = 4.1830;  
-    fCriteria[29] = 4.1709;
-  }
-  
-  bestRadius = new int*[simplexResults->count()];
-  centerDev = new float[simplexResults->count()];
-  radiusDev = new float[simplexResults->count()];
-  score = new float**[simplexResults->count()];
-  for(int i = 0; i < simplexResults->count(); i++) {
-    //SimplexData currData = simplexResults->at(i);
-    score[i] = new float*[simplexResults->at(i).getNumRadii()];
-    bestRadius[i] = new int[simplexResults->at(i).getNumLevels()];
-    for(int rad = 0; rad < simplexResults->at(i).getNumRadii(); rad++) {
-      score[i][rad] = new float[simplexResults->at(i).getNumLevels()];
-      for(int level = 0; level < simplexResults->at(i).getNumLevels(); level++){
-	score[i][rad][level] = 0.0;
-	bestRadius[i][level] = -1;
-      }
+    if(!_calMeanCenters()) {
+        std::cerr<<"Data Issues Could Not Find Mean Center"<<std::endl;
+        return false;
     }
-  }
+    _useLastMean();
+//    // polynomial fitting using data from last 2 hours, and volume number shoud > 6
+//    QList<int> validList;
+//    QDateTime lastTime =_simplexResults->last().getTime();
+//    for(int ii =(_simplexResults->size()-1) ; ii >=0; --ii) {
+//        if(_simplexResults->at(ii).getTime().secsTo(lastTime)<2*60*60)
+//            validList.prepend(ii);
+//    }
+//    if(validList.size()>6)
+//        _calPolyTest(validList,0);
+//    else
+//        _useLastMean();
+    return true;
 }
 
-bool ChooseCenter::chooseMeanCenters()
+void ChooseCenter::_initialize()
 {
-  /*
-   * Determines the radius of maximum wind for each level of each volume used
-   *  based on the scoring system based on averaged parameters from all the
-   *  converging centers found in the simplex run
-   *
+    // Pulls all the necessary user parameters from the configuration panel
+    //  and initializes the array used for fTesting
+
+    QDomElement ccElement = _config->getConfig("choosecenter");
+    _paramMinVolumes= _config->getParam(ccElement, QString("min_volumes")).toInt();
+    _paramWindWeight= _config->getParam(ccElement, QString("wind_weight")).toFloat();
+    _paramStdWeight = _config->getParam(ccElement, QString("stddev_weight")).toFloat();
+    _paramPtsWeight = _config->getParam(ccElement, QString("pts_weight")).toFloat();
+
+    _paramPosWeight = _config->getParam(ccElement, QString("position_weight")).toFloat();
+    _paramRmwWeight = _config->getParam(ccElement, QString("rmw_weight")).toFloat();
+    _paramVelWeight = _config->getParam(ccElement, QString("vt_weight")).toFloat();
+
+    QDate sDate = QDate::fromString(_config->getParam(ccElement,QString("startdate")),Qt::ISODate);
+    QDate eDate = QDate::fromString(_config->getParam(ccElement,QString("enddate")),Qt::ISODate);
+    QTime sTime = QTime::fromString(_config->getParam(ccElement,QString("starttime")),Qt::ISODate);
+    QTime eTime = QTime::fromString(_config->getParam(ccElement,QString("endtime")),Qt::ISODate);
+
+    startTime = QDateTime(sDate, sTime, Qt::UTC);
+    endTime = QDateTime(eDate, eTime, Qt::UTC);
+
+    int fPercent = _config->getParam(ccElement, QString("stats")).toInt();
+    if(fPercent == 99) {
+        _fCriteria[0] = 4052.2;
+        _fCriteria[1] = 98.50;
+        _fCriteria[2] = 34.12;
+        _fCriteria[3] = 21.20;
+        _fCriteria[4] = 16.26;
+        _fCriteria[5] = 13.75;
+        _fCriteria[6] = 12.25;
+        _fCriteria[7] = 11.26;
+        _fCriteria[8] = 10.56;
+        _fCriteria[9] = 10.04;
+        _fCriteria[10] = 9.65;
+        _fCriteria[11] = 9.33;
+        _fCriteria[12] = 9.07;
+        _fCriteria[13] = 8.86;
+        _fCriteria[14] = 8.68;
+        _fCriteria[15] = 8.53;
+        _fCriteria[16] = 8.40;
+        _fCriteria[17] = 8.29;
+        _fCriteria[18] = 8.18;
+        _fCriteria[19] = 8.10;
+        _fCriteria[20] = 8.02;
+        _fCriteria[21] = 7.95;
+        _fCriteria[22] = 7.88;
+        _fCriteria[23] = 7.82;
+        _fCriteria[24] = 7.77;
+        _fCriteria[25] = 7.72;
+        _fCriteria[26] = 7.68;
+        _fCriteria[27] = 7.64;
+        _fCriteria[28] = 7.60;
+        _fCriteria[29] = 7.56;
+
+    }
+    else {
+        // fPercent = 95
+        // these are our two options for now
+        _fCriteria[0] = 161.45;
+        _fCriteria[1] = 18.513;
+        _fCriteria[2] = 10.128;
+        _fCriteria[3] = 7.7086;
+        _fCriteria[4] = 6.6079;
+        _fCriteria[5] = 5.9874;
+        _fCriteria[6] = 5.5914;
+        _fCriteria[7] = 5.3177;
+        _fCriteria[8] = 5.1174;
+        _fCriteria[9] = 4.9646;
+        _fCriteria[10] = 4.8443;
+        _fCriteria[11] = 4.7472;
+        _fCriteria[12] = 4.6672;
+        _fCriteria[13] = 4.6001;
+        _fCriteria[14] = 4.5431;
+        _fCriteria[15] = 4.4940;
+        _fCriteria[16] = 4.4513;
+        _fCriteria[17] = 4.4139;
+        _fCriteria[18] = 4.3808;
+        _fCriteria[19] = 4.3513;
+        _fCriteria[20] = 4.3248;
+        _fCriteria[21] = 4.3009;
+        _fCriteria[22] = 4.2793;
+        _fCriteria[23] = 4.2597;
+        _fCriteria[24] = 4.2417;
+        _fCriteria[25] = 4.2252;
+        _fCriteria[26] = 4.2100;
+        _fCriteria[27] = 4.1960;
+        _fCriteria[28] = 4.1830;
+        _fCriteria[29] = 4.1709;
+    }
+
+    _ppBestRadius= new int*[_simplexResults->count()];
+    _pppScore    = new float**[_simplexResults->count()];
+
+    for(int i = 0; i < _simplexResults->count(); i++) {
+        _pppScore[i] = new float*[_simplexResults->at(i).getNumRadii()];
+        _ppBestRadius[i] = new int[_simplexResults->at(i).getNumLevels()];
+        for(int rad = 0; rad < _simplexResults->at(i).getNumRadii(); rad++) {
+            _pppScore[i][rad] = new float[_simplexResults->at(i).getNumLevels()];
+            for(int level = 0; level < _simplexResults->at(i).getNumLevels(); level++){
+                _pppScore[i][rad][level] = 0.0;
+                _ppBestRadius[i][level] = -1;
+            }
+        }
+    }
+}
+
+bool ChooseCenter::_calMeanCenters()
+{
+    /*
+   * the result of Simplex contains k levels, each level has i rings. this function first
+   * finds peak wind in those rings and give a score to each of them. then choose the ring
+   * with a highest score as the ring of the level, then average all level to get a center
+   * estimation of the volume. for each volume, do the same thing.
+   * the score of each ring of all level from all volume are stored in (_pppScore[nVol][nLevel][nRing])
+   * the index of best ring of each level from each volume is stored in (_ppBestRadius[nVol][nLevel])
+   * the variation of center and radius of best ring if also stored in (_p
+   *?but the mean center is not stored
    */
+    if(_simplexResults->isEmpty())
+        return false;
 
-  if(simplexResults->isEmpty())
-    return false;
-  
-  for(int i = 0; i < simplexResults->count(); i++) {
- 
-    // Now we zero out the variables used for finding the mean of each volume
+    for(int vidx = 0; vidx < _simplexResults->size(); vidx++) {
+        float meanRadius = 0;
+        float meanCenX = 0;
+        float meanCenY = 0;
+        const int NLEVEL = _simplexResults->at(vidx).getNumLevels();
+        const int NRADII = _simplexResults->at(vidx).getNumRadii();
+        for(int hidx = 0; hidx < NLEVEL; hidx++) {
 
-    float radiusSum = 0;
-    float xSum = 0; 
-    float ySum = 0;
-    for(int k = 0; k < simplexResults->at(i).getNumLevels(); k++) {
-      //Message::toScreen("Simplex "+QString().setNum(i)+" @ level "+QString().setNum(k)+" has total Levels "+QString().setNum(simplexResults->at(i).getNumLevels()));
-      int lastj = -1;
-      float *winds = new float[simplexResults->at(i).getNumRadii()];
-      float *stds = new float[simplexResults->at(i).getNumRadii()];
-      float *pts = new float[simplexResults->at(i).getNumRadii()];
-      float bestWind = 0.0;
-      float bestStd = 50.;
-      float bestPts = 0.;
-      float ptRatio = (float)simplexResults->at(i).getNumPointsUsed()/2.718281828;
+            float *winds= new float[NRADII];
+            float *stds = new float[NRADII];
+            float *pts  = new float[NRADII];
+            float bestWind = 0.0;
+            float bestStd = 50.;
+            float bestPts = 0.;
+            float ptRatio = (float)_simplexResults->at(vidx).getNumPointsUsed()/2.718281828;
 
-      for(int j = 0; j < simplexResults->at(i).getNumRadii(); j++) {
-	
-	// Examine each radius based on index j, for the one containing the 
-	//   highest tangential winds
-	
-	winds[j] = velNull;
-	stds[j] = velNull;
-	pts[j] = velNull;
-	if(simplexResults->at(i).getMaxVT(k,j)!=velNull) {
-	  winds[j] = simplexResults->at(i).getMaxVT(k,j);
-	  if(winds[j] > bestWind)
-	    bestWind = winds[j];
-	}
-	if(simplexResults->at(i).getCenterStdDev(k,j)!=velNull) {
-	  stds[j] = simplexResults->at(i).getCenterStdDev(k,j);
-	  if(stds[j] < bestStd)
-	    bestStd = stds[j];
-	}
-	if(simplexResults->at(i).getNumConvergingCenters(k,j)!=velNull) {
-	  pts[j] = simplexResults->at(i).getNumConvergingCenters(k,j);
-	  if(pts[j] > bestPts)
-	    bestPts = pts[j];
-	}
-      }
-      
-      // Formerlly know as fix winds
-      //   which was a sub routine in the perl version of this algorithm
-      //   zeros all wind entrys that are not a local maxima, or adjacent 
-      //   to a local maxima
-      
-      int count = 0;
-      float *peakWinds = new float[simplexResults->at(i).getNumRadii()];
-      float *peaks = new float[simplexResults->at(i).getNumRadii()];
-      for(int z = 0; z < simplexResults->at(i).getNumRadii(); z++) {
-	peakWinds[z] = 0;
-	peaks[z] = 0;
-      }
-      float meanPeak,meanStd;
-      
-      for(int a = 1; a < simplexResults->at(i).getNumRadii()-1; a++) {
-	if((winds[a] >= winds[a-1])&&(winds[a] >=winds[a+1])) {
-	  peakWinds[count] = winds[a];
-	  count++;
-	  peaks[a] = 1;
-	}
-	else {
-	  peaks[a]=0;
-    	}
-      }
-      float windSum = 0;
-      for(int a = 0; a < count; a++) {
-	windSum += peakWinds[a];
-      }
-      if(count>0) {
-	meanPeak = windSum/((float)count);
-	meanStd = 0;
-	for(int z = 0; z < count; z++) 
-	  meanStd += (peakWinds[z]-meanPeak)*(peakWinds[z]-meanPeak);
-	meanStd/=count;
-      }
-      else {
-	meanStd = 0;
-	//peakWinds = NULL;
-	//peakWinds = winds;
-      }
-      
-      delete [] peakWinds;
-      
-      // End of function formally known as fix winds
-      // returned meanpeak, meanstd, peaks[array]
-      
-      for(int jj = 0; jj < simplexResults->at(i).getNumRadii(); jj++) {
-	if(((jj > 0)&&(jj < simplexResults->at(i).getNumRadii()-1))
-	   &&((peaks[jj] == 1)||(peaks[jj+1] == 1)||(peaks[jj-1] == 1))) {
-	  winds[jj] = simplexResults->at(i).getMaxVT(k,jj);
-	  // Keep an eye out for the maxima 
-	  if(winds[jj] > bestWind) {
-	    bestWind = winds[jj];
-	  }
-	}
-	else {
-	  winds[jj] = velNull;
-	}
-      }
-      
-      float tempBest = 0.0;
-    
-      for(int j = 0; j < simplexResults->at(i).getNumRadii(); j++) {
-	score[i][j][k] = velNull;
-	float windScore = 0.0;
-	float stdScore = 0.0;
-	float ptsScore = 0.0;
-	//for(int w = 0; w <= #weightSchemes; w++) {
-	// Mike says we only need to run this once
-	// assign windWeight, stdWeight, ptsWeight, but not
-	// distWeight cause we are droping it
-	if((bestWind!=0.0)&&(winds[j]!=velNull))
-	  windScore = exp(winds[j]-bestWind)*windWeight;
-	if((stds[j]!=velNull)&&(stds[j]!=0.0))
-	  stdScore = bestStd/stds[j]*stdWeight;
-	if((bestPts!=0)&&(pts[j]!=velNull)&&(ptRatio!=0.0)) {
-	  ptsScore = log((float)pts[j]/ptRatio)*ptsWeight; 
-	  //Message::toScreen("ptsScore = "+QString().setNum(ptsScore)+" ptRatio "+QString().setNum(ptRatio));
-	}
-	
-	// How do we get log without log(const Message)??
-	
-	
-	if(winds[j]!=velNull) {
-	  // We don't want any score if the wind didn't hit near peak
-	  score[i][j][k] = windScore+stdScore+ptsScore;
-	  // I think we might want this to be totalscore too........
-	  // ps score was never declared the original version had a w index
-	  // totalScore was just suming them up over the w's
-	  // but that was commented out???
-	  
-	  
-	  // Use default weight scheme to set radius and mean 
-	  if((score[i][j][k] > tempBest)&&(k>=0)
-	     &&(k<=simplexResults->at(i).getNumLevels())) {
-	    tempBest = score[i][j][k];
-	    if(lastj == -1){
-	      // sort through to find the highest scoring x,y,radius
-	      // for each level, later we will sum those together over 
-	      // all levels and take the mean; if this is the first acceptable
-	      // radius found in a level we know because lastj is still set to 
-	      // -1, otherwise the at that was formerly the best must be
-	      // subtracted from the sums.
-	      lastj = j;
-	      radiusSum += simplexResults->at(i).getRadius(j);
-	      // gives the actual distance of the radius not just index
-	      xSum+= simplexResults->at(i).getX(k,j);
-	      ySum+= simplexResults->at(i).getY(k,j);
-	    }
-	    else {
-	      // if we have found a higher scoring radius on the same level
-	      // remove the old one and add the new
-	      // consider changing jLast to jHigh or something, jBest mayber
-	      radiusSum -= simplexResults->at(i).getRadius(j);
-	      // gives the actual distance of the radius not just index	     
-	      xSum-=simplexResults->at(i).getX(k,lastj);
-	      ySum-=simplexResults->at(i).getY(k,lastj);
-	      
-	      radiusSum += simplexResults->at(i).getRadius(j);
-	      xSum+=simplexResults->at(i).getX(k,j);
-	      ySum+=simplexResults->at(i).getY(k,j);
-	    }
-	  }
-	}
-      }
-      delete [] winds;
-      delete [] stds;
-      delete [] pts;
-      delete [] peaks;
+            //get array of maxwind,centerSD,convegedPoints on this level, and calculate best value of these param
+            for(int ridx = 0; ridx < NRADII; ridx++) {
+                // Examine each radius based on index j, for the one containing thehighest tangential winds
+
+                winds[ridx] = _simplexResults->at(vidx).getMaxVT(hidx,ridx);
+                stds[ridx]  = _simplexResults->at(vidx).getCenterStdDev(hidx,ridx);
+                pts[ridx]   = _simplexResults->at(vidx).getNumConvergingCenters(hidx,ridx);
+
+                if((winds[ridx]!=SimplexData::_fillv)&&(winds[ridx]>bestWind))
+                    bestWind = winds[ridx];
+
+                if((stds[ridx]!=SimplexData::_fillv)&&(stds[ridx] < bestStd))
+                    bestStd = stds[ridx];
+
+                if((pts[ridx]!=SimplexData::_fillv)&&(pts[ridx] > bestPts))
+                    bestPts = pts[ridx];
+            }
+
+            // Formerlly know as fix winds which was a sub routine in the perl version of this algorithm
+            // zeros all wind entrys that are not a local maxima, or adjacent to a local maxima
+            int count = 0;
+            float *peakWinds = new float[NRADII];
+            bool  *isPeaks   = new bool[NRADII];
+            for(int z = 0; z < NRADII; z++) {
+                peakWinds[z] = 0.f;
+                isPeaks[z] = 0;
+            }
+            for(int a = 1; a < NRADII-1; a++) {
+                if((winds[a] >= winds[a-1])&&(winds[a] >=winds[a+1])) {
+                    peakWinds[count] = winds[a];
+                    isPeaks[a] = 1;
+                    count++;
+                }
+            }
+            float peakWindMean=0.f,peakWindStd=0.f;
+            for(int a = 0; a < count; a++) {
+                peakWindMean += peakWinds[a];
+            }
+            if(count>0) {
+                peakWindMean = peakWindMean/((float)count);
+                for(int z = 0; z < count; z++)
+                    peakWindStd += (peakWinds[z]-peakWindMean)*(peakWinds[z]-peakWindMean);
+                peakWindStd/=count;
+            }
+            delete[] peakWinds;
+
+            //put point and points adjacent to peakwind into winds[]
+            for(int jj = 0; jj < NRADII; jj++) {
+                if(((jj > 0)&&(jj < NRADII-1))
+                        &&((isPeaks[jj] == 1)||(isPeaks[jj+1] == 1)||(isPeaks[jj-1] == 1))) {
+                    winds[jj] = _simplexResults->at(vidx).getMaxVT(hidx,jj);
+                    // Keep an eye out for the maxima
+                    if(winds[jj] > bestWind) {
+                        bestWind = winds[jj];
+                    }
+                }
+                else {
+                    winds[jj] = velNull;
+                }
+            }
+
+            //calculate a weight for each ring, and find a best on this level
+            float tempBest = 0.f,windScore,stdScore,ptsScore;
+            int   bestFlag=0;
+            for(int rr = 0; rr < NRADII; rr++){
+                windScore=stdScore=ptsScore = 0.f;
+                _pppScore[vidx][rr][hidx] = velNull;
+                if((bestWind!=0.0)&&(winds[rr]!=velNull))
+                    windScore = exp(winds[rr]-bestWind)*_paramWindWeight;
+                if((stds[rr]!=velNull)&&(stds[rr]!=0.0))
+                    stdScore = bestStd/stds[rr]*_paramStdWeight;
+                if((bestPts!=0)&&(pts[rr]!=velNull)&&(ptRatio!=0.0)) {
+                    ptsScore = log((float)pts[rr]/ptRatio)*_paramPtsWeight;
+                }
+                if(winds[rr]!=velNull) {
+                    _pppScore[vidx][rr][hidx] = windScore+stdScore+ptsScore;
+                    if((_pppScore[vidx][rr][hidx] > tempBest)&&(hidx>=0)&&(hidx<=_simplexResults->at(vidx).getNumLevels())) {
+                        tempBest = _pppScore[vidx][rr][hidx];
+                        bestFlag=rr;
+                    }
+                }
+            }//end of radii
+            meanRadius +=_simplexResults->at(vidx).getRadius(bestFlag);
+            meanCenX   +=_simplexResults->at(vidx).getMeanX(hidx,bestFlag);
+            meanCenY   +=_simplexResults->at(vidx).getMeanY(hidx,bestFlag);
+            _ppBestRadius[vidx][hidx] = bestFlag;
+
+            delete [] winds;
+            delete [] stds;
+            delete [] pts;
+            delete [] isPeaks;
+        }//end of levels
+
+        // calculate the mean radius and center scores over all levels
+        meanRadius = meanRadius/NLEVEL;
+        meanCenX   = meanCenX/NLEVEL;
+        meanCenY   = meanCenY/NLEVEL;
+        if(vidx==(_simplexResults->size()-1)){
+            const float radarLat = _config->getParam(_config->getConfig("radar"), QString("lat")).toFloat();
+            const float radarLon = _config->getParam(_config->getConfig("radar"), QString("lon")).toFloat();
+            const float radarLatRadians = radarLat * acos(-1.0)/180.0;
+            const float fac_lat = 111.13209 - 0.56605 * cos(2.0 * radarLatRadians) + 0.00012 * cos(4.0 * radarLatRadians) - 0.000002 * cos(6.0 * radarLatRadians);
+            const float fac_lon = 111.41513 * cos(radarLatRadians) - 0.09455 * cos(3.0 * radarLatRadians) + 0.00012 * cos(5.0 * radarLatRadians);
+
+            std::cout<<"ChooseCenter found new mean center: "<<radarLat+meanCenY/fac_lat<<","<<radarLon+meanCenX/fac_lon<<","<<meanRadius<<std::endl;
+        }
     }
-    //Message::toScreen("Made it to means");
-    
-    // calculate the mean radius and center scores over all levels
-    float currentNumLevels = simplexResults->at(i).getNumLevels(); 
-    // what is the current level index verses height issue
-    float meanRadius = radiusSum/currentNumLevels;
-    //float meanXChoose = xSum/currentNumLevels;
-    //float meanYChoose = ySum/currentNumLevels;
-    
-    //if(opt_i){
-    //   calc_radscore();   we don't need this it is only related to crazy
-    //}                     weight scheme stuff
-    
-    
-    for(int k = 0; k < simplexResults->at(i).getNumLevels(); k++) {
-      int bestIndex = 0;
-      float bestScore = 0.0;
-      for(int j = 0; j < simplexResults->at(i).getNumRadii(); j++) {
-	if(isnan(score[i][j][k])||isinf(score[i][j][k])) {
-	  emit errorlog(Message(QString("ChooseCenter: ChooseMeanCenters: Score no good here... i = "+QString().setNum(i)+" j = "+QString().setNum(j)+" k = "+QString().setNum(k)+" score = "+QString().setNum(score[i][j][k])),0,this->objectName(),Red,QString("Bad Score in ChooseMeanCenters")));
-	  return false;
-	}
-	if(score[i][j][k] > bestScore) {
-	  bestScore = score[i][j][k];
-	  bestIndex = j;
-	}
-      }
-      bestRadius[i][k] = bestIndex;
-    }
-    // Calculate initial standard deviations of radius and center
-    centerDev[i] = 0.0;
-    radiusDev[i] = 0.0;
-    
-    for(int k = 0; k < simplexResults->at(i).getNumLevels(); k++) {
-      int j = bestRadius[i][k];
-      //Message::toScreen("simplexResults["+QString().setNum(i)+"].getNumRadii() = "+QString().setNum(simplexResults->at(i).getNumRadii()));
-      //Message::toScreen("Best Radius (j = "+QString().setNum(j)+")");
-      //Message::toScreen(" has at ("+QString().setNum(simplexResults->at(i).getRadius(j))+")");
-      
-      float radLength = simplexResults->at(i).getRadius(j);
-      radiusDev[i] +=(meanRadius-radLength)*(meanRadius-radLength);
-      centerDev[i] +=sqrt(centerDev[i]/currentNumLevels);
-      // Do these get put in the simplexData???
-    }
-  } 
-  //Message::toScreen("Made it out of chooseMeanCenters");
-  return true; // ??? assign this other options........
+    return true;
 }
 
 
 
-bool ChooseCenter::constructPolynomial()
+bool ChooseCenter::_calPolyTest(const QList<int>& volIdx,const int& levelIdx)
 {
 
-  //Message::toScreen("Made it into construct Poly");
+    const float radarLat = _config->getParam(_config->getConfig("radar"), QString("lat")).toFloat();
+    const float radarLon = _config->getParam(_config->getConfig("radar"), QString("lon")).toFloat();
+    const float radarLatRadians = radarLat * acos(-1.0)/180.0;
+    const float fac_lat = 111.13209 - 0.56605 * cos(2.0 * radarLatRadians) + 0.00012 * cos(4.0 * radarLatRadians) - 0.000002 * cos(6.0 * radarLatRadians);
+    const float fac_lon = 111.41513 * cos(radarLatRadians) - 0.09455 * cos(3.0 * radarLatRadians) + 0.00012 * cos(5.0 * radarLatRadians);
 
-  // This initial check relies on the idea that the last volume will be
-  // the volume currently being processed, and additionally the most recent
-  // volume in the time series.
 
-  if((simplexResults->last().getTime() > endTime) ||
-     (simplexResults->last().getTime() < startTime)) {
-    emit errorlog(Message(QString("Vortex is not within the specified time period for constructing polynomials."),0,this->objectName()));
-    return false;
-  }
+    const QDateTime firstTime=_simplexResults->at(volIdx[0]).getTime();
+    const int nData =volIdx.size();
+    float* xData =new float[nData];
+    float* yData =new float[nData];
 
-  this->findHeights();
-
-  int maxPolyArray = simplexResults->count();
-  if(simplexResults->count() > 20)
-    maxPolyArray = 21;
-  
-  // Construct a least squares polynomial to fit track
-  
-  bestFitVariance = new float*[4];
-  bestFitDegree = new int*[4];
-  bestFitCoeff = new float**[4];
-  for(int criteria = 0; criteria < 4; criteria++) {
-    bestFitVariance[criteria] = new float[numHeights->count()];
-    bestFitDegree[criteria] = new int[numHeights->count()];
-    bestFitCoeff[criteria] = new float*[numHeights->count()];
-    for(int k = 0;k < numHeights->count(); k++){
-      bestFitVariance[criteria][k] = 0;
-      bestFitDegree[criteria][k] = 0;
-      bestFitCoeff[criteria][k] = new float[maxPolyArray];
-      for(int b = 0; b < maxPolyArray; b++)
-	bestFitCoeff[criteria][k][b] = 0;
-    }
-  }
-  
-  QList<int> heights = numHeights->keys();
-  // Sort heights so that k index is attached to a specific height
-  // Sort smallest to largest
-  // The sorting is nessecary because QHash randomizes ordering
-  for(int s = 0; s < heights.count()-1; s++)
-    for(int t = s+1; t < heights.count(); t++)
-      if(heights[t] < heights[s])
-	heights.swap(t,s);
-
-  for(int k = 0; k < numHeights->count(); k++) {
-    int currHeight = heights[k];
-    int* levelIndices = indexOfHeights->value(currHeight);
-    
-    // In a lot of places we will replace k with 
-    // levelIndices[simplexResultIndex] to keep the height consistant
-
-    //Message::toScreen("Level = "+QString().setNum(k)+" @ height "+QString().setNum(currHeight));
-    
-    int maxPoly = 0;
-    
-    // We want to find the eariliest time for this process;
-    // we don't want to use (simplexList)sort this late in the game 
-    // because it might ruin the member arrays
-
-    int timeRefIndex = 0;
-    firstTime = QDateTime();
-    while(levelIndices[timeRefIndex]==-1) {
-      timeRefIndex++;
-    }
-    firstTime = simplexResults->at(timeRefIndex).getTime();
-    int goodVolumes = numHeights->value(currHeight);
-    for(int i = timeRefIndex+1; i < simplexResults->count(); i++) {
-      if(levelIndices[i]!=-1) {
-	if(simplexResults->at(i).getTime()<firstTime) {
-	  timeRefIndex = i;
-	  firstTime = simplexResults->at(i).getTime();
-	}
-      }
-    }
-    
-    //Message::toScreen("How many good volumes: "+QString().setNum(goodVolumes));
-    
-    // What should the highest order basis polynomial;
-    if(goodVolumes > 20)  
-      maxPoly = 20;
-    else 
-      maxPoly = goodVolumes-1;
-
-    if(maxPoly < 3){
-      emit errorlog(Message(QString("Cannot Adequately Fit Storm Parameters to Polynomials of Less Than 3rd Order"),0,this->objectName(),Yellow,QString("Construct Polynomial Error")));
-      continue;
-    }
-    
-    //Message::toScreen("maxPoly = "+QString().setNum(maxPoly));
-    
-    // Things are stored here so far but never used
-    // Store the variance of each polynomial fit by the maximum order
-    // polynomial that the fit uses
-    float* squareVariance = new float[maxPoly+1];
-
-    // Initialize fitting matrices
-    float* BB = new float[goodVolumes]; 
-    float** MM = new float*[maxPoly+1];
-    for(int rr = 0; rr <=maxPoly; rr++) {
-      MM[rr] = new float[goodVolumes];
-      for(int ii = 0; ii < goodVolumes; ii++) {
-	MM[rr][ii] = 0;
-	BB[ii] = 0;
-      }
+    //first get the xdata, which here is the time (in minute) from the firstTime
+    for(int i=0;i<volIdx.size();++i){
+        xData[i]=firstTime.secsTo(_simplexResults->at(volIdx[i]).getTime())/60.f;
     }
 
-    float *lastFitCoeff;
-    lastFitCoeff = new float[maxPoly+1];
-    float *currentCoeff; 
-    currentCoeff = new float[maxPoly+1];
-    
-    for(int ii = 0; ii <= maxPoly; ii++) {
-      lastFitCoeff[ii] = 0;
-      currentCoeff[ii] = 0;
+    //then retrieve ydata, we have 4 different ydata, so we'll process them one by one
+    float** bestCoeff=new float*[4];
+    for(int i=0;i<4;i++)
+        bestCoeff[i]=new float[MAX_ORDER];
+    float*  bestOrder=new float[4];
+    float*  bestRSS  =new float[4];
+
+    for(int n=0;n<4;n++){
+        for(int i=0;i<volIdx.size();++i){
+            int bestRadius =_ppBestRadius[volIdx[i]][levelIdx];
+            switch(n){
+            case 0:
+                yData[i]=_simplexResults->at(volIdx[i]).getMeanX(levelIdx,bestRadius);break;
+            case 1:
+                yData[i]=_simplexResults->at(volIdx[i]).getMeanY(levelIdx,bestRadius);break;
+            case 2:
+                yData[i]=_simplexResults->at(volIdx[i]).getRadius(bestRadius);break;
+            case 3:
+                yData[i]=_simplexResults->at(volIdx[i]).getMaxVT(levelIdx,bestRadius);break;
+            }
+        }
+        //here xData yData is ready, we'll do the polynomial fitting
+        //we iterate through all possible order and try to find a best order?
+        float lastRSS;
+        for(int nOrder=1;nOrder<MAX_ORDER;++nOrder){
+            float* coeff =new float[nOrder+1];
+            float  fitRSS;
+            _polyFit(nOrder,nData,xData,yData,coeff,fitRSS);
+            if(nOrder>1){
+                if(_fTest(lastRSS,nData-nOrder+1,fitRSS,nData-nOrder)){
+                    lastRSS =fitRSS;
+                    bestOrder[n]=nOrder;
+                    bestRSS[n]  =fitRSS/(nData-nOrder);
+                    for(int k=0;k<nOrder;k++)
+                        bestCoeff[n][k]=coeff[k];
+                }
+                else
+                    break;
+            }
+            else{
+                lastRSS =fitRSS;
+                bestOrder[n]=nOrder;
+                bestRSS[n]=fitRSS/(nData-nOrder);
+                for(int k=0;k<nOrder;k++)
+                    bestCoeff[n][k]=coeff[k];
+            }
+            delete[] coeff;
+        }
     }
-    
+    //use the best fitting model to 'correct' the center
+    int bestRadius =_ppBestRadius[volIdx.last()][levelIdx];
+    float fitX,fitY,fitRad,fitWind;
+    _polyCal(bestOrder[0],bestCoeff[0],_simplexResults->at(volIdx.last()).getMeanX(levelIdx,bestRadius),fitX);
+    _polyCal(bestOrder[1],bestCoeff[1],_simplexResults->at(volIdx.last()).getMeanY(levelIdx,bestRadius),fitY);
+    _polyCal(bestOrder[2],bestCoeff[2],_simplexResults->at(volIdx.last()).getRadius(bestRadius),fitRad);
+    _polyCal(bestOrder[3],bestCoeff[3],_simplexResults->at(volIdx.last()).getMaxVT(levelIdx,bestRadius),fitWind);
+
+    Center bestCenter;
+    float minError=999.0f,error,xError,yError,radError,vtError;
+    for(int ridx=0;ridx<_simplexResults->last().getNumRadii();ridx++){
+        for(int pidx=0;pidx<_simplexResults->last().getNumPointsUsed();pidx++){
+            Center tmpCenter=_simplexResults->last().getCenter(levelIdx,ridx,pidx);
+            if(tmpCenter.isValid())
+                continue;
+            xError  =exp(-0.5f*pow((fitX-tmpCenter.getX())/sqrt(bestRSS[0]),2.0f))*_paramPosWeight;
+            yError  =exp(-0.5f*pow((fitY-tmpCenter.getY())/sqrt(bestRSS[1]),2.0f))*_paramPosWeight;
+            radError=exp(-0.5f*pow((fitRad-tmpCenter.getRadius())/sqrt(bestRSS[2]),2.0f))*_paramRmwWeight;
+            vtError =exp(-0.5f*pow((fitWind-tmpCenter.getMaxVT())/sqrt(bestRSS[3]),2.0f))*_paramWindWeight;
+            error =xError+yError+radError+vtError;
+            if(error<minError){
+                minError =error;
+                bestCenter =tmpCenter;
+            }
+        }
+    }
+
+    //modify the VortexData on this Level
+    _vortexData->setLat(levelIdx,radarLat+ bestCenter.getX()/fac_lat);
+    _vortexData->setLon(levelIdx,radarLon+ bestCenter.getY()/fac_lon);
+    _vortexData->setHeight(levelIdx,_simplexResults->last().getHeight(levelIdx));
+    _vortexData->setRMW(levelIdx, bestCenter.getRadius());
+    _vortexData->setRMWUncertainty(levelIdx, radError);
+    _vortexData->setCenterStdDev(levelIdx, sqrt(xError*xError+yError*yError));
+    std::cout<<"ChooseCenter found new poly center: "<<bestCenter.getX()<<","<<bestCenter.getY()<<","<<bestCenter.getRadius()<<std::endl;
+
+    //clear up
+    delete[] xData;
+    delete[] yData;
+    delete[] bestOrder;
+    delete[] bestRSS;
+    for(int i=0;i<4;i++)
+        delete[] bestCoeff[i];
+    delete[] bestCoeff;
+}
+
+bool ChooseCenter::_calPolyCenters()
+{
+    // This initial check relies on the idea that the last volume will be
+    // the volume currently being processed, and additionally the most recent
+    // volume in the time series.
+
+    if((_simplexResults->last().getTime() > endTime) ||(_simplexResults->last().getTime() < startTime)) {
+        std::cerr<<"Vortex is not within the specified time period for constructing polynomials."<<std::endl;
+        return false;
+    }
+
+    this->findHeights();
+
+    const int maxPolyArray = _simplexResults->count()>20?21:_simplexResults->count();
+
+    // Construct a least squares polynomial to fit track
+
+    _ppBestFitVariance = new float*[4];
+    _ppBestFitDegree = new int*[4];
+    _pppBestFitCoeff = new float**[4];
     for(int criteria = 0; criteria < 4; criteria++) {
-
-      //Message::toScreen("Criteria is "+QString().setNum(criteria));
-      // Iterates through the procedure for the four different
-      // curve fitting criteria
-
-      for(int ii = 0; ii <= maxPoly; ii++)
-	squareVariance[ii] = 0;
-      
-      for(int n = 1; n <=maxPoly; n++) {
-	//Message::toScreen("Fitting to "+QString().setNum(n)+" order polynomial");
-	for(int m = 0; m < n; m++) {
-	  // Copy the last set into the lastFit array
-	  lastFitCoeff[m]= currentCoeff[m];
-	  currentCoeff[m] = 0;
-	}
-	currentCoeff[n] = 0;
-       	for(int ii = 0; ii < goodVolumes; ii++) {
-	  BB[ii] = 0;
-	  for(int rr = 0; rr <= maxPoly; rr++)
-	    MM[rr][ii]= 0;
-	}
-	
-	int gv = 0;
-	for(int i = 0; i < simplexResults->count(); i++) {
-	  
-	  // Only take those values which are in specified time range 
-	  // and additionally have a level at this height
-	  // Both of these characteristics are specified if the 
-	  // value of the index in indexOfHeights value array is not set
-	  // to -1.  This is done in findHeights()
-	  
-	  if(levelIndices[i]!=-1) {
-	    
-	    for(int r = 0; r <= n; r++) {
-	      float min = ((float)firstTime.secsTo(simplexResults->at(i).getTime())/60.0);
-	      MM[r][gv] = pow(min,(double)(r));
-	    }
-	    int jBest = bestRadius[i][levelIndices[i]];
-	    float y = 0;
-	    switch(criteria) {
-	    case 0:
-	      y = simplexResults->at(i).getX(levelIndices[i], jBest); break;
-	    case 1:
-	      y = simplexResults->at(i).getY(levelIndices[i], jBest); break;
-	    case 2:
-	      y = simplexResults->at(i).getRadius(jBest); break;
-	    case 3:
-	      y = simplexResults->at(i).getMaxVT(levelIndices[i], jBest); 
-	      break; 
-	    }
-	    BB[gv] = y;
-	    gv++;
-	  }
-	}
-	float stDev;
-	float *stError = new float[n+1];
-	for(int ii = 0; ii <= n; ii++)
-	  stError[ii] = 0;
-	//Message::toScreen("MM");
-	//Matrix::printMatrix(MM,n+1,goodVolumes);
-	
-	//Message::toScreen("BB");
-	//Matrix::printMatrix(BB,goodVolumes);
-	
-	if(!Matrix::lls(n+1,goodVolumes,MM,BB,stDev,currentCoeff,stError)) {
-	  emit errorlog(Message(QString("Least Squares Fit Failed in Construct Polynomial"),0,this->objectName(),Yellow,QString("Least Squares Fit Failed")));
-	  return false;
-	}
-       
-	float errorSum = 0;
-	delete [] stError;
-	for(int i = 0; i < simplexResults->count(); i++) {
-	  if(levelIndices[i]!=-1) {
-	    float min = ((float)firstTime.secsTo(simplexResults->at(i).getTime())/60.0);
-	    float func_y  = 0;
-	    for(int m = 0; m <=n; m++) {
-	      func_y += currentCoeff[m]*pow(min,m);
-	    }
-	    //if(criteria == 2)
-	    //Message::toScreen(" Fitted Radius = "+QString().setNum(func_y));
-	    int jBest = bestRadius[i][levelIndices[i]];
-	    switch(criteria) {
-	    case 0:
-	      errorSum +=pow(func_y-simplexResults->at(i).getX(levelIndices[i], jBest), 2); break;
-	    case 1:
-	      errorSum +=pow(func_y-simplexResults->at(i).getY(levelIndices[i], jBest), 2); break;
-	    case 2:
-	      errorSum +=pow(func_y-simplexResults->at(i).getRadius(jBest),2); break;
-	    case 3:
-	      errorSum +=pow(func_y-simplexResults->at(i).getMaxVT(levelIndices[i], jBest), 2); 
-	      break;
-	    }
-	  }
-	} 
-	int degFreedom = goodVolumes-n;
-	if(degFreedom == 0)
-	  Message::toScreen("ChooseCenter construct Polynomial, division by zero");
-	squareVariance[n] = errorSum/(float)degFreedom;
-	//Message::toScreen("Got to here");
-	if(n > 1) {
-	  if(squareVariance[n] > squareVariance[n-1]) {
-	    // we found the best fit!!!!
-	    bestFitVariance[criteria][k] = squareVariance[n-1];
-	    bestFitDegree[criteria][k] = n-1;
-	    // Now we have to revert back to the old set
-	    // This is why everything is kept in storage
-	    for(int l = 0; l <= n; l++) {
-	      bestFitCoeff[criteria][k][l] = lastFitCoeff[l];
-	    }
-	    break;
-	  }
-	  else {
-	    if(n == maxPoly) {
-	      // Maxed out
-	      bestFitVariance[criteria][k] = squareVariance[n];
-	      bestFitDegree[criteria][k] = n;
-	      for(int l = 0; l <= n; l++) {
-		bestFitCoeff[criteria][k][l] = currentCoeff[l];
-	      }
-	    }
-	    else {
-	      //Message::toScreen("Using F-Test");
-	      // preform the f test to see if a higher polynomial is
-	      // warranted
-	      float fTest;
-	      float m_delta = squareVariance[n-1]*(float)(degFreedom+1) ;
-	      m_delta-= squareVariance[n]*(float)degFreedom;
-	      if(squareVariance[n] > 0) 
-		fTest = m_delta/squareVariance[n];
-	      else 
-		fTest = 0;
-	      if(degFreedom >30) 
-		degFreedom = 30;
-	      float fCrit = fCriteria[degFreedom-1];
-	      if(fTest < fCrit) {
-		// Found the best center
-		bestFitVariance[criteria][k] = squareVariance[n-1];
-		bestFitDegree[criteria][k] = n-1;
-		// degree = n-1; phasing out
-		for(int l = 0; l <= (n-1); l++) {
-		  bestFitCoeff[criteria][k][l] = lastFitCoeff[l];
-		}		  
-	      }
-	    }
-	  }
-	}
-	else {
-	  // Doing a linear fit with only 3 points
-	  bestFitVariance[criteria][k] = squareVariance[n];
-	  bestFitDegree[criteria][k] = n;
-	  for(int l = 0; l <= n; l++) {
-	    bestFitCoeff[criteria][k][l] = currentCoeff[l];
-	  }
-	}
-      }
+        _ppBestFitVariance[criteria] = new float[numHeights->count()];
+        _ppBestFitDegree[criteria] = new int[numHeights->count()];
+        _pppBestFitCoeff[criteria] = new float*[numHeights->count()];
+        for(int k = 0;k < numHeights->count(); k++){
+            _ppBestFitVariance[criteria][k] = 0;
+            _ppBestFitDegree[criteria][k] = 0;
+            _pppBestFitCoeff[criteria][k] = new float[maxPolyArray];
+            for(int b = 0; b < maxPolyArray; b++)
+                _pppBestFitCoeff[criteria][k][b] = 0;
+        }
     }
-    //Message::toScreen("Got to deleting arrays");
-    for(int ii = 0; ii <= maxPoly; ii++) {
-      delete [] MM[ii];
+
+    QList<int> heights = numHeights->keys();
+    // Sort heights so that k index is attached to a specific height
+    // Sort smallest to largest
+    // The sorting is nessecary because QHash randomizes ordering
+    for(int s = 0; s < heights.count()-1; s++)
+        for(int t = s+1; t < heights.count(); t++)
+            if(heights[t] < heights[s])
+                heights.swap(t,s);
+
+    for(int k = 0; k < numHeights->count(); k++) {
+        int currHeight = heights[k];
+        int* levelIndices = indexOfHeights->value(currHeight);
+
+        // In a lot of places we will replace k with
+        // levelIndices[simplexResultIndex] to keep the height consistant
+
+        int maxPoly = 0;
+
+        // We want to find the eariliest time for this process;
+        // we don't want to use (simplexList)sort this late in the game
+        // because it might ruin the member arrays
+
+        int timeRefIndex = 0;
+        firstTime = QDateTime();
+        while(levelIndices[timeRefIndex]==-1) {
+            timeRefIndex++;
+        }
+        firstTime = _simplexResults->at(timeRefIndex).getTime();
+        int goodVolumes = numHeights->value(currHeight);
+        for(int i = timeRefIndex+1; i < _simplexResults->count(); i++) {
+            if(levelIndices[i]!=-1) {
+                if(_simplexResults->at(i).getTime()<firstTime) {
+                    timeRefIndex = i;
+                    firstTime = _simplexResults->at(i).getTime();
+                }
+            }
+        }
+
+        // What should the highest order basis polynomial;
+        if(goodVolumes > 20)
+            maxPoly = 20;
+        else
+            maxPoly = goodVolumes-1;
+
+        if(maxPoly < 3){
+            std::cerr<<"Cannot Adequately Fit Storm Parameters to Polynomials of Less Than 3rd Order"<<std::endl;
+            continue;
+        }
+
+        // Things are stored here so far but never used
+        // Store the variance of each polynomial fit by the maximum order
+        // polynomial that the fit uses
+        float* squareVariance = new float[maxPoly+1];
+
+        // Initialize fitting matrices
+        float* BB = new float[goodVolumes];
+        float** MM = new float*[maxPoly+1];
+        for(int rr = 0; rr <=maxPoly; rr++) {
+            MM[rr] = new float[goodVolumes];
+            for(int ii = 0; ii < goodVolumes; ii++) {
+                MM[rr][ii] = 0;
+                BB[ii] = 0;
+            }
+        }
+
+        float *lastFitCoeff = new float[maxPoly+1];
+        float *currentCoeff = new float[maxPoly+1];
+        for(int ii = 0; ii <= maxPoly; ii++) {
+            lastFitCoeff[ii] = 0;
+            currentCoeff[ii] = 0;
+        }
+
+        for(int criteria = 0; criteria < 4; criteria++) {
+            // Iterates through the procedure for the four different curve fitting criteria
+            for(int ii = 0; ii <= maxPoly; ii++)
+                squareVariance[ii] = 0;
+
+            for(int n = 1; n <=maxPoly; n++) {
+                for(int m = 0; m < n; m++) {
+                    // Copy the last set into the lastFit array
+                    lastFitCoeff[m]= currentCoeff[m];
+                    currentCoeff[m] = 0;
+                }
+                currentCoeff[n] = 0;
+                for(int ii = 0; ii < goodVolumes; ii++) {
+                    BB[ii] = 0;
+                    for(int rr = 0; rr <= maxPoly; rr++)
+                        MM[rr][ii]= 0;
+                }
+
+                int gv = 0;
+                for(int i = 0; i < _simplexResults->count(); i++) {
+                    // Only take those values which are in specified time range and additionally have a level at this height
+                    // Both of these characteristics are specified if the value of the index in indexOfHeights value array is not set to -1.  This is done in findHeights()
+                    if(levelIndices[i]!=-1) {
+
+                        for(int order = 0; order <= n; order++) {
+                            float min = firstTime.secsTo(_simplexResults->at(i).getTime())/60.0;
+                            MM[order][gv] = pow(min,(double)(order));
+                        }
+                        int jBest = _ppBestRadius[i][levelIndices[i]];
+                        float y = 0;
+                        switch(criteria) {
+                        case 0:
+                            y = _simplexResults->at(i).getMeanX(levelIndices[i], jBest); break;
+                        case 1:
+                            y = _simplexResults->at(i).getMeanY(levelIndices[i], jBest); break;
+                        case 2:
+                            y = _simplexResults->at(i).getRadius(jBest); break;
+                        case 3:
+                            y = _simplexResults->at(i).getMaxVT(levelIndices[i], jBest);
+                            break;
+                        }
+                        BB[gv] = y;
+                        gv++;
+                    }
+                }
+
+                float stDev;
+                float *stError = new float[n+1];
+                if(!Matrix::lls(n+1,goodVolumes,MM,BB,stDev,currentCoeff,stError)) {
+                    std::cerr<<"Least Squares Fit Failed in Construct Polynomial"<<std::endl;
+                    return false;
+                }
+                delete [] stError;
+
+                //use these coefficient to
+                float errorSum = 0;
+                for(int i = 0; i < _simplexResults->count(); i++) {
+                    if(levelIndices[i]!=-1) {
+                        float min = ((float)firstTime.secsTo(_simplexResults->at(i).getTime())/60.0);
+                        float func_y  = 0;
+                        for(int m = 0; m <=n; m++) {
+                            func_y += currentCoeff[m]*pow(min,m);
+                        }
+                        //if(criteria == 2)
+                        //Message::toScreen(" Fitted Radius = "+QString().setNum(func_y));
+                        int jBest = _ppBestRadius[i][levelIndices[i]];
+                        switch(criteria) {
+                        case 0:
+                            errorSum +=pow(func_y-_simplexResults->at(i).getMeanX(levelIndices[i], jBest), 2); break;
+                        case 1:
+                            errorSum +=pow(func_y-_simplexResults->at(i).getMeanY(levelIndices[i], jBest), 2); break;
+                        case 2:
+                            errorSum +=pow(func_y-_simplexResults->at(i).getRadius(jBest),2); break;
+                        case 3:
+                            errorSum +=pow(func_y-_simplexResults->at(i).getMaxVT(levelIndices[i], jBest), 2);
+                            break;
+                        }
+                    }
+                }
+                int degFreedom = goodVolumes-n;
+                if(degFreedom == 0)
+                    Message::toScreen("ChooseCenter construct Polynomial, division by zero");
+                squareVariance[n] = errorSum/(float)degFreedom;
+
+                if(n > 1) {
+                    if(squareVariance[n] > squareVariance[n-1]) {
+                        // we found the best fit!!!!
+                        _ppBestFitVariance[criteria][k] = squareVariance[n-1];
+                        _ppBestFitDegree[criteria][k] = n-1;
+                        // Now we have to revert back to the old set
+                        // This is why everything is kept in storage
+                        for(int l = 0; l <= n; l++) {
+                            _pppBestFitCoeff[criteria][k][l] = lastFitCoeff[l];
+                        }
+                        break;
+                    }
+                    else {
+                        if(n == maxPoly) {
+                            // Maxed out
+                            _ppBestFitVariance[criteria][k] = squareVariance[n];
+                            _ppBestFitDegree[criteria][k] = n;
+                            for(int l = 0; l <= n; l++) {
+                                _pppBestFitCoeff[criteria][k][l] = currentCoeff[l];
+                            }
+                        }
+                        else {
+                            //Message::toScreen("Using F-Test");
+                            // preform the f test to see if a higher polynomial is warranted
+                            float fTest;
+                            float m_delta = squareVariance[n-1]*(float)(degFreedom+1)-squareVariance[n]*(float)degFreedom;
+                            if(squareVariance[n] > 0)
+                                fTest = m_delta/squareVariance[n];
+                            else
+                                fTest = 0;
+                            if(degFreedom >30)
+                                degFreedom = 30;
+                            float fCrit = _fCriteria[degFreedom-1];
+                            if(fTest < fCrit) {
+                                // Found the best center
+                                _ppBestFitVariance[criteria][k] = squareVariance[n-1];
+                                _ppBestFitDegree[criteria][k] = n-1;
+                                // degree = n-1; phasing out
+                                for(int l = 0; l <= (n-1); l++) {
+                                    _pppBestFitCoeff[criteria][k][l] = lastFitCoeff[l];
+                                }
+                            }
+                        }
+                    }
+                }
+                else {
+                    // Doing a linear fit with only 3 points
+                    _ppBestFitVariance[criteria][k] = squareVariance[n];
+                    _ppBestFitDegree[criteria][k] = n;
+                    for(int l = 0; l <= n; l++) {
+                        _pppBestFitCoeff[criteria][k][l] = currentCoeff[l];
+                    }
+                }
+            }
+        }
+        //Message::toScreen("Got to deleting arrays");
+        for(int ii = 0; ii <= maxPoly; ii++) {
+            delete [] MM[ii];
+        }
+        delete [] MM;
+        delete [] BB;
+        delete [] squareVariance;
+        delete [] lastFitCoeff;
+        delete [] currentCoeff;
+        //delete [] stError;
     }
-    delete [] MM;
-    delete [] BB;
-    delete [] squareVariance;
-    delete [] lastFitCoeff;
-    delete [] currentCoeff;
-    //delete [] stError;
-  }
-  
-  //Message::toScreen("Finished Construct Polynomial");
-  return true;
+
+    return true;
 }
 
 
@@ -845,347 +769,324 @@ bool ChooseCenter::constructPolynomial()
 bool ChooseCenter::fixCenters()
 {
 
-  // Set up parameters for populating the vortexData
+    // Set up parameters for populating the vortexData
+    float radarLat = _config->getParam(_config->getConfig("radar"), QString("lat")).toFloat();
+    float radarLon = _config->getParam(_config->getConfig("radar"), QString("lon")).toFloat();
+    float radarLatRadians = radarLat * acos(-1.0)/180.0;
+    float fac_lat = 111.13209 - 0.56605 * cos(2.0 * radarLatRadians) + 0.00012 * cos(4.0 * radarLatRadians) - 0.000002 * cos(6.0 * radarLatRadians);
+    float fac_lon = 111.41513 * cos(radarLatRadians) - 0.09455 * cos(3.0 * radarLatRadians) + 0.00012 * cos(5.0 * radarLatRadians);
 
-  float radarLat = config->getParam(config->getConfig("radar"), QString("lat")).toFloat();
-  float radarLon = config->getParam(config->getConfig("radar"), QString("lon")).toFloat();
-  float radarLatRadians = radarLat * acos(-1.0)/180.0;
-  float fac_lat = 111.13209 - 0.56605 * cos(2.0 * radarLatRadians) + 0.00012 * cos(4.0 * radarLatRadians) - 0.000002 * cos(6.0 * radarLatRadians);
-  float fac_lon = 111.41513 * cos(radarLatRadians) - 0.09455 * cos(3.0 * radarLatRadians) + 0.00012 * cos(5.0 * radarLatRadians);
-  
-  //Message::toScreen("Lat Lon Conversions and Time Resolved");
-  
-  float **newVariance = new float*[4];
-  for(int m = 0; m < 4; m++) {
-    newVariance[m] = new float[numHeights->count()];
-    for(int k = 0; k < numHeights->count(); k++)
-      newVariance[m][k] = 0;
-  }
-  newBestRadius = new int*[simplexResults->count()];
-  newBestCenter = new int*[simplexResults->count()];
-  for(int i = 0; i < simplexResults->count(); i++) {
-    newBestRadius[i] = new int[numHeights->count()];
-    newBestCenter[i] = new int[numHeights->count()];
-    for(int k = 0; k < numHeights->count(); k++) {
-      newBestRadius[i][k] = 0;
-      newBestCenter[i][k] = 0;
-    }
-  }
 
-  // Get the volume with the latest time so we know which one we are
-  // currently working on.
-
-  // set firstTime to the earliest volume in the simplexResults set
-  
-  firstTime = simplexResults->at(0).getTime();
-  for(int ii = 1; ii < simplexResults->count(); ii++) {
-    if(simplexResults->at(ii).getTime() < firstTime)
-      firstTime = simplexResults->at(ii).getTime();
-  }
-
-  // Find the last index for picking a center;
-  int lastTimeIndex = 0;
-  float longestTime = 0;
-  for(int i = 0; i < simplexResults->count(); i++) {
-    if(getMinutesTo(simplexResults->at(i).getTime()) > longestTime) {
-      lastTimeIndex = i;
-      longestTime = getMinutesTo(simplexResults->at(i).getTime());
-    }
-  }
-  
-  QList<int> heights = numHeights->keys();
-  // Sort heights so that k index is attached to a specific height
-  // Sort smallest to largest
-  // The sorting is nessecary because QHash randomizes ordering
-  for(int s = 0; s < heights.count()-1; s++)
-    for(int t = s+1; t < heights.count(); t++)
-      if(heights[t] < heights[s])
-	heights.swap(t,s);
-  
-  for(int k = 0; k < numHeights->count(); k++) {
-    
-    int currHeight = heights[k];  // in meters
-    int goodVolumes = numHeights->value(currHeight);
-    int* levelIndices = indexOfHeights->value(currHeight);
-
-    //Message::toScreen("Level = "+QString().setNum(k)+" @ height "+QString().setNum(currHeight));
-    
-    // If the level we are examining is not part of the current 
-    // simplex search then don't even bother
-    //Message::toScreen("Working on level k = "+QString().setNum(k)+" @ "+QString().setNum(currHeight));
-    if(levelIndices[lastTimeIndex]==-1){
-      //Message::toScreen("Skipping Work On Level k = "+QString().setNum(k));
-      // the last simplex had no data on this level
-      continue;
-    }
-    int timeRefIndex = 0;
-    firstTime = QDateTime();
-    while(levelIndices[timeRefIndex]==-1) {
-      timeRefIndex++;
-    }
-    firstTime = simplexResults->at(timeRefIndex).getTime();
-    for(int i = timeRefIndex+1; i < simplexResults->count(); i++) {
-      if(levelIndices[i]!=-1) {
-	if(simplexResults->at(i).getTime()<firstTime) {
-	  timeRefIndex = i;
-	  firstTime = simplexResults->at(i).getTime();
-	}
-      }
+    _ppNewBestRadius = new int*[_simplexResults->count()];
+    _ppNewBestCenter = new int*[_simplexResults->count()];
+    for(int i = 0; i < _simplexResults->count(); i++) {
+        _ppNewBestRadius[i] = new int[numHeights->count()];
+        _ppNewBestCenter[i] = new int[numHeights->count()];
+        for(int k = 0; k < numHeights->count(); k++) {
+            _ppNewBestRadius[i][k] = 0;
+            _ppNewBestCenter[i][k] = 0;
+        }
     }
 
-    // Do work that fixCenters is supposed to
-    
-    float xErrorSum = 0;
-    float yErrorSum = 0;
-    float radErrorSum = 0;
-    float windErrorSum = 0;
-    
-    for(int i = 0; i < simplexResults->count(); i++) {
-      if(levelIndices[i]!=-1){
-	float x = 0;
-	float y = 0;
-	float rad = 0;
-	float wind = 0;
-	float finalStd = 0;
-	float confidence = 0;
-	float stdError = 0;
-	float min = ((float)firstTime.secsTo(simplexResults->at(i).getTime())/60.0);
-	//check out use of n up to best degree of fit based on assignment
-	for(int n = 0; n <= bestFitDegree[0][k]; n++) {
-	  x += bestFitCoeff[0][k][n]*pow(min,n);
-	}
-	for(int n = 0; n <= bestFitDegree[1][k]; n++) {
-	  y += bestFitCoeff[1][k][n]*pow(min,n);
-	}
-	for(int n = 0; n <= bestFitDegree[2][k]; n++) {
-	  rad += bestFitCoeff[2][k][n]*pow(min,n);
-	}
-	for(int n = 0; n <= bestFitDegree[3][k]; n++) {
-	  wind += bestFitCoeff[3][k][n]*pow(min,n);
-	}
+    // Get the volume with the latest time so we know which one we are
+    // currently working on.
 
-	//Message::toScreen("Rad from fit is "+QString().setNum(rad)+"  x from fit "+QString().setNum(x)+"  y from fit "+QString().setNum(y)+"  wind from fit "+QString().setNum(wind));
-	
-	float minError = 0;
-	float totalError = 0;
-	float minXError = x*x;
-	float minYError = y*y;
-	float minRadError = rad*rad;
-	float minWindError = wind*wind;
-	
-	for(int j = 0; j < simplexResults->at(i).getNumRadii(); j++) {
-	  float xError, yError, radError, windError;
-	  int howManyReturnNull = 0;
-	  for(int l = 0; l < simplexResults->at(i).getNumPointsUsed(); l++) {
-	    if(simplexResults->at(i).getCenter(levelIndices[i],j,l).isNull()) {
-	      howManyReturnNull++;
-	    }
-	    else {
-	      Center currCenter = simplexResults->at(i).getCenter(levelIndices[i],j,l);
-	      float stdX = sqrt(bestFitVariance[0][k]);
-	      xError = exp(-.5*pow((x-currCenter.getX())/stdX, 2));
-	      float stdY = sqrt(bestFitVariance[1][k]);
-	      yError = exp(-.5*pow((y-currCenter.getY())/stdY, 2));
-	      float stdRad = sqrt(bestFitVariance[2][k]);
-	      if(stdRad == 0) {
-		radError = 1;
-	      }
-	      else {
-		radError = exp(-.5*pow((rad-currCenter.getRadius())/stdRad, 2));  
-	      }
-	      float stdWind = sqrt(bestFitVariance[3][k]);
-	      windError = exp(-.5*pow((wind-currCenter.getMaxVT())/stdWind, 2));
-	      xError *= positionWeight;
-	      yError *= positionWeight;
-	      radError *= rmwWeight;
-	      windError *= velWeight;
-	      totalError = xError+yError+radError+windError;
-	      
-	      if(totalError > minError) {
-		minError = totalError;
-		minXError = xError;
-		minYError = yError;
-		minRadError = radError;
-		minWindError = windError;
-		newBestRadius[i][k] = j;
-		newBestCenter[i][k] = l;
-		
-		int jBest = bestRadius[i][levelIndices[i]];
-		float meanX=((simplexResults->at(i).getX(levelIndices[i],jBest)+x+currCenter.getX())/3.0);
-		float meanY=((simplexResults->at(i).getY(levelIndices[i],jBest)+y+currCenter.getY())/3.0);
-		//finalStd = pow((simplexResults->at(i).getX(levelIndices[i],jBest)-meanX),2);
-		finalStd = 0;
-		finalStd += pow((x-meanX), 2);
-		finalStd += pow((currCenter.getX()-meanX), 2);
-		finalStd += pow((simplexResults->at(i).getY(levelIndices[i],jBest)-meanY),2);
-		finalStd += pow((y-meanY), 2);
-		finalStd += pow((currCenter.getY()-meanY), 2);
-		finalStd = sqrt(finalStd/3.0);
-		confidence = (100*minError)/4.0;   // percent ? who uses this
-		float avgError = minError/4.0;
-		stdError = pow((avgError-minXError),2);
-		stdError += pow((avgError-minYError),2);
-		stdError += pow((avgError-minRadError),2);
-		stdError += pow((avgError-minWindError),2);
-		stdError /= 4.0;
-		// finalStd and stdError are printed only for each level and 
-		// volume, these may be desired as outputs
-	      }
-	    }
-	  }
-	}
-	// new variables here but why?
-	
-	// get best simplex center;
-	Center bestCenter = simplexResults->at(i).getCenter(levelIndices[i],
-							newBestRadius[i][k],
-							newBestCenter[i][k]);
-	float xError, yError, radError, windError;
-	
-	//Message::toScreen("BestCenter is at level "+QString().setNum(levelIndices[i])+" radius index "+QString().setNum(newBestRadius[i][k])+" center index "+QString().setNum(newBestCenter[i][k])+" with a radius "+QString().setNum(bestCenter.getRadius())+" x = "+QString().setNum(bestCenter.getX())+" y = "+QString().setNum(bestCenter.getY()));
-	
-	xError = (x-bestCenter.getX())*(x-bestCenter.getX());
-	yError = (y-bestCenter.getY())*(y-bestCenter.getY());
-	radError = (rad-bestCenter.getRadius())*(rad-bestCenter.getRadius());
-	windError = (wind-bestCenter.getMaxVT())*(wind-bestCenter.getMaxVT());
-	xErrorSum += xError;
-	yErrorSum += yError;
-	radErrorSum += radError;
-	windErrorSum += windError;
-	
-	if(i == lastTimeIndex) {
-	  //Message::toScreen("Vortex Data level "+QString().setNum(levelIndices[i])+" @ height "+QString().setNum(simplexResults->at(i).getHeight(levelIndices[i]))+" time "+vortexData->getTime().toString()+" radius = "+QString().setNum(rad)+" radError "+QString().setNum(radError));
-	  // if the volume we are looking at is the last one we will want to keep
-	  // all the info in vortexData
-	  
-	  // We don't check to see that any of these levels are in the search
-	  // zone for vortexData in vtd
+    // set firstTime to the earliest volume in the simplexResults set
 
-	  int j = bestRadius[i][levelIndices[i]];
-	  /* float centerLat = radarLat + y/fac_lat;
-	  float centerLon = radarLon + x/fac_lon; */
-	  float centerLat = radarLat + bestCenter.getY()/fac_lat;
-	  float centerLon = radarLon + bestCenter.getX()/fac_lon;
-	  vortexData->setLat(levelIndices[i], centerLat);
-	  vortexData->setLon(levelIndices[i], centerLon);
-	  vortexData->setHeight(levelIndices[i], simplexResults->at(i).getHeight(levelIndices[i]));
-	  //vortexData->setRMW(levelIndices[i], rad);
-	  vortexData->setRMW(levelIndices[i], bestCenter.getRadius());
-	  vortexData->setRMWUncertainty(levelIndices[i], radError);
-	  //Message::toScreen("Rad error for level "+QString().setNum(k)+" is "+QString().setNum(radError));
-	  vortexData->setCenterStdDev(levelIndices[i], sqrt(xError*xError+yError*yError));
-	  vortexData->setNumConvergingCenters(levelIndices[i], simplexResults->at(i).getNumConvergingCenters(levelIndices[i],j));
-	}
-      }
+    firstTime = _simplexResults->at(0).getTime();
+    for(int ii = 1; ii < _simplexResults->count(); ii++) {
+        if(_simplexResults->at(ii).getTime() < firstTime)
+            firstTime = _simplexResults->at(ii).getTime();
     }
-  
-    // newVariance is the variance related to the fit of the line?
-    float degree = bestFitDegree[3][k];
-    newVariance[0][k]=xErrorSum/(goodVolumes-degree);
-    newVariance[1][k]=yErrorSum/(goodVolumes-degree);
-    newVariance[2][k]=radErrorSum/(goodVolumes-degree);
-    newVariance[3][k]=windErrorSum/(goodVolumes-degree);
-    // the newVariance is never used in the perl code of choose center,
-    // and the variable degree is never initialized either, it is just left at
-    // the last degree checked for the last function, probably wind
-    // is this intentional or not??
-    // my best guess is that degree will be set to the high degree for wind
-    // so that is what I will set it to here
-  }
 
-  for(int i = 0; i < 4; i++)
-    delete [] newVariance[i];
-  delete [] newVariance;
-  //Message::toScreen("Finished Fix Centers");
-  return true;
-}
-    
-void ChooseCenter::useLastMean()
-{
-  // Fake fill of vortexData for testing purposes
-  float radarLat = config->getParam(config->getConfig("radar"), QString("lat")).toFloat();
-  float radarLon = config->getParam(config->getConfig("radar"), QString("lon")).toFloat();
-  float radarLatRadians = radarLat * acos(-1.0)/180.0;
-  float fac_lat = 111.13209 - 0.56605 * cos(2.0 * radarLatRadians)
-	  + 0.00012 * cos(4.0 * radarLatRadians) - 0.000002 * cos(6.0 * radarLatRadians);
-  float fac_lon = 111.41513 * cos(radarLatRadians)
-	  - 0.09455 * cos(3.0 * radarLatRadians) + 0.00012 * cos(5.0 * radarLatRadians);
-  
-  int i = simplexResults->size() - 1;
-  for(int k = 0; k < simplexResults->at(i).getNumLevels(); k++) {
-	  int j = bestRadius[i][k];
-	  float centerLat = radarLat + simplexResults->at(i).getY(k,j)/fac_lat;
-	  float centerLon = radarLon + simplexResults->at(i).getX(k,j)/fac_lon;
-	  vortexData->setLat(k, centerLat);
-	  vortexData->setLon(k, centerLon);
-	  vortexData->setHeight(k, simplexResults->at(i).getHeight(k));
-	  vortexData->setRMW(k, simplexResults->at(i).getRadius(j));
-	  vortexData->setRMWUncertainty(k, -999);
-	  vortexData->setCenterStdDev(k, simplexResults->at(i).getCenterStdDev(k,j));
-	  vortexData->setNumConvergingCenters(k, simplexResults->at(i).getNumConvergingCenters(k,j));
-  } 
-  
+    // Find the last index for picking a center;
+    int lastTimeIndex = 0;
+    float longestTime = 0;
+    for(int i = 0; i < _simplexResults->count(); i++) {
+        if(firstTime.secsTo(_simplexResults->at(i).getTime())/60.f > longestTime) {
+            lastTimeIndex = i;
+            longestTime = firstTime.secsTo(_simplexResults->at(i).getTime())/60.f;
+        }
+    }
+
+    QList<int> heights = numHeights->keys();
+    // Sort heights so that k index is attached to a specific height
+    // Sort smallest to largest
+    // The sorting is nessecary because QHash randomizes ordering
+    for(int s = 0; s < heights.count()-1; s++)
+        for(int t = s+1; t < heights.count(); t++)
+            if(heights[t] < heights[s])
+                heights.swap(t,s);
+
+    for(int hidx = 0; hidx < numHeights->count(); hidx++) {
+
+        int currHeight = heights[hidx];  // in meters
+        int goodVolumes = numHeights->value(currHeight);
+        int* levelIndices = indexOfHeights->value(currHeight);
+
+        if(levelIndices[lastTimeIndex]==-1){
+            continue;
+        }
+        int timeRefIndex = 0;
+        firstTime = QDateTime();
+        while(levelIndices[timeRefIndex]==-1) {
+            timeRefIndex++;
+        }
+        firstTime = _simplexResults->at(timeRefIndex).getTime();
+        for(int i = timeRefIndex+1; i < _simplexResults->count(); i++) {
+            if(levelIndices[i]!=-1) {
+                if(_simplexResults->at(i).getTime()<firstTime) {
+                    timeRefIndex = i;
+                    firstTime = _simplexResults->at(i).getTime();
+                }
+            }
+        }
+
+        // Do work that fixCenters is supposed to
+
+        for(int vidx = 0; vidx < _simplexResults->count(); vidx++) {
+            if(levelIndices[vidx]!=-1){
+                float polyFitx = 0;
+                float polyFity = 0;
+                float polyFitrad = 0;
+                float polyFitwind = 0;
+                float finalStd = 0;
+                float confidence = 0;
+                float stdError = 0;
+                float min = ((float)firstTime.secsTo(_simplexResults->at(vidx).getTime())/60.0);
+                //check out use of n up to best degree of fit based on assignment
+                for(int n = 0; n <= _ppBestFitDegree[0][hidx]; n++) {
+                    polyFitx += _pppBestFitCoeff[0][hidx][n]*pow(min,n);
+                }
+                for(int n = 0; n <= _ppBestFitDegree[1][hidx]; n++) {
+                    polyFity += _pppBestFitCoeff[1][hidx][n]*pow(min,n);
+                }
+                for(int n = 0; n <= _ppBestFitDegree[2][hidx]; n++) {
+                    polyFitrad += _pppBestFitCoeff[2][hidx][n]*pow(min,n);
+                }
+                for(int n = 0; n <= _ppBestFitDegree[3][hidx]; n++) {
+                    polyFitwind += _pppBestFitCoeff[3][hidx][n]*pow(min,n);
+                }
+
+                float totalMinError = 0;
+                float totalError = 0;
+
+                for(int ridx = 0; ridx < _simplexResults->at(vidx).getNumRadii(); ridx++) {
+                    float xError, yError, radError, windError;
+                    for(int pidx = 0; pidx < _simplexResults->at(vidx).getNumPointsUsed(); pidx++) {
+                        if(!_simplexResults->at(vidx).getCenter(levelIndices[vidx],ridx,pidx).isValid()) {
+
+                            Center currCenter = _simplexResults->at(vidx).getCenter(levelIndices[vidx],ridx,pidx);
+                            float stdX = sqrt(_ppBestFitVariance[0][hidx]);
+                            xError = exp(-.5*pow((polyFitx-currCenter.getX())/stdX, 2));
+                            float stdY = sqrt(_ppBestFitVariance[1][hidx]);
+                            yError = exp(-.5*pow((polyFity-currCenter.getY())/stdY, 2));
+                            float stdRad = sqrt(_ppBestFitVariance[2][hidx]);
+                            if(stdRad == 0) {
+                                radError = 1;
+                            }
+                            else {
+                                radError = exp(-.5*pow((polyFitrad-currCenter.getRadius())/stdRad, 2));
+                            }
+                            float stdWind = sqrt(_ppBestFitVariance[3][hidx]);
+                            windError = exp(-.5*pow((polyFitwind-currCenter.getMaxVT())/stdWind, 2));
+                            xError    *= _paramPosWeight;
+                            yError    *= _paramPosWeight;
+                            radError  *= _paramRmwWeight;
+                            windError *= _paramVelWeight;
+                            totalError = xError+yError+radError+windError;
+
+                            if(totalError > totalMinError) {
+                                totalMinError = totalError;
+                                _ppNewBestRadius[vidx][hidx] = ridx;
+                                _ppNewBestCenter[vidx][hidx] = pidx;
+                            }
+                        }
+                    }
+                }
+                // new variables here but why?
+
+                // get best simplex center;
+                Center bestCenter = _simplexResults->at(vidx).getCenter(levelIndices[vidx],_ppNewBestRadius[vidx][hidx],_ppNewBestCenter[vidx][hidx]);
+                float xError, yError, radError;
+
+                xError = (polyFitx-bestCenter.getX())*(polyFitx-bestCenter.getX());
+                yError = (polyFity-bestCenter.getY())*(polyFity-bestCenter.getY());
+                radError = (polyFitrad-bestCenter.getRadius())*(polyFitrad-bestCenter.getRadius());
+
+                if(vidx == lastTimeIndex) {
+                    // if the volume we are looking at is the last one we will want to keep all the info in vortexData
+                    // We don't check to see that any of these levels are in the search zone for vortexData in vtd
+
+                    int j = _ppBestRadius[vidx][levelIndices[vidx]];
+
+                    float centerLat = radarLat + bestCenter.getY()/fac_lat;
+                    float centerLon = radarLon + bestCenter.getX()/fac_lon;
+                    _vortexData->setLat(levelIndices[vidx], centerLat);
+                    _vortexData->setLon(levelIndices[vidx], centerLon);
+                    _vortexData->setHeight(levelIndices[vidx], _simplexResults->at(vidx).getHeight(levelIndices[vidx]));
+                    _vortexData->setMaxVT(levelIndices[vidx],bestCenter.getMaxVT());
+                    _vortexData->setRMW(levelIndices[vidx], bestCenter.getRadius());
+                    _vortexData->setRMWUncertainty(levelIndices[vidx], radError);
+                    _vortexData->setCenterStdDev(levelIndices[vidx], sqrt(xError*xError+yError*yError));
+                }
+            }
+        }
+
+        // the newVariance is never used in the perl code of choose center,
+        // and the variable degree is never initialized either, it is just left at
+        // the last degree checked for the last function, probably wind
+        // is this intentional or not??
+        // my best guess is that degree will be set to the high degree for wind
+        // so that is what I will set it to here
+    }
+    return true;
 }
 
-float ChooseCenter::getMinutesTo(const QDateTime &volTime)
+void ChooseCenter::_useLastMean()
 {
-  float min = ((float)firstTime.secsTo(volTime)/60.0);
-  return min;
-}
+    // Fake fill of vortexData for testing purposes
+    float radarLat = _config->getParam(_config->getConfig("radar"), QString("lat")).toFloat();
+    float radarLon = _config->getParam(_config->getConfig("radar"), QString("lon")).toFloat();
+    float radarLatRadians = radarLat * acos(-1.0)/180.0;
+    float fac_lat = 111.13209 - 0.56605 * cos(2.0 * radarLatRadians) + 0.00012 * cos(4.0 * radarLatRadians) - 0.000002 * cos(6.0 * radarLatRadians);
+    float fac_lon = 111.41513 * cos(radarLatRadians) - 0.09455 * cos(3.0 * radarLatRadians) + 0.00012 * cos(5.0 * radarLatRadians);
 
-void ChooseCenter::catchLog(const Message& message)
-{
-  emit errorlog(message);
+    for(int k = 0; k < _simplexResults->last().getNumLevels(); k++) {
+        int bestRadii = _ppBestRadius[_simplexResults->size()-1][k];
+        float centerLat = radarLat + _simplexResults->last().getMeanY(k,bestRadii)/fac_lat;
+        float centerLon = radarLon + _simplexResults->last().getMeanX(k,bestRadii)/fac_lon;
+        _vortexData->setLat(k, centerLat);
+        _vortexData->setLon(k, centerLon);
+        _vortexData->setHeight(k, _simplexResults->last().getHeight(k));
+        _vortexData->setMaxVT(k, _simplexResults->last().getMaxVT(k,bestRadii));
+        _vortexData->setRMW(k, _simplexResults->last().getRadius(bestRadii));
+        _vortexData->setRMWUncertainty(k, -999);
+        _vortexData->setCenterStdDev(k, _simplexResults->last().getCenterStdDev(k,bestRadii));
+    }
+
 }
 
 void ChooseCenter::findHeights()
 {
-  numHeights = new QHash<int, int>;
-  indexOfHeights = new QHash<int,int*>;
-  numHeights->clear();
-  indexOfHeights->clear();
-  for(int i = 0; i < simplexResults->count(); i++) {
-    if((simplexResults->at(i).getTime() >= startTime) &&
-       (simplexResults->at(i).getTime() <= endTime)) {
-      for(int j = 0; j < simplexResults->at(i).getNumLevels(); j++) {
-	int currHeight = int(simplexResults->at(i).getHeight(j)*1000+.5);
-	if(numHeights->value(currHeight,-1)==-1) {
-	  numHeights->insert(currHeight,1);
-	  int* newHeightArray = new int[simplexResults->count()];
-	  for(int kk = 0; kk < simplexResults->count(); kk++)
-	    newHeightArray[kk] = -1;
-	  indexOfHeights->insert(currHeight,newHeightArray);
-	}
-	else
-	  numHeights->insert(currHeight, numHeights->value(currHeight)+1);
-      }
+    numHeights = new QHash<int, int>;
+    indexOfHeights = new QHash<int,int*>;
+
+    for(int i = 0; i < _simplexResults->count(); i++) {
+        if((_simplexResults->at(i).getTime() >= startTime) &&(_simplexResults->at(i).getTime() <= endTime)) {
+            for(int j = 0; j < _simplexResults->at(i).getNumLevels(); j++) {
+                int currHeight = int(_simplexResults->at(i).getHeight(j)*1000+.5);
+                if(numHeights->value(currHeight,-1)==-1) {
+                    numHeights->insert(currHeight,1);
+                    int* newHeightArray = new int[_simplexResults->count()];
+                    for(int kk = 0; kk < _simplexResults->count(); kk++)
+                        newHeightArray[kk] = -1;
+                    indexOfHeights->insert(currHeight,newHeightArray);
+                }
+                else
+                    numHeights->insert(currHeight, numHeights->value(currHeight)+1);
+            }
+        }
     }
-  }
-  for(int i = 0; i < simplexResults->count(); i++) {
-    if((simplexResults->at(i).getTime() >= startTime) &&
-       (simplexResults->at(i).getTime() <= endTime)) {
-      for(int j = 0; j < simplexResults->at(i).getNumLevels(); j++) {
-	int currHeight = int(simplexResults->at(i).getHeight(j)*1000+.5);
-	int* heightProfile = indexOfHeights->take(currHeight);
-	heightProfile[i] = j;
-	indexOfHeights->insert(currHeight,heightProfile);
-      }
+
+    for(int i = 0; i < _simplexResults->count(); i++) {
+        if((_simplexResults->at(i).getTime() >= startTime) && (_simplexResults->at(i).getTime() <= endTime)) {
+            for(int j = 0; j < _simplexResults->at(i).getNumLevels(); j++) {
+                int currHeight = int(_simplexResults->at(i).getHeight(j)*1000+.5);
+                int* heightProfile = indexOfHeights->take(currHeight);
+                heightProfile[i] = j;
+                indexOfHeights->insert(currHeight,heightProfile);
+            }
+        }
     }
-  }
-  QList<int> heights = numHeights->keys();
-  for(int i = 0; i < heights.count(); i++) {
-    if(numHeights->value(heights[i]) <= 3) {
-      //Message::toScreen("Not enough values @ height "+QString().setNum(heights[i])+" removing this set.");
-      numHeights->remove(heights[i]);
-      indexOfHeights->remove(heights[i]);
-      continue;
-    }    
-    QString message;
-    //Message::toScreen(QString().setNum(numHeights->value(heights[i]))+" @ "+QString().setNum(heights[i]));
-    for(int ii = 0; ii < simplexResults->count(); ii++) {
-      message+= QString().setNum(indexOfHeights->value(heights[i])[ii])+", ";
+
+    QHash<int, int>::const_iterator i1 = numHeights->constBegin();
+    while (i1 != numHeights->constEnd()) {
+        std::cout << i1.key() << ": " << i1.value() << std::endl;
+        ++i1;
     }
-    //Message::toScreen(message);
-  }
-  
+    QHash<int, int*>::const_iterator i = indexOfHeights->constBegin();
+    while(i!=indexOfHeights->constEnd()){
+        std::cout << i.key() << ": "<< i.value() << std::endl;
+        ++i;
+    }
+
+    QList<int> heights = numHeights->keys();
+    for(int i = 0; i < heights.count(); i++) {
+        if(numHeights->value(heights[i]) <= 3) {
+            numHeights->remove(heights[i]);
+            indexOfHeights->remove(heights[i]);
+            continue;
+        }
+    }
+
+}
+
+bool ChooseCenter::_polyFit(const int nCoeff, const int nData, const float* xData, const float* yData, float* aData, float& rss )
+{
+    float** A=new float*[nCoeff+1];
+    for(int i=0;i<=nCoeff;i++)
+        A[i]=new float[nData];
+    for(int i=0;i<=nCoeff;i++)
+        for(int j=0;j<nData;j++)
+            A[i][j]=pow(xData[j],float(i));
+    float* b=new float[nData];
+    for(int i=0;i<nData;i++)
+        b[i]=yData[i];
+    float* stError=new float[nData];
+    float dummyStd;
+    Matrix::lls(nCoeff+1,nData,A,b,dummyStd,aData,stError);
+    for(int i=0;i<nData;i++)
+        _polyCal(nCoeff,aData,xData[i],b[i]);
+    rss =0.0f;
+    for(int i=0;i<nData;i++)
+        rss +=(b[i]-yData[i])*(b[i]-yData[i]);
+
+    delete[] stError;
+    delete[] b;
+    for(int i=0;i<=nCoeff;i++)
+        delete[] A[i];
+    delete[] A;
+}
+
+void ChooseCenter::_polyCal(const int nOrder, const float* aData, const float xData, float& yData)
+{
+    /* Notice: here nOrder is the order of polynomial fitting, aData should be a rray of length nOrder+1
+     */
+
+    yData =0.f;
+    for(int i=0;i<=nOrder;i++)
+        yData +=aData[i]*pow(xData,float(i));
+}
+
+void ChooseCenter::_polyTest()
+{
+
+    std::srand((unsigned)std::time(0));
+    const int nOrder =10;
+    const int nData  =100;
+
+    float  xData[nData],yData[nData],a[nOrder],b[nOrder];
+    for(int i=0;i<nOrder;i++)
+        a[i]=(std::rand()%10)/10.f;
+
+    for(int i=0;i<nData;i++){
+        xData[i]=(std::rand()%10)/10.f;
+        yData[i]=0.f;
+        for(int j=0;j<nOrder;j++)
+            yData[i]+=a[j]*pow(xData[i],float(j));
+        //yData[i]+=(std::rand()%10)/50.f;
+    }
+    float fitStd;
+    _polyFit(nOrder,nData,xData,yData,b,fitStd);
+    std::cout<<"Fitting Result:"<<std::endl;
+    for(int i=0;i<nOrder;i++)
+        std::cout<<a[i]<<"---"<<b[i]<<std::endl;
+    std::cout<<"Fit std: "<<fitStd<<std::endl;
+    int i=0;
+}
+bool ChooseCenter::_fTest(const float& RSS1,const int& freedom1,const float& RSS2,const int& freedom2)
+{
+    float fTest =((RSS1-RSS2)/(freedom1-freedom2))/(RSS2/freedom2);
+    return freedom1>29?fTest>_fCriteria[29]:fTest>_fCriteria[freedom1];
 }

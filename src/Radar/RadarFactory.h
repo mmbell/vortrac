@@ -29,44 +29,45 @@
 class RadarFactory : public QObject
 {
 
-  Q_OBJECT
+    Q_OBJECT
 
- public:
-  RadarFactory(Configuration* radarConfig, QObject *parent = 0);
-  ~RadarFactory();
-  RadarData* getUnprocessedData();
-  bool hasUnprocessedData();
-  int getNumProcessed() const;
-  
- public slots:
-   void catchLog(const Message& message);
-   void updateDataQueue(const VortexList* list);
- signals:
-   void log(const Message& message);
+public:
+    RadarFactory(Configuration* radarConfig, QObject *parent = 0);
+    ~RadarFactory();
+    RadarData* getUnprocessedData();
+    bool hasUnprocessedData();
+    int getNumProcessed() const;
 
- private:
-  enum dataFormat {
-	ncdclevelII,
-	ldmlevelII,
-	model,
-	dorade,
-	netcdf
-  };
+public slots:
+    void catchLog(const Message& message);
+    void updateDataQueue(const VortexList* list);
 
-  QDir dataPath;
-  QString radarName;
-  float radarLat;
-  float radarLon;
-  float radarAlt;
-  dataFormat radarFormat;
-  QQueue<QString> *radarQueue;
-  QDateTime startDateTime;
-  QDateTime endDateTime;
-  QHash<QString, bool> fileAnalyzed;
-  QDateTime radarDateTime;
-  Configuration* mainConfig;
+signals:
+    void log(const Message& message);
+
+private:
+    enum dataFormat {
+        ncdclevelII,
+        ldmlevelII,
+        model,
+        dorade,
+        netcdf
+    };
+
+    QDir dataPath;
+    QString radarName;
+    float radarLat;
+    float radarLon;
+    float radarAlt;
+    dataFormat radarFormat;
+    QQueue<QString> *radarQueue;
+    QDateTime startDateTime;
+    QDateTime endDateTime;
+    QHash<QString, bool> fileAnalyzed;
+    QDateTime radarDateTime;
+    Configuration* mainConfig;
 };
-  
+
 
 #endif
 

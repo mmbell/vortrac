@@ -44,9 +44,9 @@ public:
 	void setPressure(const float& press);
 	
 	float getWindSpeed() const;
-	void setWindSpeed(const float& speed);
+        void  setWindSpeed(const float& speed);
 	float getWindDirection() const;
-	void setWindDirection(const float& dir);
+        void  setWindDirection(const float& dir);
 	float getUwind() const;
 	float getVwind() const;
 	
@@ -60,11 +60,10 @@ protected:
 	float longitude;
 	float altitude;
 	float pressure;
-	QDateTime time;
-	QString stationName;
 	float windSpeed;
 	float windDirection;
-	
+        QDateTime time;
+        QString stationName;
 };
 
 #endif

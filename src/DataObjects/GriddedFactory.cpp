@@ -14,7 +14,7 @@
 
 GriddedFactory::GriddedFactory()
 {
-  abort = NULL;
+    abort = NULL;
 }
 
 GriddedFactory::~GriddedFactory()
@@ -24,53 +24,43 @@ GriddedFactory::~GriddedFactory()
 GriddedData* GriddedFactory::makeEmptyGrid()
 {
 
-  // Create a new gridded data object with the named coordinate system as the default
- 
-  return 0;
+    // Create a new gridded data object with the named coordinate system as the default
+
+    return 0;
 
 }
 
-GriddedData* GriddedFactory::makeCappi(RadarData *radarData, 
-				       Configuration* mainConfig,
-				       float *vortexLat, float *vortexLon)
+GriddedData* GriddedFactory::makeCappi(RadarData *radarData,Configuration* mainConfig,float *vortexLat, float *vortexLon)
 {
-
-  //coordSystem = cartesian;
-		CappiGrid* cappi = new CappiGrid;
-		cappi->setExit(abort);
-		cappi->gridRadarData(radarData,mainConfig->getConfig("cappi"),
-				     vortexLat,vortexLon);
-		return cappi;
-		
+    CappiGrid* cappi = new CappiGrid;
+    cappi->gridRadarData(radarData,mainConfig->getConfig("cappi"),vortexLat,vortexLon);
+    return cappi;
 }
 
 GriddedData* GriddedFactory::makeAnalytic(RadarData *radarData,
-					  Configuration* mainConfig, 
-					  Configuration* analyticConfig,
-					  float *vortexLat, float *vortexLon,
-					  float *radarLat, float *radarLon)
+                                          Configuration* mainConfig,
+                                          Configuration* analyticConfig,
+                                          float *vortexLat, float *vortexLon,
+                                          float *radarLat, float *radarLon)
 {
-                
-                if(radarData->getNumRays() <= 0) {
-		  //coordSystem = cartesian;
-		     AnalyticGrid *data = new AnalyticGrid();
-		     data->setExit(abort);
-		     data->gridAnalyticData(mainConfig, analyticConfig, 
-					    vortexLat, vortexLon,radarLat,
-					    radarLon);
-		     return data;
-		}
-		else {
-		    return makeCappi(radarData, mainConfig, 
-				     vortexLat, vortexLon);
-		}
-		
-		Message::toScreen("Error in make Analytic GriddedFactory");
-		return new CappiGrid();
-	      
+
+    if(radarData->getNumRays() <= 0) {
+        //coordSystem = cartesian;
+        AnalyticGrid *data = new AnalyticGrid();
+        data->gridAnalyticData(mainConfig, analyticConfig,vortexLat, vortexLon,radarLat,
+                               radarLon);
+        return data;
+    }
+    else {
+        return makeCappi(radarData, mainConfig,vortexLat, vortexLon);
+    }
+
+    Message::toScreen("Error in make Analytic GriddedFactory");
+    return new CappiGrid();
+
 }
 
 void GriddedFactory::setAbort(volatile bool* newAbort)
 {
-  abort = newAbort;
+    abort = newAbort;
 }

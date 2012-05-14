@@ -11,10 +11,8 @@
 #ifndef VORTEXTHREAD_H
 #define VORTEXTHREAD_H
 
-#include <QMutex>
 #include <QSize>
-#include <QThread>
-#include <QWaitCondition>
+#include <QObject>
 
 #include "IO/Message.h"
 #include "Config/Configuration.h"
@@ -26,7 +24,7 @@
 #include "Pressure/PressureList.h"
 #include "Radar/RadarData.h"
 
-class VortexThread : public QThread
+class VortexThread : public QObject
 {
   Q_OBJECT
     
@@ -34,22 +32,17 @@ class VortexThread : public QThread
   VortexThread(QObject *parent = 0);
   ~VortexThread();
   void getWinds(Configuration *wholeConfig, GriddedData *dataPtr, RadarData *radarPtr, VortexData *vortexPtr, PressureList *pressurePtr);
+  void run();
 
  public slots:
      void catchLog(const Message& message);
    
- protected:
-     void run();
- 
  signals:
      void windsFound();
      void pressureFound();
      void log(const Message& message);
  
  private:
-     QMutex mutex;
-     QWaitCondition waitForData;
-     bool abort;
      GriddedData *gridData;
      RadarData *radarVolume;
      VortexData *vortexData;
@@ -58,7 +51,6 @@ class VortexThread : public QThread
      
      float* dataGaps;
      GBVTD* vtd;
-     Coefficient* vtdCoeffs; 
 
      QString vortexPath;
      QString geometry;
@@ -78,17 +70,15 @@ class VortexThread : public QThread
      float hvvpUncertainty;
      
      int numEstimates;
-     PressureData presObs[101];
+     QList<PressureData> _presObs;
 
      float vtdStdDev;
      float convergingCenters;
      float rhoBar[16];
-     void archiveWinds(float& radius,int& height,float& maxCoeffs);
-     void archiveWinds(VortexData& data, float& radius,
-		       int& height,float& maxCoeffs);
+     void archiveWinds(float radius,int height,int maxCoeffs, Coefficient *vtdCoeffs);
+     void archiveWinds(VortexData& data, float& radius,int& height,int& maxCoeffs, Coefficient *vtdCoeffs);
      // void getPressureDeficit(const float& height);
-     void getPressureDeficit(VortexData* data, float* pDeficit, 
-			     const float& height);
+     void getPressureDeficit(VortexData* data, float* pDeficit,const float& height);
      //void calcCentralPressure();
      void calcCentralPressure(VortexData* vortex, float* pD, float height);
      void calcPressureUncertainty(float setLimit, QString nameAddition);

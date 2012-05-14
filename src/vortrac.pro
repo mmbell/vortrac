@@ -7,8 +7,7 @@ DEPENDPATH += . Config Grids GUI IO Radar
 INCLUDEPATH += . GUI Config IO Radar
 
 # Input
-HEADERS += Threads/AnalysisThread.h \
-           Threads/PollThread.h \
+HEADERS += Threads/workThread.h \
            Threads/SimplexThread.h \
            Threads/VortexThread.h \
            DataObjects/VortexData.h \
@@ -18,7 +17,6 @@ HEADERS += Threads/AnalysisThread.h \
            DataObjects/Coefficient.h \
            DataObjects/Center.h \
            Config/Configuration.h \
-	   Config/thredds_Config.h \
            DataObjects/AnalyticGrid.h \
            DataObjects/CappiGrid.h \
            DataObjects/GriddedData.h \
@@ -29,7 +27,6 @@ HEADERS += Threads/AnalysisThread.h \
            GUI/AnalysisPage.h \
            GUI/GraphFace.h \
            GUI/KeyPicture.h \
-           GUI/TestGraph.h \
            GUI/AbstractPanel.h \ 
            GUI/panels.h \
            GUI/DiagnosticPanel.h \
@@ -59,8 +56,7 @@ HEADERS += Threads/AnalysisThread.h \
            Pressure/HWind.h \
            Pressure/AWIPS.h
 SOURCES += main.cpp \
-           Threads/AnalysisThread.cpp \
-           Threads/PollThread.cpp \
+           Threads/workThread.cpp \
            Threads/SimplexThread.cpp \
            Threads/VortexThread.cpp \
            DataObjects/VortexData.cpp \
@@ -70,7 +66,6 @@ SOURCES += main.cpp \
            DataObjects/Coefficient.cpp \
            DataObjects/Center.cpp \
            Config/Configuration.cpp \
-	   Config/thredds_Config.cpp \
            DataObjects/AnalyticGrid.cpp \
            DataObjects/CappiGrid.cpp \
            DataObjects/GriddedData.cpp \
@@ -81,7 +76,6 @@ SOURCES += main.cpp \
            GUI/AnalysisPage.cpp \
            GUI/GraphFace.cpp \ 
            GUI/KeyPicture.cpp \
-           GUI/TestGraph.cpp \
            GUI/AbstractPanel.cpp \
            GUI/panels.cpp \
            GUI/DiagnosticPanel.cpp \

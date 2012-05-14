@@ -26,34 +26,26 @@
 
 class StormSignal:public QWidget
 {
-
-  Q_OBJECT
+    Q_OBJECT
     
- public:
-        StormSignal(QSize hint = QSize(225,80), QWidget *parent = 0);
-        ~StormSignal();
+public:
+    StormSignal(QSize hint = QSize(225,80), QWidget *parent = 0);
+    ~StormSignal();
+    QSize sizeHint() const;
 
+protected:
+    void paintEvent(QPaintEvent *event);
 
-	QSize sizeHint() const;
+private:
+    bool flashing, on;
+    StormSignalStatus currentStatus;
+    QTimer *timer;
+    QPen pen;
+    QSize hint;
+    QPainterPath *hurrSymbol;
 
- protected:
-	void paintEvent(QPaintEvent *event);
- 
- private:
-	bool flashing, on;
-	StormSignalStatus currentStatus;
-	QTimer *timer;
-	QPen pen;
-	QSize hint;
-	QPainterPath *hurrSymbol;
- 
- public slots:
-        void catchLog(const Message& message);
-        void changeStatus(StormSignalStatus status);
- 
- signals:
-        void log(const Message& message);
-
+public slots:
+    void changeStatus(StormSignalStatus status);
 };
- 
+
 #endif

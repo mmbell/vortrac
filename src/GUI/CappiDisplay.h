@@ -32,16 +32,15 @@ public:
 
     float getMaxRec() { return maxRec; }
     float getMaxApp() { return maxApp; }
-						
+
 public slots:
-  void clearImage();
-  void constructImage(const GriddedData* cappi);
-  void setGBVTDResults(const float& xP, const float& yP, 
-		       const float& rmwEstimate, const float& sMin, const float& sMax, const float& vMax);
-  void exit();
-	
+    void clearImage();
+    void constructImage(const GriddedData* cappi);
+    void setGBVTDResults(float x, float y,float rmwEstimate, float sMin, float sMax, float vMax,
+                         float userlat, float userlon,float lat, float lon);
+
 signals:
-    void hasImage(bool imageAvailable); 
+    void hasImage(bool imageAvailable);
 
 protected:
     void mousePressEvent(QMouseEvent *event);
@@ -57,7 +56,6 @@ private:
     QImage legendImage;
     QPoint lastPoint;
     int PaintEngineMode;
-    bool exitNow;
     QColor backColor;
     float maxApp;
     float maxRec;
@@ -66,7 +64,7 @@ private:
     float velIncr;
     bool hasGBVTDInfo;
     float xPercent, yPercent;
-	float radiusMaximumWind;
+    float radiusMaximumWind;
     float simplexMin, simplexMax;
     float vortexMax;
     float minVelXpercent, minVelYpercent;
