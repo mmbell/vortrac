@@ -70,7 +70,6 @@ void VortexThread::getWinds(Configuration *wholeConfig, GriddedData *dataPtr, Ra
 void VortexThread::run()
 {
 
-    bool foundWinds = true;
     emit log(Message(QString(),0,this->objectName(),Green));
 
     // Initialize variables

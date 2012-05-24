@@ -42,7 +42,7 @@ public:
     inline void setTime(const QDateTime& radartime) { _time=radartime;}
 
     inline float getMaxVT(int index=0) const    { return (index<_numLevels)?_maxVT[index]:-999.0f; }
-    inline float setMaxVT(int index,float value){ if(index<_numLevels) _maxVT[index]=value; }
+    inline void setMaxVT(int index,float value){ if(index<_numLevels) _maxVT[index]=value; }
     inline float getRMW(int index=0) const      { return (index<_numLevels)?_RMW[index]:_fillv;}
     inline void  setRMW(int index,float value)  { if(index<_numLevels) _RMW[index]=value;}
     inline void  setRMW(float a[],int howMany)  { for(int i=0;i<howMany;i++) setRMW(i,a[i]);}

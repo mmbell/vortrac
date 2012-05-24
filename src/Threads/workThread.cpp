@@ -18,7 +18,7 @@
 workThread::workThread(QObject *parent)
     : QThread(parent)
 {
-    this->setObjectName("workThread");
+    this->setObjectName("Master");
     abort = false;
     runOnce = false;
 
@@ -98,7 +98,7 @@ void workThread::run()
 
             //STEP 3: get the first guess of center Lat,Lon for simplex
             _latlonFirstGuess(newVolume);
-            QString currentCenter("geting ("+QString().setNum(_firstGuessLat)+", "+QString().setNum(_firstGuessLon)+")");
+            QString currentCenter("Processing ("+QString().setNum(_firstGuessLat)+", "+QString().setNum(_firstGuessLon)+")");
             emit log(Message(currentCenter,1,this->objectName()));
 
             //STEP 4: from Radardata ---> Griddata, make cappi
@@ -147,14 +147,12 @@ void workThread::run()
                 simplexLat=_firstGuessLat;
                 simplexLon=_firstGuessLon;
                 Message newMsg(QString(),0,this->objectName(),
-                               AllOff,"simplex failed",
-                               SimplexError,"No Simplex Center Converge");
+                               Yellow,"Center Not Found");
                 emit log(newMsg);
             }
             else{
                 Message newMsg(QString(),0,this->objectName(),
-                               Green,"Center Found",
-                               Ok,"Simplex Center Converge");
+                               Green,"Center Found");
                 emit log(newMsg);
             }
             QDomElement radar = configData->getConfig("radar");
@@ -172,7 +170,7 @@ void workThread::run()
             emit newCappiInfo(xPercent, yPercent, rmwEstimate, sMin, sMax, vMax, _firstGuessLat, _firstGuessLon, simplexLat, simplexLon);
             delete [] xyValues;
 
-            //STEP 6: GBVTB to calculate the wind
+            //STEP 6: GBVTD to calculate the wind
             //if simplex algorithm successfully find the center, then perform the GBVTD
             VortexThread* pVtd=new VortexThread();
             pVtd->getWinds(configData,gridData,newVolume,&vortexData,&_pressureList);

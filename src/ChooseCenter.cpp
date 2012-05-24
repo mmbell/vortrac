@@ -503,6 +503,7 @@ bool ChooseCenter::_calPolyTest(const QList<int>& volIdx,const int& levelIdx)
     for(int i=0;i<4;i++)
         delete[] bestCoeff[i];
     delete[] bestCoeff;
+	return true;
 }
 
 bool ChooseCenter::_calPolyCenters()
@@ -1047,6 +1048,7 @@ bool ChooseCenter::_polyFit(const int nCoeff, const int nData, const float* xDat
     for(int i=0;i<=nCoeff;i++)
         delete[] A[i];
     delete[] A;
+	return true;
 }
 
 void ChooseCenter::_polyCal(const int nOrder, const float* aData, const float xData, float& yData)
@@ -1083,8 +1085,8 @@ void ChooseCenter::_polyTest()
     for(int i=0;i<nOrder;i++)
         std::cout<<a[i]<<"---"<<b[i]<<std::endl;
     std::cout<<"Fit std: "<<fitStd<<std::endl;
-    int i=0;
 }
+
 bool ChooseCenter::_fTest(const float& RSS1,const int& freedom1,const float& RSS2,const int& freedom2)
 {
     float fTest =((RSS1-RSS2)/(freedom1-freedom2))/(RSS2/freedom2);
