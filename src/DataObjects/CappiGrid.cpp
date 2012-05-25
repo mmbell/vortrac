@@ -351,7 +351,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
                                     }
                                 }
                             }
-                            velData[g] += 2*minfold*nyquist;
+                            //velData[g] += 2*minfold*nyquist;
                             float newVel = velData[g];
                             float weight = (100*nyquist) * (RSquareLinear - rSquare) / (RSquareLinear + rSquare);
                             velValues[iIndex][jIndex][kIndex].weight += weight;
@@ -369,89 +369,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
             //delete currentRay;
         }
 
-        /* 2nd round of BB?
-  Ray* currentRay = NULL;
-  float velNull = -999.;
-  int numVGatesAveraged = 15;
-  int maxFold = 4;
-  float numRays = radarData->getNumRays();
-  for(int i = 0; i < numRays; i++)
-  {
-   currentRay = radarData->getRay(i);
-   float *vGates = currentRay->getVelData();
-   float startVelocity = velNull;
-   for(int j = 0; j < currentRay->getVel_numgates(); j++) {
-    if (vGates[j] != velNull) {
-     startVelocity = vGates[j];
-     break;
-    }
-   }
-   float nyquistVelocity = currentRay->getNyquist_vel();
-   int numVelocityGates = currentRay->getVel_numgates();
-   if((numVelocityGates!=0)&&(startVelocity!=velNull))
-   {
-    float sum = float(numVGatesAveraged)*startVelocity;
-    float nyquistSum = float(numVGatesAveraged)*nyquistVelocity;
-    int n = 0;
-    int overMaxFold = 0;
-    bool dealiased;
-    float segVelocity[numVGatesAveraged];
-    for(int k = 0; k < numVGatesAveraged; k++)
-    {
-     segVelocity[k] = startVelocity;
-    }
-    for(int j = 0; j < numVelocityGates; j++)
-    {
-     //Message::toScreen("Gate "+QString().setNum(j));
-     if(vGates[j]!=velNull)
-     {
-      //Message::toScreen("has data");
-      n = 0;
-      dealiased = false;
-      while(dealiased!=true)
-      {
-       float tryVelocity = numVGatesAveraged*(vGates[j]+(2.0*n*nyquistVelocity));
-       if((sum+nyquistSum >= tryVelocity)&&
-          (tryVelocity >= sum-nyquistSum))
-       {
-        dealiased=true;
-       }
-       else
-       {
-        if(tryVelocity > sum+nyquistSum){
-         n--;
-         //Message::toScreen("n--");
-        }
-        if(tryVelocity < sum-nyquistSum){
-         n++;
-         //Message::toScreen("n++");
-        }
-        if(abs(n) >= maxFold) {
-         //emit log(Message(QString("Ray #")+QString().setNum(i)+QString(" Gate# ")+QString().setNum(j)+QString(" exceeded maxfolds")));
-         overMaxFold++;
-         dealiased=true;
-         vGates[j]=velNull;
-        }
-       }
-       //Message::toScreen("Ray = "+QString().setNum(i)+" j = "+QString().setNum(j)+" with "+QString().setNum(n)+" folds");
-      }
-      if(vGates[j]!=velNull)
-      {
-       vGates[j]+= 2.0*n*(nyquistVelocity);
-       sum -= segVelocity[0];
-       sum += vGates[j];
-       for(int m = 0; m < numVGatesAveraged-1; m++)
-       {
-        segVelocity[m] = segVelocity[m+1];
-       }
-       segVelocity[numVGatesAveraged-1]= vGates[j];
-      }
-     }
-    }
-   }
-   vGates = NULL;
-   currentRay = NULL;
-  } */
+
 
         for (int k = 0; k < int(kDim); k++) {
             for (int j = 0; j < int(jDim); j++) {
@@ -467,7 +385,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
         }
     }
 
-    // Smooth local outliers
+    /* Smooth local outliers
     for (int k = 0; k < int(kDim); k++) {
         // float sumtexture = 0;
         // float maxtexture = 0;
@@ -506,7 +424,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
                 }
             }
         }
-    }
+    } */
 
     /* Remove global outliers
  for (int k = 0; k < int(kDim); k++) {

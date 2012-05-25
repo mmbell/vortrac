@@ -1574,6 +1574,8 @@ bool RadarQC::BB()
         if((numVelocityGates!=0)&&(startVelocity!=velNull))
         {
             float sum = float(numVGatesAveraged)*startVelocity;
+			float median, mean;
+			mean = median = startVelocity;
             float nyquistSum = float(numVGatesAveraged)*nyquistVelocity;
             int n = 0;
             int overMaxFold = 0;
@@ -1593,19 +1595,19 @@ bool RadarQC::BB()
                     dealiased = false;
                     while(dealiased!=true)
                     {
-                        float tryVelocity = numVGatesAveraged*(vGates[j]+(2.0*n*nyquistVelocity));
-                        if((sum+nyquistSum >= tryVelocity)&&
-                                (tryVelocity >= sum-nyquistSum))
+                        float tryVelocity = vGates[j]+(2.0*n*nyquistVelocity);
+                        if((median+nyquistVelocity >= tryVelocity)&&
+                                (tryVelocity >= median-nyquistVelocity))
                         {
                             dealiased=true;
                         }
                         else
                         {
-                            if(tryVelocity > sum+nyquistSum){
+                            if(tryVelocity > median+nyquistVelocity){
                                 n--;
                                 //Message::toScreen("n--");
                             }
-                            if(tryVelocity < sum-nyquistSum){
+                            if(tryVelocity < median-nyquistVelocity){
                                 n++;
                                 //Message::toScreen("n++");
                             }
@@ -1623,20 +1625,161 @@ bool RadarQC::BB()
                         vGates[j]+= 2.0*n*(nyquistVelocity);
                         sum -= segVelocity[0];
                         sum += vGates[j];
+						mean = sum / numVGatesAveraged;
+						float threshold_mean = 0.0;
+						int meancount = 0;
+						QList<float> sortVelocity;
                         for(int m = 0; m < numVGatesAveraged-1; m++)
                         {
+							sortVelocity << segVelocity[m];
                             segVelocity[m] = segVelocity[m+1];
+							if (fabs(segVelocity[m] - mean) < nyquistVelocity)
+							{
+								threshold_mean += segVelocity[m];
+								meancount++;
+							}							
                         }
-                        segVelocity[numVGatesAveraged-1]= vGates[j];
+						sortVelocity << vGates[j];
+						segVelocity[numVGatesAveraged-1] = vGates[j];
+						threshold_mean += vGates[j];
+						meancount++;
+						//if (meancount < numVGatesAveraged) Message::toScreen(QString("Threshold reduced to ") + QString().setNum(meancount));
+						qSort(sortVelocity);
+						int mIndex = float(numVGatesAveraged)/2;
+						median = (sortVelocity.at(mIndex));// + (threshold_mean / (float)meancount)) / 2;
                     }
                 }
             }
         }
         vGates = NULL;
-        //delete vGates;
         currentRay = NULL;
     }
-    //delete currentRay;
+	
+	// Now do an azimuthal pass
+	for (int n = 0; n < radarData->getNumSweeps(); n++) {
+        Sweep* currentSweep = radarData->getSweep(n);
+		int rays = currentSweep->getNumRays();
+		int gates = currentSweep->getVel_numgates();
+		float nyquistVelocity = currentSweep->getNyquist_vel();
+		
+		// Allocate memory for the gradient fields
+		float** a1 = new float*[rays];
+		float** veldata = new float*[rays];
+		for (int i=0; i < rays; i++) {
+			a1[i] = new float[gates];
+			veldata[i] = new float[gates];
+		}
+		
+		// Find the gradient
+		float sum;
+		int ray_index;
+		for (int i=0; i < rays; i++)  {
+			for (int j=0; j < gates; j++) {
+				sum = 0.0;
+				a1[i][j] = veldata[i][j] = velNull;
+				double weights[5] = { 1./12., -2./3., 0, 2./3., -1./12. }; 
+				//double weights[2] = {-1.0, 1.0};
+				sum = 0;
+				for (int m = i-2; m < i+3; m++) {
+				//for (int m = i; m < i+2; m++) {
+					ray_index = m + currentSweep->getFirstRay();
+					if (ray_index < currentSweep->getFirstRay()) ray_index += rays;
+					if (ray_index > currentSweep->getLastRay()) ray_index -= rays;
+					float* raydata = radarData->getRay(ray_index)->getVelData();
+					int ri = (m >= rays) ? (m-rays) : m;
+					ri = (ri < 0) ? (ri+rays) : ri;
+					if (raydata != NULL) veldata[ri][j] = raydata[j];
+					if (veldata[ri][j] != velNull) {
+						sum += weights[m-i+2]*veldata[ri][j];
+						//sum += weights[m-i]*veldata[i][j];
+					} else {
+						sum = velNull;
+						break;
+					}
+				}
+				if (sum != velNull) 
+					a1[i][j] = fabs(sum);
+			}
+		}
+		for (int j=0; j < gates; j++) {
+			float mingrad = 1e34;
+			int startindex = 0;
+			for (int i=0; i < rays; i++)  {
+				if ((a1[i][j] != velNull) and (a1[i][j] < mingrad)) {
+					mingrad = a1[i][j];
+					startindex = i;
+				}
+			}
+			// Use a much smaller azimuthal average because of radial shear across eyewall
+			int azavg = 1; //numVGatesAveraged / 6;
+			float startVelocity = veldata[startindex][j];
+			if(startVelocity!=velNull)
+			{
+				float sum = float(azavg)*startVelocity;
+				float median, mean;
+				mean = median = startVelocity;
+				float nyquistSum = float(azavg)*nyquistVelocity;
+				//int fold = 0;
+				int overMaxFold = 0;
+				bool dealiased;
+				float segVelocity[azavg];
+				for(int k = 0; k < azavg; k++)
+				{
+					segVelocity[k] = startVelocity;
+				}
+				for (int ri=startindex; ri < rays+startindex; ri++)
+				{
+
+					int i = (ri >= rays) ? (ri-rays) : ri;
+					
+					//Message::toScreen("Gate "+QString().setNum(j));
+					if(veldata[i][j]!=velNull)
+					{
+						int minfold = 0;
+						mingrad = 1e34;
+						for (int fold = -1; fold < 2; fold++)
+						{
+							//double weights[5] = { -1./12., 4./3., -5./2., 4./3., -1./12. }; 
+							double weights[3] = {1.0, -2.0, 1.0};
+							sum = 0;
+							//for (int m = i-2; m < i+3; m++) {
+							for (int m = i-1; m < i+2; m++) {
+								int ri = (m >= rays) ? (m-rays) : m;
+								ri = (ri < 0) ? (ri+rays) : ri;
+								if (veldata[ri][j] != velNull) {
+									float tryVelocity = veldata[ri][j];
+									if (ri == i) tryVelocity += (2.0*fold*nyquistVelocity);
+									sum += weights[m-i+1]*tryVelocity;
+									//sum += weights[m-i]*veldata[i][j];
+								} else {
+									sum = velNull;
+									break;
+								}
+							}
+							if ((sum != velNull) and (fabs(sum) < mingrad)) {
+								mingrad = sum;
+								minfold = fold;
+							}
+						}
+						if(veldata[i][j]!=velNull)
+						{
+							veldata[i][j]+= 2.0*minfold*(nyquistVelocity);
+							ray_index = i + currentSweep->getFirstRay();
+							float* raydata = radarData->getRay(ray_index)->getVelData();
+							raydata[j] = veldata[i][j];
+						}
+					}
+				}
+			}			
+		}
+		for (int i=0; i < rays; i++)  {
+			delete[] veldata[i];
+			delete[] a1[i];
+		}
+		delete[] veldata;
+		delete[] a1;
+		
+	}
     //Message::toScreen("Getting out of dealias");
     return true;
 }
