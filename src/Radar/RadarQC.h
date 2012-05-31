@@ -191,6 +191,13 @@ private:
    *
    */
 
+	bool derivativeDealias();
+	/* This method tries to minimize 2nd derivatives in the radial velocity
+	 by through velocity unfolding */
+	
+	bool multiprfDealias();
+	/* This method compares rays at different Nyquist velocities for dealiasing */
+	
     float findHeight(Ray* currentRay, int gateIndex);
     /*
    * Uses the 4/3 earth radius model to return the height of a specific gate

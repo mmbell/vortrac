@@ -194,10 +194,10 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
             }
 
         }
-        if ((currentRay->getVel_numgates() > 0)
+        if (currentRay->getVel_numgates() > 0) {
                 // Just grab the lowest elevation sweeps
                 //and (currentRay->getElevation() < 0.75)) {
-                and (fabs(currentRay->getNyquist_vel() - maxNyquist) < 0.1)) {
+                //and (fabs(currentRay->getNyquist_vel() - maxNyquist) < 0.1)) {
             float* velData = currentRay->getVelData();
             float* swData = currentRay->getSwData();
             float nyquist = currentRay->getNyquist_vel();
@@ -351,7 +351,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
                                     }
                                 }
                             }
-                            //velData[g] += 2*minfold*nyquist;
+                            velData[g] += 2*minfold*nyquist;
                             float newVel = velData[g];
                             float weight = (100*nyquist) * (RSquareLinear - rSquare) / (RSquareLinear + rSquare);
                             velValues[iIndex][jIndex][kIndex].weight += weight;
@@ -385,7 +385,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
         }
     }
 
-    /* Smooth local outliers
+    // Smooth local outliers
     for (int k = 0; k < int(kDim); k++) {
         // float sumtexture = 0;
         // float maxtexture = 0;
@@ -424,7 +424,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
                 }
             }
         }
-    } */
+    }
 
     /* Remove global outliers
  for (int k = 0; k < int(kDim); k++) {

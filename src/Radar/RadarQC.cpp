@@ -419,11 +419,18 @@ bool RadarQC::dealias()
     }
 
     emit log(Message(QString(),1,this->objectName()));
+	
 
     if(!BB()) {
         Message::toScreen("Failed in Bargen-Brown dealising");
         return false;
     }
+
+	/* if(!multiprfDealias())
+		return false; */
+
+	if(!derivativeDealias())
+		return false;
 
     return true;
 }
@@ -1556,10 +1563,6 @@ float RadarQC::getStart(Ray *currentRay)
 }
 
 bool RadarQC::BB()
-/*
-   * ??? Failures to dealias a single row are ignored and move on
-   */
-
 {
     //emit log(Message("In BB"));
     Ray* currentRay = NULL;
@@ -1655,7 +1658,14 @@ bool RadarQC::BB()
         currentRay = NULL;
     }
 	
-	// Now do an azimuthal pass
+    //Message::toScreen("Getting out of dealias");
+    return true;
+}
+
+bool RadarQC::derivativeDealias()
+{
+	
+	// Minimize 2nd derivative in azimuth after BB routine
 	for (int n = 0; n < radarData->getNumSweeps(); n++) {
         Sweep* currentSweep = radarData->getSweep(n);
 		int rays = currentSweep->getNumRays();
@@ -1681,7 +1691,7 @@ bool RadarQC::BB()
 				//double weights[2] = {-1.0, 1.0};
 				sum = 0;
 				for (int m = i-2; m < i+3; m++) {
-				//for (int m = i; m < i+2; m++) {
+					//for (int m = i; m < i+2; m++) {
 					ray_index = m + currentSweep->getFirstRay();
 					if (ray_index < currentSweep->getFirstRay()) ray_index += rays;
 					if (ray_index > currentSweep->getLastRay()) ray_index -= rays;
@@ -1718,10 +1728,6 @@ bool RadarQC::BB()
 				float sum = float(azavg)*startVelocity;
 				float median, mean;
 				mean = median = startVelocity;
-				float nyquistSum = float(azavg)*nyquistVelocity;
-				//int fold = 0;
-				int overMaxFold = 0;
-				bool dealiased;
 				float segVelocity[azavg];
 				for(int k = 0; k < azavg; k++)
 				{
@@ -1729,7 +1735,7 @@ bool RadarQC::BB()
 				}
 				for (int ri=startindex; ri < rays+startindex; ri++)
 				{
-
+					
 					int i = (ri >= rays) ? (ri-rays) : ri;
 					
 					//Message::toScreen("Gate "+QString().setNum(j));
@@ -1782,8 +1788,125 @@ bool RadarQC::BB()
 	}
     //Message::toScreen("Getting out of dealias");
     return true;
-}
+}	
 
+bool RadarQC::multiprfDealias()
+{
+	int maxgates = 0;
+	for (int n = 0; n < radarData->getNumSweeps(); n++) {
+        Sweep* currentSweep = radarData->getSweep(n);
+		if (currentSweep->getVel_numgates() > maxgates) maxgates = currentSweep->getVel_numgates();
+	}
+	
+	for (int theta = 0; theta < 360; theta++) {
+		float raydata[10][maxgates];
+		float nyquists[10];
+		int rayindex[10];
+		for (int i = 0; i < 10; i++) {
+			nyquists[i] = 0.0;
+			rayindex[i] = -999;
+			for (int j = 0; j < maxgates; j++) {
+				raydata[i][j] = velNull;
+			}
+		}		
+		int raycount = 0;
+		for (int n = 0; n < radarData->getNumRays(); n++) {
+			Ray* currentRay = radarData->getRay(n);
+			if (currentRay->getElevation() > 0.75) continue;
+			//float phi = deg2rad * (90. - (currentRay->getElevation()));
+			
+			float azdiff = fabs((float)theta - currentRay->getAzimuth());
+			if ((360.0 - azdiff) < azdiff) azdiff = 360.0 - azdiff;
+			if (azdiff > 0.5) continue;
+			if (currentRay->getVel_numgates() == 0) continue;
+			float *vGates = currentRay->getVelData();
+			nyquists[raycount] = currentRay->getNyquist_vel();
+			for (int j = 0; j < currentRay->getVel_numgates(); j++) {
+				raydata[raycount][j] = vGates[j];
+			}
+			rayindex[raycount] = n;
+			raycount++;
+			if (raycount == 10) break;
+		}
+		
+		for (int j = 0; j < maxgates; j++) {
+			float folddata[10][5];
+			int foldindex[10];
+			raycount = 0;
+			float mean = 0.;
+			for (int i = 0; i < 10; i++) {
+				if ((raydata[i][j] != velNull) and (rayindex[i] != -999)) {
+					mean += raydata[i][j];					
+					for (int fold = -2; fold < 3; fold++) {
+						folddata[raycount][fold+2]= raydata[i][j] + 2*fold*nyquists[i];
+						foldindex[raycount] = rayindex[i];
+					}
+					raycount++;
+				}
+			}
+
+			if (raycount > 2) {
+				mean /= raycount;
+				float var = 0;
+				for (int i = 0; i < raycount; i++) {
+					var += (folddata[i][2]-mean)*(folddata[i][2]-mean);
+				}
+				var /= (raycount-1);
+				if (var < 16) continue;
+				
+				int fold[raycount];
+				float minfold[raycount];
+				float minvar = var;
+				for (int i = 0; i < raycount; i++) fold[i] = -2;
+				int n = 0;
+				int basen = 0;
+				int basefold = -2;
+				while (basefold < 3) {
+					
+					mean = 0.;
+					for (int i = 0; i < raycount; i++) {
+						mean += folddata[i][fold[i]];
+					}
+					mean /= raycount;
+					var = 0.;
+					for (int i = 0; i < raycount; i++) {
+						var += (folddata[i][fold[i]]-mean)*(folddata[i][fold[i]]-mean);
+					}
+					var /= (raycount-1);
+					if (var < minvar) {
+						minvar = var;
+						for (int i = 0; i < raycount; i++) minfold[i] = folddata[i][fold[i]];
+					}
+					fold[n]++;
+					if (fold[n] > 2) {
+						fold[n] = -2;
+						n++;
+						if (n > raycount-1) {
+							n = basen;
+							basen++;
+							if (basen > raycount-1) basen = 0;
+							if (n == 0) basefold++;
+							fold[n] = basefold;
+							n++;
+						}
+						fold[n]++;
+					}
+				}
+				if (minvar != 1e34){
+					for (int i = 0; i < raycount; i++) {
+						Ray* currentRay = radarData->getRay(foldindex[i]);
+						float *vGates = currentRay->getVelData();
+						vGates[j] = minfold[i];
+					}
+				}
+			} else {
+				continue;
+			}
+		}
+	}
+	
+	return true;
+}
 
 void RadarQC::crazyCheck()
 {
