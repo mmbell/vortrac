@@ -51,7 +51,7 @@ void workThread::run()
 
     //initialize the saving path of data-list
     _simplexList.setFilePath(workingDir.filePath(namePrefix+"simplexlist.xml"));
-    _vortexList.setFilePath(workingDir.filePath(namePrefix+"voretexlist.xml"));
+    _vortexList.setFilePath(workingDir.filePath(namePrefix+"vortexlist.xml"));
     _pressureList.setFilePath(workingDir.filePath(namePrefix+"pressurelist.xml"));
     if(continuePreviousRun){
         _simplexList.restore();
@@ -409,10 +409,10 @@ void workThread::_latlonFirstGuess(RadarData* radarVolume)
         if (relDist < 10 || usrDateTime.secsTo(volDateTime)>60*60) {
             _firstGuessLat = newLatLon[0];
             _firstGuessLon = newLatLon[1];
-            std::cout<<"Using estimation of center ("<<_firstGuessLat<<","<<_firstGuessLon<<") from last vortex"<<std::endl;
+            //std::cout<<"Using estimation of center ("<<_firstGuessLat<<","<<_firstGuessLon<<") from last vortex"<<std::endl;
         }
         else
-            std::cout<<"Using estimation of center ("<<_firstGuessLat<<","<<_firstGuessLon<<") from user input"<<std::endl;
+            //std::cout<<"Using estimation of center ("<<_firstGuessLat<<","<<_firstGuessLon<<") from user input"<<std::endl;
 
         delete [] newLatLon;
     }

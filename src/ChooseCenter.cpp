@@ -382,7 +382,7 @@ bool ChooseCenter::_calMeanCenters()
             const float fac_lat = 111.13209 - 0.56605 * cos(2.0 * radarLatRadians) + 0.00012 * cos(4.0 * radarLatRadians) - 0.000002 * cos(6.0 * radarLatRadians);
             const float fac_lon = 111.41513 * cos(radarLatRadians) - 0.09455 * cos(3.0 * radarLatRadians) + 0.00012 * cos(5.0 * radarLatRadians);
 
-            std::cout<<"ChooseCenter found new mean center: "<<radarLat+meanCenY/fac_lat<<","<<radarLon+meanCenX/fac_lon<<","<<meanRadius<<std::endl;
+            //std::cout<<"ChooseCenter found new mean center: "<<radarLat+meanCenY/fac_lat<<","<<radarLon+meanCenX/fac_lon<<","<<meanRadius<<std::endl;
         }
     }
     return true;
