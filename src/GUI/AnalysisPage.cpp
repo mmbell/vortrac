@@ -559,18 +559,25 @@ void AnalysisPage::runThread()
     QStringList allPossibleFiles = workingDirectory.entryList(QDir::Files);
     allPossibleFiles = allPossibleFiles.filter(nameFilter, Qt::CaseInsensitive);
     bool continuePreviousRun = false;
-    QString openOldMessage = QString(tr("Vortrac has found information about a previously started run. Would you like to continue this run?\nPress 'Yes' to continue a previous run. Press 'No' to start a new run."));
+    QString openOldMessage = QString(tr("Vortrac has found information about a previous run. Continuing will erase this data!\nPress 'Yes' to continue."));
     if(allPossibleFiles.count()> 0){
         if(allPossibleFiles.filter("vortexList").count()>0 && allPossibleFiles.filter("simplexList").count()>0)
         {
             int answer = QMessageBox::information(this,tr("VORTRAC"),openOldMessage,3,4,0);
-            if(answer==3)
-                continuePreviousRun = true;
-            if(answer==0)
+            if(answer==3) {
+                continuePreviousRun = false;
+            } else {
                 return;
+	    }
         }
     }
     //set a flag in pollThread if continue previous run or not
+	// Try to fetch new radar data every 5 minutes
+	 QTimer::singleShot(0, this, SLOT(fetchRemoteData()));
+	 QTimer *fetchTimer = new QTimer(this);
+	 connect(fetchTimer, SIGNAL(timeout()), this, SLOT(fetchRemoteData()));
+	 fetchTimer->start(300000);
+	
     pollThread->setContinuePreviousRun(continuePreviousRun);
     pollThread->setConfig(configData);
     pollThread->start();
@@ -791,7 +798,8 @@ void AnalysisPage::changeStormSignal(StormSignalStatus status,
 void AnalysisPage::fetchRemoteData()
 {
     // Fetch the catalog of files
-    QString server = "http://shelf.rcac.purdue.edu:8080/thredds/";
+    //QString server = "http://shelf.rcac.purdue.edu:8080/thredds/";
+	QString server = "http://motherlode.ucar.edu/thredds/catalog/nexrad/level2/";
     QDomElement radar = configData->getConfig("radar");
     QString radarName = configData->getParam(radar,"name");
     QUrl catalog = QUrl(server + radarName + "/catalog.xml");
@@ -852,7 +860,8 @@ bool AnalysisPage::getRemoteData()
     localfile.remove(0,5);
     if (!dataPath.exists(localfile)) {
         QString dataurl = urlList.at(1);
-        QString server("http://shelf.rcac.purdue.edu:8080/thredds/fileServer/");
+        //QString server("http://shelf.rcac.purdue.edu:8080/thredds/fileServer/");
+		QString server = "http://motherlode.ucar.edu/thredds/fileServer/nexrad/level2/";
         QString url = server + dataurl;
         QUrl fileurl = QUrl(url);
         QNetworkRequest request(fileurl);
