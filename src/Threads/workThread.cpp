@@ -69,7 +69,7 @@ void workThread::run()
     while(!abort) {
         //STEP 1: Check for new data
         if (dataSource->hasUnprocessedData()) {
-
+        if(abort) break;
             // Update the data queue with any knowledge of any volumes that might have already been processed
             dataSource->updateDataQueue(&_vortexList);
 
@@ -95,19 +95,19 @@ void workThread::run()
             dealiaser->dealias();
             emit log(Message("Finished QC and Dealiasing",1, this->objectName()));
             delete dealiaser;
-
+	if(abort) break;
             //STEP 3: get the first guess of center Lat,Lon for simplex
             _latlonFirstGuess(newVolume);
             QString currentCenter("Processing ("+QString().setNum(_firstGuessLat)+", "+QString().setNum(_firstGuessLon)+")");
             emit log(Message(currentCenter,1,this->objectName()));
-
+        if(abort) break;
             //STEP 4: from Radardata ---> Griddata, make cappi
             GriddedFactory* gridFactory=new GriddedFactory();
             GriddedData* gridData=gridFactory->makeCappi(newVolume,configData,&_firstGuessLat,&_firstGuessLon);
             gridData->writeAsi();
             emit log(Message("Done with Cappi",15,this->objectName()));
             emit newCappi(gridData);
-
+        if(abort) break;
             //STEP 5: simplex to find a new center
             VortexData vortexData;
             vortexData.setTime(newVolume->getDateTime());
@@ -140,7 +140,7 @@ void workThread::run()
                     vortexData.setRMW(ll, -999.f);
                 }
             }
-
+        if(abort) break;
             float simplexLat=vortexData.getLat(0);
             float simplexLon=vortexData.getLon(0);
             if(GriddedData::getCartesianDistance(_firstGuessLat,_firstGuessLon,simplexLat,simplexLon)>50.0f){
@@ -169,14 +169,14 @@ void workThread::run()
             float vMax = configData->getParam(vtd, "outerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
             emit newCappiInfo(xPercent, yPercent, rmwEstimate, sMin, sMax, vMax, _firstGuessLat, _firstGuessLon, simplexLat, simplexLon);
             delete [] xyValues;
-
+        if(abort) break;
             //STEP 6: GBVTD to calculate the wind
             //if simplex algorithm successfully find the center, then perform the GBVTD
             VortexThread* pVtd=new VortexThread();
             pVtd->getWinds(configData,gridData,newVolume,&vortexData,&_pressureList);
             delete pVtd;
             _vortexList.append(vortexData);
-
+        if(abort) break;
             //STEP 7: Check for new pressure data to process while we are analyzing the current volume
             if(pressureSource->hasUnprocessedData()) {
                 // Create a list of new pressure observations that have not yet been processed
@@ -197,14 +197,14 @@ void workThread::run()
 
             }
             checkIntensification();
-
+        if(abort) break;
             //STEP 8: finish a round of analysis, clear up
             emit vortexListUpdate(&_vortexList);
             emit log(Message(QString("Completed Analysis On Volume "+newVolume->getFileName()),100,this->objectName(),Green));
             delete newVolume;
             delete gridFactory;
             delete gridData;
-
+        if(abort) break;
             //STEP 9: after finish process each volume,save data to XML
             _vortexList.saveXML();
             _simplexList.saveXML();

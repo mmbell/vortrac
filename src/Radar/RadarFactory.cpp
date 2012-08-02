@@ -186,8 +186,8 @@ bool RadarFactory::hasUnprocessedData()
     }
     case ldmlevelII:
     {
-        // Should have filenames starting with radar ID
-        dataPath.setNameFilters(QStringList(radarName + "*"));
+        // Should have filenames containing radar ID
+        dataPath.setNameFilters(QStringList("*" + radarName + "*"));
         dataPath.setFilter(QDir::Files);
         //dataPath.setSorting(QDir::Time | QDir::Reversed);
         dataPath.setSorting(QDir::Name);
@@ -197,17 +197,25 @@ bool RadarFactory::hasUnprocessedData()
         for (int i = 0; i < filenames.size(); ++i) {
             QString file = filenames.at(i);
             QString timepart = file.split("/").last();
-            // Replace the radarname so we just have timestamps
-            timepart.replace(radarName, "");
             QDate fileDate;
             QTime fileTime;
-            if (timepart.contains('.')) {
+            if (timepart.contains("Level2")) {
+                // UCAR Format
+                timepart.replace(".ar2v", "");
+                QStringList timestamp = timepart.split("_");
+                fileDate = QDate::fromString(timestamp.at(2), "yyyyMMdd");
+                fileTime = QTime::fromString(timestamp.at(3), "hhmm");                
+            } else if (timepart.contains('.')) {
                 // NRL Format
+                // Replace the radarname so we just have timestamps
+                timepart.replace(radarName, "");
                 QStringList timestamp = timepart.split(".");
                 fileDate = QDate::fromString(timestamp.at(1).left(8), "yyyyMMdd");
                 fileTime = QTime::fromString(timestamp.at(1).right(6), "hhmmss");
             }  else if (timepart.contains('_')) {
                 // Purdue Format
+                // Replace the radarname so we just have timestamps
+                timepart.replace(radarName, "");
                 QStringList timestamp = timepart.split("_");
                 fileDate = QDate::fromString(timestamp.at(1), "yyyyMMdd");
                 if (timestamp.size() > 2) {
@@ -215,8 +223,9 @@ bool RadarFactory::hasUnprocessedData()
                 } else {
                     emit log(Message(QString("Problem with time in level_II filename, this may be a NCDC file"),0,this->objectName(),Red,QString("Radar format mismatch?")));
                 }
+            } else {
+                emit log(Message(QString("Problem with time in level_II filename, this may be a non-standard file"),0,this->objectName(),Red,QString("Radar format mismatch?")));
             }
-
             QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
 
             QString timeString = fileDateTime.toString(Qt::ISODate);

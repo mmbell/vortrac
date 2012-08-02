@@ -471,28 +471,38 @@ void RadarQC::thresholdData()
         float *vGates = currentRay->getVelData();
         float *swGates = currentRay->getSwData();
         float *refGates = currentRay->getRefData();
-        for (int j = 0; j < numVGates; j++)
-        {
-            //         if(j<20) {
-            //         vGates[j]=velNull;
-            //       }
-            //	  int jref = int((float)j * velGateSp / refGateSp);
-            //	  if(jref >= currentRay->getRef_numgates())
-            //	    jref = int(velNull);
-            if((swGates[j] > specWidthLimit)||
-                    (fabs(vGates[j]) < velMin) ||
-                    (fabs(vGates[j]) > velMax))
-                //||(jref==velNull)||(refGates[jref] < refMin)
-                //  ||(refGates[jref] > refMax))
+        if (swGates != NULL) {
+            for (int j = 0; j < numVGates; j++)
             {
-                // This was extended to threshold against min and max
-                // reflectivity as well but we are not currently using
-                // these thresholds - LM
-                vGates[j] = velNull;
+                //         if(j<20) {
+                //         vGates[j]=velNull;
+                //       }
+                //	  int jref = int((float)j * velGateSp / refGateSp);
+                //	  if(jref >= currentRay->getRef_numgates())
+                //	    jref = int(velNull);
+                if((swGates[j] > specWidthLimit)||
+                   (fabs(vGates[j]) < velMin) ||
+                   (fabs(vGates[j]) > velMax))
+                    //||(jref==velNull)||(refGates[jref] < refMin)
+                    //  ||(refGates[jref] > refMax))
+                {
+                    // This was extended to threshold against min and max
+                    // reflectivity as well but we are not currently using
+                    // these thresholds - LM
+                    vGates[j] = velNull;
+                }
+                
+                if(vGates[j]!=velNull) {
+                    validBinCount[sweepIndex][j]++;
+                }
             }
-
-            if(vGates[j]!=velNull) {
-                validBinCount[sweepIndex][j]++;
+        } else {
+            // No spectrum width data, so just go with it for now
+            for (int j = 0; j < numVGates; j++)
+            {
+                if(vGates[j]!=velNull) {
+                    validBinCount[sweepIndex][j]++;
+                }
             }
         }
         vGates = NULL;

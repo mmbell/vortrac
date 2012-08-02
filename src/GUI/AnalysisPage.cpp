@@ -255,7 +255,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 AnalysisPage::~AnalysisPage()
 {
     prepareToClose();
-    if(NULL!=pollThread)
+    if(abortButton->isEnabled())
         abortThread();
     delete cappiDisplay;
     delete configData;
@@ -547,7 +547,7 @@ void AnalysisPage::runThread()
             this, SLOT(updateCappiInfo(float, float, float, float, float, float, float ,float ,float, float)),Qt::DirectConnection);
     connect(pollThread, SIGNAL(newCappiInfo(float, float, float, float, float, float, float ,float ,float, float)),
             cappiDisplay, SLOT(setGBVTDResults(float, float, float, float, float, float, float ,float ,float, float)),Qt::DirectConnection);
-    connect(pollThread, SIGNAL(vortexListUpdate(VortexList*)),this, SLOT(pollVortexUpdate(VortexList*)));
+    connect(pollThread, SIGNAL(vortexListUpdate(VortexList*)),this, SLOT(pollVortexUpdate(VortexList*)),Qt::DirectConnection);
 
     // Check to see if there are old list files that we want to start from in
     // the working directory. We have to do this here because we cannot create
@@ -573,10 +573,10 @@ void AnalysisPage::runThread()
     }
     //set a flag in pollThread if continue previous run or not
 	// Try to fetch new radar data every 5 minutes
-	 QTimer::singleShot(0, this, SLOT(fetchRemoteData()));
-	 QTimer *fetchTimer = new QTimer(this);
-	 connect(fetchTimer, SIGNAL(timeout()), this, SLOT(fetchRemoteData()));
-	 fetchTimer->start(300000);
+	QTimer::singleShot(0, this, SLOT(fetchRemoteData()));
+    QTimer *fetchTimer = new QTimer(this);
+    connect(fetchTimer, SIGNAL(timeout()), this, SLOT(fetchRemoteData()));
+    fetchTimer->start(300000);
 	
     pollThread->setContinuePreviousRun(continuePreviousRun);
     pollThread->setConfig(configData);
@@ -726,8 +726,16 @@ bool AnalysisPage::analyticModel()
 
 void AnalysisPage::pollVortexUpdate(VortexList* list)
 {
+    if (list==NULL) {
+	currPressure->display(0);
+        currRMW->display(0);
+        currDeficit->display(0);
+        deficitLabel->setText(tr("Pressure Deficit From 0 km (mb):"));
+        emit vortexListChanged(NULL);
+	return;
+    }
     //Message::toScreen("Made it too pollVortexUpdate in AnalysisPage");
-    if((list!=NULL)&&(list->count() > 0)) {
+    if(list->count() > 0) {
 
         // Find the outermost vtd mean wind coefficient that is not equal to -999
         float maxRadius = list->last().getMaxValidRadius();
@@ -802,7 +810,8 @@ void AnalysisPage::fetchRemoteData()
 	QString server = "http://motherlode.ucar.edu/thredds/catalog/nexrad/level2/";
     QDomElement radar = configData->getConfig("radar");
     QString radarName = configData->getParam(radar,"name");
-    QUrl catalog = QUrl(server + radarName + "/catalog.xml");
+    QString currdate = QDateTime::currentDateTimeUtc().date().toString("yyyyMMdd");
+    QUrl catalog = QUrl(server + radarName + "/" + currdate + "/catalog.xml");
     QString url = catalog.toString();
     QNetworkRequest request(catalog);
     catalog_reply = catalog_manager.get(request);
@@ -846,8 +855,8 @@ bool AnalysisPage::getRemoteData()
     QTextStream thredds(&file);
     while (!thredds.atEnd() and (urlList.size() <= 2)) {
         QString line = thredds.readLine();
-        if (line.contains("urlPath")) {
-            QString url = line.right(25);
+        if (line.contains("urlPath") and !line.contains("latest")) {
+            QString url = line.right(60);
             url.chop(2);
             urlList << url;
         }
@@ -861,7 +870,7 @@ bool AnalysisPage::getRemoteData()
     if (!dataPath.exists(localfile)) {
         QString dataurl = urlList.at(1);
         //QString server("http://shelf.rcac.purdue.edu:8080/thredds/fileServer/");
-		QString server = "http://motherlode.ucar.edu/thredds/fileServer/nexrad/level2/";
+		QString server = "http://motherlode.ucar.edu/thredds/fileServer/";
         QString url = server + dataurl;
         QUrl fileurl = QUrl(url);
         QNetworkRequest request(fileurl);

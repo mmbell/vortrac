@@ -237,7 +237,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
                         float weight = (100*nyquist) *(RSquareLinear - rSquare) / (RSquareLinear + rSquare);
                         velValues[iIndex][jIndex][kIndex].weight += weight;
                         velValues[iIndex][jIndex][kIndex].sumVel += weight*velData[g];
-                        velValues[iIndex][jIndex][kIndex].sumSw += weight*swData[g];
+                        if (swData != NULL) velValues[iIndex][jIndex][kIndex].sumSw += weight*swData[g];
                     }
                 }
             }
