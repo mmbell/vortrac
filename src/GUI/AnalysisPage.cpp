@@ -249,7 +249,8 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     pollThread = NULL;
 
     connect(this, SIGNAL(saveGraphImage(const QString&)),graph, SLOT(saveImage(const QString&)));
-
+    connect(&datafile_manager, SIGNAL(finished(QNetworkReply*)),
+            SLOT(saveRemoteData(QNetworkReply*)));
 }
 
 AnalysisPage::~AnalysisPage()
@@ -853,7 +854,7 @@ bool AnalysisPage::getRemoteData()
     urlList.clear();
 
     QTextStream thredds(&file);
-    while (!thredds.atEnd() and (urlList.size() <= 2)) {
+    while (!thredds.atEnd() and (urlList.size() <= 5)) {
         QString line = thredds.readLine();
         if (line.contains("urlPath") and !line.contains("latest")) {
             QString url = line.right(60);
@@ -864,45 +865,57 @@ bool AnalysisPage::getRemoteData()
     file.close();
 
     // Check to see if this file is already in the directory, or download it
-    //for (int i = 0; i < urlList.size(); ++i) {
-    QString localfile = urlList.at(1);
-    localfile.remove(0,5);
-    if (!dataPath.exists(localfile)) {
-        QString dataurl = urlList.at(1);
-        //QString server("http://shelf.rcac.purdue.edu:8080/thredds/fileServer/");
-		QString server = "http://motherlode.ucar.edu/thredds/fileServer/";
-        QString url = server + dataurl;
-        QUrl fileurl = QUrl(url);
-        QNetworkRequest request(fileurl);
-        datafile_reply = datafile_manager.get(request);
-        connect(datafile_reply, SIGNAL(finished()), this,
-                SLOT(saveRemoteData()));
+    for (int i = 0; i < urlList.size(); ++i) {
+        QUrl url = urlList.at(i);
+        QString remotepath = url.path();
+        QString localfile = QFileInfo(remotepath).fileName();
+        if (!dataPath.exists(localfile)) {
+            QString dataurl = urlList.at(i);
+            //QString server("http://shelf.rcac.purdue.edu:8080/thredds/fileServer/");
+            QString server = "http://motherlode.ucar.edu/thredds/fileServer/";
+            QString url = server + dataurl;
+            QUrl fileurl = QUrl(url);
+            QNetworkRequest request(fileurl);
+            QNetworkReply *reply = datafile_manager.get(request);
+            datafile_replies.append(reply);
+        } else {
+            QString msg = "Level II data file " + localfile + " previously downloaded";
+            emit log(Message(msg,0,this->objectName()));
+        }
     }
-    //}
 
     return true;
 }
 
-bool AnalysisPage::saveRemoteData()
+bool AnalysisPage::saveRemoteData(QNetworkReply *reply)
 {
-    QUrl url = datafile_reply->url();
+    QUrl url = reply->url();
     QString remotepath = url.path();
     QString filename = QFileInfo(remotepath).fileName();
-    QDomElement radar = configData->getConfig("radar");
-    QString localpath = configData->getParam(radar,"dir");
-    QDir dataPath(localpath);
-    QFile file(dataPath.absolutePath() + "/" + filename);
-    if (!file.open(QIODevice::WriteOnly)) {
-        emit log(Message(QString("Problem saving remote data"),0,this->objectName(),Yellow,QString("Problem with remote data")));
+    if (reply->error()) {
+        QString msg = "Level II data file " + filename + " download failed: " + reply->errorString();
+        emit log(Message(msg,0,this->objectName()));
+        datafile_replies.removeAll(reply);
+        reply->deleteLater();
         return false;
+    } else {
+        QDomElement radar = configData->getConfig("radar");
+        QString localpath = configData->getParam(radar,"dir");
+        QDir dataPath(localpath);
+        QFile file(dataPath.absolutePath() + "/" + filename);
+        if (!file.open(QIODevice::WriteOnly)) {
+            emit log(Message(QString("Problem saving remote data"),0,this->objectName(),Yellow,QString("Problem with remote data")));
+            return false;
+        }
+        
+        file.write(reply->readAll());
+        file.close();
+        datafile_replies.removeAll(reply);
+        reply->deleteLater();
+        QString msg = "Level II data file " + filename + " downloaded successfully";
+        emit log(Message(msg,0,this->objectName()));
+        return true;
     }
-
-    file.write(datafile_reply->readAll());
-    file.close();
-    datafile_reply->deleteLater();
-    QString msg = "Level II data file " + filename + " downloaded successfully";
-    emit log(Message(msg,0,this->objectName()));
-    return true;
 }
 
 

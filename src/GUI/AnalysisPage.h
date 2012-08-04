@@ -92,7 +92,7 @@ private slots:
     void updateStatusLog(const QString& entry);
     void fetchRemoteData();
     bool getRemoteData();
-    bool saveRemoteData();
+    bool saveRemoteData(QNetworkReply *reply);
 
 protected:
     void closeEvent(QCloseEvent *event);
@@ -135,7 +135,7 @@ private:
     QNetworkAccessManager catalog_manager;
     QNetworkAccessManager datafile_manager;
     QNetworkReply* catalog_reply;
-    QNetworkReply* datafile_reply;
+    QList<QNetworkReply *> datafile_replies;
     QStringList urlList;
 
 };
