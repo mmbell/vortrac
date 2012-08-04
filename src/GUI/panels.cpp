@@ -21,6 +21,47 @@
 
 VortexPanel::VortexPanel():AbstractPanel()
 {
+    QGroupBox *opMode = new QGroupBox(tr("Operating Mode"));
+    operational = new QRadioButton(tr("Automatic operational"), opMode);
+    manual = new QRadioButton(tr("Manual operational"), opMode);
+    //research = new QRadioButton(tr("Research"), opMode);
+    
+    QFrame *autoParameters = new QFrame;
+    
+    QLabel *idNameLabel = new QLabel(tr("Storm ID:"));
+    idName = new QLineEdit();
+    QHBoxLayout *nameLayout = new QHBoxLayout;
+    nameLayout->addWidget(idNameLabel);
+    nameLayout->addWidget(idName);
+
+    QLabel *level2Label = new QLabel(tr("Level II Data URL"));
+    level2url = new QLineEdit();
+    QHBoxLayout *level2Layout = new QHBoxLayout;
+    level2Layout->addWidget(level2Label);
+    level2Layout->addWidget(level2url);
+
+    QLabel *level3Label = new QLabel(tr("Level III Data URL"));
+    level3url = new QLineEdit();
+    QHBoxLayout *level3Layout = new QHBoxLayout;
+    level3Layout->addWidget(level3Label);
+    level3Layout->addWidget(level3url);
+
+    QLabel *atcfLabel = new QLabel(tr("ATCF URL"));
+    atcfurl = new QLineEdit();
+    QHBoxLayout *atcfLayout = new QHBoxLayout;
+    atcfLayout->addWidget(atcfLabel);
+    atcfLayout->addWidget(atcfurl);
+    
+    QVBoxLayout *autoLayout = new QVBoxLayout;
+    autoLayout->addLayout(nameLayout);
+    autoLayout->addLayout(level2Layout);
+    autoLayout->addLayout(level3Layout);
+    autoLayout->addLayout(atcfLayout);
+    autoParameters->setLayout(autoLayout);
+    autoParameters->hide();
+
+    QFrame *manualParameters = new QFrame;
+    
     QLabel *vortexNameLabel = new QLabel(tr("Vortex Name:"));
     vortexName = new QLineEdit();
     QHBoxLayout *name = new QHBoxLayout;
@@ -85,31 +126,56 @@ VortexPanel::VortexPanel():AbstractPanel()
     obs->addStretch();
     obs->addWidget(obsDateTime);
 
+    QVBoxLayout *manualLayout = new QVBoxLayout();
+    manualLayout->addLayout(name);
+    //layout->addWidget(stormType);
+    manualLayout->addLayout(lat);
+    manualLayout->addLayout(longitude);
+    manualLayout->addLayout(direction);
+    manualLayout->addLayout(speed);
+    manualLayout->addLayout(obs);
+    manualLayout->addLayout(rmwLayout);
+    manualParameters->setLayout(manualLayout);
+    manualParameters->hide();
+    
     QLabel *workingDirLabel = new QLabel(tr("Working Directory"));
     QGridLayout *dirLayout = new QGridLayout();
     dirLayout->addWidget(workingDirLabel, 0, 0);
     dirLayout->addWidget(dir, 1, 0, 1, 3);
     dirLayout->addWidget(browse, 1, 3);
 
-    QVBoxLayout *layout = new QVBoxLayout();
-    layout->addLayout(name);
-    //layout->addWidget(stormType);
-    layout->addLayout(lat);
-    layout->addLayout(longitude);
-    layout->addLayout(direction);
-    layout->addLayout(speed);
-    layout->addLayout(obs);
-    layout->addLayout(rmwLayout);
-    layout->addLayout(dirLayout);
-    layout->addStretch(1);
-    setLayout(layout);
+    QVBoxLayout *opModeLayout = new QVBoxLayout;
+    opModeLayout->addWidget(operational);
+    opModeLayout->addWidget(autoParameters);
+    opModeLayout->addWidget(manual);
+    opModeLayout->addWidget(manualParameters);
+    opMode->setLayout(opModeLayout);
+    
+    QVBoxLayout *main = new QVBoxLayout;
+    main->addWidget(opMode);
+    main->addLayout(dirLayout);
+    main->addStretch(1);
+    setLayout(main);
 
     // Add the widgets that should not be adjustable at runtime to
     // the turnOffWhenRunning QList
     turnOffWhenRunning.append(dir);
     turnOffWhenRunning.append(workingDirLabel);
     turnOffWhenRunning.append(browse);
-
+    
+    connect(operational, SIGNAL(toggled(const bool)),
+            this, SLOT(valueChanged()));
+    connect(operational, SIGNAL(toggled(bool)),
+            autoParameters, SLOT(setVisible(bool)));
+    connect(idName, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
+    connect(level2url, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
+    connect(level3url, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
+    connect(atcfurl, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
+    
+    connect(manual, SIGNAL(toggled(const bool)),
+            this, SLOT(valueChanged()));
+    connect(manual, SIGNAL(toggled(bool)),
+            manualParameters, SLOT(setVisible(bool)));
     connect(vortexName, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
     connect(latBox, SIGNAL(valueChanged(const QString&)), this, SLOT(valueChanged()));
     connect(longBox, SIGNAL(valueChanged(const QString&)), this, SLOT(valueChanged()));
@@ -118,6 +184,7 @@ VortexPanel::VortexPanel():AbstractPanel()
     connect(rmwBox, SIGNAL(valueChanged(const QString&)), this, SLOT(valueChanged()));
     connect(dir, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
     connect(obsDateTime, SIGNAL(dateTimeChanged(const QDateTime&)), this, SLOT(valueChanged()));
+    
     connect(this, SIGNAL(workingDirectoryChanged()), this, SLOT(createDirectory()));
 
     setPanelChanged(false);
@@ -126,6 +193,9 @@ VortexPanel::VortexPanel():AbstractPanel()
 VortexPanel::~VortexPanel()
 {
     turnOffWhenRunning.clear();
+    delete level2url;
+    delete level3url;
+    delete atcfurl;
     delete vortexName;
     delete latBox;
     delete longBox;
@@ -148,6 +218,24 @@ void VortexPanel::updatePanel(const QDomElement panelElement)
     {
         QString name = child.tagName();
         QString parameter = child.text();
+        if(name == "mode") {
+            if(parameter == "operational")
+                operational->setChecked(true);
+            if(parameter == "manual")
+                manual->setChecked(true);
+        }
+        if (name == "id") {
+            idName->clear();
+            idName->insert(parameter); }
+        if (name == "level2url") {
+            level2url->clear();
+            level2url->insert(parameter); }
+        if (name == "level3url") {
+            level3url->clear();
+            level3url->insert(parameter); }
+        if (name == "atcfurl") {
+            atcfurl->clear();
+            atcfurl->insert(parameter); }
         if(name == "name") {
             vortexName->clear();
             vortexName->insert(parameter); }
@@ -187,45 +275,64 @@ bool VortexPanel::updateConfig()
     QDomElement element = getPanelElement();
     if (checkPanelChanged())
     {
-        if(getFromElement("name")!=vortexName->text()) {
-            emit changeDom(element, "name", vortexName->text());
+        if(operational->isChecked()) {
+            
+            if(getFromElement("id")!=idName->text()) {
+                emit changeDom(element, "id", idName->text());
+            }
+            if(getFromElement("level2url")!=level2url->text()) {
+                emit changeDom(element, "level2url", level2url->text());
+            }
+            if(getFromElement("level3url")!=level3url->text()) {
+                emit changeDom(element, "level3url", level3url->text());
+            }
+            if(getFromElement("atcfurl")!=atcfurl->text()) {
+                emit changeDom(element, "atcfurl", atcfurl->text());
+            }
         }
-        if(fabs(getFromElement("lat").toDouble()-latBox->value())>=0.01) {
-            emit changeDom(element, QString("lat"),
-                           QString().setNum(latBox->value()));
-        }
-        if(fabs(getFromElement("lon").toDouble()-longBox->value())>=0.01) {
-            emit changeDom(element, QString("lon"),
-                           QString().setNum(longBox->value()));
-        }
-        if(fabs(getFromElement("direction").toDouble()-directionBox->value())
-                >=0.01) {
-            emit changeDom(element, QString("direction"),
-                           QString().setNum(directionBox->value()));
-        }
-        if(fabs(getFromElement("speed").toDouble()-speedBox->value())>=0.01) {
-            emit changeDom(element, QString("speed"),
-                           QString().setNum(speedBox->value()));
-        }
-        if(fabs(getFromElement("rmw").toDouble()-rmwBox->value())>=0.01) {
-            emit changeDom(element, QString("rmw"),
-                           QString().setNum(rmwBox->value()));
-            emit rmwChanged();
+        if(manual->isChecked()) {
+            
+            if(getFromElement("name")!=vortexName->text()) {
+                emit changeDom(element, "name", vortexName->text());
+            }
+            if(fabs(getFromElement("lat").toDouble()-latBox->value())>=0.01) {
+                emit changeDom(element, QString("lat"),
+                               QString().setNum(latBox->value()));
+            }
+            if(fabs(getFromElement("lon").toDouble()-longBox->value())>=0.01) {
+                emit changeDom(element, QString("lon"),
+                               QString().setNum(longBox->value()));
+            }
+            if(fabs(getFromElement("direction").toDouble()-directionBox->value())
+               >=0.01) {
+                emit changeDom(element, QString("direction"),
+                               QString().setNum(directionBox->value()));
+            }
+            if(fabs(getFromElement("speed").toDouble()-speedBox->value())>=0.01) {
+                emit changeDom(element, QString("speed"),
+                               QString().setNum(speedBox->value()));
+            }
+            if(fabs(getFromElement("rmw").toDouble()-rmwBox->value())>=0.01) {
+                emit changeDom(element, QString("rmw"),
+                               QString().setNum(rmwBox->value()));
+                emit rmwChanged();
+            }
+            if(getFromElement("obsdate")
+               !=obsDateTime->date().toString("yyyy-MM-dd")) {
+                emit changeDom(element, QString("obsdate"),
+                               obsDateTime->date().toString("yyyy-MM-dd"));
+            }
+            if(getFromElement("obstime")
+               !=obsDateTime->time().toString("hh:mm:ss")) {
+                emit changeDom(element, QString("obstime"),
+                               obsDateTime->time().toString("hh:mm:ss"));
+            }
         }
         if(getFromElement("dir")!=dir->text()) {
             emit changeDom(element, QString("dir"), dir->text());
             emit workingDirectoryChanged();
         }
-        if(getFromElement("obsdate")
-                !=obsDateTime->date().toString("yyyy-MM-dd")) {
-            emit changeDom(element, QString("obsdate"),
-                           obsDateTime->date().toString("yyyy-MM-dd"));
-        }
-        if(getFromElement("obstime")
-                !=obsDateTime->time().toString("hh:mm:ss")) {
-            emit changeDom(element, QString("obstime"),
-                           obsDateTime->time().toString("hh:mm:ss"));
-        }
+
     }
     setPanelChanged(false);
     return true;

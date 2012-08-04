@@ -34,7 +34,8 @@ HEADERS += Threads/workThread.h \
            GUI/StopLight.h \ 
            GUI/CappiDisplay.h \
            GUI/StormSignal.h \
-           HVVP/Hvvp.h \
+	   GUI/StartDialog.h \
+	   HVVP/Hvvp.h \
            IO/Message.h \
            IO/Log.h \
            Radar/RadarFactory.h \
@@ -83,6 +84,7 @@ SOURCES += main.cpp \
            GUI/StopLight.cpp \
            GUI/CappiDisplay.cpp \
            GUI/StormSignal.cpp \
+	   GUI/StartDialog.cpp \
            HVVP/Hvvp.cpp \
            IO/Message.cpp \
            IO/Log.cpp \

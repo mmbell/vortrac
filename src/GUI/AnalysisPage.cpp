@@ -286,78 +286,12 @@ void AnalysisPage::newFile()
     // Set the current filename to untitled
     isUntitled = true;
     configFileName = QDir::current().filePath("vortrac_newconfig.xml");
-    /*
-  // Used for testing QDateTime
-  Message::toScreen("Testing QDateTime via AnalsysisPage");
-  Message::toScreen("I will generate a date time set to my b-day @ 12:34:56");
-  Message::toScreen("Format 1: By Loading Date & Time from Numbers");
-  QDateTime separate;
-  separate.setDate(QDate(1984,9,18));
-  separate.setTime(QTime(12,34,56));
-  QDateTime oldSeparate = separate;
-  Message::toScreen("Format 1: "+separate.toString(Qt::ISODate));
-  if(separate.timeSpec()==Qt::UTC)
-    Message::toScreen("       is automatically set to UTC");
-  else {
-    Message::toScreen("       is automatically set to LOCAL TIME");
-    Message::toScreen(" We will try to adjust the timeSpec of Format 1!");
-    separate.setTimeSpec(Qt::UTC);
-    Message::toScreen("Format 1 (Adjusted) : "+separate.toString(Qt::ISODate));
-    if(oldSeparate == separate)
-      Message::toScreen("These are equal");
-    else
-      Message::toScreen("These are NOT equal");
-  }
-  Message::toScreen("Format 2: By Loading Date & Time from Strings");
-  QDateTime separateStrings;
-  separateStrings.setDate(QDate::fromString(QString("1984-09-18"),
-         Qt::ISODate));
-  separateStrings.setTime(QTime::fromString(QString("12:34:56"),
-         Qt::ISODate));
-  QDateTime oldSeparateStrings = separateStrings;
-  Message::toScreen("Format 2: "+separateStrings.toString(Qt::ISODate));
-  if(separateStrings.timeSpec()==Qt::UTC)
-    Message::toScreen("       is automatically set to UTC");
-  else {
-    Message::toScreen("       is automatically set to LOCAL TIME");
-    Message::toScreen(" We will try to adjust the timeSpec of Format 2!");
-    separateStrings.setTimeSpec(Qt::UTC);
-    Message::toScreen("Format 2 (Adjusted) : "+separateStrings.toString(Qt::ISODate));
-    if(oldSeparateStrings == separateStrings)
-      Message::toScreen("These are equal");
-    else
-      Message::toScreen("These are NOT equal");
-  }
-  Message::toScreen("Format 3: By Loading from a Single String ");
-  QString timeString("1984-09-18T12:34:56");
-  timeString = separateStrings.toString(Qt::ISODate);
-  Message::toScreen(timeString);
-  QDateTime single;
-  //single.fromString(timeString, QString("yyyy-MM-ddThh:mm:ss"));
-  single = QDateTime::fromString(timeString, Qt::ISODate);
-  QDateTime oldSingle = single;
-  Message::toScreen("Format 3: "+single.toString(Qt::ISODate));
-  Message::toScreen("Format 3: Date Only "+single.date().toString(Qt::ISODate));
-  Message::toScreen("Format 3: Time Only "+single.time().toString(Qt::ISODate));
-  if(single.timeSpec()==Qt::UTC)
-    Message::toScreen("       is automatically set to UTC");
-  else {
-    Message::toScreen("       is automatically set to LOCAL TIME");
-    Message::toScreen(" We will try to adjust the timeSpec of Format 3!");
-    single.setTimeSpec(Qt::UTC);
-    Message::toScreen("Format 3 (Adjusted) : "+single.toString(Qt::ISODate));
-    if(oldSingle == single)
-      Message::toScreen("These are equal");
-    else
-      Message::toScreen("These are NOT equal");
-  }
-  if(separate == separateStrings)
-    Message::toScreen("separate == separateStrings");
-  if(separate == single)
-    Message::toScreen("seperate == single");
-  if(oldSeparateStrings == oldSingle)
-    Message::toScreen("OLDS ARE EQUAL");
-  */
+    
+    quickstart = new StartDialog(this, configData);
+    connect(quickstart, SIGNAL(go()), this, SLOT(runThread()));
+    connect(quickstart, SIGNAL(manual()), this, SLOT(openConfigDialog()));
+    quickstart->show();
+
 }
 
 bool AnalysisPage::loadFile(const QString &fileName)
@@ -523,6 +457,7 @@ void AnalysisPage::updatePage()
 void AnalysisPage::runThread()
 {
     //check the sanity of parameter
+    configDialog->checkConfig();
     if(!configDialog->checkPanels()) {
         QMessageBox errCfg;
         errCfg.setText("Please check errors: Incorrect entry in the configuration");
@@ -807,7 +742,6 @@ void AnalysisPage::changeStormSignal(StormSignalStatus status,
 void AnalysisPage::fetchRemoteData()
 {
     // Fetch the catalog of files
-    //QString server = "http://shelf.rcac.purdue.edu:8080/thredds/";
 	QString server = "http://motherlode.ucar.edu/thredds/catalog/nexrad/level2/";
     QDomElement radar = configData->getConfig("radar");
     QString radarName = configData->getParam(radar,"name");
@@ -865,13 +799,13 @@ bool AnalysisPage::getRemoteData()
     file.close();
 
     // Check to see if this file is already in the directory, or download it
-    for (int i = 0; i < urlList.size(); ++i) {
+    //for (int i = 0; i < urlList.size(); ++i) {
+    for (int i = urlList.size()-1; i >= 0; --i) {
         QUrl url = urlList.at(i);
         QString remotepath = url.path();
         QString localfile = QFileInfo(remotepath).fileName();
         if (!dataPath.exists(localfile)) {
             QString dataurl = urlList.at(i);
-            //QString server("http://shelf.rcac.purdue.edu:8080/thredds/fileServer/");
             QString server = "http://motherlode.ucar.edu/thredds/fileServer/";
             QString url = server + dataurl;
             QUrl fileurl = QUrl(url);
@@ -918,5 +852,10 @@ bool AnalysisPage::saveRemoteData(QNetworkReply *reply)
     }
 }
 
+void AnalysisPage::openConfigDialog()
+{
+    configDialog->checkConfig();
+    configDialog->show();
+}
 
 

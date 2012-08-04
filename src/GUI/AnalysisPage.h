@@ -25,7 +25,7 @@
 #include "ConfigurationDialog.h"
 #include "DiagnosticPanel.h"
 #include "CappiDisplay.h"
-
+#include "StartDialog.h"
 //#include "TestGraph.h"
 
 class AnalysisPage : public QWidget
@@ -64,7 +64,6 @@ public slots:
     void updateCappiInfo(float x, float y, float rmwEstimate, float sMin, float sMax, float vMax,
                          float userCenterLat, float userCenterLon, float centerLat, float centerLon);
     void updateCappiDisplay(bool hasImage);
-
     // void changeStopLight(StopLightColor color, const QString message);
     // void changeStormSignal(StormSignalStatus status, const QString message);
 
@@ -93,7 +92,8 @@ private slots:
     void fetchRemoteData();
     bool getRemoteData();
     bool saveRemoteData(QNetworkReply *reply);
-
+    void openConfigDialog();
+    
 protected:
     void closeEvent(QCloseEvent *event);
 
@@ -138,6 +138,7 @@ private:
     QList<QNetworkReply *> datafile_replies;
     QStringList urlList;
 
+    StartDialog *quickstart;
 };
 
 #endif

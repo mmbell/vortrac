@@ -43,9 +43,15 @@ public:
     bool checkValues();
 
 private:
-    QLineEdit *vortexName;
+    QLineEdit *idName, *vortexName;
     // Widget used to receive/display hurricane name
 
+    QRadioButton *operational, *manual;
+    // Radio buttons to determine run mode
+    
+    QLineEdit *level2url, *level3url, *atcfurl;
+    // URLS for operational data streams
+    
     QDoubleSpinBox *latBox, *longBox, *directionBox, *speedBox, *rmwBox;
     /*
    * latBox & lonBox are used to adjust the starting latitude and longitude
