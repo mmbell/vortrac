@@ -21,10 +21,10 @@ StartDialog::StartDialog(QWidget* parent,
     setWindowTitle(tr("Start new analysis"));
     
     panel = new StartPanel(initialConfig);
-    
-    QPushButton *go = new QPushButton(tr("Go"));
+
+    QPushButton *go = new QPushButton(tr("Real-Time"));
     go->setDefault(true);
-    QPushButton *manual = new QPushButton(tr("Configure"));
+    QPushButton *manual = new QPushButton(tr("Archive"));
     QHBoxLayout *buttons = new QHBoxLayout;
     connect(go, SIGNAL(clicked()), this, SLOT(goButton()));
     connect(manual, SIGNAL(clicked()), this, SLOT(manualButton()));
@@ -52,6 +52,7 @@ void StartDialog::goButton()
 
 void StartDialog::manualButton()
 {
+    panel->changeMode();
     panel->updateConfig();
     emit manual();
     close();
@@ -225,4 +226,19 @@ bool StartPanel::checkValues()
     return true;
 }
 
-
+bool StartPanel::changeMode()
+{
+    QDomNodeList nodeList = configData->getRoot().childNodes();
+    for (int i = 0; i <= nodeList.count()-1; i++) 
+    {
+        QDomNode currNode = nodeList.item(i);
+        QDomElement child = currNode.toElement();
+        if (child.tagName() == "vortex") {
+            if(child.firstChildElement("mode").text()!= QString("manual")) {
+                emit changeDom(child, "mode", QString("manual"));
+            } else {
+                emit changeDom(child, "mode", QString("operational"));
+            }
+        }                
+    }
+}
