@@ -511,11 +511,13 @@ void AnalysisPage::runThread()
     }
     //set a flag in pollThread if continue previous run or not
 	// Try to fetch new radar data every 5 minutes
-	QTimer::singleShot(0, this, SLOT(fetchRemoteData()));
-    QTimer *fetchTimer = new QTimer(this);
-    connect(fetchTimer, SIGNAL(timeout()), this, SLOT(fetchRemoteData()));
-    fetchTimer->start(300000);
-	
+    QString mode = configData->getParam(configData->getConfig("vortex"), "mode");
+    if (mode == "operational") {
+        QTimer::singleShot(0, this, SLOT(fetchRemoteData()));
+        QTimer *fetchTimer = new QTimer(this);
+        connect(fetchTimer, SIGNAL(timeout()), this, SLOT(fetchRemoteData()));
+        fetchTimer->start(300000);
+	}
     pollThread->setContinuePreviousRun(continuePreviousRun);
     pollThread->setConfig(configData);
     pollThread->start();

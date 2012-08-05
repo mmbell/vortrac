@@ -277,6 +277,9 @@ bool VortexPanel::updateConfig()
     {
         if(operational->isChecked()) {
             
+            if(getFromElement("mode")!=QString("operational")) {
+                emit changeDom(element, "mode", QString("operational"));
+            }
             if(getFromElement("id")!=idName->text()) {
                 emit changeDom(element, "id", idName->text());
             }
@@ -292,6 +295,9 @@ bool VortexPanel::updateConfig()
         }
         if(manual->isChecked()) {
             
+            if(getFromElement("mode")!=QString("manual")) {
+                emit changeDom(element, "mode", QString("manual"));
+            }
             if(getFromElement("name")!=vortexName->text()) {
                 emit changeDom(element, "name", vortexName->text());
             }

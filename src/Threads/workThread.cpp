@@ -133,12 +133,6 @@ void workThread::run()
                 centerFinder->findCenter();
                 delete centerFinder;
 
-            }else{
-                for(int ll=0;ll<vortexData.getNumLevels();ll++){
-                    vortexData.setLat(ll, -999.f);
-                    vortexData.setLon(ll, -999.f);
-                    vortexData.setRMW(ll, -999.f);
-                }
             }
         if(abort) break;
             float simplexLat=vortexData.getLat(0);
