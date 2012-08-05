@@ -38,7 +38,8 @@ HEADERS += Threads/workThread.h \
 	   HVVP/Hvvp.h \
            IO/Message.h \
            IO/Log.h \
-           Radar/RadarFactory.h \
+	   IO/ATCF.h \
+	   Radar/RadarFactory.h \
            Radar/LevelII.h \
            Radar/NcdcLevelII.h \
            Radar/LdmLevelII.h \
@@ -88,6 +89,7 @@ SOURCES += main.cpp \
            HVVP/Hvvp.cpp \
            IO/Message.cpp \
            IO/Log.cpp \
+	   IO/ATCF.cpp \
            Radar/RadarFactory.cpp \
            Radar/LevelII.cpp \
            Radar/NcdcLevelII.cpp \
