@@ -251,6 +251,11 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     connect(this, SIGNAL(saveGraphImage(const QString&)),graph, SLOT(saveImage(const QString&)));
     connect(&datafile_manager, SIGNAL(finished(QNetworkReply*)),
             SLOT(saveRemoteData(QNetworkReply*)));
+
+    quickstart = new StartDialog(this, configData);
+    connect(quickstart, SIGNAL(go()), this, SLOT(runThread()));
+    connect(quickstart, SIGNAL(manual()), this, SLOT(openConfigDialog()));
+
 }
 
 AnalysisPage::~AnalysisPage()
@@ -268,7 +273,7 @@ AnalysisPage::~AnalysisPage()
     delete currRMW;
     delete currDeficit;
     delete deficitLabel;
-
+    delete quickstart;
 }
 
 void AnalysisPage::newFile()
@@ -287,9 +292,6 @@ void AnalysisPage::newFile()
     isUntitled = true;
     configFileName = QDir::current().filePath("vortrac_newconfig.xml");
     
-    quickstart = new StartDialog(this, configData);
-    connect(quickstart, SIGNAL(go()), this, SLOT(runThread()));
-    connect(quickstart, SIGNAL(manual()), this, SLOT(openConfigDialog()));
     quickstart->show();
 
 }

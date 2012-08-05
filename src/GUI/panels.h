@@ -91,7 +91,8 @@ public:
     bool updateConfig();
     bool checkDates();
     bool checkValues();
-
+    bool setDefaultDirectory(QDir* newDir);
+    
 private:
     /*
     *  radarName, latBox and longBox are used in this panel but

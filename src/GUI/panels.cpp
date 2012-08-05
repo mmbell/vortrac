@@ -654,6 +654,57 @@ bool RadarPanel::checkValues()
     return true;
 }
 
+bool RadarPanel::setDefaultDirectory(QDir* newDir)
+{
+    QString subDirectory("radar");
+    if(!newDir->isAbsolute())
+        newDir->makeAbsolute();
+    if(newDir->exists(subDirectory))
+        if(newDir->cd(subDirectory)){
+            if(newDir->isReadable()){
+                defaultDirectory->cd(newDir->path());
+                delete newDir;
+                return true;
+            }
+            else {
+                newDir->cdUp();
+                defaultDirectory->cd(newDir->path());
+                delete newDir;
+                return false;
+            }
+        }
+        else {
+            defaultDirectory->cd(newDir->path());
+            delete newDir;
+            return false;
+        }
+    if(newDir->mkdir(subDirectory)) {
+        if(newDir->cd(subDirectory)){
+            if(newDir->isReadable()){
+                defaultDirectory->cd(newDir->path());
+                delete newDir;
+                return true;
+            }
+            else {
+                newDir->cdUp();
+                defaultDirectory->cd(newDir->path());
+                delete newDir;
+                return false;
+            }
+        }
+        else {
+            defaultDirectory->cd(newDir->path());
+            delete newDir;
+            return false;
+        }
+    }
+    else {
+        defaultDirectory->cd(newDir->path());
+        delete newDir;
+        return false;
+    }
+}
+
 CappiPanel::CappiPanel():AbstractPanel()
 {
     QLabel *cappiDirLabel = new QLabel(tr("CAPPI Output Directory"));
