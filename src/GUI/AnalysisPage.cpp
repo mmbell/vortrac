@@ -247,7 +247,8 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     statusLog->catchLog(Message("VORTRAC Status Log for "+QDateTime::currentDateTime().toUTC().toString()+ " UTC"));
 
     pollThread = NULL;
-
+    atcf = NULL;
+    
     connect(this, SIGNAL(saveGraphImage(const QString&)),graph, SLOT(saveImage(const QString&)));
     connect(&datafile_manager, SIGNAL(finished(QNetworkReply*)),
             SLOT(saveRemoteData(QNetworkReply*)));
@@ -487,6 +488,10 @@ void AnalysisPage::runThread()
             cappiDisplay, SLOT(setGBVTDResults(float, float, float, float, float, float, float ,float ,float, float)),Qt::DirectConnection);
     connect(pollThread, SIGNAL(vortexListUpdate(VortexList*)),this, SLOT(pollVortexUpdate(VortexList*)),Qt::DirectConnection);
 
+    atcf = new ATCF(configData);
+    connect(atcf, SIGNAL(log(const Message&)),this, SLOT(catchLog(const Message&)));
+    pollThread->setATCF(atcf);
+    
     // Check to see if there are old list files that we want to start from in
     // the working directory. We have to do this here because we cannot create
     // widgets in the threads.
@@ -517,6 +522,11 @@ void AnalysisPage::runThread()
         QTimer *fetchTimer = new QTimer(this);
         connect(fetchTimer, SIGNAL(timeout()), this, SLOT(fetchRemoteData()));
         fetchTimer->start(300000);
+        
+        QTimer::singleShot(0, atcf, SLOT(getTcvitals()));
+        QTimer *atcfTimer = new QTimer(this);
+        connect(atcfTimer, SIGNAL(timeout()), atcf, SLOT(getTcvitals()));
+        atcfTimer->start(3600000);
 	}
     pollThread->setContinuePreviousRun(continuePreviousRun);
     pollThread->setConfig(configData);
@@ -535,6 +545,7 @@ void AnalysisPage::abortThread()
         pollVortexUpdate(NULL);
         cappiDisplay->clearImage();
     }
+    delete atcf;
     configDialog->turnOffMembers(false);
     runButton->setEnabled(true);
 }
@@ -861,5 +872,4 @@ void AnalysisPage::openConfigDialog()
     configDialog->checkConfig();
     configDialog->show();
 }
-
 

@@ -26,6 +26,7 @@
 #include "DiagnosticPanel.h"
 #include "CappiDisplay.h"
 #include "StartDialog.h"
+#include "ATCF.h"
 //#include "TestGraph.h"
 
 class AnalysisPage : public QWidget
@@ -93,7 +94,7 @@ private slots:
     bool getRemoteData();
     bool saveRemoteData(QNetworkReply *reply);
     void openConfigDialog();
-    
+
 protected:
     void closeEvent(QCloseEvent *event);
 
@@ -139,6 +140,7 @@ private:
     QStringList urlList;
 
     StartDialog *quickstart;
+    ATCF *atcf;
 };
 
 #endif

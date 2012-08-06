@@ -25,7 +25,7 @@
 #include "Pressure/PressureFactory.h"
 #include "Pressure/PressureList.h"
 #include "ChooseCenter.h"
-
+#include "IO/ATCF.h"
 
 class workThread : public QThread
 {
@@ -35,6 +35,7 @@ public:
     workThread(QObject *parent = 0);
     ~workThread();
     void setConfig(Configuration *configPtr) {configData = configPtr;}
+    void setATCF(ATCF *atcfPtr) {atcf = atcfPtr;}
     void stop();
 
 public slots:
@@ -76,6 +77,7 @@ private:
     void checkIntensification();
     void checkListConsistency();
 
+    ATCF *atcf;
 };
 
 #endif

@@ -64,7 +64,7 @@ void workThread::run()
     connect(dataSource, SIGNAL(log(const Message&)),this, SLOT(catchLog(const Message&)));
     PressureFactory *pressureSource = new PressureFactory(configData);
     connect(pressureSource, SIGNAL(log(const Message&)),this, SLOT(catchLog(const Message&)));
-
+    
     // Begin working loop
     while(!abort) {
         //STEP 1: Check for new data
@@ -359,56 +359,59 @@ void workThread::catchCappiInfo(float x,float y,float rmwEstimate,float sMin,flo
 
 void workThread::_latlonFirstGuess(RadarData* radarVolume)
 {
+    QString mode = configData->getParam(configData->getConfig("vortex"),"mode");
     QDateTime volDateTime = radarVolume->getDateTime();
-    float stormSpd = configData->getParam(configData->getConfig("vortex"),"speed").toFloat();
-    float stormDir = configData->getParam(configData->getConfig("vortex"),"direction").toFloat();
-    stormDir = 450.0f-stormDir;
-    if(stormDir > 360.0f)
-        stormDir -=360.0f;
-    stormDir*=acos(-1.0f)/180.f;
-
-    //calucate the expolation from user define center
-    // Get initial lat and lon
-    float initLat = configData->getParam(configData->getConfig("vortex"),"lat").toFloat();
-    float initLon = configData->getParam(configData->getConfig("vortex"),"lon").toFloat();
-    QDate obsDate = QDate::fromString(configData->getParam(configData->getConfig("vortex"),"obsdate"),"yyyy-MM-dd");
-    QTime obsTime = QTime::fromString(configData->getParam(configData->getConfig("vortex"),"obstime"),"hh:mm:ss");
-    QDateTime usrDateTime = QDateTime(obsDate, obsTime, Qt::UTC);
-    int elapsedSeconds =usrDateTime.secsTo(volDateTime);
-
-    float distanceMoved = elapsedSeconds*stormSpd/1000.0;
-    float changeInX = distanceMoved*cos(stormDir);
-    float changeInY = distanceMoved*sin(stormDir);
-    float *extrapLatLon = GriddedData::getAdjustedLatLon(initLat,initLon, changeInX, changeInY);
-    _firstGuessLat=extrapLatLon[0];
-    _firstGuessLon=extrapLatLon[1];
-
-    //if there's vortex result,try to exraplation from this recored
-    if (!_vortexList.isEmpty()) {
-        _vortexList.timeSort();
-        float vortexLat = _vortexList.last().getLat();
-        float vortexLon = _vortexList.last().getLon();
-        QDateTime obsDateTime = _vortexList.last().getTime();
-
-
-
-        int elapsedSeconds =obsDateTime.secsTo(volDateTime);
+    
+    if (mode == "manual") {        
+        float stormSpd = configData->getParam(configData->getConfig("vortex"),"speed").toFloat();
+        float stormDir = configData->getParam(configData->getConfig("vortex"),"direction").toFloat();
+        stormDir = 450.0f-stormDir;
+        if(stormDir > 360.0f)
+            stormDir -=360.0f;
+        stormDir*=acos(-1.0f)/180.f;
+        
+        //calucate the expolation from user define center
+        // Get initial lat and lon
+        float initLat = configData->getParam(configData->getConfig("vortex"),"lat").toFloat();
+        float initLon = configData->getParam(configData->getConfig("vortex"),"lon").toFloat();
+        QDate obsDate = QDate::fromString(configData->getParam(configData->getConfig("vortex"),"obsdate"),"yyyy-MM-dd");
+        QTime obsTime = QTime::fromString(configData->getParam(configData->getConfig("vortex"),"obstime"),"hh:mm:ss");
+        QDateTime usrDateTime = QDateTime(obsDate, obsTime, Qt::UTC);
+        int elapsedSeconds =usrDateTime.secsTo(volDateTime);
+        
         float distanceMoved = elapsedSeconds*stormSpd/1000.0;
         float changeInX = distanceMoved*cos(stormDir);
         float changeInY = distanceMoved*sin(stormDir);
+        float *extrapLatLon = GriddedData::getAdjustedLatLon(initLat,initLon, changeInX, changeInY);
+        _firstGuessLat=extrapLatLon[0];
+        _firstGuessLon=extrapLatLon[1];
+        delete [] extrapLatLon;
+        
+        //if there is a vortex result,try to extrapolation from this record
+        if (!_vortexList.isEmpty()) {
+            _vortexList.timeSort();
+            float vortexLat = _vortexList.last().getLat();
+            float vortexLon = _vortexList.last().getLon();
+            QDateTime obsDateTime = _vortexList.last().getTime();
+            
+            int elapsedSeconds =obsDateTime.secsTo(volDateTime);
+            float distanceMoved = elapsedSeconds*stormSpd/1000.0;
+            float changeInX = distanceMoved*cos(stormDir);
+            float changeInY = distanceMoved*sin(stormDir);
+            
+            float *newLatLon = GriddedData::getAdjustedLatLon(vortexLat,vortexLon, changeInX, changeInY);
+            float relDist = GriddedData::getCartesianDistance(extrapLatLon[0],extrapLatLon[1],newLatLon[0],newLatLon[1]);
+            
+            if (relDist < 10 || usrDateTime.secsTo(volDateTime)>60*60) {
+                _firstGuessLat = newLatLon[0];
+                _firstGuessLon = newLatLon[1];
+                //std::cout<<"Using estimation of center ("<<_firstGuessLat<<","<<_firstGuessLon<<") from last vortex"<<std::endl;
+            }
+            delete [] newLatLon;
 
-        float *newLatLon = GriddedData::getAdjustedLatLon(vortexLat,vortexLon, changeInX, changeInY);
-        float relDist = GriddedData::getCartesianDistance(extrapLatLon[0],extrapLatLon[1],newLatLon[0],newLatLon[1]);
-
-        if (relDist < 10 || usrDateTime.secsTo(volDateTime)>60*60) {
-            _firstGuessLat = newLatLon[0];
-            _firstGuessLon = newLatLon[1];
-            //std::cout<<"Using estimation of center ("<<_firstGuessLat<<","<<_firstGuessLon<<") from last vortex"<<std::endl;
         }
-        else
-            //std::cout<<"Using estimation of center ("<<_firstGuessLat<<","<<_firstGuessLon<<") from user input"<<std::endl;
-
-        delete [] newLatLon;
+    } else if (mode == "operational") {
+        _firstGuessLat = atcf->getLatitude(volDateTime);
+        _firstGuessLon = atcf->getLongitude(volDateTime);
     }
-    delete [] extrapLatLon;
 }

@@ -10,13 +10,148 @@
  */
 
 #include "ATCF.h"
+#include <QtNetwork>
 
-ATCF::ATCF()
+ATCF::ATCF(Configuration* config, QObject *parent) : QObject(parent)
 {
-
+    this->setObjectName("ATCF");
+    configData = config;
+    connect(&tcvitals_manager, SIGNAL(finished(QNetworkReply*)),
+            SLOT(saveTcvitals(QNetworkReply*)));
 }
 
 ATCF::~ATCF()
 {
     
+}
+
+void ATCF::setConfiguration(Configuration *config)
+{
+    configData = config;
+}
+
+void ATCF::catchLog(const Message& message)
+{
+    emit log(message);
+}
+
+bool ATCF::getTcvitals()
+{
+    QString dataurl = "atcf/com/tcvitals";
+    QString server = "http://ftp.nhc.noaa.gov/";
+    QString url = server + dataurl;
+    QUrl fileurl = QUrl(url);
+    QNetworkRequest request(fileurl);
+    tcvitals_reply = tcvitals_manager.get(request);
+
+    return true;
+}
+
+bool ATCF::saveTcvitals(QNetworkReply *reply)
+{
+    QUrl url = reply->url();
+    QString remotepath = url.path();
+    QString filename = QFileInfo(remotepath).fileName();
+    if (reply->error()) {
+        QString msg = "tcvitals file download failed: " + reply->errorString();
+        emit log(Message(msg,0,this->objectName()));
+        reply->deleteLater();
+        return false;
+    } else {
+        QDomElement vortex = configData->getConfig("vortex");
+        QString localpath = configData->getParam(vortex,"dir");
+        QDir dataPath(localpath);
+        QFile file(dataPath.absolutePath() + "/" + filename);
+        if (!file.open(QIODevice::WriteOnly)) {
+            emit log(Message(QString("Problem saving tcvitals"),0,this->objectName(),Yellow,QString("Problem with remote data")));
+            return false;
+        }
+        
+        file.write(reply->readAll());
+        file.close();
+        reply->deleteLater();
+        QString msg = "tcvitals file downloaded successfully";
+        emit log(Message(msg,0,this->objectName()));
+        parseTcvitals();
+        return true;
+    }
+}
+
+bool ATCF::parseTcvitals()
+{
+    QDomElement vortex = configData->getConfig("vortex");
+    QString localpath = configData->getParam(vortex,"dir");
+    QDir dataPath(localpath);
+    QFile file(dataPath.absolutePath() + "/tcvitals");
+    if (!file.open(QIODevice::ReadOnly)) {
+        emit log(Message(QString("Problem reading tcvitals"),0,this->objectName(),Yellow,QString("Problem with remote data")));
+        return false;
+    }
+    
+    QString stormId = configData->getParam(vortex,"id");
+    QTextStream tcvitals(&file);
+    while (!tcvitals.atEnd()) {
+        QString line = tcvitals.readLine();
+        QStringList vitals = line.split(QRegExp("\\s+"));
+        if (vitals.at(1) == stormId) {
+            // Match!
+            stormName = vitals.at(2);
+            QDate date = QDate::fromString(vitals.at(3), "yyyyMMdd");
+            QTime time = QTime::fromString(vitals.at(4), "hhmm");
+            obTime = QDateTime(date, time, Qt::UTC);
+            QString lat = vitals.at(5);
+            if (lat.endsWith("S")) {
+                lat.chop(1);
+                obLat = -(lat.toFloat() / 10.0);
+            } else {
+                lat.chop(1);
+                obLat = lat.toFloat() / 10.0;
+            }
+            
+            QString lon = vitals.at(6);
+            if (lon.endsWith("W")) {
+                lon.chop(1);
+                obLon = -(lon.toFloat() / 10.0);
+            } else {
+                lat.chop(1);
+                obLon = lon.toFloat() / 10.0;
+            }
+
+            obDir = vitals.at(7).toFloat();
+            obDir = 450.0f-obDir;
+            if(obDir > 360.0f)
+                obDir -=360.0f;
+            obDir*=acos(-1.0f)/180.f;
+
+            obSpd = vitals.at(8).toFloat() / 10.0;
+            obCentralPressure = vitals.at(9).toFloat();
+            obEnvPressure = vitals.at(10).toFloat();
+            obOuterRadius = vitals.at(11).toFloat();
+            obRMW = vitals.at(13).toFloat();
+        }
+    }
+    file.close();
+    return true;
+}
+
+float ATCF::getLatitude(const QDateTime& time)
+{
+    int elapsedSeconds =obTime.secsTo(time);
+    float distanceMoved = elapsedSeconds*obSpd/1000.0;
+    float changeInY = distanceMoved*sin(obDir);
+    float LatRadians = obLat * acos(-1.0)/180.0;
+    float fac_lat = 111.13209 - 0.56605 * cos(2.0 * LatRadians)
+    + 0.00012 * cos(4.0 * LatRadians) - 0.000002 * cos(6.0 * LatRadians);
+    return changeInY/fac_lat + obLat;
+}
+
+float ATCF::getLongitude(const QDateTime& time)
+{
+    int elapsedSeconds =obTime.secsTo(time);
+    float distanceMoved = elapsedSeconds*obSpd/1000.0;
+    float changeInX = distanceMoved*cos(obDir);
+        float LatRadians = obLat * acos(-1.0)/180.0;
+    float fac_lon = 111.41513 * cos(LatRadians)
+    - 0.09455 * cos(3.0 * LatRadians) + 0.00012 * cos(5.0 * LatRadians);
+    return changeInX/fac_lon + obLon;    
 }
