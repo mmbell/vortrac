@@ -490,6 +490,7 @@ void AnalysisPage::runThread()
 
     atcf = new ATCF(configData);
     connect(atcf, SIGNAL(log(const Message&)),this, SLOT(catchLog(const Message&)));
+    connect(atcf, SIGNAL(tcvitalsReady()),this, SLOT(updateTcvitals()));
     pollThread->setATCF(atcf);
     
     // Check to see if there are old list files that we want to start from in
@@ -525,12 +526,36 @@ void AnalysisPage::runThread()
         
         QTimer::singleShot(0, atcf, SLOT(getTcvitals()));
         QTimer *atcfTimer = new QTimer(this);
-        connect(atcfTimer, SIGNAL(timeout()), atcf, SLOT(getTcvitals()));
-        atcfTimer->start(3600000);
-	}
-    pollThread->setContinuePreviousRun(continuePreviousRun);
-    pollThread->setConfig(configData);
-    pollThread->start();
+        connect(atcfTimer, SIGNAL(timeout()), this, SLOT(updateTcvitals()));
+        atcfTimer->start(3600000);        
+	} else {
+        pollThread->setContinuePreviousRun(continuePreviousRun);
+        pollThread->setConfig(configData);
+        pollThread->start();
+    }
+}
+
+void AnalysisPage::updateTcvitals()
+{
+    // Get name from ATCF
+    QString vortexName = atcf->getStormName();
+    configData->setParam(configData->getConfig("vortex"), "name", vortexName);
+    
+    QString rmw = QString().setNum(atcf->getRMW());
+    configData->setParam(configData->getConfig("vortex"), "rmw", rmw);
+
+    configDialog->checkConfig();
+    if(!configDialog->checkPanels()) {
+        QMessageBox errCfg;
+        errCfg.setText("Please check errors: Incorrect entry in the configuration");
+        errCfg.exec();
+        return;
+    }
+    if (!pollThread->isRunning()) {
+        pollThread->setContinuePreviousRun(false);
+        pollThread->setConfig(configData);
+        pollThread->start();
+    }
 }
 
 void AnalysisPage::abortThread()
@@ -681,7 +706,7 @@ void AnalysisPage::pollVortexUpdate(VortexList* list)
 	currPressure->display(0);
         currRMW->display(0);
         currDeficit->display(0);
-        deficitLabel->setText(tr("Pressure Deficit From 0 km (mb):"));
+        deficitLabel->setText(tr("Pressure Deficit Unavailable"));
         emit vortexListChanged(NULL);
 	return;
     }
@@ -705,7 +730,7 @@ void AnalysisPage::pollVortexUpdate(VortexList* list)
         currPressure->display(0);
         currRMW->display(0);
         currDeficit->display(0);
-        deficitLabel->setText(tr("Pressure Deficit From 0 km (mb):"));
+        deficitLabel->setText(tr("Pressure Deficit Unavailable"));
         emit vortexListChanged(NULL);
     }
 }
@@ -757,12 +782,14 @@ void AnalysisPage::changeStormSignal(StormSignalStatus status,
 void AnalysisPage::fetchRemoteData()
 {
     // Fetch the catalog of files
-	QString server = "http://motherlode.ucar.edu/thredds/catalog/nexrad/level2/";
+    QDomElement vortex = configData->getConfig("vortex");
+    QString server = configData->getParam(vortex,"level2url");
+    QString catalogurl = "thredds/catalog/nexrad/level2/";
     QDomElement radar = configData->getConfig("radar");
     QString radarName = configData->getParam(radar,"name");
     QString currdate = QDateTime::currentDateTimeUtc().date().toString("yyyyMMdd");
-    QUrl catalog = QUrl(server + radarName + "/" + currdate + "/catalog.xml");
-    QString url = catalog.toString();
+    QUrl catalog = QUrl(server + catalogurl + radarName + "/" + currdate + "/catalog.xml");
+    //QString url = catalog.toString();
     QNetworkRequest request(catalog);
     catalog_reply = catalog_manager.get(request);
     // Connect the signals and slots
@@ -815,21 +842,23 @@ bool AnalysisPage::getRemoteData()
 
     // Check to see if this file is already in the directory, or download it
     //for (int i = 0; i < urlList.size(); ++i) {
+    QDomElement vortex = configData->getConfig("vortex");
     for (int i = urlList.size()-1; i >= 0; --i) {
         QUrl url = urlList.at(i);
         QString remotepath = url.path();
         QString localfile = QFileInfo(remotepath).fileName();
         if (!dataPath.exists(localfile)) {
-            QString dataurl = urlList.at(i);
-            QString server = "http://motherlode.ucar.edu/thredds/fileServer/";
-            QString url = server + dataurl;
+            QString server = configData->getParam(vortex,"level2url");
+            QString dataurl= "thredds/fileServer/";
+            QString url = server + dataurl + urlList.at(i);
             QUrl fileurl = QUrl(url);
             QNetworkRequest request(fileurl);
             QNetworkReply *reply = datafile_manager.get(request);
             datafile_replies.append(reply);
-        } else {
-            QString msg = "Level II data file " + localfile + " previously downloaded";
+            QString msg = "Downloading Level II data file " + localfile;
             emit log(Message(msg,0,this->objectName()));
+            urlList.removeAt(i);
+            break;
         }
     }
 
@@ -838,6 +867,8 @@ bool AnalysisPage::getRemoteData()
 
 bool AnalysisPage::saveRemoteData(QNetworkReply *reply)
 {
+    // Process the first file
+    bool status = false;
     QUrl url = reply->url();
     QString remotepath = url.path();
     QString filename = QFileInfo(remotepath).fileName();
@@ -846,7 +877,6 @@ bool AnalysisPage::saveRemoteData(QNetworkReply *reply)
         emit log(Message(msg,0,this->objectName()));
         datafile_replies.removeAll(reply);
         reply->deleteLater();
-        return false;
     } else {
         QDomElement radar = configData->getConfig("radar");
         QString localpath = configData->getParam(radar,"dir");
@@ -854,7 +884,6 @@ bool AnalysisPage::saveRemoteData(QNetworkReply *reply)
         QFile file(dataPath.absolutePath() + "/" + filename);
         if (!file.open(QIODevice::WriteOnly)) {
             emit log(Message(QString("Problem saving remote data"),0,this->objectName(),Yellow,QString("Problem with remote data")));
-            return false;
         }
         
         file.write(reply->readAll());
@@ -863,8 +892,32 @@ bool AnalysisPage::saveRemoteData(QNetworkReply *reply)
         reply->deleteLater();
         QString msg = "Level II data file " + filename + " downloaded successfully";
         emit log(Message(msg,0,this->objectName()));
-        return true;
+        status = true;
     }
+    
+    // See if there are other files left
+    for (int i = urlList.size()-1; i >= 0; --i) {
+        QUrl url = urlList.at(i);
+        QString remotepath = url.path();
+        QString localfile = QFileInfo(remotepath).fileName();
+        QDomElement radar = configData->getConfig("radar");
+        QString path = configData->getParam(radar,"dir");
+        QDir dataPath(path);
+        if (!dataPath.exists(localfile)) {
+            QString dataurl = urlList.at(i);
+            QString server = "http://motherlode.ucar.edu/thredds/fileServer/";
+            QString url = server + dataurl;
+            QUrl fileurl = QUrl(url);
+            QNetworkRequest request(fileurl);
+            QNetworkReply *reply = datafile_manager.get(request);
+            datafile_replies.append(reply);
+            QString msg = "Downloading Level II data file " + localfile;
+            emit log(Message(msg,0,this->objectName()));
+            urlList.removeAt(i);
+            break;
+        }
+    }
+    return status;
 }
 
 void AnalysisPage::openConfigDialog()

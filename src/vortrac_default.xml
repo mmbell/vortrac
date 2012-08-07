@@ -5,7 +5,7 @@
      <mode>operational</mode>
      <level2url>http://motherlode.ucar.edu/</level2url>
      <level3url>http://motherlode.ucar.edu/</level3url>
-     <atcfurl>ftp://ftp.nhc.noaa.gov/atcf/</atcfurl>
+     <atcfurl>ftp://ftp.nhc.noaa.gov/</atcfurl>
      <name>New Hurricane</name>
      <lat>0.00</lat>
      <lon>0.00</lon>

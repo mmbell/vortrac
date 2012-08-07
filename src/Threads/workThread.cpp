@@ -43,8 +43,15 @@ void workThread::run()
 {
 
     //Initialize configuration
+    QString mode = configData->getParam(configData->getConfig("vortex"), "mode");
     QDir workingDir(configData->getParam(configData->getConfig("vortex"),"dir"));
     QString vortexName = configData->getParam(configData->getConfig("vortex"), "name");
+    if (vortexName == "Unknown") {
+        // Problem with ATCF data
+        Message newMsg(QString("Vortex name is unknown, please check ATCF data feed"),-1,this->objectName(),
+                       Red,"ATCF Error");
+        emit log(newMsg);
+    }
     QString radarName = configData->getParam(configData->getConfig("radar"), "name");
     QString year=QString().setNum(QDate::fromString(configData->getParam(configData->getConfig("radar"),"startdate"), "yyyy-MM-dd").year());
     QString namePrefix=vortexName+"_"+radarName+"_"+year+"_";
@@ -79,7 +86,7 @@ void workThread::run()
                 delete newVolume;
                 continue;
             }
-            emit log(Message("Found file:" + newVolume->getFileName(), 1, this->objectName()));
+            emit log(Message("Found file:" + newVolume->getFileName(), -1, this->objectName()));
             // Check to makes sure that the file still exists and is readable
             if(!newVolume->fileIsReadable()) {
                 emit log(Message(QString("The radar data file "+newVolume->getFileName()+" is not readable"), -1,this->objectName()));
@@ -93,12 +100,13 @@ void workThread::run()
             connect(dealiaser,SIGNAL(log(const Message&)),this,SLOT(catchLog(const Message&)));
             dealiaser->getConfig(configData->getConfig("qc"));
             dealiaser->dealias();
-            emit log(Message("Finished QC and Dealiasing",1, this->objectName()));
+            emit log(Message("Finished QC and Dealiasing",10, this->objectName()));
             delete dealiaser;
 	if(abort) break;
             //STEP 3: get the first guess of center Lat,Lon for simplex
             _latlonFirstGuess(newVolume);
-            QString currentCenter("Processing ("+QString().setNum(_firstGuessLat)+", "+QString().setNum(_firstGuessLon)+")");
+            QString currentCenter("Processing radar volume at "+ newVolume->getDateTime().toString("hh:mm") + " with (" +
+                                  QString().setNum(_firstGuessLat)+", "+QString().setNum(_firstGuessLon)+") center estimate");
             emit log(Message(currentCenter,1,this->objectName()));
         if(abort) break;
             //STEP 4: from Radardata ---> Griddata, make cappi
@@ -111,10 +119,6 @@ void workThread::run()
             //STEP 5: simplex to find a new center
             VortexData vortexData;
             vortexData.setTime(newVolume->getDateTime());
-            for(int ll=0;ll<vortexData.getMaxLevels();ll++){
-                vortexData.setLat(ll,_firstGuessLat);
-                vortexData.setLon(ll,_firstGuessLon);
-            }
             SimplexThread* pSimplex=new SimplexThread();
             pSimplex->initParam(configData,gridData,_firstGuessLat,_firstGuessLon);
             pSimplex->findCenter(&_simplexList);
@@ -132,23 +136,29 @@ void workThread::run()
                 ChooseCenter *centerFinder = new ChooseCenter(configData,&_simplexList,&vortexData);
                 centerFinder->findCenter();
                 delete centerFinder;
-
+                if(GriddedData::getCartesianDistance(_firstGuessLat,_firstGuessLon,vortexData.getLat(0),vortexData.getLon(0))>50.0f){
+                    Message newMsg(QString(),5,this->objectName(),
+                                   Yellow,"Center Not Found");
+                    emit log(newMsg);
+                }
+                else{
+                    Message newMsg(QString(),5,this->objectName(),
+                                   Green,"Center Found");
+                    emit log(newMsg);
+                }
+            } else {
+                for(int ll=0;ll<vortexData.getMaxLevels();ll++){
+                    vortexData.setLat(ll,_firstGuessLat);
+                    vortexData.setLon(ll,_firstGuessLon);
+                    vortexData.setHeight(ll, ll+1);
+                    Message newMsg(QString(),5,this->objectName(),
+                                   Yellow,"Center Not Found");
+                    emit log(newMsg);
+                }
             }
         if(abort) break;
-            float simplexLat=vortexData.getLat(0);
-            float simplexLon=vortexData.getLon(0);
-            if(GriddedData::getCartesianDistance(_firstGuessLat,_firstGuessLon,simplexLat,simplexLon)>50.0f){
-                simplexLat=_firstGuessLat;
-                simplexLon=_firstGuessLon;
-                Message newMsg(QString(),0,this->objectName(),
-                               Yellow,"Center Not Found");
-                emit log(newMsg);
-            }
-            else{
-                Message newMsg(QString(),0,this->objectName(),
-                               Green,"Center Found");
-                emit log(newMsg);
-            }
+            float simplexLat = vortexData.getLat(0);
+            float simplexLon = vortexData.getLon(0);
             QDomElement radar = configData->getConfig("radar");
             QDomElement simplex = configData->getConfig("center");
             QDomElement vtd   = configData->getConfig("vtd");
@@ -164,14 +174,7 @@ void workThread::run()
             emit newCappiInfo(xPercent, yPercent, rmwEstimate, sMin, sMax, vMax, _firstGuessLat, _firstGuessLon, simplexLat, simplexLon);
             delete [] xyValues;
         if(abort) break;
-            //STEP 6: GBVTD to calculate the wind
-            //if simplex algorithm successfully find the center, then perform the GBVTD
-            VortexThread* pVtd=new VortexThread();
-            pVtd->getWinds(configData,gridData,newVolume,&vortexData,&_pressureList);
-            delete pVtd;
-            _vortexList.append(vortexData);
-        if(abort) break;
-            //STEP 7: Check for new pressure data to process while we are analyzing the current volume
+            //STEP 6: Check for new pressure data to process for the current volume
             if(pressureSource->hasUnprocessedData()) {
                 // Create a list of new pressure observations that have not yet been processed
                 QList<PressureData>* newObs = pressureSource->getUnprocessedData();
@@ -188,13 +191,29 @@ void workThread::run()
                     }
                 }
                 delete newObs;
-
+            }
+        if(abort) break;
+            //STEP 7: GBVTD to calculate the wind
+            //if simplex algorithm successfully find the center, then perform the GBVTD
+            VortexThread* pVtd=new VortexThread();
+            if (mode == "operational") {
+                pVtd->setEnvPressure(atcf->getEnvPressure());
+                pVtd->setOuterRadius(atcf->getOuterRadius());
+            }
+            pVtd->getWinds(configData,gridData,newVolume,&vortexData,&_pressureList);
+            delete pVtd;
+            if (vortexData.getMaxValidRadius() != -999) {
+                _vortexList.append(vortexData);
+            } else  {
+                QString status = "No Central Pressure Estimate at " + vortexData.getTime().toString("hh:mm");
+                Message newMsg(status,0,this->objectName(),Yellow,"Pressure Not Found");
+                emit log(newMsg);
             }
             checkIntensification();
         if(abort) break;
             //STEP 8: finish a round of analysis, clear up
             emit vortexListUpdate(&_vortexList);
-            emit log(Message(QString("Completed Analysis On Volume "+newVolume->getFileName()),100,this->objectName(),Green));
+            emit log(Message(QString("Completed Analysis On Volume "+newVolume->getFileName()),100,this->objectName()));
             delete newVolume;
             delete gridFactory;
             delete gridData;
@@ -209,7 +228,6 @@ void workThread::run()
             sleep(2);
         }
     }
-    emit log(Message(QString("workThread Finished"),-1,this->objectName()));
     delete dataSource;
     delete pressureSource;
 }

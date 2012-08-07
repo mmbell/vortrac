@@ -356,19 +356,26 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
             }
         }
     }
-
-    maxApp = fabs(minVel);
-    maxRec = fabs(maxVel);
-    //Message::toScreen("maxVel is "+QString().setNum(maxVel)+" minVel is "+QString().setNum(minVel));
     float velRange;
-    if(maxVel>fabs(minVel)) {
-        velRange = 2*maxVel;
-        minVel = -1*maxVel;
+    if (maxVel == -9999) {
+        // No winds in domain
+        maxApp = 0;
+        maxRec = 0;
+        velRange = 2;
+        maxVel = 1;
+    } else {
+        maxApp = fabs(minVel);
+        maxRec = fabs(maxVel);
+        if(maxVel>fabs(minVel)) {
+            velRange = 2*maxVel;
+            minVel = -1*maxVel;
+        }
+        else {
+            velRange = 2*fabs(minVel);
+            maxVel = -1*minVel;
+        }
     }
-    else {
-        velRange = 2*fabs(minVel);
-        maxVel = -1*minVel;
-    }
+    //Message::toScreen("maxVel is "+QString().setNum(maxVel)+" minVel is "+QString().setNum(minVel));
     velIncr = velRange/41;
     // Set each pixel color scaled to the max and min ranges
     for (float i = 0; i < iDim; i++) {

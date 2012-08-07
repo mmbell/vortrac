@@ -33,13 +33,15 @@ public:
     float getEnvPressure() { return obEnvPressure; }
     float getOuterRadius() { return obOuterRadius; }
     float getRMW() { return obRMW; }
+    QString getStormName() { return stormName; }
     
 public slots:
     void catchLog(const Message& message);
 
 signals:
     void log(const Message& message);
-
+    void tcvitalsReady();
+    
 private:
     Configuration *configData;
     
@@ -55,7 +57,7 @@ private:
     QString stormName;
     float obLat, obLon, obDir, obSpd;
     float obCentralPressure, obEnvPressure, obOuterRadius, obRMW;
-
+    QFile vitalsfile;
 };
 
 #endif

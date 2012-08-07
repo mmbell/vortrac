@@ -70,8 +70,6 @@ void VortexThread::getWinds(Configuration *wholeConfig, GriddedData *dataPtr, Ra
 void VortexThread::run()
 {
 
-    emit log(Message(QString(),0,this->objectName(),Green));
-
     // Initialize variables
     readInConfig();
 
@@ -101,16 +99,16 @@ void VortexThread::run()
     if(closure.contains(QString("hvvp"),Qt::CaseInsensitive)) {
         if(calcHVVP(true)) {
             vtd = new GBVTD(geometry, closure, maxWave, dataGaps, hvvpResult);
-            emit log(Message(QString(),6,this->objectName(),Green));
+            //emit log(Message(QString(),6,this->objectName(),Green));
         }
         else {
-            emit log(Message(QString(),6,this->objectName(),Yellow,QString("Could Not Retrieve HVVP Wind")));
+            emit log(Message(QString(),5,this->objectName(),Yellow,QString("Could Not Retrieve HVVP Wind")));
             vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
         }
     }
     else {
         vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
-        emit log(Message(QString(),6,this->objectName(),Green));
+        emit log(Message(QString(),5,this->objectName()));
     }
     Coefficient* vtdCoeffs = new Coefficient[20];
 
@@ -132,7 +130,7 @@ void VortexThread::run()
         float referenceLon = vortexData->getLon(h);
         gridData->setAbsoluteReferencePoint(referenceLat, referenceLon, height);
         if ((gridData->getRefPointI() < 0) ||(gridData->getRefPointJ() < 0) ||(gridData->getRefPointK() < 0)) {
-            emit log(Message(QString("Simplex center is outside CAPPI"),0,this->objectName()));
+            emit log(Message(QString("Simplex center is outside CAPPI"),0,this->objectName(),Yellow));
             continue;
         }
 
@@ -155,7 +153,7 @@ void VortexThread::run()
                 if (vtdCoeffs[0].getParameter() == "VTC0") {
                     // VT[v] = vtdCoeffs[0].getValue();
                 } else {
-                    emit log(Message(QString("Error retrieving VTC0 in vortex!"),0,this->objectName()));
+                    emit log(Message(QString("Error retrieving VTC0 in vortex!"),0,this->objectName(), Yellow));
                 }
             } else {
                 QString err("Insufficient data for VTD winds: radius ");
@@ -174,7 +172,7 @@ void VortexThread::run()
         }
 
     }
-    emit log(Message(QString(),endPercent,this->objectName()));
+    emit log(Message(QString(),15,this->objectName()));
 
 
     // Clean up
@@ -280,7 +278,14 @@ void VortexThread::calcCentralPressure(VortexData* vortex, float* pD, float heig
 
     int heightIndex = vortex->getHeightIndex(height);
     float centralPressure = 0;
-
+    float pressureDeficit = pD[(int)lastRing] - pD[0];
+    if (pressureDeficit == 0) {
+        // No analysis, so return -999
+        vortex->setPressure(-999);
+        vortex->setPressureDeficit(-999);
+        return;
+    }
+    
     // Sum values to hold pressure estimates
     float pressWeightSum = 0;
     float pressSum = 0;
@@ -333,6 +338,24 @@ void VortexThread::calcCentralPressure(VortexData* vortex, float* pD, float heig
         }
     }
 
+    if (envPressure != -999) {
+        float pPrimeOuter;
+        if (maxObRadius >= lastRing) {
+            pPrimeOuter = pD[(int)lastRing];
+        } else {
+            pPrimeOuter = pD[(int)maxObRadius];
+        }
+        float cpEstimate = envPressure - (pPrimeOuter - pD[0]);
+        float weight = 1.0;
+        
+        // Sum the estimate and save the value for Std Dev calculation
+        pressWeightSum += weight;
+        pressSum += (weight * cpEstimate);
+        pressEstimates[numEstimates] = cpEstimate;
+        weightEstimates[numEstimates] = weight;
+        numEstimates++;
+
+    }
     if (numEstimates > 0)
         centralPressure = pressSum/pressWeightSum;
     else

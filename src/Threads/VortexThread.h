@@ -33,7 +33,9 @@ class VortexThread : public QObject
   ~VortexThread();
   void getWinds(Configuration *wholeConfig, GriddedData *dataPtr, RadarData *radarPtr, VortexData *vortexPtr, PressureList *pressurePtr);
   void run();
-
+    void setEnvPressure(const float& pressure) { envPressure = pressure; }
+    void setOuterRadius(const float& radius) { maxObRadius = radius; }
+    
  public slots:
      void catchLog(const Message& message);
    
@@ -68,7 +70,8 @@ class VortexThread : public QObject
      float maxObTimeDiff;
      float hvvpResult;
      float hvvpUncertainty;
-     
+     float envPressure;
+     float outerRadius;
      int numEstimates;
      QList<PressureData> _presObs;
 

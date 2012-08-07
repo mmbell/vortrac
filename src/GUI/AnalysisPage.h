@@ -94,7 +94,8 @@ private slots:
     bool getRemoteData();
     bool saveRemoteData(QNetworkReply *reply);
     void openConfigDialog();
-
+    void updateTcvitals();
+    
 protected:
     void closeEvent(QCloseEvent *event);
 

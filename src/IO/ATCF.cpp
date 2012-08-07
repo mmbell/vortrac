@@ -18,6 +18,9 @@ ATCF::ATCF(Configuration* config, QObject *parent) : QObject(parent)
     configData = config;
     connect(&tcvitals_manager, SIGNAL(finished(QNetworkReply*)),
             SLOT(saveTcvitals(QNetworkReply*)));
+    stormName = "Unknown";
+    obLat = obLon = obDir = obSpd = 
+    obCentralPressure = obEnvPressure = obOuterRadius = obRMW = -999.0;
 }
 
 ATCF::~ATCF()
@@ -37,8 +40,17 @@ void ATCF::catchLog(const Message& message)
 
 bool ATCF::getTcvitals()
 {
-    QString dataurl = "atcf/com/tcvitals";
-    QString server = "http://ftp.nhc.noaa.gov/";
+    QDomElement vortex = configData->getConfig("vortex");
+    QString stormId = configData->getParam(vortex,"id");
+    QString dataurl = "atcf/com/";
+    if (stormId.contains("L")) {
+        stormId.chop(1);
+        dataurl += "al" + stormId + "2012-tcvitals.dat";
+    } else if (stormId.contains("E")) {
+        stormId.chop(1);
+        dataurl += "ep" + stormId + "2012-tcvitals.dat";
+    } 
+    QString server = configData->getParam(vortex,"atcfurl");
     QString url = server + dataurl;
     QUrl fileurl = QUrl(url);
     QNetworkRequest request(fileurl);
@@ -61,14 +73,14 @@ bool ATCF::saveTcvitals(QNetworkReply *reply)
         QDomElement vortex = configData->getConfig("vortex");
         QString localpath = configData->getParam(vortex,"dir");
         QDir dataPath(localpath);
-        QFile file(dataPath.absolutePath() + "/" + filename);
-        if (!file.open(QIODevice::WriteOnly)) {
+        vitalsfile.setFileName(dataPath.absolutePath() + "/" + filename);
+        if (!vitalsfile.open(QIODevice::WriteOnly)) {
             emit log(Message(QString("Problem saving tcvitals"),0,this->objectName(),Yellow,QString("Problem with remote data")));
             return false;
         }
         
-        file.write(reply->readAll());
-        file.close();
+        vitalsfile.write(reply->readAll());
+        vitalsfile.close();
         reply->deleteLater();
         QString msg = "tcvitals file downloaded successfully";
         emit log(Message(msg,0,this->objectName()));
@@ -79,17 +91,13 @@ bool ATCF::saveTcvitals(QNetworkReply *reply)
 
 bool ATCF::parseTcvitals()
 {
-    QDomElement vortex = configData->getConfig("vortex");
-    QString localpath = configData->getParam(vortex,"dir");
-    QDir dataPath(localpath);
-    QFile file(dataPath.absolutePath() + "/tcvitals");
-    if (!file.open(QIODevice::ReadOnly)) {
+    if (!vitalsfile.open(QIODevice::ReadOnly)) {
         emit log(Message(QString("Problem reading tcvitals"),0,this->objectName(),Yellow,QString("Problem with remote data")));
         return false;
     }
-    
+    QDomElement vortex = configData->getConfig("vortex");
     QString stormId = configData->getParam(vortex,"id");
-    QTextStream tcvitals(&file);
+    QTextStream tcvitals(&vitalsfile);
     while (!tcvitals.atEnd()) {
         QString line = tcvitals.readLine();
         QStringList vitals = line.split(QRegExp("\\s+"));
@@ -130,7 +138,8 @@ bool ATCF::parseTcvitals()
             obRMW = vitals.at(13).toFloat();
         }
     }
-    file.close();
+    vitalsfile.close();
+    emit tcvitalsReady();
     return true;
 }
 
