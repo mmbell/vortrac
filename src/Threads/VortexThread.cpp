@@ -579,6 +579,7 @@ void VortexThread::readInConfig()
         maxObTimeDiff = 59 * 60;
     }
     gradientHeight = firstLevel;
+    envPressure = -999;
 }
 
 bool VortexThread::calcHVVP(bool printOutput)

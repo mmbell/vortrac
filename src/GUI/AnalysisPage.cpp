@@ -537,13 +537,25 @@ void AnalysisPage::runThread()
 
 void AnalysisPage::updateTcvitals()
 {
-    // Get name from ATCF
+    // Get info from ATCF
+    QDomElement vortex = configData->getConfig("vortex");
     QString vortexName = atcf->getStormName();
-    configData->setParam(configData->getConfig("vortex"), "name", vortexName);
-    
+    configData->setParam(vortex, "name", vortexName);
+    QString lat = QString().setNum(atcf->getLatitude(atcf->getTime()));
+    configData->setParam(vortex, "lat", lat);
+    QString lon = QString().setNum(atcf->getLongitude(atcf->getTime()));
+    configData->setParam(vortex, "lon", lon);
+    QString dir = QString().setNum(atcf->getDirection());
+    configData->setParam(vortex, "direction", dir);
+    QString speed = QString().setNum(atcf->getSpeed());
+    configData->setParam(vortex, "speed", speed);
     QString rmw = QString().setNum(atcf->getRMW());
-    configData->setParam(configData->getConfig("vortex"), "rmw", rmw);
-
+    configData->setParam(vortex, "rmw", rmw);
+    QString date = atcf->getTime().toString("yyyy-MM-dd");
+    configData->setParam(vortex, "date", date);
+    QString time = atcf->getTime().toString("hh:mm:ss");
+    configData->setParam(vortex, "time", time);
+    
     configDialog->checkConfig();
     if(!configDialog->checkPanels()) {
         QMessageBox errCfg;

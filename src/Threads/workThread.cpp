@@ -117,6 +117,7 @@ void workThread::run()
             emit newCappi(gridData);
         if(abort) break;
             //STEP 5: simplex to find a new center
+            emit log(Message("Finding center",1,this->objectName()));
             VortexData vortexData;
             vortexData.setTime(newVolume->getDateTime());
             SimplexThread* pSimplex=new SimplexThread();
@@ -195,6 +196,7 @@ void workThread::run()
         if(abort) break;
             //STEP 7: GBVTD to calculate the wind
             //if simplex algorithm successfully find the center, then perform the GBVTD
+            emit log(Message("Estimating pressure",1,this->objectName()));
             VortexThread* pVtd=new VortexThread();
             if (mode == "operational") {
                 pVtd->setEnvPressure(atcf->getEnvPressure());

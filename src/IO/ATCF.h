@@ -33,7 +33,10 @@ public:
     float getEnvPressure() { return obEnvPressure; }
     float getOuterRadius() { return obOuterRadius; }
     float getRMW() { return obRMW; }
+    float getDirection() { return obDir; }
+    float getSpeed() { return obSpd; }
     QString getStormName() { return stormName; }
+    QDateTime getTime() { return obTime; }
     
 public slots:
     void catchLog(const Message& message);

@@ -120,7 +120,7 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
 
         float* stdError = new float[numCoeffs];
         if(!Matrix::lls(numCoeffs, numData, xLLS, yLLS, vtdStdDev, FourierCoeffs, stdError)) {
-            Message::toScreen("GBVTD Returned Nothing from LLS");
+            //Message::toScreen("GBVTD Returned Nothing from LLS");
             for (int i = 0; i<=numCoeffs-1; i++)
                 delete[] xLLS[i];
             delete[] yLLS;
