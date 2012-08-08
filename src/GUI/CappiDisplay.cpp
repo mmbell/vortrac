@@ -308,14 +308,14 @@ void CappiDisplay::resizeImage(QImage *image, const QSize &newSize)
     imageHolder.unlock();
 }
 
-void CappiDisplay::constructImage(const GriddedData* cappi)
+void CappiDisplay::constructImage(const GriddedData& cappi)
 {
     // Fill the pixmap with data from the cappi
     imageHolder.lock();
     //hasGBVTDInfo = false;
     image.fill(qRgb(255, 255, 255));
-    iDim = (int)cappi->getIdim();
-    jDim = (int)cappi->getJdim();
+    iDim = (int)cappi.getIdim();
+    jDim = (int)cappi.getJdim();
     QSize cappiSize((int)iDim,(int)jDim);
     image = image.scaled(cappiSize);
 
@@ -328,10 +328,10 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
     if(hasGBVTDInfo) {
         float xIndex = xPercent*iDim;
         float yIndex = yPercent*jDim;
-        minI = xIndex-(simplexMax*iDim*cappi->getIGridsp());
-        maxI = xIndex+(simplexMax*iDim*cappi->getIGridsp());
-        minJ = yIndex-(simplexMax*iDim*cappi->getJGridsp());
-        maxJ = yIndex+(simplexMax*iDim*cappi->getJGridsp());
+        minI = xIndex-(simplexMax*iDim*cappi.getIGridsp());
+        maxI = xIndex+(simplexMax*iDim*cappi.getIGridsp());
+        minJ = yIndex-(simplexMax*iDim*cappi.getJGridsp());
+        maxJ = yIndex+(simplexMax*iDim*cappi.getJGridsp());
     } else {
         minI = 0;
         maxI = iDim;
@@ -341,7 +341,7 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
 
     for (float i = minI; i < maxI; i++) {
         for (float j = minJ; j < maxJ; j++) {
-            float vel = cappi->getIndexValue(field,i,j,k);
+            float vel = cappi.getIndexValue(field,i,j,k);
             if (vel != -999) {
                 if (vel > maxVel) {
                     maxVel = vel;
@@ -380,7 +380,7 @@ void CappiDisplay::constructImage(const GriddedData* cappi)
     // Set each pixel color scaled to the max and min ranges
     for (float i = 0; i < iDim; i++) {
         for (float j = 0; j < jDim; j++) {
-            float vel = cappi->getIndexValue(field,i,j,k);
+            float vel = cappi.getIndexValue(field,i,j,k);
             int color = 1;
             if (vel == -999) {
                 color = 0;

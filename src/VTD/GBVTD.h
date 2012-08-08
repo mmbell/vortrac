@@ -41,7 +41,6 @@ private:
     float* psi;
     float thetaT;
     float centerDistance;
-    int numCoeffs;
     float level;
     float* FourierCoeffs;
 

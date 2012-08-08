@@ -114,7 +114,7 @@ void workThread::run()
             GriddedData* gridData=gridFactory->makeCappi(newVolume,configData,&_firstGuessLat,&_firstGuessLon);
             gridData->writeAsi();
             emit log(Message("Done with Cappi",15,this->objectName()));
-            emit newCappi(gridData);
+            emit newCappi(*gridData);
         if(abort) break;
             //STEP 5: simplex to find a new center
             emit log(Message("Finding center",1,this->objectName()));
@@ -249,7 +249,7 @@ void workThread::catchVCP(const int vcp)
     emit newVCP(vcp);
 }
 
-void workThread::catchCappi(const GriddedData* cappi)
+void workThread::catchCappi(const GriddedData& cappi)
 {
     emit newCappi(cappi);
 }

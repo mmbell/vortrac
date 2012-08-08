@@ -41,7 +41,7 @@ public:
 public slots:
     void catchLog(const Message& message);
     void catchVCP(const int vcp);
-    void catchCappi(const GriddedData* cappi);
+    void catchCappi(const GriddedData& cappi);
     void catchCappiInfo(float x,float y,float rmwEstimate,float sMin,float sMax,float vMax,
                         float userLat,float userLon,float lat,float lon);
     void setOnlyRunOnce(const bool newRunOnce = true);
@@ -51,7 +51,7 @@ signals:
     void log(const Message& message);
     void newVCP(const int);
     void vortexListUpdate(VortexList* list);
-    void newCappi(const GriddedData* cappi);
+    void newCappi(const GriddedData& cappi);
     void newCappiInfo(float x,float y,float rmwEstimate,float sMin,float sMax,float vMax,
                       float userLat,float userLon,float lat,float lon);
 

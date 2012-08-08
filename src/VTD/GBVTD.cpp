@@ -88,7 +88,7 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
         numData = goodCount;
 
         // Get the maximum number of coefficients for the given data distribution and geometry
-        numCoeffs = getNumCoefficients(numData);
+        int numCoeffs = getNumCoefficients(numData);
 
         if (numCoeffs == 0) {
             // Too much missing data, set everything to 0 and return
@@ -261,11 +261,11 @@ int GBVTD::getNumCoefficients(int& numData)
 
     // Find the data gaps
     bool degreeSector[360];
-    for (int i=0; i<=360; i++) degreeSector[i]=false;
+    for (int i=0; i<360; i++) degreeSector[i]=false;
 
     for (int i=0; i<=numData-1; i++) {
         int j = int(psi[i]*RAD2DEG);
-        if (j > 360) j = j - 360;
+        if (j > 359) j = j - 360;
         degreeSector[j] = true;
     }
 

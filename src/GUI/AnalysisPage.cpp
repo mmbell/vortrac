@@ -480,7 +480,7 @@ void AnalysisPage::runThread()
 
     connect(pollThread, SIGNAL(log(const Message&)),this, SLOT(catchLog(const Message&)));
     connect(pollThread, SIGNAL(newVCP(const int)),diagPanel, SLOT(updateVCP(const int)));
-    connect(pollThread, SIGNAL(newCappi(const GriddedData*)),cappiDisplay, SLOT(constructImage(const GriddedData*)),Qt::DirectConnection);
+    connect(pollThread, SIGNAL(newCappi(GriddedData)),cappiDisplay, SLOT(constructImage(GriddedData)),Qt::DirectConnection);
 
     connect(pollThread, SIGNAL(newCappiInfo(float, float, float, float, float, float, float ,float ,float, float)),
             this, SLOT(updateCappiInfo(float, float, float, float, float, float, float ,float ,float, float)),Qt::DirectConnection);
