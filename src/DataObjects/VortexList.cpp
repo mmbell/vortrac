@@ -57,7 +57,7 @@ bool VortexList::saveXML()
         tmpStr.sprintf("%6.2f,%6.2f,%6.2f",record.getLat(),record.getLon(),record.getHeight());
         xmlWriter.writeTextElement("center", tmpStr);
 
-        //maxVT, RMW, Pressure, Pressure deficit
+        //maxVT, RMW, Pressure, Pressure deficit (check for uninitialized)
         tmpStr.sprintf("%6.2f,%6.2f,%6.2f,%6.2f",record.getMaxVT(),record.getRMW(),record.getPressure(),record.getPressureDeficit());
         xmlWriter.writeTextElement("strength",tmpStr);
         xmlWriter.writeEndElement();

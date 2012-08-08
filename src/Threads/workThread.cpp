@@ -405,7 +405,6 @@ void workThread::_latlonFirstGuess(RadarData* radarVolume)
         float *extrapLatLon = GriddedData::getAdjustedLatLon(initLat,initLon, changeInX, changeInY);
         _firstGuessLat=extrapLatLon[0];
         _firstGuessLon=extrapLatLon[1];
-        delete [] extrapLatLon;
         
         //if there is a vortex result,try to extrapolation from this record
         if (!_vortexList.isEmpty()) {
@@ -430,6 +429,8 @@ void workThread::_latlonFirstGuess(RadarData* radarVolume)
             delete [] newLatLon;
 
         }
+        delete [] extrapLatLon;
+
     } else if (mode == "operational") {
         _firstGuessLat = atcf->getLatitude(volDateTime);
         _firstGuessLon = atcf->getLongitude(volDateTime);
