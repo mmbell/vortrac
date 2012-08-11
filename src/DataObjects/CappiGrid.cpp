@@ -105,14 +105,14 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 
     // Calculate radius of influence
     float hROI = 1.0;
-    //float vROI = 2.0;
+    float vROI = 2.0;
     float xRadius = (iGridsp * iGridsp) * (hROI*hROI);
     float yRadius = (jGridsp * jGridsp) * (hROI*hROI);
-    //float zRadius = (kGridsp * kGridsp) * (vROI*vROI);
-    float RSquare = xRadius + yRadius; // + zRadius;
+    float zRadius = (kGridsp * kGridsp) * (vROI*vROI);
+    float RSquare = xRadius + yRadius + zRadius;
     int maxIplus = (int)(RSquare/iGridsp);
     int maxJplus = (int)(RSquare/jGridsp);
-    //int maxKplus = (int)(RSquare/kGridsp);
+    int maxKplus = (int)(RSquare/kGridsp);
 
     // Initialize weights
     for (int k = 0; k < int(kDim); k++) {
@@ -169,28 +169,27 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
                 float j = (y - ymin)/jGridsp;
                 float k = (z - zmin)/kGridsp;
                 float RSquareLinear = RSquare*range*range / 30276.0;
-                //for (int kplus = -maxKplus; kplus <= maxKplus; kplus++) {
+                for (int kplus = -maxKplus; kplus <= maxKplus; kplus++) {
                 for (int jplus = -maxJplus; jplus <= maxJplus; jplus++) {
                     for (int iplus = -maxIplus; iplus <= maxIplus; iplus++) {
                         int iIndex = (int)(i+iplus);
                         int jIndex = (int)(j+jplus);
-                        //int kIndex = (int)(k+kplus);
-                        int kIndex = 0;
+                        int kIndex = (int)(k+kplus);
                         if ((iIndex < 0) or (iIndex > (int)iDim)) { continue; }
                         if ((jIndex < 0) or (jIndex > (int)jDim)) { continue; }
                         if ((kIndex < 0) or (kIndex > (int)kDim)) { continue; }
 
                         float dx = (i - (int)(i+iplus))*iGridsp;
                         float dy = (j - (int)(j+jplus))*jGridsp;
-                        // float dz = (k - (int)(k+kplus))*kGridsp;
-                        float rSquare = (dx*dx) + (dy*dy); // + (dz*dz);
+                        float dz = (k - (int)(k+kplus))*kGridsp;
+                        float rSquare = (dx*dx) + (dy*dy) + (dz*dz);
                         if (rSquare > RSquareLinear) { continue; }
                         float weight = (RSquareLinear - rSquare) / (RSquareLinear + rSquare);
                         refValues[iIndex][jIndex][kIndex].weight += weight;
                         refValues[iIndex][jIndex][kIndex].sumRef += weight*refData[g];
                     }
                 }
-                //}
+                }
             }
 
         }
@@ -217,28 +216,29 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
                 // Looks like a good point, find its closest Cartesian index
                 float i = (x - xmin)/iGridsp;
                 float j = (y - ymin)/jGridsp;
+                float k = (z - zmin)/kGridsp;
                 float RSquareLinear = RSquare; //* range*range / 30276.0;
+                for (int kplus = -maxKplus; kplus <= maxKplus; kplus++) {
                 for (int jplus = -maxJplus; jplus <= maxJplus; jplus++) {
                     for (int iplus = -maxIplus; iplus <= maxIplus; iplus++) {
                         int iIndex = (int)(i+iplus);
                         int jIndex = (int)(j+jplus);
-                        //int kIndex = (int)(k+kplus);
-                        // Hard-code single level only
-                        int kIndex = 0;
+                        int kIndex = (int)(k+kplus);
                         if ((iIndex < 0) or (iIndex >= (int)iDim)) { continue; }
                         if ((jIndex < 0) or (jIndex >= (int)jDim)) { continue; }
                         if ((kIndex < 0) or (kIndex >= (int)kDim)) { continue; }
 
                         float dx = (i - (int)(i+iplus))*iGridsp;
                         float dy = (j - (int)(j+jplus))*jGridsp;
-                        //float dz = (k - (int)(k+kplus))*kGridsp;
-                        float rSquare = (dx*dx) + (dy*dy); // + (dz*dz);
+                        float dz = (k - (int)(k+kplus))*kGridsp;
+                        float rSquare = (dx*dx) + (dy*dy) + (dz*dz);
                         if (rSquare > RSquareLinear) { continue; }
                         float weight = (100*nyquist) *(RSquareLinear - rSquare) / (RSquareLinear + rSquare);
                         velValues[iIndex][jIndex][kIndex].weight += weight;
                         velValues[iIndex][jIndex][kIndex].sumVel += weight*velData[g];
                         if (swData != NULL) velValues[iIndex][jIndex][kIndex].sumSw += weight*swData[g];
                     }
+                }
                 }
             }
 
@@ -307,21 +307,22 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
                     // Looks like a good point, find its closest Cartesian index
                     float i = (x - xmin)/iGridsp;
                     float j = (y - ymin)/jGridsp;
+                    float k = (z - zmin)/kGridsp;
                     float RSquareLinear = RSquare; //* range*range / 30276.0;
+                    for (int kplus = -maxKplus; kplus <= maxKplus; kplus++) {
                     for (int jplus = -maxJplus; jplus <= maxJplus; jplus++) {
                         for (int iplus = -maxIplus; iplus <= maxIplus; iplus++) {
                             int iIndex = (int)(i+iplus);
                             int jIndex = (int)(j+jplus);
-                            //int kIndex = (int)(k+kplus);
-                            // Hard-code single level only
-                            int kIndex = 0;
+                            int kIndex = (int)(k+kplus);
                             if ((iIndex < 0) or (iIndex >= (int)iDim)) { continue; }
                             if ((jIndex < 0) or (jIndex >= (int)jDim)) { continue; }
                             if ((kIndex < 0) or (kIndex >= (int)kDim)) { continue; }
 
                             float dx = (i - (int)(i+iplus))*iGridsp;
                             float dy = (j - (int)(j+jplus))*jGridsp;
-                            float rSquare = (dx*dx) + (dy*dy); // + (dz*dz);
+                            float dz = (k - (int)(k+kplus))*kGridsp;
+                            float rSquare = (dx*dx) + (dy*dy) + (dz*dz);
                             if (rSquare > RSquareLinear) { continue; }
                             float avgCappi = 0;
                             float quadcount = 0;
@@ -357,6 +358,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
                             velValues[iIndex][jIndex][kIndex].weight += weight;
                             velValues[iIndex][jIndex][kIndex].sumVel += weight*newVel;
                         }
+                    }
                     }
                 }
 
