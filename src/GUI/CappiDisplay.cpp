@@ -21,6 +21,7 @@ CappiDisplay::CappiDisplay(QWidget *parent)
     setAttribute(Qt::WA_StaticContents);
     PaintEngineMode = -5;
     connect(this, SIGNAL(hasImage(bool)),this, SLOT(setVisible(bool)));
+    displayType = velocity;
     
     backColor = qRgb(255,255,255);
     legendImage = QImage(10,50,QImage::Format_RGB32);
@@ -28,8 +29,8 @@ CappiDisplay::CappiDisplay(QWidget *parent)
     minVel = 0;
     maxRec = 0;
     maxApp = 0;
-    velIncr = 1;
-
+    contourIncr = 1;
+    
     //Set the palette
     imageHolder.lock();
     
@@ -132,6 +133,7 @@ CappiDisplay::CappiDisplay(QWidget *parent)
     imageHolder.unlock();
 
     hasGBVTDInfo = false;
+    hasCappi = false;
 
     this->clearImage();
     emit hasImage(true);
@@ -211,7 +213,13 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
     QFont legendFont("Times",7);
     imagePainter->setFont(legendFont);
     for(int i = 0; i < 42; i+=2) {
-        imagePainter->drawText(QPoint((int)(2.5*boxHeight), (int)(offset+(i*boxHeight)+(.7*boxHeight))), QString().setNum(maxVel-i*velIncr, 'f', 0));
+        float label;
+        if (displayType == velocity){
+            label = maxVel-i*contourIncr;
+        } else {
+            label = 50 - i*contourIncr;
+        }
+        imagePainter->drawText(QPoint((int)(2.5*boxHeight), (int)(offset+(i*boxHeight)+(.7*boxHeight))), QString().setNum(label, 'f', 0));
     }
 
     if(imagePainter->isActive())
@@ -311,6 +319,8 @@ void CappiDisplay::resizeImage(QImage *image, const QSize &newSize)
 void CappiDisplay::constructImage(const GriddedData& cappi)
 {
     // Fill the pixmap with data from the cappi
+    currentCappi = cappi;
+    hasCappi = true;
     imageHolder.lock();
     //hasGBVTDInfo = false;
     image.fill(qRgb(255, 255, 255));
@@ -323,7 +333,8 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
     maxVel = -9999;
     minVel= 9999;
     float k = 0;
-    QString field("ve");
+    QString velfield("ve");
+    QString dbzfield("dz");
     float minI, maxI, minJ, maxJ;
     if(hasGBVTDInfo) {
         float xIndex = xPercent*iDim;
@@ -338,10 +349,10 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
         minJ = 0;
         maxJ = jDim;
     }
-
+    
     for (float i = minI; i < maxI; i++) {
         for (float j = minJ; j < maxJ; j++) {
-            float vel = cappi.getIndexValue(field,i,j,k);
+            float vel = cappi.getIndexValue(velfield,i,j,k);
             if (vel != -999) {
                 if (vel > maxVel) {
                     maxVel = vel;
@@ -376,16 +387,26 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
         }
     }
     //Message::toScreen("maxVel is "+QString().setNum(maxVel)+" minVel is "+QString().setNum(minVel));
-    velIncr = velRange/41;
+    QString field;
+    float minValue;
+    if (displayType == velocity) {
+        contourIncr = velRange/41;
+        field = velfield;
+        minValue = minVel;
+    } else if (displayType == reflectivity) {
+        contourIncr = 1.5;
+        field = dbzfield;
+        minValue = -11.5;
+    }
     // Set each pixel color scaled to the max and min ranges
     for (float i = 0; i < iDim; i++) {
         for (float j = 0; j < jDim; j++) {
-            float vel = cappi.getIndexValue(field,i,j,k);
+            float value = cappi.getIndexValue(field,i,j,k);
             int color = 1;
-            if (vel == -999) {
+            if (value == -999) {
                 color = 0;
             } else {
-                color = (int)((vel - minVel)/velIncr) + 2;
+                color = (int)((value - minValue)/contourIncr) + 2;
                 if ((color < 0) or (color > 43)) {
                     // Bad color
                     color = 1;
@@ -420,5 +441,16 @@ void CappiDisplay::setGBVTDResults(float x, float y,float rmw, float sMin, float
     hasGBVTDInfo = true;
     imageHolder.unlock();
     emit hasImage(true);
+    update();
+}
+
+void CappiDisplay::toggleRadarDisplay()
+{
+    if (displayType == velocity) {
+        displayType = reflectivity;
+    } else {
+        displayType = velocity;
+    }
+    if (hasCappi) constructImage(currentCappi);
     update();
 }

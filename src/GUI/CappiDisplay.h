@@ -38,6 +38,7 @@ public slots:
     void constructImage(const GriddedData& cappi);
     void setGBVTDResults(float x, float y,float rmwEstimate, float sMin, float sMax, float vMax,
                          float userlat, float userlon,float lat, float lon);
+    void toggleRadarDisplay();
 
 signals:
     void hasImage(bool imageAvailable);
@@ -61,16 +62,22 @@ private:
     float maxRec;
     float maxVel;
     float minVel;
-    float velIncr;
+    float contourIncr;
     bool hasGBVTDInfo;
+    bool hasCappi;
     float xPercent, yPercent;
     float radiusMaximumWind;
     float simplexMin, simplexMax;
     float vortexMax;
     float minVelXpercent, minVelYpercent;
     float maxVelXpercent, maxVelYpercent;
-
-
+    enum displayTypes {
+        velocity,
+        reflectivity,
+        spectrumWidth
+    };
+    int displayType;
+    GriddedData currentCappi;
 };
 
 #endif

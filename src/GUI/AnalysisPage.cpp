@@ -148,6 +148,11 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     lcdUserCenterLon->display(0);
     QLabel* lcdUserCenterLonLabel = new QLabel(tr("User Estimated TC Longitude"));
 
+    QGroupBox *fieldDisplay = new QGroupBox(tr("Radar display"));
+    QRadioButton *velocity = new QRadioButton(tr("Velocity"), fieldDisplay);
+    QRadioButton *reflectivity = new QRadioButton(tr("dBZ"), fieldDisplay);
+    velocity->setChecked(true);
+
     QVBoxLayout *appRecLayout = new QVBoxLayout();
     appRecLayout->addStretch();
     appRecLayout->addWidget(appMaxLabel, 0, Qt::AlignHCenter);
@@ -168,11 +173,17 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     appRecLayout->addWidget(lcdUserCenterLon, 0, Qt::AlignHCenter);
     appRecLayout->addStretch();
 
+    QVBoxLayout *fieldLayout = new QVBoxLayout;
+    fieldLayout->addWidget(velocity);
+    fieldLayout->addWidget(reflectivity);
+    fieldDisplay->setLayout(fieldLayout);
+
     QScrollArea* cappiBox = new QScrollArea;
     QHBoxLayout *cappiLayout = new QHBoxLayout(cappiBox);
     cappiLayout->addLayout(appRecLayout);
     cappiLayout->addStretch();
     cappiLayout->addWidget(cappiDisplay);
+    cappiLayout->addWidget(fieldDisplay);
     cappiLayout->addStretch();
 
     cappiBox->setLayout(cappiLayout);
@@ -256,6 +267,10 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     quickstart = new StartDialog(this, configData);
     connect(quickstart, SIGNAL(go()), this, SLOT(runThread()));
     connect(quickstart, SIGNAL(manual()), this, SLOT(openConfigDialog()));
+
+    // Connect the cappi toggle buttons
+    connect(velocity, SIGNAL(toggled(const bool)),
+            cappiDisplay, SLOT(toggleRadarDisplay()));
 
 }
 
