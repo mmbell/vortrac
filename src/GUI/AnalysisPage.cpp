@@ -69,20 +69,25 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 
     // Construct Analysis Page Layout
     deficitLabel = new QLabel(tr("Pressure Deficit From 0 km (mb):"));
-    currDeficit = new QLCDNumber;
-    currDeficit->setSegmentStyle(QLCDNumber::Flat);
+    currDeficit = new QLabel(tr("0"));
+    currDeficit->setFrameStyle(QFrame::StyledPanel);
     currDeficit->resize(100,100);
-
+    QFont font = currDeficit->font();
+    font.setPointSize(36);
+    currDeficit->setFont(font);
+    
     QLabel *pressureLabel = new QLabel(tr("Current Pressure (mb):"));
-    currPressure = new QLCDNumber;
-    currPressure->setSegmentStyle(QLCDNumber::Flat);
+    currPressure = new QLabel(tr("0"));
+    currPressure->setFrameStyle(QFrame::StyledPanel);
     currPressure->resize(100,100);
-
+    currPressure->setFont(font);
+    
     QLabel *rmwLabel = new QLabel(tr("Current RMW (km):"));
-    currRMW = new QLCDNumber;
-    currRMW->setSegmentStyle(QLCDNumber::Flat);
+    currRMW = new QLabel(tr("0"));
+    currRMW->setFrameStyle(QFrame::StyledPanel);
     currRMW->resize(100,100);
-
+    currRMW->setFont(font);
+    
     QGroupBox *pressureGraph = new QGroupBox;
 
     QPushButton *legend = new QPushButton("See Legend");
@@ -108,44 +113,52 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 
 
     //initialize cappi display
-    appMaxWind = new QLCDNumber();
-    appMaxWind->setSegmentStyle(QLCDNumber::Flat);
+    appMaxWind = new QLabel();
+    appMaxWind->setFrameStyle(QFrame::StyledPanel);
     appMaxWind->resize(100,100);
-    appMaxWind->display(cappiDisplay->getMaxApp());
+    font = appMaxWind->font();
+    font.setPointSize(24);
+    appMaxWind->setFont(font);
+    appMaxWind->setText(QString().setNum(cappiDisplay->getMaxApp(),'f', 1));
     QLabel* appMaxLabel = new QLabel(tr("Maximum"));
     QLabel* appMaxLabel2 = new QLabel(tr("Approaching Wind (m/s)"));
 
-    recMaxWind = new QLCDNumber();
-    recMaxWind->setSegmentStyle(QLCDNumber::Flat);
+    recMaxWind = new QLabel();
+    recMaxWind->setFrameStyle(QFrame::StyledPanel);
     recMaxWind->resize(100,100);
-    recMaxWind->display(cappiDisplay->getMaxRec());
+    recMaxWind->setFont(font);
+    recMaxWind->setText(QString().setNum(cappiDisplay->getMaxRec(),'f', 1));
     QLabel* recMaxLabel = new QLabel(tr("Maximum"));
     QLabel* recMaxLabel2 = new QLabel(tr("Receding Wind (m/s)"));
     QLabel* emptyLabel = new QLabel();
     QLabel* emptyLabel2 = new QLabel();
 
-    lcdCenterLat = new QLCDNumber();
-    lcdCenterLat->setSegmentStyle(QLCDNumber::Flat);
+    lcdCenterLat = new QLabel();
+    lcdCenterLat->setFrameStyle(QFrame::StyledPanel);
     lcdCenterLat->resize(100,100);
-    lcdCenterLat->display(0);
+    lcdCenterLat->setFont(font);
+    lcdCenterLat->setText(QString().setNum(0));
     QLabel* lcdCenterLatLabel = new QLabel(tr("VORTRAC TC Latitude"));
 
-    lcdCenterLon = new QLCDNumber();
-    lcdCenterLon->setSegmentStyle(QLCDNumber::Flat);
+    lcdCenterLon = new QLabel();
+    lcdCenterLon->setFrameStyle(QFrame::StyledPanel);
     lcdCenterLon->resize(100,100);
-    lcdCenterLon->display(0);
+    lcdCenterLon->setFont(font);
+    lcdCenterLon->setText(QString().setNum(0));
     QLabel* lcdCenterLonLabel = new QLabel(tr("VORTRAC TC Longitude"));
 
-    lcdUserCenterLat = new QLCDNumber();
-    lcdUserCenterLat->setSegmentStyle(QLCDNumber::Flat);
+    lcdUserCenterLat = new QLabel();
+    lcdUserCenterLat->setFrameStyle(QFrame::StyledPanel);
     lcdUserCenterLat->resize(100,100);
-    lcdUserCenterLat->display(0);
+    lcdUserCenterLat->setFont(font);
+    lcdUserCenterLat->setText(QString().setNum(0));
     QLabel* lcdUserCenterLatLabel = new QLabel(tr("User Estimated TC Latitude"));
 
-    lcdUserCenterLon = new QLCDNumber();
-    lcdUserCenterLon->setSegmentStyle(QLCDNumber::Flat);
+    lcdUserCenterLon = new QLabel();
+    lcdUserCenterLon->setFrameStyle(QFrame::StyledPanel);
     lcdUserCenterLon->resize(100,100);
-    lcdUserCenterLon->display(0);
+    lcdUserCenterLon->setFont(font);
+    lcdUserCenterLon->setText(QString().setNum(0));
     QLabel* lcdUserCenterLonLabel = new QLabel(tr("User Estimated TC Longitude"));
 
     QGroupBox *fieldDisplay = new QGroupBox(tr("Radar display"));
@@ -629,21 +642,21 @@ void AnalysisPage::catchLog(const Message& message)
 void AnalysisPage::updateCappiInfo(float x, float y, float rmwEstimate, float sMin, float sMax, float vMax,
                                    float userCenterLat, float userCenterLon, float centerLat, float centerLon)
 {
-    lcdCenterLat->display(centerLat);
-    lcdCenterLon->display(centerLon);
-    lcdUserCenterLat->display(userCenterLat);
-    lcdUserCenterLon->display(userCenterLon);
+    lcdCenterLat->setText(QString().setNum(centerLat,'f', 2));
+    lcdCenterLon->setText(QString().setNum(centerLon,'f', 2));
+    lcdUserCenterLat->setText(QString().setNum(userCenterLat,'f', 2));
+    lcdUserCenterLon->setText(QString().setNum(userCenterLon,'f', 2));
 }
 
 void AnalysisPage::updateCappiDisplay(bool hasImage)
 {
     if(hasImage) {
-        appMaxWind->display(cappiDisplay->getMaxApp());
-        recMaxWind->display(cappiDisplay->getMaxRec());
+        appMaxWind->setText(QString().setNum(cappiDisplay->getMaxApp(),'f', 1));
+        recMaxWind->setText(QString().setNum(cappiDisplay->getMaxRec(),'f', 1));
     }
     else {
-        appMaxWind->display(0);
-        recMaxWind->display(0);
+        appMaxWind->setText(QString().setNum(0));
+        recMaxWind->setText(QString().setNum(0));
     }
 
 }
@@ -730,9 +743,9 @@ bool AnalysisPage::analyticModel()
 void AnalysisPage::pollVortexUpdate(VortexList* list)
 {
     if (list==NULL) {
-	currPressure->display(0);
-        currRMW->display(0);
-        currDeficit->display(0);
+        currPressure->setText(QString().setNum(0));
+        currRMW->setText(QString().setNum(0));
+        currDeficit->setText(QString().setNum(0));
         deficitLabel->setText(tr("Pressure Deficit Unavailable"));
         emit vortexListChanged(NULL);
 	return;
@@ -742,21 +755,21 @@ void AnalysisPage::pollVortexUpdate(VortexList* list)
 
         // Find the outermost vtd mean wind coefficient that is not equal to -999
         float maxRadius = list->last().getMaxValidRadius();
-        currPressure->display((int)list->last().getPressure());
+        currPressure->setText(QString().setNum((int)list->last().getPressure()));
 
         if(list->last().getAveRMW()==-999.0)
-            currRMW->display("0");
+            currRMW->setText(QString().setNum(0));
         else
-            currRMW->display(list->last().getAveRMW());
+            currRMW->setText(QString().setNum(list->last().getAveRMW()));
 
-        currDeficit->display(list->last().getPressureDeficit());
+        currDeficit->setText(QString().setNum(list->last().getPressureDeficit(), 'f', 1));
         deficitLabel->setText(tr("Pressure Deficit From ")+QString().setNum(maxRadius)+tr(" km (mb):"));
         emit vortexListChanged(list);
     }
     else {
-        currPressure->display(0);
-        currRMW->display(0);
-        currDeficit->display(0);
+        currPressure->setText(QString().setNum(0));
+        currRMW->setText(QString().setNum(0));
+        currDeficit->setText(QString().setNum(0));
         deficitLabel->setText(tr("Pressure Deficit Unavailable"));
         emit vortexListChanged(NULL);
     }

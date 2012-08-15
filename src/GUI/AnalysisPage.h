@@ -116,17 +116,17 @@ private:
     ConfigurationDialog *configDialog;
     QDir workingDirectory;
     QString imageFileName;
-    QLCDNumber *currPressure;
-    QLCDNumber *currRMW;
-    QLCDNumber *currDeficit;
+    QLabel *currPressure;
+    QLabel *currRMW;
+    QLabel *currDeficit;
     QTabWidget* visuals;
     CappiDisplay* cappiDisplay;
-    QLCDNumber *appMaxWind;
-    QLCDNumber *recMaxWind;
-    QLCDNumber *lcdCenterLat;
-    QLCDNumber *lcdCenterLon;
-    QLCDNumber *lcdUserCenterLat;
-    QLCDNumber *lcdUserCenterLon;
+    QLabel *appMaxWind;
+    QLabel *recMaxWind;
+    QLabel *lcdCenterLat;
+    QLabel *lcdCenterLon;
+    QLabel *lcdUserCenterLat;
+    QLabel *lcdUserCenterLon;
 
     QLabel* deficitLabel;
     QPushButton *runButton;
