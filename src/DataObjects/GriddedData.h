@@ -56,13 +56,13 @@ class GriddedData
   float getCartesianRefPointJ();
   float getCartesianRefPointK();
   
-  float getCartesianPointFromIndexI (const float& indexI);
-  float getCartesianPointFromIndexJ (const float& indexJ);
-  float getCartesianPointFromIndexK (const float& indexK);
+  float getCartesianPointFromIndexI (const float& indexI) const;
+  float getCartesianPointFromIndexJ (const float& indexJ) const;
+  float getCartesianPointFromIndexK (const float& indexK) const;
   
-  int getIndexFromCartesianPointI (const float& cartI);
-  int getIndexFromCartesianPointJ (const float& cartJ);
-  int getIndexFromCartesianPointK (const float& cartK);
+  int getIndexFromCartesianPointI (const float& cartI) const;
+  int getIndexFromCartesianPointJ (const float& cartJ) const;
+  int getIndexFromCartesianPointK (const float& cartK) const;
   
   // Return a 1D array of values
   float* getNativeData();

@@ -335,6 +335,7 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
     float k = 0;
     QString velfield("ve");
     QString dbzfield("dz");
+    QString heightfield("ht");
     float minI, maxI, minJ, maxJ;
     if(hasGBVTDInfo) {
         float xIndex = xPercent*iDim;
@@ -349,18 +350,22 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
         minJ = 0;
         maxJ = jDim;
     }
-    
+    float maxAppXindex, maxAppYindex, maxRecXindex, maxRecYindex;
     for (float i = minI; i < maxI; i++) {
         for (float j = minJ; j < maxJ; j++) {
             float vel = cappi.getIndexValue(velfield,i,j,k);
             if (vel != -999) {
                 if (vel > maxVel) {
                     maxVel = vel;
+                    maxAppXindex = i;
+                    maxAppYindex = j;
                     maxVelXpercent = (i+1)/iDim;
                     maxVelYpercent = (j+1)/jDim;
                 }
                 if (vel < minVel) {
                     minVel = vel;
+                    maxRecXindex = i;
+                    maxRecYindex = j;
                     minVelXpercent = (i+1)/iDim;
                     minVelYpercent = (j+1)/jDim;
                 }
@@ -385,6 +390,22 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
             velRange = 2*fabs(minVel);
             maxVel = -1*minVel;
         }
+        heightMaxApp = cappi.getIndexValue(heightfield,maxAppXindex,maxAppYindex,k);
+        heightMaxRec = cappi.getIndexValue(heightfield,maxRecXindex,maxRecYindex,k);
+        float cartI = cappi.getCartesianPointFromIndexI(maxAppXindex);
+        float cartJ = cappi.getCartesianPointFromIndexJ(maxAppYindex);
+        distMaxApp = sqrt(cartI*cartI + cartJ*cartJ);
+        dirMaxApp = atan2(cartJ,cartI)*57.2957795130823;
+        if (fabs(dirMaxApp) < 0.000001) { dirMaxApp=0.; }
+        if (dirMaxApp > 360.0) dirMaxApp -= 360.0;
+        if (dirMaxApp < 0.) dirMaxApp += 360.0;
+        cartI = cappi.getCartesianPointFromIndexI(maxRecXindex);
+        cartJ = cappi.getCartesianPointFromIndexJ(maxRecYindex);
+        distMaxRec = sqrt(cartI*cartI + cartJ*cartJ);
+        dirMaxRec = atan2(cartJ,cartI)*57.2957795130823;
+        if (fabs(dirMaxRec) < 0.000001) { dirMaxRec=0.; }
+        if (dirMaxRec > 360.0) dirMaxRec -= 360.0;
+        if (dirMaxRec < 0.) dirMaxRec += 360.0;
     }
     //Message::toScreen("maxVel is "+QString().setNum(maxVel)+" minVel is "+QString().setNum(minVel));
     QString field;

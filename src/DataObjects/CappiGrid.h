@@ -44,7 +44,7 @@ private:
     class goodVel {
     public:
         float sumVel;
-        float sumSw;
+        float height;
         float weight;
     };
 

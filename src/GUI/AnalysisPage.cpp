@@ -120,16 +120,16 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     font.setPointSize(24);
     appMaxWind->setFont(font);
     appMaxWind->setText(QString().setNum(cappiDisplay->getMaxApp(),'f', 1));
-    QLabel* appMaxLabel = new QLabel(tr("Maximum"));
-    QLabel* appMaxLabel2 = new QLabel(tr("Approaching Wind (m/s)"));
+    QLabel* appMaxLabel = new QLabel(tr("Maximum Approaching Wind (m/s)"));
+    appMaxLabel2 = new QLabel();
 
     recMaxWind = new QLabel();
     recMaxWind->setFrameStyle(QFrame::StyledPanel);
     recMaxWind->resize(100,100);
     recMaxWind->setFont(font);
     recMaxWind->setText(QString().setNum(cappiDisplay->getMaxRec(),'f', 1));
-    QLabel* recMaxLabel = new QLabel(tr("Maximum"));
-    QLabel* recMaxLabel2 = new QLabel(tr("Receding Wind (m/s)"));
+    QLabel* recMaxLabel = new QLabel(tr("Maximum Receding Wind (m/s)"));
+    recMaxLabel2 = new QLabel();
     QLabel* emptyLabel = new QLabel();
     QLabel* emptyLabel2 = new QLabel();
 
@@ -651,12 +651,27 @@ void AnalysisPage::updateCappiInfo(float x, float y, float rmwEstimate, float sM
 void AnalysisPage::updateCappiDisplay(bool hasImage)
 {
     if(hasImage) {
-        appMaxWind->setText(QString().setNum(cappiDisplay->getMaxApp(),'f', 1));
-        recMaxWind->setText(QString().setNum(cappiDisplay->getMaxRec(),'f', 1));
+        QChar deg(0x00B0);
+        QString vel = QString().setNum(cappiDisplay->getMaxApp(),'f', 1);
+        QString loc = "at " + QString().setNum(cappiDisplay->getMaxAppHeight(),'f', 1) + " km (" +
+            QString().setNum(cappiDisplay->getMaxAppDist(),'f', 1) + " km/" +
+            QString().setNum(cappiDisplay->getMaxAppDir(),'f', 1) +
+            deg + ")";
+        appMaxWind->setText(vel);
+        appMaxLabel2->setText(loc);
+        vel = QString().setNum(cappiDisplay->getMaxRec(),'f', 1);
+        loc = "at " + QString().setNum(cappiDisplay->getMaxRecHeight(),'f', 1) + " km (" +
+        QString().setNum(cappiDisplay->getMaxRecDist(),'f', 1) + " km/" +
+        QString().setNum(cappiDisplay->getMaxRecDir(),'f', 1) +
+        deg + ")";
+        recMaxWind->setText(vel);
+        recMaxLabel2->setText(loc);
     }
     else {
         appMaxWind->setText(QString().setNum(0));
         recMaxWind->setText(QString().setNum(0));
+        appMaxLabel2->setText(QString());
+        recMaxLabel2->setText(QString());
     }
 
 }

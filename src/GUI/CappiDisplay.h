@@ -31,8 +31,15 @@ public:
     bool saveImage(const QString &fileName, const char *fileFormat);
 
     float getMaxRec() { return maxRec; }
-    float getMaxApp() { return maxApp; }
+    float getMaxRecHeight() { return heightMaxRec; }
+    float getMaxRecDist() { return distMaxRec; }
+    float getMaxRecDir() { return dirMaxRec; }
 
+    float getMaxApp() { return maxApp; }
+    float getMaxAppHeight() { return heightMaxApp; }
+    float getMaxAppDist() { return distMaxApp; }
+    float getMaxAppDir() { return dirMaxApp; }
+    
 public slots:
     void clearImage();
     void constructImage(const GriddedData& cappi);
@@ -78,6 +85,10 @@ private:
     };
     int displayType;
     GriddedData currentCappi;
+    float heightMaxApp, heightMaxRec;
+    float distMaxApp, distMaxRec;
+    float dirMaxApp, dirMaxRec;
+    
 };
 
 #endif

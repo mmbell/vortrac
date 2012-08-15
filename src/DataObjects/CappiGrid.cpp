@@ -94,7 +94,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,floa
     }
 
     // Set the initial field names
-    fieldNames << "DZ" << "VE" << "SW";
+    fieldNames << "DZ" << "VE" << "HT";
 
 }
 
@@ -121,7 +121,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
                 refValues[i][j][k].sumRef = 0;
                 refValues[i][j][k].weight = 0;
                 velValues[i][j][k].sumVel = 0;
-                velValues[i][j][k].sumSw = 0;
+                velValues[i][j][k].height = 0;
                 velValues[i][j][k].weight = 0;
             }
         }
@@ -236,7 +236,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
                         float weight = (100*nyquist) *(RSquareLinear - rSquare) / (RSquareLinear + rSquare);
                         velValues[iIndex][jIndex][kIndex].weight += weight;
                         velValues[iIndex][jIndex][kIndex].sumVel += weight*velData[g];
-                        if (swData != NULL) velValues[iIndex][jIndex][kIndex].sumSw += weight*swData[g];
+                        velValues[iIndex][jIndex][kIndex].height += weight*z;
                     }
                 }
                 }
@@ -267,10 +267,10 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
                 }
                 if (velValues[i][j][k].weight > 0) {
                     dataGrid[1][i][j][k] = velValues[i][j][k].sumVel/velValues[i][j][k].weight;
-                    dataGrid[2][i][j][k] = velValues[i][j][k].sumSw/velValues[i][j][k].weight;
+                    dataGrid[2][i][j][k] = velValues[i][j][k].height/velValues[i][j][k].weight;
                 }
                 velValues[i][j][k].sumVel = 0;
-                velValues[i][j][k].sumSw = 0;
+                velValues[i][j][k].height = 0;
                 velValues[i][j][k].weight = 0;
             }
         }

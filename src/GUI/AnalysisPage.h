@@ -122,7 +122,9 @@ private:
     QTabWidget* visuals;
     CappiDisplay* cappiDisplay;
     QLabel *appMaxWind;
+    QLabel *appMaxLabel2;
     QLabel *recMaxWind;
+    QLabel *recMaxLabel2;
     QLabel *lcdCenterLat;
     QLabel *lcdCenterLon;
     QLabel *lcdUserCenterLat;

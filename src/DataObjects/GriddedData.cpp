@@ -271,7 +271,7 @@ float GriddedData::getCartesianRefPointK ()
 
 // These functions convert between indices and cartesian points
 
-float GriddedData::getCartesianPointFromIndexI (const float& indexI)
+float GriddedData::getCartesianPointFromIndexI (const float& indexI) const
 {
     //	return (indexI + xmin)*iGridsp;  xmin is in km -LM 2/24/07
     if((indexI > 0)&&(indexI < iDim)) {
@@ -286,7 +286,7 @@ float GriddedData::getCartesianPointFromIndexI (const float& indexI)
     return -999.;
 }
 
-float GriddedData::getCartesianPointFromIndexJ (const float& indexJ)
+float GriddedData::getCartesianPointFromIndexJ (const float& indexJ) const
 {
     //return (indexJ + ymin)*jGridsp;
 
@@ -302,7 +302,7 @@ float GriddedData::getCartesianPointFromIndexJ (const float& indexJ)
     return -999.;
 }
 
-float GriddedData::getCartesianPointFromIndexK (const float& indexK)
+float GriddedData::getCartesianPointFromIndexK (const float& indexK) const
 {
     //	return (indexK + zmin)*kGridsp;
     if((indexK >= 0)&&(indexK < kDim)) {
@@ -319,7 +319,7 @@ float GriddedData::getCartesianPointFromIndexK (const float& indexK)
 
 // These functions convert between cartesian points and indices
 
-int GriddedData::getIndexFromCartesianPointI (const float& cartI)
+int GriddedData::getIndexFromCartesianPointI (const float& cartI) const
 {
 
     // Takes a distance position in km in the grids coordinate system
@@ -346,7 +346,7 @@ int GriddedData::getIndexFromCartesianPointI (const float& cartI)
 
 }
 
-int GriddedData::getIndexFromCartesianPointJ (const float& cartJ)
+int GriddedData::getIndexFromCartesianPointJ (const float& cartJ) const
 {
     // return (cartJ/jGridsp) - ymin;  // removed 2/24/07 -LM
 
@@ -363,7 +363,7 @@ int GriddedData::getIndexFromCartesianPointJ (const float& cartJ)
     return index;
 }
 
-int GriddedData::getIndexFromCartesianPointK (const float& cartK)
+int GriddedData::getIndexFromCartesianPointK (const float& cartK) const
 {
     //return (cartK/kGridsp) - zmin;  // removed 2/24/07 -LM
 
@@ -387,7 +387,7 @@ int GriddedData::getFieldIndex(const QString& fieldName) const
         field = 0;
     if((fieldName == "ve")||(fieldName == "VE"))
         field = 1;
-    if((fieldName == "sw")||(fieldName == "SW"))
+    if((fieldName == "ht")||(fieldName == "HT"))
         field = 2;
     if(field == -1)
         Message::toScreen("GriddedData::GetFieldIndex: Failed to Select From Available Fields");
