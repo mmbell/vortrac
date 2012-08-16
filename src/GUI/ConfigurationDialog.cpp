@@ -116,6 +116,7 @@ bool ConfigurationDialog::readConfig()
   vortex->setPanelChanged(true);
   vortex->updateConfig();
   graphics->checkDisplayType();
+  setSimplexRadii();
   setPanelDirectories();
   return true;
   //find way to check fail!!

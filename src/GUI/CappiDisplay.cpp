@@ -20,7 +20,7 @@ CappiDisplay::CappiDisplay(QWidget *parent)
     this->setObjectName("cappiDisplay");
     setAttribute(Qt::WA_StaticContents);
     PaintEngineMode = -5;
-    connect(this, SIGNAL(hasImage(bool)),this, SLOT(setVisible(bool)));
+    //connect(this, SIGNAL(hasImage(bool)),this, SLOT(setVisible(bool)));
     displayType = velocity;
     
     backColor = qRgb(255,255,255);
@@ -136,8 +136,8 @@ CappiDisplay::CappiDisplay(QWidget *parent)
     hasCappi = false;
 
     this->clearImage();
-    emit hasImage(true);
-    this->repaint();
+//    emit hasImage(true);
+//    this->repaint();
     emit hasImage(false);
     this->update();
 }
@@ -173,8 +173,12 @@ void CappiDisplay::clearImage()
 {
     emit hasImage(false);
     imageHolder.lock();
-    image.fill(qRgb(255, 255, 255));
-    legendImage.fill(qRgb(255,255,255));
+    image.fill(qRgb(0,0,0));
+    legendImage.fill(qRgb(0,0,0));
+    image = image.scaled((int)500,(int)500);
+    legendImage = legendImage.scaled(70,500);
+    this->setMinimumSize(QSize(int(image.size().width()*1.2),int(image.size().height())));
+    this->resize(this->minimumSize());
     imageHolder.unlock();
     //QString message;
     //message.setNum(PaintEngineMode);

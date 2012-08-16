@@ -106,7 +106,7 @@ VortexPanel::VortexPanel():AbstractPanel()
 
     QLabel *rmwLabel = new QLabel(tr("Radius of Maximum Wind Estimate (km)"));
     rmwBox = new QDoubleSpinBox();
-    rmwBox->setRange(0,100);
+    rmwBox->setRange(0,200);
     rmwBox->setDecimals(2);
     QHBoxLayout *rmwLayout = new QHBoxLayout;
     rmwLayout->addWidget(rmwLabel);

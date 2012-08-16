@@ -959,9 +959,10 @@ bool AnalysisPage::saveRemoteData(QNetworkReply *reply)
         QString path = configData->getParam(radar,"dir");
         QDir dataPath(path);
         if (!dataPath.exists(localfile)) {
-            QString dataurl = urlList.at(i);
-            QString server = "http://motherlode.ucar.edu/thredds/fileServer/";
-            QString url = server + dataurl;
+            QDomElement vortex = configData->getConfig("vortex");
+            QString server = configData->getParam(vortex,"level2url");
+            QString dataurl= "thredds/fileServer/";
+            QString url = server + dataurl + urlList.at(i);;
             QUrl fileurl = QUrl(url);
             QNetworkRequest request(fileurl);
             QNetworkReply *reply = datafile_manager.get(request);
