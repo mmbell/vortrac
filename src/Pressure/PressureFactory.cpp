@@ -39,12 +39,15 @@ PressureFactory::PressureFactory(Configuration *mainCfg, QObject *parent) : QObj
     radarlon = mainCfg->getParam(radarConfig,"lon").toFloat();
 
     QString format = mainCfg->getParam(pressureConfig,QString("format"));
-    if (format == "HWind")
+    if (format == "HWind") {
         pressureFormat = hwind;
-    if (format == "AWIPS")
+    } else if (format == "AWIPS") {
         pressureFormat = awips;
-    else
+    } else if (format == "MADIS") {
+        pressureFormat = madis;
+    } else {
         emit log(Message("Data format not supported"));
+    }
 }
 
 PressureFactory::~PressureFactory()
@@ -164,6 +167,60 @@ QList<PressureData>* PressureFactory::getUnprocessedData()
 
         break;
     }
+        case madis:
+        {
+            QFile file(fileName);
+            QString timepart = fileName.split("/").last();
+            // Parse the timestamp
+            QStringList timestamp = timepart.split("_");
+            QDate obDate = QDate::fromString(timestamp.at(0), "yyyyMMdd");
+            QTime obTime = QTime::fromString(timestamp.at(1), "hhmm");
+            
+            if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+                return 0;
+            
+            QTextStream in(&file);
+            while (!in.atEnd()) {
+                QString ob = in.readLine();
+                if (ob.contains("No matching data")) continue;
+                MADIS *pressureData = new MADIS(ob);
+                //pressureData->setTime(obDateTime);
+                
+                // Check to make sure it is not a duplicate -- this messes up the XML structure
+                bool duplicateOb = false;
+                for (int i = 0; i < pressureList->size(); i++) {
+                    if ((pressureList->at(i).getStationName() == pressureData->getStationName())
+                        and (pressureList->at(i).getTime() == pressureData->getTime())) {
+                        //emit log(Message("Omitting duplicate surface ob"));
+                        duplicateOb = true;
+                    }
+                }
+                // Check to make sure it is not a duplicate and not too far away
+                float obLat = pressureData->getLat();
+                float obLon = pressureData->getLon();
+                float obAlt = pressureData->getAltitude();
+                float obPressure = pressureData->getPressure();
+                float LatRadians = radarlat * acos(-1.0)/180.0;
+                float fac_lat = 111.13209 - 0.56605 * cos(2.0 * LatRadians)
+                + 0.00012 * cos(4.0 * LatRadians) - 0.000002 * cos(6.0 * LatRadians);
+                float fac_lon = 111.41513 * cos(LatRadians)
+                - 0.09455 * cos(3.0 * LatRadians) + 0.00012 * cos(5.0 * LatRadians);
+                
+                float relX = (obLon - radarlon) * fac_lon;
+                float relY = (obLat - radarlat) * fac_lat;
+                float obRange = sqrt(relX*relX + relY*relY);
+                if 	((!duplicateOb) and (obRange < 500) and (obAlt < 15.0)
+                     and (obPressure < 1050.) and (obPressure > 850.)) {
+                    pressureList->append(*pressureData);
+                }
+                delete pressureData;
+            }
+            file.close();
+            return pressureList;
+            
+            break;
+        }
+            
     case netcdf:
     {
         // Not yet implemented
@@ -253,6 +310,38 @@ bool PressureFactory::hasUnprocessedData()
 
         break;
     }
+        case madis:
+        {
+            // Assuming that the filename structure has a trailing timestamp
+            //dataPath.setNameFilters(QStringList("*"));
+            dataPath.setFilter(QDir::Files);
+            //dataPath.setSorting(QDir::Time | QDir::Reversed);
+            dataPath.setSorting(QDir::Name);
+            QStringList filenames = dataPath.entryList();
+            
+            // Check to see which are in the time limits
+            for (int i = 0; i < filenames.size(); ++i) {
+                QString file = filenames.at(i);
+                QString timepart = file;
+                // Parse the timestamps
+                QStringList timestamp = timepart.split("_");
+                if(timestamp.size()<3)
+                    continue;
+                QDate fileDate = QDate::fromString(timestamp.at(0), "yyyyMMdd");
+                QTime fileTime = QTime::fromString(timestamp.at(1), "hhmm");
+                QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
+                
+                if (fileDateTime >= startDateTime && fileDateTime <= endDateTime) {
+                    // Valid time and pressure name, check to see if it has been processed
+                    if (!fileParsed[dataPath.filePath(file)]) {
+                        // File has not been parsed, add it to the queue
+                        pressureQueue->enqueue(file);
+                    }
+                }
+            }
+            
+            break;
+        }
 
     case netcdf:
     {

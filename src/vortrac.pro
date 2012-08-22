@@ -56,7 +56,9 @@ HEADERS += Threads/workThread.h \
            Pressure/PressureList.h \
            Pressure/PressureFactory.h \
            Pressure/HWind.h \
-           Pressure/AWIPS.h
+           Pressure/AWIPS.h \
+	   Pressure/MADIS.h \
+	   Pressure/MADISFactory.h
 SOURCES += main.cpp \
            Threads/workThread.cpp \
            Threads/SimplexThread.cpp \
@@ -106,7 +108,9 @@ SOURCES += main.cpp \
            Pressure/PressureList.cpp \
            Pressure/PressureFactory.cpp \
            Pressure/HWind.cpp \
-           Pressure/AWIPS.cpp
+           Pressure/AWIPS.cpp \
+	   Pressure/MADIS.cpp \
+	   Pressure/MADISFactory.cpp
 RESOURCES += vortrac.qrc
 LIBS += -lbz2 
 QT += xml network

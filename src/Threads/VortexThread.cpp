@@ -299,40 +299,39 @@ void VortexThread::calcCentralPressure(VortexData* vortex, float* pD, float heig
         float obPressure = pressureList->at(i).getPressure();
         if (obPressure > 0) {
             // Check the time
-            QDateTime time = pressureList->at(i).getTime();
-            if(time.date()==vortex->getTime().date()) {
-                int obTimeDiff = time.time().secsTo(vortex->getTime().time());
-                if ((obTimeDiff > 0) and (obTimeDiff <= maxObTimeDiff)) {
-                    // Check the distance
-                    float vortexLat = vortex->getLat(heightIndex);
-                    float vortexLon = vortex->getLon(heightIndex);
-                    float obLat = pressureList->at(i).getLat();
-                    float obLon = pressureList->at(i).getLon();
-                    float* relDist = gridData->getCartesianPoint(&vortexLat, &vortexLon,&obLat, &obLon);
-                    float obRadius = sqrt(relDist[0]*relDist[0] + relDist[1]*relDist[1]);
-                    delete [] relDist;
-
-                    if ((obRadius >= vortex->getRMW(heightIndex)) and (obRadius <= maxObRadius)) {
-                        // Good ob anchor!
-                        _presObs.append(pressureList->at(i));
-                        float pPrimeOuter;
-                        if (obRadius >= lastRing) {
-                            pPrimeOuter = pD[(int)lastRing];
-                        } else {
-                            pPrimeOuter = pD[(int)obRadius];
-                        }
-                        float cpEstimate = obPressure - (pPrimeOuter - pD[0]);
-                        float weight = (((maxObTimeDiff - obTimeDiff) / maxObTimeDiff) +
-                                        ((maxObRadius - obRadius) / maxObRadius)) / 2;
-
-                        // Sum the estimate and save the value for Std Dev calculation
-                        pressWeightSum += weight;
-                        pressSum += (weight * cpEstimate);
-                        pressEstimates[numEstimates] = cpEstimate;
-                        weightEstimates[numEstimates] = weight;
-                        numEstimates++;
-
+            QString obTime = pressureList->at(i).getTime().toString(Qt::ISODate);
+            QString vortexTime = vortex->getTime().toString(Qt::ISODate);
+            int obTimeDiff = pressureList->at(i).getTime().secsTo(vortex->getTime());
+            if ((obTimeDiff > 0) and (obTimeDiff <= maxObTimeDiff)) {
+                // Check the distance
+                float vortexLat = vortex->getLat(heightIndex);
+                float vortexLon = vortex->getLon(heightIndex);
+                float obLat = pressureList->at(i).getLat();
+                float obLon = pressureList->at(i).getLon();
+                float* relDist = gridData->getCartesianPoint(&vortexLat, &vortexLon,&obLat, &obLon);
+                float obRadius = sqrt(relDist[0]*relDist[0] + relDist[1]*relDist[1]);
+                delete [] relDist;
+                
+                if ((obRadius >= vortex->getRMW(heightIndex)) and (obRadius <= maxObRadius)) {
+                    // Good ob anchor!
+                    _presObs.append(pressureList->at(i));
+                    float pPrimeOuter;
+                    if (obRadius >= lastRing) {
+                        pPrimeOuter = pD[(int)lastRing];
+                    } else {
+                        pPrimeOuter = pD[(int)obRadius];
                     }
+                    float cpEstimate = obPressure - (pPrimeOuter - pD[0]);
+                    float weight = (((maxObTimeDiff - obTimeDiff) / maxObTimeDiff) +
+                                    ((maxObRadius - obRadius) / maxObRadius)) / 2;
+                    
+                    // Sum the estimate and save the value for Std Dev calculation
+                    pressWeightSum += weight;
+                    pressSum += (weight * cpEstimate);
+                    pressEstimates[numEstimates] = cpEstimate;
+                    weightEstimates[numEstimates] = weight;
+                    numEstimates++;
+                    
                 }
             }
         }

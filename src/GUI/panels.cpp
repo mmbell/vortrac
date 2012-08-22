@@ -2694,6 +2694,31 @@ PressurePanel::PressurePanel()
     dirLayout->addWidget(dir, 1, 0, 1, 3);
     dirLayout->addWidget(browse, 1,3);
 
+    QGroupBox *madisBox = new QGroupBox(tr("MADIS Parameters"));
+    QLabel *urlLabel = new QLabel(tr("MADIS URL"));
+    madisurl = new QLineEdit();
+    QHBoxLayout *urlLayout = new QHBoxLayout;
+    urlLayout->addWidget(urlLabel);
+    urlLayout->addWidget(madisurl);
+    
+    QLabel *userLabel = new QLabel(tr("MADIS Username"));
+    madisuser = new QLineEdit();
+    QHBoxLayout *userLayout = new QHBoxLayout;
+    urlLayout->addWidget(userLabel);
+    urlLayout->addWidget(madisuser);
+
+    QLabel *passwordLabel = new QLabel(tr("MADIS Password"));
+    madispassword = new QLineEdit();
+    QHBoxLayout *passwordLayout = new QHBoxLayout;
+    passwordLayout->addWidget(passwordLabel);
+    passwordLayout->addWidget(madispassword);
+    
+    QVBoxLayout *madisLayout = new QVBoxLayout;
+    madisLayout->addLayout(urlLayout);
+    madisLayout->addLayout(userLayout);
+    madisLayout->addLayout(passwordLayout);
+    madisBox->setLayout(madisLayout);
+    
     QLabel *gradientHeightLabel = new QLabel(tr("Height at which Pressure Gradient is Calculated (km)"));
     gradientHeight = new QDoubleSpinBox;
     gradientHeight->setDecimals(2);
@@ -2710,6 +2735,7 @@ PressurePanel::PressurePanel()
                                   QString(""));
     pressureFormatOptions->insert(QString("HWind"), QString("HWind"));
     pressureFormatOptions->insert(QString("AWIPS"), QString("AWIPS"));
+    pressureFormatOptions->insert(QString("MADIS"), QString("MADIS"));
     pressureFormat = new QComboBox();
     QList<QString> options = pressureFormatOptions->keys();
     for(int i = 0; i < options.count(); i++)
@@ -2775,6 +2801,7 @@ PressurePanel::PressurePanel()
 
     QVBoxLayout *main = new QVBoxLayout;
     main->addLayout(dirLayout);
+    main->addWidget(madisBox);
     main->addLayout(pressureFormatLayout);
     main->addLayout(gradientHeightLayout);
     main->addLayout(maxObsTimeLayout);
@@ -2792,6 +2819,12 @@ PressurePanel::PressurePanel()
     turnOffWhenRunning.append(pressureFormatLabel);
 
     connect(dir, SIGNAL(textChanged(const QString&)),
+            this, SLOT(valueChanged()));
+    connect(madisurl, SIGNAL(textChanged(const QString&)),
+            this, SLOT(valueChanged()));
+    connect(madisuser, SIGNAL(textChanged(const QString&)),
+            this, SLOT(valueChanged()));
+    connect(madispassword, SIGNAL(textChanged(const QString&)),
             this, SLOT(valueChanged()));
     connect(pressureFormat, SIGNAL(activated(const QString&)),
             this, SLOT(valueChanged()));
@@ -2816,6 +2849,9 @@ PressurePanel::PressurePanel()
 PressurePanel::~PressurePanel()
 {
     turnOffWhenRunning.clear();
+    delete madisurl;
+    delete madisuser;
+    delete madispassword;
     delete pressureFormat;
     delete pressureFormatOptions;
     delete maxObsTime;
@@ -2846,6 +2882,15 @@ void PressurePanel::updatePanel(const QDomElement panelElement)
             }
             else
                 setPanelChanged(true);}
+        if (name == "madisurl") {
+            madisurl->clear();
+            madisurl->insert(parameter); }
+        if (name == "madisuser") {
+            madisuser->clear();
+            madisuser->insert(parameter); }
+        if (name == "madispassword") {
+            madispassword->clear();
+            madispassword->insert(parameter); }
         if (name == "format") {
             int index = pressureFormat->findText(
                         pressureFormatOptions->key(parameter),
@@ -2892,6 +2937,15 @@ bool PressurePanel::updateConfig()
         if(getFromElement("dir")!=dir->text()) {
             emit changeDom(element, QString("dir"), dir->text());
             emit workingDirectoryChanged();
+        }
+        if(getFromElement("madisurl")!=madisurl->text()) {
+            emit changeDom(element, "madisurl", madisurl->text());
+        }
+        if(getFromElement("madisuser")!=madisuser->text()) {
+            emit changeDom(element, "madisuser", madisuser->text());
+        }
+        if(getFromElement("madispassword")!=madispassword->text()) {
+            emit changeDom(element, "madispassword", madispassword->text());
         }
         if(getFromElement("format")
                 !=pressureFormatOptions->value(pressureFormat->currentText()))

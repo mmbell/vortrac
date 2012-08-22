@@ -377,6 +377,8 @@ private:
     // If maxObsDistRing is used the measurement will be made from the largest
     //    analysis ring.
 
+    QLineEdit *madisurl, *madisuser, *madispassword;
+    // URL, name and password for getting pressure data
 };
 
 class GraphicsPanel:public AbstractPanel

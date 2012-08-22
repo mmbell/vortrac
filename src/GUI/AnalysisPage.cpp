@@ -272,6 +272,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 
     pollThread = NULL;
     atcf = NULL;
+    madis = NULL;
     
     connect(this, SIGNAL(saveGraphImage(const QString&)),graph, SLOT(saveImage(const QString&)));
     connect(&datafile_manager, SIGNAL(finished(QNetworkReply*)),
@@ -521,6 +522,10 @@ void AnalysisPage::runThread()
     connect(atcf, SIGNAL(tcvitalsReady()),this, SLOT(updateTcvitals()));
     pollThread->setATCF(atcf);
     
+    madis = new MADISFactory(configData);
+    connect(madis, SIGNAL(log(const Message&)),this, SLOT(catchLog(const Message&)));
+    connect(this, SIGNAL(updateMadis(float, float)),madis, SLOT(setBoundingBox(float, float)));
+
     // Check to see if there are old list files that we want to start from in
     // the working directory. We have to do this here because we cannot create
     // widgets in the threads.
@@ -554,8 +559,14 @@ void AnalysisPage::runThread()
         
         QTimer::singleShot(0, atcf, SLOT(getTcvitals()));
         QTimer *atcfTimer = new QTimer(this);
-        connect(atcfTimer, SIGNAL(timeout()), this, SLOT(updateTcvitals()));
-        atcfTimer->start(3600000);        
+        connect(atcfTimer, SIGNAL(timeout()), atcf, SLOT(getTcvitals()));
+        atcfTimer->start(3600000);
+        
+        QTimer::singleShot(0, madis, SLOT(getPressureObs()));
+        QTimer *madisTimer = new QTimer(this);
+        connect(madisTimer, SIGNAL(timeout()), madis, SLOT(getPressureObs()));
+        madisTimer->start(1800000);
+        
 	} else {
         pollThread->setContinuePreviousRun(continuePreviousRun);
         pollThread->setConfig(configData);
@@ -646,6 +657,7 @@ void AnalysisPage::updateCappiInfo(float x, float y, float rmwEstimate, float sM
     lcdCenterLon->setText(QString().setNum(centerLon,'f', 2));
     lcdUserCenterLat->setText(QString().setNum(userCenterLat,'f', 2));
     lcdUserCenterLon->setText(QString().setNum(userCenterLon,'f', 2));
+    emit updateMadis(userCenterLat, userCenterLon);
 }
 
 void AnalysisPage::updateCappiDisplay(bool hasImage)
@@ -981,4 +993,3 @@ void AnalysisPage::openConfigDialog()
     configDialog->checkConfig();
     configDialog->show();
 }
-

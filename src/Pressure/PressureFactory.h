@@ -21,6 +21,7 @@
 #include "Pressure/PressureList.h"
 #include "Pressure/HWind.h"
 #include "Pressure/AWIPS.h"
+#include "Pressure/MADIS.h"
 #include "IO/Message.h"
 #include "GUI/ConfigTree.h"
 
@@ -45,6 +46,7 @@ private:
     enum dataFormat {
         hwind,
         awips,
+        madis,
         netcdf
     };
 

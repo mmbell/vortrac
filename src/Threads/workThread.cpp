@@ -221,6 +221,17 @@ void workThread::run()
             delete gridData;
         if(abort) break;
             //STEP 9: after finish process each volume,save data to XML
+            // Print out summary information to log
+			QString summary = "VORTRAC ATCF,";
+			QString values;
+			summary += vortexData.getTime().toString(Qt::ISODate) + ",";
+			summary += values.setNum(vortexData.getLat()) + ",";
+			summary += values.setNum(vortexData.getLon()) + ",";
+			summary += values.setNum(vortexData.getPressure()) + ",";
+			summary += values.setNum(vortexData.getPressureUncertainty()) + ",";
+			summary += values.setNum(vortexData.getRMW()) + ",";
+			summary += values.setNum(vortexData.getRMWUncertainty());
+			emit log(Message(summary,0,this->objectName()));
             _vortexList.saveXML();
             _simplexList.saveXML();
             _pressureList.saveXML();

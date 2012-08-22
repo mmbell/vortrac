@@ -26,7 +26,8 @@
 #include "DiagnosticPanel.h"
 #include "CappiDisplay.h"
 #include "StartDialog.h"
-#include "ATCF.h"
+#include "IO/ATCF.h"
+#include "Pressure/MADISFactory.h"
 //#include "TestGraph.h"
 
 class AnalysisPage : public QWidget
@@ -73,6 +74,7 @@ signals:
     void log(const Message& message);
     void saveGraphImage(const QString& name);
     void vortexListChanged(VortexList* list);
+    void updateMadis(float userCenterLat, float userCenterLon);
 //    void newVCP(const int vcp);
 //    void newCappi(const GriddedData* cappi);
 //    void newCappiInfo(const float& x, const float& y, const float& rmwEstimate,
@@ -144,6 +146,7 @@ private:
 
     StartDialog *quickstart;
     ATCF *atcf;
+    MADISFactory *madis;
 };
 
 #endif
