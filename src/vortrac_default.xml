@@ -97,13 +97,16 @@
    </hvvp>
    <pressure>
      <dir>default</dir>
-     <format>AWIPS</format>
+     <format>MADIS</format>
      <height>1</height>
      <maxobstime>59</maxobstime>
      <maxobsdist>50</maxobsdist>
      <maxobsmethod>ring</maxobsmethod>
      <av_interval>8</av_interval>
      <rapidlimit>3</rapidlimit>
+     <madisurl>https://madis-data.noaa.gov/</madisurl>
+     <madisuser>nps11_madis_research</madisuser>
+     <madispassword>Jht_GBVTD12#$</madispassword>
    </pressure>
    <graphics>
      <display_type>pressure</display_type>
