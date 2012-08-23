@@ -361,15 +361,15 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
             if (vel != -999) {
                 if (vel > maxVel) {
                     maxVel = vel;
-                    maxAppXindex = i;
-                    maxAppYindex = j;
+                    maxRecXindex = i;
+                    maxRecYindex = j;
                     maxVelXpercent = (i+1)/iDim;
                     maxVelYpercent = (j+1)/jDim;
                 }
                 if (vel < minVel) {
                     minVel = vel;
-                    maxRecXindex = i;
-                    maxRecYindex = j;
+                    maxAppXindex = i;
+                    maxAppYindex = j;
                     minVelXpercent = (i+1)/iDim;
                     minVelYpercent = (j+1)/jDim;
                 }
@@ -400,6 +400,7 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
         float cartJ = cappi.getCartesianPointFromIndexJ(maxAppYindex);
         distMaxApp = sqrt(cartI*cartI + cartJ*cartJ);
         dirMaxApp = atan2(cartJ,cartI)*57.2957795130823;
+        dirMaxApp = 450.0 - dirMaxApp;
         if (fabs(dirMaxApp) < 0.000001) { dirMaxApp=0.; }
         if (dirMaxApp > 360.0) dirMaxApp -= 360.0;
         if (dirMaxApp < 0.) dirMaxApp += 360.0;
@@ -407,6 +408,7 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
         cartJ = cappi.getCartesianPointFromIndexJ(maxRecYindex);
         distMaxRec = sqrt(cartI*cartI + cartJ*cartJ);
         dirMaxRec = atan2(cartJ,cartI)*57.2957795130823;
+        dirMaxRec = 450.0 - dirMaxRec;
         if (fabs(dirMaxRec) < 0.000001) { dirMaxRec=0.; }
         if (dirMaxRec > 360.0) dirMaxRec -= 360.0;
         if (dirMaxRec < 0.) dirMaxRec += 360.0;
