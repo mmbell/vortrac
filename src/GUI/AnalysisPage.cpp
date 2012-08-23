@@ -671,6 +671,9 @@ void AnalysisPage::updateCappiDisplay(bool hasImage)
             deg + ")";
         appMaxWind->setText(vel);
         appMaxLabel2->setText(loc);
+        QString msg = "Maximum approaching velocity of " + vel + " m/s " + loc;
+        emit log(Message(msg,0,this->objectName()));
+
         vel = QString().setNum(cappiDisplay->getMaxRec(),'f', 1);
         loc = "at " + QString().setNum(cappiDisplay->getMaxRecHeight(),'f', 1) + " km (" +
         QString().setNum(cappiDisplay->getMaxRecDist(),'f', 1) + " km/" +
@@ -678,6 +681,9 @@ void AnalysisPage::updateCappiDisplay(bool hasImage)
         deg + ")";
         recMaxWind->setText(vel);
         recMaxLabel2->setText(loc);
+        msg = "Maximum receding velocity of " + vel + " m/s " + loc;
+        emit log(Message(msg,0,this->objectName()));
+
     }
     else {
         appMaxWind->setText(QString().setNum(0));

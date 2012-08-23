@@ -184,8 +184,13 @@ void VortexThread::run()
 
     // Get the central pressure
     calcCentralPressure(vortexData,pressureDeficit, gradientHeight); // is firstLevel right?
-    calcPressureUncertainty(1,QString());
-
+    if (vortexData->getPressure() != -999.0) {
+        calcPressureUncertainty(1,QString());
+    } else {
+        vortexData->setPressureUncertainty(-999.0);
+        vortexData->setDeficitUncertainty(-999.0);
+        vortexData->setAveRMWUncertainty(-999.0);
+    }
     delete [] vtdCoeffs;
     delete [] pressureDeficit;
 }

@@ -29,6 +29,10 @@ CappiDisplay::CappiDisplay(QWidget *parent)
     minVel = 0;
     maxRec = 0;
     maxApp = 0;
+    heightMaxApp = heightMaxRec = 0.;
+    distMaxApp = distMaxRec = 0;
+    dirMaxApp = dirMaxRec = 0;
+
     contourIncr = 1;
     
     //Set the palette
@@ -348,13 +352,20 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
         maxI = xIndex+(simplexMax*iDim*cappi.getIGridsp());
         minJ = yIndex-(simplexMax*iDim*cappi.getJGridsp());
         maxJ = yIndex+(simplexMax*iDim*cappi.getJGridsp());
+        if (minI < 0) minI = 0;
+        if (maxI > iDim) maxI = iDim;
+        if (minJ < 0) minJ = 0;
+        if (maxJ > jDim) maxJ = jDim;
     } else {
         minI = 0;
         maxI = iDim;
         minJ = 0;
         maxJ = jDim;
     }
-    float maxAppXindex, maxAppYindex, maxRecXindex, maxRecYindex;
+    float maxAppXindex = -999.0;
+    float maxAppYindex = -999.0;
+    float maxRecXindex = -999.0;
+    float maxRecYindex = -999.0;
     for (float i = minI; i < maxI; i++) {
         for (float j = minJ; j < maxJ; j++) {
             float vel = cappi.getIndexValue(velfield,i,j,k);
@@ -394,24 +405,33 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
             velRange = 2*fabs(minVel);
             maxVel = -1*minVel;
         }
-        heightMaxApp = cappi.getIndexValue(heightfield,maxAppXindex,maxAppYindex,k);
-        heightMaxRec = cappi.getIndexValue(heightfield,maxRecXindex,maxRecYindex,k);
-        float cartI = cappi.getCartesianPointFromIndexI(maxAppXindex);
-        float cartJ = cappi.getCartesianPointFromIndexJ(maxAppYindex);
-        distMaxApp = sqrt(cartI*cartI + cartJ*cartJ);
-        dirMaxApp = atan2(cartJ,cartI)*57.2957795130823;
-        dirMaxApp = 450.0 - dirMaxApp;
-        if (fabs(dirMaxApp) < 0.000001) { dirMaxApp=0.; }
-        if (dirMaxApp > 360.0) dirMaxApp -= 360.0;
-        if (dirMaxApp < 0.) dirMaxApp += 360.0;
-        cartI = cappi.getCartesianPointFromIndexI(maxRecXindex);
-        cartJ = cappi.getCartesianPointFromIndexJ(maxRecYindex);
-        distMaxRec = sqrt(cartI*cartI + cartJ*cartJ);
-        dirMaxRec = atan2(cartJ,cartI)*57.2957795130823;
-        dirMaxRec = 450.0 - dirMaxRec;
-        if (fabs(dirMaxRec) < 0.000001) { dirMaxRec=0.; }
-        if (dirMaxRec > 360.0) dirMaxRec -= 360.0;
-        if (dirMaxRec < 0.) dirMaxRec += 360.0;
+        
+        if ((maxAppXindex != -999.0) and (maxAppYindex != -999.0)) {
+            heightMaxApp = cappi.getIndexValue(heightfield,maxAppXindex,maxAppYindex,k);
+            float cartI = cappi.getCartesianPointFromIndexI(maxAppXindex);
+            float cartJ = cappi.getCartesianPointFromIndexJ(maxAppYindex);
+            distMaxApp = sqrt(cartI*cartI + cartJ*cartJ);
+            dirMaxApp = atan2(cartJ,cartI)*57.2957795130823;
+            dirMaxApp = 450.0 - dirMaxApp;
+            if (fabs(dirMaxApp) < 0.000001) { dirMaxApp=0.; }
+            if (dirMaxApp > 360.0) dirMaxApp -= 360.0;
+            if (dirMaxApp < 0.) dirMaxApp += 360.0;
+        } else {
+            heightMaxApp = distMaxApp = dirMaxApp = -999.0;
+        }
+        if ((maxRecXindex != -999.0) and (maxRecYindex != -999.0)) {
+            heightMaxRec = cappi.getIndexValue(heightfield,maxRecXindex,maxRecYindex,k);
+            float cartI = cappi.getCartesianPointFromIndexI(maxRecXindex);
+            float cartJ = cappi.getCartesianPointFromIndexJ(maxRecYindex);
+            distMaxRec = sqrt(cartI*cartI + cartJ*cartJ);
+            dirMaxRec = atan2(cartJ,cartI)*57.2957795130823;
+            dirMaxRec = 450.0 - dirMaxRec;
+            if (fabs(dirMaxRec) < 0.000001) { dirMaxRec=0.; }
+            if (dirMaxRec > 360.0) dirMaxRec -= 360.0;
+            if (dirMaxRec < 0.) dirMaxRec += 360.0;
+        } else {
+            heightMaxRec = distMaxRec = dirMaxRec = -999.0;
+        }
     }
     //Message::toScreen("maxVel is "+QString().setNum(maxVel)+" minVel is "+QString().setNum(minVel));
     QString field;

@@ -146,6 +146,18 @@ void workThread::run()
                     Message newMsg(QString(),5,this->objectName(),
                                    Green,"Center Found");
                     emit log(newMsg);
+                    QString values;
+                    QString result = "Position estimate " + values.setNum(vortexData.getLat());
+                    result += " N " + values.setNum(vortexData.getLon()) + " E";
+                    emit log(Message(result,0,this->objectName()));
+                    if (vortexData.getRMW() != -999.) {
+                        result = "RMW estimate " + values.setNum(vortexData.getRMW());
+                        result += " +/- " + values.setNum(vortexData.getRMWUncertainty()) + " km";
+                        emit log(Message(result,0,this->objectName()));
+                    } else {
+                        emit log(Message(QString("RMW not found"),0,this->objectName()));
+                    }
+
                 }
             } else {
                 for(int ll=0;ll<vortexData.getMaxLevels();ll++){
@@ -206,6 +218,11 @@ void workThread::run()
             delete pVtd;
             if (vortexData.getMaxValidRadius() != -999) {
                 _vortexList.append(vortexData);
+                QString values;
+                QString result = "Central Pressure estimate " + values.setNum(vortexData.getPressure());
+                result += " +/- " + values.setNum(vortexData.getPressureUncertainty()) + " hPa";
+                result += " at " + vortexData.getTime().toString("hh:mm");
+                emit log(Message(result,0,this->objectName()));
             } else  {
                 QString status = "No Central Pressure Estimate at " + vortexData.getTime().toString("hh:mm");
                 Message newMsg(status,0,this->objectName(),Yellow,"Pressure Not Found");
@@ -222,8 +239,8 @@ void workThread::run()
         if(abort) break;
             //STEP 9: after finish process each volume,save data to XML
             // Print out summary information to log
-			QString summary = "VORTRAC ATCF,";
 			QString values;
+            QString summary = "VORTRAC ATCF,";
 			summary += vortexData.getTime().toString(Qt::ISODate) + ",";
 			summary += values.setNum(vortexData.getLat()) + ",";
 			summary += values.setNum(vortexData.getLon()) + ",";
@@ -231,7 +248,7 @@ void workThread::run()
 			summary += values.setNum(vortexData.getPressureUncertainty()) + ",";
 			summary += values.setNum(vortexData.getRMW()) + ",";
 			summary += values.setNum(vortexData.getRMWUncertainty());
-			emit log(Message(summary,0,this->objectName()));
+            emit log(Message(summary,0,this->objectName()));
             _vortexList.saveXML();
             _simplexList.saveXML();
             _pressureList.saveXML();

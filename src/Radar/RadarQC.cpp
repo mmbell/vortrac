@@ -1517,6 +1517,7 @@ float RadarQC::getStart(Ray *currentRay)
                 if(dataHeight < 0) {
                     dataHeight = 0;
                 }
+                if(dataHeight > vadLevels-1) dataHeight = vadLevels - 1;
             }
         }
         velGates = NULL;

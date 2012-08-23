@@ -36,9 +36,9 @@ Ray::Ray()
 
 Ray::~Ray()
 {
-  delete [] refData;
-  delete [] velData;
-  delete [] swData;
+  if (refData != NULL) delete [] refData;
+  if (velData != NULL) delete [] velData;
+  if (swData != NULL) delete [] swData;
 }
 
 void Ray::setTime(const int &value) {
