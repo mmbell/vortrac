@@ -11,6 +11,7 @@
 
 #include "Log.h"
 #include <QFileDialog>
+#include <QDateTime>
 
 Log::Log(QWidget *parent) 
     : QWidget(parent)
@@ -20,14 +21,14 @@ Log::Log(QWidget *parent)
             this, SLOT(catchLog(const Message&)));
 
     workingDirectory = QDir::current();
-    logFileName = QString("autoLog");
-
-    int i = 0;
+    QString baselogFileName = QString("VORTRAC_status_");
+    logFileName =  baselogFileName + QDateTime::currentDateTime().toUTC().toString("yyMMddhhmmss");
+    
     QString newName(logFileName);
     while(QFile::exists(workingDirectory.filePath(newName+".log")))
     {
-        i++;
-        newName = logFileName+QString().setNum(i);
+        QString currtime = QDateTime::currentDateTime().toUTC().toString("yyMMddhhmmss");
+        newName = baselogFileName + currtime;
     }
 
     logFileName = newName + ".log";
@@ -71,14 +72,14 @@ void Log::setWorkingDirectory(QDir& newDir)
             newDir.mkpath(newDir.path());
     }
 
-    QString newFileName("autoLog");
+    QString baseFileName("VORTRAC_status_");
+    QString newFileName = baseFileName + QDateTime::currentDateTime().toUTC().toString("yyMMddhhmmss");
     QFile newLogFile(newDir.filePath(newFileName+".log"));
-    int i = 0;
     QString newName(newFileName);
     while(QFile::exists(newDir.filePath(newName+".log")))
     {
-        i++;
-        newName = newFileName+QString().setNum(i);
+        QString currtime = QDateTime::currentDateTime().toUTC().toString("yyMMddhhmmss");
+        newName = baseFileName+currtime;
         //      Message::toScreen("Trying..."+newDir.filePath(newName+".log"));
     }
     newFileName = newName+".log";
