@@ -240,6 +240,14 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
 
     simplexList->append(*simplexData);
     delete simplexData;
+    // Deallocate memory for the vertices
+    delete[] vertex[0];
+    delete[] vertex[1];
+    delete[] vertex[2];
+    delete[] vertex;
+    delete[] VT;
+    delete[] vertexSum;
+
     return true;
 }
 

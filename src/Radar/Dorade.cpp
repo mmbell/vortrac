@@ -58,6 +58,8 @@ Dorade::~Dorade()
 	delete[] rangles;
 	delete rkptr;
 	delete[] rtptr;
+    delete [] Sweeps;
+    delete [] Rays;
 }
 
 bool Dorade::readVolume()

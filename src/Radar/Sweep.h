@@ -16,6 +16,7 @@ class Sweep
 
 public:
   Sweep();
+  ~Sweep();
   void setSweepIndex(const int &value);
   void setElevation(const float &value);
   void setUnambig_range(const float &value);

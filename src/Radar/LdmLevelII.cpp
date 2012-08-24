@@ -107,7 +107,10 @@ bool LdmLevelII::readVolume()
 	  
 	  recNum++;
 	  // Skip the metadata at the beginning
-	  if ((recNum == 1) and (uncompSize == 325888)) { continue; }
+	  if ((recNum == 1) and (uncompSize == 325888)) {
+          delete[] uncompressed;
+          continue;
+      }
 	   
 	  unsigned int msgIncr = 0;
 	  //for (unsigned int i = 0; i < uncompSize; i += 2432) {
@@ -293,10 +296,25 @@ bool LdmLevelII::readVolume()
 				  addSweep(&Sweeps[numSweeps]);
 				  // Sweeps[numSweeps].setFirstRay(numRays);
 
-			  } else if (msg31Header->radial_status == 4) {
+			  } else if (msg31Header->radial_status == 2) {
 			      // Bail out?
+                  //int status = msg31Header->radial_status;
 				  //break;
-			  }
+			  } else if (msg31Header->radial_status == 5) {
+                  // Last sweep
+                  Sweeps[numSweeps-1].setLastRay(numRays-1);
+				  // Increment array
+				  addSweep(&Sweeps[numSweeps]);
+              } else {
+                  // Shouldn't be here
+                  /* Check for missing sweep demarcation!
+                  if ((msg31Header->elevation - Sweeps[numSweeps-1].getElevation()) > 0.2) {
+                      // This is probably a new sweep
+                      Sweeps[numSweeps-1].setLastRay(numRays-1);
+                      // Increment array
+                      addSweep(&Sweeps[numSweeps]);
+                  } */
+              }
 			  			  
 			  // Put more rays in the volume, associated with the current Sweep;
 			  addRay(&Rays[numRays]);

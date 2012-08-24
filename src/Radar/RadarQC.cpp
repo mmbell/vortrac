@@ -1681,14 +1681,18 @@ bool RadarQC::derivativeDealias()
         Sweep* currentSweep = radarData->getSweep(n);
 		int rays = currentSweep->getNumRays();
 		int gates = currentSweep->getVel_numgates();
+        if (gates == 0) continue;
+
 		float nyquistVelocity = currentSweep->getNyquist_vel();
-		
 		// Allocate memory for the gradient fields
 		float** a1 = new float*[rays];
 		float** veldata = new float*[rays];
 		for (int i=0; i < rays; i++) {
 			a1[i] = new float[gates];
 			veldata[i] = new float[gates];
+            for (int j=0; j < gates; j++) {
+                a1[i][j] = veldata[i][j] = velNull;
+            }
 		}
 		
 		// Find the gradient
@@ -1697,7 +1701,6 @@ bool RadarQC::derivativeDealias()
 		for (int i=0; i < rays; i++)  {
 			for (int j=0; j < gates; j++) {
 				sum = 0.0;
-				a1[i][j] = veldata[i][j] = velNull;
 				double weights[5] = { 1./12., -2./3., 0, 2./3., -1./12. }; 
 				//double weights[2] = {-1.0, 1.0};
 				sum = 0;

@@ -102,7 +102,10 @@ void workThread::run()
             dealiaser->dealias();
             emit log(Message("Finished QC and Dealiasing",10, this->objectName()));
             delete dealiaser;
-	if(abort) break;
+            if(abort) {
+                delete newVolume;
+                break;
+            }
             //STEP 3: get the first guess of center Lat,Lon for simplex
             _latlonFirstGuess(newVolume);
             QString currentCenter("Processing radar volume at "+ newVolume->getDateTime().toString("hh:mm") + " with (" +
@@ -115,7 +118,12 @@ void workThread::run()
             gridData->writeAsi();
             emit log(Message("Done with Cappi",15,this->objectName()));
             emit newCappi(*gridData);
-        if(abort) break;
+            if(abort) {
+                delete newVolume;
+                delete gridFactory;
+                delete gridData;
+                break;
+            }
             //STEP 5: simplex to find a new center
             emit log(Message("Finding center",1,this->objectName()));
             VortexData vortexData;
@@ -169,7 +177,12 @@ void workThread::run()
                     emit log(newMsg);
                 }
             }
-        if(abort) break;
+            if(abort) {
+                delete newVolume;
+                delete gridFactory;
+                delete gridData;
+                break;
+            }
             float simplexLat = vortexData.getLat(0);
             float simplexLon = vortexData.getLon(0);
             QDomElement radar = configData->getConfig("radar");
@@ -186,7 +199,12 @@ void workThread::run()
             float vMax = configData->getParam(vtd, "outerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
             emit newCappiInfo(xPercent, yPercent, rmwEstimate, sMin, sMax, vMax, _firstGuessLat, _firstGuessLon, simplexLat, simplexLon);
             delete [] xyValues;
-        if(abort) break;
+            if(abort) {
+                delete newVolume;
+                delete gridFactory;
+                delete gridData;
+                break;
+            }
             //STEP 6: Check for new pressure data to process for the current volume
             if(pressureSource->hasUnprocessedData()) {
                 // Create a list of new pressure observations that have not yet been processed
@@ -205,7 +223,12 @@ void workThread::run()
                 }
                 delete newObs;
             }
-        if(abort) break;
+            if(abort) {
+                delete newVolume;
+                delete gridFactory;
+                delete gridData;
+                break;
+            }
             //STEP 7: GBVTD to calculate the wind
             //if simplex algorithm successfully find the center, then perform the GBVTD
             emit log(Message("Estimating pressure",1,this->objectName()));
@@ -223,6 +246,16 @@ void workThread::run()
                 result += " +/- " + values.setNum(vortexData.getPressureUncertainty()) + " hPa";
                 result += " at " + vortexData.getTime().toString("hh:mm");
                 emit log(Message(result,0,this->objectName()));
+                // Print out summary information to log
+                QString summary = "VORTRAC ATCF,";
+                summary += vortexData.getTime().toString(Qt::ISODate) + ",";
+                summary += values.setNum(vortexData.getLat()) + ",";
+                summary += values.setNum(vortexData.getLon()) + ",";
+                summary += values.setNum(vortexData.getPressure()) + ",";
+                summary += values.setNum(vortexData.getPressureUncertainty()) + ",";
+                summary += values.setNum(vortexData.getRMW()) + ",";
+                summary += values.setNum(vortexData.getRMWUncertainty());
+                emit log(Message(summary,0,this->objectName()));
             } else  {
                 QString status = "No Central Pressure Estimate at " + vortexData.getTime().toString("hh:mm");
                 Message newMsg(status,0,this->objectName(),Yellow,"Pressure Not Found");
@@ -238,17 +271,6 @@ void workThread::run()
             delete gridData;
         if(abort) break;
             //STEP 9: after finish process each volume,save data to XML
-            // Print out summary information to log
-			QString values;
-            QString summary = "VORTRAC ATCF,";
-			summary += vortexData.getTime().toString(Qt::ISODate) + ",";
-			summary += values.setNum(vortexData.getLat()) + ",";
-			summary += values.setNum(vortexData.getLon()) + ",";
-			summary += values.setNum(vortexData.getPressure()) + ",";
-			summary += values.setNum(vortexData.getPressureUncertainty()) + ",";
-			summary += values.setNum(vortexData.getRMW()) + ",";
-			summary += values.setNum(vortexData.getRMWUncertainty());
-            emit log(Message(summary,0,this->objectName()));
             _vortexList.saveXML();
             _simplexList.saveXML();
             _pressureList.saveXML();

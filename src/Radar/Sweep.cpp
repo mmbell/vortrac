@@ -14,6 +14,10 @@ Sweep::Sweep()
 {
 }
 
+Sweep::~Sweep()
+{
+}
+
 void Sweep::setSweepIndex(const int &value) {
   sweepIndex = value;
 }
