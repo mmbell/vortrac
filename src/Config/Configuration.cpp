@@ -16,7 +16,7 @@
 Configuration::Configuration(QObject *parent, const QString &filename) : QObject(parent)
 {
     this->setObjectName("Configuration");
-    logChanges = true;
+    logChanges = false;
     if(filename.isEmpty())
     { // Create a new configuration from scratch
         QDomDocument domDoc("CurrConfig");

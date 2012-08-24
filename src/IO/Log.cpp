@@ -209,9 +209,9 @@ void Log::catchLog(const Message& logEntry)
     QString stopLightMessage = logg->getStopLightMessage();
     StormSignalStatus stormSignalStatus = logg->getStatus();
     QString stormSignalMessage = logg->getStormSignalMessage();
-
+    bool debug = false;
     if(message!=QString()) {
-        if(displayLocation && (location!=QString())) {
+        if(displayLocation && (location!=QString()) and debug) {
             message = location+": "+message;
         }
         message+="\n";
