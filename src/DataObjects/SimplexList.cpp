@@ -14,10 +14,9 @@
 #include <QFile>
 #include <QXmlStreamWriter>
 
-SimplexList::SimplexList(QString filePath)
+SimplexList::SimplexList(QString filePath) : QList<SimplexData>()
 {
     _filePath =filePath;
-    QList<SimplexData>::QList<SimplexData>();
 }
 
 SimplexList::~SimplexList()

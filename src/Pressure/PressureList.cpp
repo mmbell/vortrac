@@ -11,10 +11,9 @@
 
 #include "PressureList.h"
 
-PressureList::PressureList(QString prsFilePath)
+PressureList::PressureList(QString prsFilePath) : QList<PressureData>()
 {
     _filePath = prsFilePath;
-    QList<PressureData>::QList<PressureData>();
 }
 PressureList::~PressureList()
 {

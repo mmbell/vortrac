@@ -19,10 +19,9 @@
 #include "VortexList.h"
 
 
-VortexList::VortexList(QString filePath)
+VortexList::VortexList(QString filePath) : QList<VortexData>()
 {
     _filePath = filePath;
-    QList<VortexData>::QList<VortexData>();
 }
 
 VortexList::~VortexList()
