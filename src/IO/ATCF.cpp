@@ -126,11 +126,6 @@ bool ATCF::parseTcvitals()
             }
 
             obDir = vitals.at(7).toFloat();
-            obDir = 450.0f-obDir;
-            if(obDir > 360.0f)
-                obDir -=360.0f;
-            obDir*=acos(-1.0f)/180.f;
-
             obSpd = vitals.at(8).toFloat() / 10.0;
             obCentralPressure = vitals.at(9).toFloat();
             obEnvPressure = vitals.at(10).toFloat();
@@ -147,7 +142,11 @@ float ATCF::getLatitude(const QDateTime& time)
 {
     int elapsedSeconds =obTime.secsTo(time);
     float distanceMoved = elapsedSeconds*obSpd/1000.0;
-    float changeInY = distanceMoved*sin(obDir);
+    float dir = 450.0f-obDir;
+    if(dir > 360.0f)
+        dir -=360.0f;
+    dir*=acos(-1.0f)/180.f;
+    float changeInY = distanceMoved*sin(dir);
     float LatRadians = obLat * acos(-1.0)/180.0;
     float fac_lat = 111.13209 - 0.56605 * cos(2.0 * LatRadians)
     + 0.00012 * cos(4.0 * LatRadians) - 0.000002 * cos(6.0 * LatRadians);
@@ -158,7 +157,11 @@ float ATCF::getLongitude(const QDateTime& time)
 {
     int elapsedSeconds =obTime.secsTo(time);
     float distanceMoved = elapsedSeconds*obSpd/1000.0;
-    float changeInX = distanceMoved*cos(obDir);
+    float dir = 450.0f-obDir;
+    if(dir > 360.0f)
+        dir -=360.0f;
+    dir*=acos(-1.0f)/180.f;
+    float changeInX = distanceMoved*cos(dir);
         float LatRadians = obLat * acos(-1.0)/180.0;
     float fac_lon = 111.41513 * cos(LatRadians)
     - 0.09455 * cos(3.0 * LatRadians) + 0.00012 * cos(5.0 * LatRadians);

@@ -295,8 +295,8 @@ void VortexThread::calcCentralPressure(VortexData* vortex, float* pD, float heig
     float pressWeightSum = 0;
     float pressSum = 0;
     numEstimates = 0;
-    float pressEstimates[100];
-    float weightEstimates[100];
+    float* pressEstimates = new float[pressureList->size()];
+    float* weightEstimates = new float[pressureList->size()];
     
     // Iterate through the pressure data
     //Message::toScreen("Size of searching List = "+QString().setNum(pressureList->size())+" within time "+QString().setNum(maxObTimeDiff)+" of vortex time "+vortex->getTime().toString(Qt::ISODate));
@@ -316,8 +316,8 @@ void VortexThread::calcCentralPressure(VortexData* vortex, float* pD, float heig
                 float* relDist = gridData->getCartesianPoint(&vortexLat, &vortexLon,&obLat, &obLon);
                 float obRadius = sqrt(relDist[0]*relDist[0] + relDist[1]*relDist[1]);
                 delete [] relDist;
-                
-                if ((obRadius >= vortex->getRMW(heightIndex)) and (obRadius <= maxObRadius)) {
+                if ((obRadius >= 20) and (obRadius <= maxObRadius)) {
+                //if ((obRadius >= vortex->getRMW(heightIndex)) and (obRadius <= maxObRadius)) {
                     // Good ob anchor!
                     _presObs.append(pressureList->at(i));
                     float pPrimeOuter;
@@ -368,6 +368,8 @@ void VortexThread::calcCentralPressure(VortexData* vortex, float* pD, float heig
     vortex->setPressure(centralPressure);
     vortex->setPressureDeficit(pD[(int)lastRing]-pD[(int)firstRing]);
 
+    delete pressEstimates;
+    delete weightEstimates;
 }
 
 void VortexThread::catchLog(const Message& message)

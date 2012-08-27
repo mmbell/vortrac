@@ -591,10 +591,18 @@ void AnalysisPage::updateTcvitals()
     QString rmw = QString().setNum(atcf->getRMW());
     configData->setParam(vortex, "rmw", rmw);
     QString date = atcf->getTime().toString("yyyy-MM-dd");
-    configData->setParam(vortex, "date", date);
+    configData->setParam(vortex, "obsdate", date);
     QString time = atcf->getTime().toString("hh:mm:ss");
-    configData->setParam(vortex, "time", time);
+    configData->setParam(vortex, "obstime", time);
     
+    QDomElement radar = configData->getConfig("radar");
+    configData->setParam(radar, "startdate", date);
+    configData->setParam(radar, "starttime", time);
+    
+    QDomElement choosecenter = configData->getConfig("choosecenter");
+    configData->setParam(choosecenter, "startdate", date);
+    configData->setParam(choosecenter, "starttime", time);
+
     configDialog->checkConfig();
     if(!configDialog->checkPanels()) {
         QMessageBox errCfg;

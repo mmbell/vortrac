@@ -45,7 +45,7 @@ public:
     bool writeToFile(const QString fileName);
     bool fileIsReadable();
     QString getFileName();
-
+    float getMaxUnambig_range();
 
 protected:
     QString radarName;

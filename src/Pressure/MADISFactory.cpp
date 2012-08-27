@@ -25,10 +25,10 @@ MADISFactory::MADISFactory(Configuration* config, QObject *parent) : QObject(par
     QDomElement radar = configData->getConfig("radar");
     float radarLat = configData->getParam(radar,"lat").toFloat();
     float radarLon = configData->getParam(radar,"lon").toFloat();
-    latll = QString().setNum(radarLat - 0.5);
-    latur = QString().setNum(radarLat + 0.5);
-    lonll = QString().setNum(radarLon - 0.5);
-    lonur = QString().setNum(radarLon + 0.5);
+    latll = QString().setNum(radarLat - 2.5);
+    latur = QString().setNum(radarLat + 2.5);
+    lonll = QString().setNum(radarLon - 2.5);
+    lonur = QString().setNum(radarLon + 2.5);
 }
 
 MADISFactory::~MADISFactory()

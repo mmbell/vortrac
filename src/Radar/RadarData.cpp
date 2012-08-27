@@ -239,3 +239,13 @@ QString RadarData::getFileName()
   return QString();
   */
 }
+
+float RadarData::getMaxUnambig_range()
+{
+    float maxRange = -999;
+    for (int i = 0; i < numSweeps; ++i) {
+        float range = Sweeps[i].getUnambig_range();
+        if (range > maxRange) maxRange = range;
+    }
+    return maxRange;
+}

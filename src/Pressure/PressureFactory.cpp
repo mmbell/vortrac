@@ -28,12 +28,14 @@ PressureFactory::PressureFactory(Configuration *mainCfg, QObject *parent) : QObj
     QDate startDate = QDate::fromString(mainCfg->getParam(radarConfig,QString("startdate")),Qt::ISODate);
     QDate endDate = QDate::fromString(mainCfg->getParam(radarConfig,QString("enddate")),Qt::ISODate);
     QTime startTime = QTime::fromString(mainCfg->getParam(radarConfig,QString("starttime")),"hh:mm:ss");
-    // Set the start time 1 hour earlier so that we can get all relevant pressure measurements
-    startTime = startTime.addSecs(-3600);
     QTime endTime = QTime::fromString(mainCfg->getParam(radarConfig,QString("endtime")),"hh:mm:ss");
 
     startDateTime = QDateTime(startDate, startTime, Qt::UTC);
     endDateTime = QDateTime(endDate, endTime, Qt::UTC);
+    
+    // Set the start time 1 hour earlier so that we can get all relevant pressure measurements
+    startDateTime = startDateTime.addSecs(-3600);
+
     dataPath = QDir(mainCfg->getParam(pressureConfig,QString("dir")));
     radarlat = mainCfg->getParam(radarConfig,"lat").toFloat();
     radarlon = mainCfg->getParam(radarConfig,"lon").toFloat();
@@ -330,7 +332,6 @@ bool PressureFactory::hasUnprocessedData()
                 QDate fileDate = QDate::fromString(timestamp.at(0), "yyyyMMdd");
                 QTime fileTime = QTime::fromString(timestamp.at(1), "hhmm");
                 QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
-                
                 if (fileDateTime >= startDateTime && fileDateTime <= endDateTime) {
                     // Valid time and pressure name, check to see if it has been processed
                     if (!fileParsed[dataPath.filePath(file)]) {

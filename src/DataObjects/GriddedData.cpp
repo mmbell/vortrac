@@ -274,7 +274,7 @@ float GriddedData::getCartesianRefPointK ()
 float GriddedData::getCartesianPointFromIndexI (const float& indexI) const
 {
     //	return (indexI + xmin)*iGridsp;  xmin is in km -LM 2/24/07
-    if((indexI > 0)&&(indexI < iDim)) {
+    if((indexI >= 0)&&(indexI < iDim)) {
         float distance =  indexI*iGridsp+xmin;
         if((distance >= xmin) && (distance <= xmax)) {
             return distance;
@@ -290,7 +290,7 @@ float GriddedData::getCartesianPointFromIndexJ (const float& indexJ) const
 {
     //return (indexJ + ymin)*jGridsp;
 
-    if((indexJ > 0)&&(indexJ < jDim)) {
+    if((indexJ >= 0)&&(indexJ < jDim)) {
         float distance =  indexJ*jGridsp+ymin;
         if((distance >= ymin) && (distance <= ymax)) {
             return distance;

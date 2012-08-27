@@ -52,7 +52,10 @@ void workThread::run()
                        Red,"ATCF Error");
         emit log(newMsg);
     }
-    QString radarName = configData->getParam(configData->getConfig("radar"), "name");
+    QDomElement radar = configData->getConfig("radar");
+    float radarLat = configData->getParam(radar,"lat").toFloat();
+    float radarLon = configData->getParam(radar,"lon").toFloat();
+    QString radarName = configData->getParam(radar, "name");
     QString year=QString().setNum(QDate::fromString(configData->getParam(configData->getConfig("radar"),"startdate"), "yyyy-MM-dd").year());
     QString namePrefix=vortexName+"_"+radarName+"_"+year+"_";
 
@@ -145,7 +148,9 @@ void workThread::run()
                 ChooseCenter *centerFinder = new ChooseCenter(configData,&_simplexList,&vortexData);
                 centerFinder->findCenter();
                 delete centerFinder;
-                if(GriddedData::getCartesianDistance(_firstGuessLat,_firstGuessLon,vortexData.getLat(0),vortexData.getLon(0))>50.0f){
+                float userDistance = GriddedData::getCartesianDistance(_firstGuessLat,_firstGuessLon,vortexData.getLat(0),vortexData.getLon(0));
+                float range = GriddedData::getCartesianDistance(radarLat,radarLon,vortexData.getLat(0),vortexData.getLon(0));
+                if((userDistance>25.0f) or (range > newVolume->getMaxUnambig_range())) {
                     Message newMsg(QString(),5,this->objectName(),
                                    Yellow,"Center Not Found");
                     emit log(newMsg);
@@ -185,11 +190,8 @@ void workThread::run()
             }
             float simplexLat = vortexData.getLat(0);
             float simplexLon = vortexData.getLon(0);
-            QDomElement radar = configData->getConfig("radar");
             QDomElement simplex = configData->getConfig("center");
             QDomElement vtd   = configData->getConfig("vtd");
-            float radarLat = configData->getParam(radar,"lat").toFloat();
-            float radarLon = configData->getParam(radar,"lon").toFloat();
             float* xyValues = gridData->getCartesianPoint(&radarLat, &radarLon, &simplexLat, &simplexLon);
             float xPercent = float(gridData->getIndexFromCartesianPointI(xyValues[0])+1)/gridData->getIdim();
             float yPercent = float(gridData->getIndexFromCartesianPointJ(xyValues[1])+1)/gridData->getJdim();

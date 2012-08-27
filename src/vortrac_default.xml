@@ -83,7 +83,7 @@
      <bottomlevel>1</bottomlevel>
      <toplevel>1</toplevel>
      <innerradius>1</innerradius>
-     <outerradius>100</outerradius>
+     <outerradius>125</outerradius>
      <ringwidth>1.0</ringwidth>
      <maxwavenumber>1</maxwavenumber>
      <maxdatagap wavenum="0">180</maxdatagap>
