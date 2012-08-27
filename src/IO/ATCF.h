@@ -49,7 +49,7 @@ private:
     Configuration *configData;
     
 private slots:
-    bool getTcvitals();
+    bool getTcvitals(bool archive = false);
     bool saveTcvitals(QNetworkReply *reply);
     bool parseTcvitals();
     

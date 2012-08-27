@@ -29,7 +29,7 @@ public:
     bool updateConfig();
     bool checkValues();
     void setConfig(Configuration *config) {configData = config;}
-    bool changeMode();
+    void changeMode();
     
 private:
     QLineEdit *idName;

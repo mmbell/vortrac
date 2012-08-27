@@ -183,6 +183,21 @@ bool StartPanel::updateConfig()
 {
     // If any of the Panel's members have been changed these values will be
     // writen to the corresponding location within the Configuration
+    QString stormId = idName->text();
+    if (stormId.startsWith("al")) {
+        // Switch to alternate style
+        stormId.remove(0,2);
+        stormId += "L";
+        idName->clear();
+        idName->insert(stormId);
+    } else if (stormId.startsWith("ep")) {
+        // Switch to alternate style
+        stormId.remove(0,2);
+        stormId += "E";
+        idName->clear();
+        idName->insert(stormId);
+    }
+
     if (checkPanelChanged())
     {
         QDomNodeList nodeList = configData->getRoot().childNodes();
@@ -226,7 +241,7 @@ bool StartPanel::checkValues()
     return true;
 }
 
-bool StartPanel::changeMode()
+void StartPanel::changeMode()
 {
     QDomNodeList nodeList = configData->getRoot().childNodes();
     for (int i = 0; i <= nodeList.count()-1; i++) 

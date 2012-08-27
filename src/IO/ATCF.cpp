@@ -38,18 +38,28 @@ void ATCF::catchLog(const Message& message)
     emit log(message);
 }
 
-bool ATCF::getTcvitals()
+bool ATCF::getTcvitals(bool archive)
 {
     QDomElement vortex = configData->getConfig("vortex");
     QString stormId = configData->getParam(vortex,"id");
     QString dataurl = "atcf/com/";
-    if (stormId.contains("L")) {
-        stormId.chop(1);
-        dataurl += "al" + stormId + "2012-tcvitals.dat";
-    } else if (stormId.contains("E")) {
-        stormId.chop(1);
-        dataurl += "ep" + stormId + "2012-tcvitals.dat";
-    } 
+    if (archive) {
+        if (stormId.contains("L")) {
+            stormId.chop(1);
+            dataurl += "al" + stormId + "2012-tcvitals-arch.dat";
+        } else if (stormId.contains("E")) {
+            stormId.chop(1);
+            dataurl += "ep" + stormId + "2012-tcvitals-arch.dat";
+        }
+    } else {
+        if (stormId.contains("L")) {
+            stormId.chop(1);
+            dataurl += "al" + stormId + "2012-tcvitals.dat";
+        } else if (stormId.contains("E")) {
+            stormId.chop(1);
+            dataurl += "ep" + stormId + "2012-tcvitals.dat";
+        }
+    }
     QString server = configData->getParam(vortex,"atcfurl");
     QString url = server + dataurl;
     QUrl fileurl = QUrl(url);
@@ -98,12 +108,13 @@ bool ATCF::parseTcvitals()
     QDomElement vortex = configData->getConfig("vortex");
     QString stormId = configData->getParam(vortex,"id");
     QTextStream tcvitals(&vitalsfile);
+    QString stormFound("Not Found");
     while (!tcvitals.atEnd()) {
         QString line = tcvitals.readLine();
         QStringList vitals = line.split(QRegExp("\\s+"));
         if (vitals.at(1) == stormId) {
             // Match!
-            stormName = vitals.at(2);
+            stormFound = stormName = vitals.at(2);
             QDate date = QDate::fromString(vitals.at(3), "yyyyMMdd");
             QTime time = QTime::fromString(vitals.at(4), "hhmm");
             obTime = QDateTime(date, time, Qt::UTC);
@@ -134,8 +145,15 @@ bool ATCF::parseTcvitals()
         }
     }
     vitalsfile.close();
-    emit tcvitalsReady();
-    return true;
+    
+    if (stormFound == "Not Found") {
+        // Try the archive data
+        getTcvitals(true);
+        return false;
+    } else {
+        emit tcvitalsReady();
+        return true;
+    }
 }
 
 float ATCF::getLatitude(const QDateTime& time)
