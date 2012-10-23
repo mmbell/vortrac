@@ -28,6 +28,7 @@
 #include "StartDialog.h"
 #include "IO/ATCF.h"
 #include "Pressure/MADISFactory.h"
+#include "Radar/FetchRemote.h"
 //#include "TestGraph.h"
 
 class AnalysisPage : public QWidget
@@ -92,9 +93,6 @@ private slots:
     void pollVortexUpdate(VortexList* list);
     void popUpStatus();
     void updateStatusLog(const QString& entry);
-    void fetchRemoteData();
-    bool getRemoteData();
-    bool saveRemoteData(QNetworkReply *reply);
     void openConfigDialog();
     void updateTcvitals();
     
@@ -138,15 +136,11 @@ private:
     //  TestGraph *tester;
 
     bool analyticModel();
-    QNetworkAccessManager catalog_manager;
-    QNetworkAccessManager datafile_manager;
-    QNetworkReply* catalog_reply;
-    QList<QNetworkReply *> datafile_replies;
-    QStringList urlList;
 
     StartDialog *quickstart;
     ATCF *atcf;
     MADISFactory *madis;
+    FetchRemote *fetchremote;
 };
 
 #endif
