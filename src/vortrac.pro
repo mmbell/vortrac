@@ -60,8 +60,8 @@ HEADERS += Threads/workThread.h \
 	   Pressure/MADIS.h \
 	   Pressure/MADISFactory.h \
            Radar/FetchRemote.h \
-           Driver.h \
-           DriverBatch.h
+           Batch/DriverBatch.h \
+           Batch/BatchWindow.h
 SOURCES += main.cpp \
            Threads/workThread.cpp \
            Threads/SimplexThread.cpp \
@@ -115,8 +115,8 @@ SOURCES += main.cpp \
 	   Pressure/MADIS.cpp \
 	   Pressure/MADISFactory.cpp \
            Radar/FetchRemote.cpp \
-           Driver.cpp \
-           DriverBatch.cpp
+           Batch/DriverBatch.cpp \
+           Batch/BatchWindow.cpp
 RESOURCES += vortrac.qrc
 LIBS += -lbz2 
 QT += xml network

@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef POLLTHREAD_H
-#define POLLTHREAD_H
+#ifndef WORKTHREAD_H
+#define WORKTHREAD_H
 
 #include <QThread>
 #include <QList>
