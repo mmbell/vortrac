@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 
         std::cout << "Batch Mode started for " << xmlfile.toStdString() << " ...\n";
         QApplication app(argc,argv);
-        BatchWindow mainWin(0, domDoc);
+        BatchWindow mainWin(0, xmlfile);
 
         app.exec();
 

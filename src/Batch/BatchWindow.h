@@ -10,7 +10,7 @@ class BatchWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    BatchWindow(QWidget *parent, QDomDocument& xmlfile);
+    BatchWindow(QWidget *parent, const QString &fileName);
     ~BatchWindow();
 
 public slots:

@@ -1,6 +1,6 @@
 #include "BatchWindow.h"
 
-BatchWindow::BatchWindow(QWidget *parent, QDomDocument& xmlfile)
+BatchWindow::BatchWindow(QWidget *parent, const QString &fileName)
     : QMainWindow(parent)
 {
     this->setObjectName("Batch Window");
@@ -11,7 +11,7 @@ BatchWindow::BatchWindow(QWidget *parent, QDomDocument& xmlfile)
 
     std::cout << "Starting main window ... \n";
 
-    driver = new DriverBatch(this, xmlfile);
+    driver = new DriverBatch(this, fileName);
 
     driver->initialize();
     driver->run();

@@ -13,6 +13,7 @@
 #ifndef DRIVERBATCH_H
 #define DRIVERBATCH_H
 
+#include <QtGui>
 #include <QWidget>
 #include <QTextEdit>
 #include <QFile>
@@ -33,11 +34,12 @@ class DriverBatch  : public QWidget
     Q_OBJECT
 
 public:
-    DriverBatch(QWidget *parent, QDomDocument& xmlfile);
+    DriverBatch(QWidget *parent, const QString &fileName);
     ~DriverBatch();
     bool initialize();
     bool run();
     bool finalize();
+    bool loadFile(const QString &fileName);
 
 public slots:
     void saveLog();
@@ -48,11 +50,13 @@ signals:
 
 protected:
     workThread *pollThread;
-    QDomDocument *domDoc;
+    QString xmlfile;
     bool parseXMLconfig();
     bool validateXMLconfig();
 
 private:
+    bool isUntitled;
+    QDir workingDirectory;
     QString vortexLabel;
     QString configFileName;
     Configuration *configData;
