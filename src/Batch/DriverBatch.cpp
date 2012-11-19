@@ -15,11 +15,32 @@
 DriverBatch::DriverBatch(QWidget *parent, QDomDocument& xmlfile)
     : QWidget(parent)
 {
+    this->setObjectName("Analysis Batchmode Driver");
     domDoc = &xmlfile;
+    statusLog = new Log();
+
+    connect(this, SIGNAL(log(const Message&)),statusLog, SLOT(catchLog(const Message&)));
+
+    // Create a new configuration instance
+    configData = new Configuration;
+    connect(configData, SIGNAL(log(const Message&)),this, SLOT(catchLog(const Message&)));
+
+    statusText = new QTextEdit;
+
+    statusLog->catchLog(Message("VORTRAC Status Log for "+QDateTime::currentDateTime().toUTC().toString()+ " UTC"));
+
+    pollThread = NULL;
+    atcf = NULL;
+    madis = NULL;
+    fetchremote = NULL;
+
 }
 
 DriverBatch::~DriverBatch()
 {
+    delete configData;
+    delete statusLog;
+    delete statusText;
 }
 
 bool DriverBatch::initialize()
@@ -59,4 +80,14 @@ bool DriverBatch::validateXMLconfig()
 {
     std::cout << "Validating configuration file...\n";
     return true;
+}
+
+void DriverBatch::saveLog()
+{
+//    statusLog->saveLogFile();
+}
+
+void DriverBatch::catchLog(const Message& message)
+{
+    emit log(message);
 }

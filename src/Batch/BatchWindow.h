@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include "DriverBatch.h"
-
+#include "IO/Message.h"
 
 class BatchWindow : public QMainWindow
 {
@@ -12,8 +12,16 @@ class BatchWindow : public QMainWindow
 public:
     BatchWindow(QWidget *parent, QDomDocument& xmlfile);
     ~BatchWindow();
+
+public slots:
+    void catchLog(const Message& message);
+
+signals:
+    void log(const Message& message);
+
 protected:
     DriverBatch *driver;
+
 
 };
 

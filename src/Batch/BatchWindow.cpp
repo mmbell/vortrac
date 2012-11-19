@@ -23,3 +23,8 @@ BatchWindow::~BatchWindow()
 {
     delete driver;
 }
+
+void BatchWindow::catchLog(const Message& message)
+{
+    emit log(message);
+}

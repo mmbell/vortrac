@@ -149,11 +149,8 @@ void workThread::run()
                 centerFinder->findCenter();
                 delete centerFinder;
                 float userDistance = GriddedData::getCartesianDistance(_firstGuessLat,_firstGuessLon,vortexData.getLat(0),vortexData.getLon(0));
-                /*
-                 float range = GriddedData::getCartesianDistance(radarLat,radarLon,vortexData.getLat(0),vortexData.getLon(0));
-                 Need to further test (range > newVolume->getMaxUnambig_range())) {
-                */
-                if((userDistance>25.0f)) { 
+                float range = GriddedData::getCartesianDistance(radarLat,radarLon,vortexData.getLat(0),vortexData.getLon(0));
+                if((userDistance>25.0f) or (range > newVolume->getMaxUnambig_range())) {
                     Message newMsg(QString(),5,this->objectName(),
                                    Yellow,"Center Not Found");
                     emit log(newMsg);
