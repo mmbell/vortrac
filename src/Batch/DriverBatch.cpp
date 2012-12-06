@@ -45,7 +45,33 @@ DriverBatch::DriverBatch(QWidget *parent, const QString &fileName)
     currPressure = new QLabel(tr("0"));
     currRMW = new QLabel(tr("0"));
 
+    cappiDisplay = new CappiDisplay();
+    appMaxWind = new QLabel();
+    appMaxWind->setText(QString().setNum(cappiDisplay->getMaxApp(),'f', 1));
+    appMaxLabel2 = new QLabel();
+
+    recMaxWind = new QLabel();
+    recMaxWind->setText(QString().setNum(cappiDisplay->getMaxRec(),'f', 1));
+    recMaxLabel2 = new QLabel();
+    connect(cappiDisplay, SIGNAL(hasImage(bool)),this, SLOT(updateCappiDisplay(bool)));
+
+    lcdCenterLat = new QLabel();
+    lcdCenterLat->setText(QString().setNum(0));
+
+    lcdCenterLon = new QLabel();
+    lcdCenterLon->setText(QString().setNum(0));
+
+    lcdUserCenterLat = new QLabel();
+    lcdUserCenterLat->setText(QString().setNum(0));
+
+    lcdUserCenterLon = new QLabel();
+    lcdUserCenterLon->setText(QString().setNum(0));
+
+    diagPanel = new DiagnosticPanel;
+    connect(diagPanel, SIGNAL(log(const Message&)),this,SLOT(catchLog(const Message&)));
+
 }
+
 
 DriverBatch::~DriverBatch()
 {
@@ -78,7 +104,15 @@ bool DriverBatch::run()
     connect(thread, SIGNAL(finished()),this->parentWidget(),SLOT(closeWindow()));
 
     connect(pollThread, SIGNAL(log(const Message&)),this, SLOT(catchLog(const Message&)));
-    connect(pollThread, SIGNAL(vortexListUpdate(VortexList*)),this, SLOT(pollVortexUpdate(VortexList*)),Qt::DirectConnection);  //Necessary?
+
+    connect(pollThread, SIGNAL(newVCP(const int)),diagPanel, SLOT(updateVCP(const int)));
+    connect(pollThread, SIGNAL(newCappi(GriddedData)),cappiDisplay, SLOT(constructImage(GriddedData)),Qt::DirectConnection);
+
+    connect(pollThread, SIGNAL(newCappiInfo(float, float, float, float, float, float, float ,float ,float, float)),
+            this, SLOT(updateCappiInfo(float, float, float, float, float, float, float ,float ,float, float)),Qt::DirectConnection);
+    connect(pollThread, SIGNAL(newCappiInfo(float, float, float, float, float, float, float ,float ,float, float)),
+            cappiDisplay, SLOT(setGBVTDResults(float, float, float, float, float, float, float ,float ,float, float)),Qt::DirectConnection);
+    connect(pollThread, SIGNAL(vortexListUpdate(VortexList*)),this, SLOT(pollVortexUpdate(VortexList*)),Qt::DirectConnection);
 
     atcf = new ATCF(configData);
     connect(atcf, SIGNAL(log(const Message&)),this, SLOT(catchLog(const Message&)));
@@ -261,4 +295,60 @@ void DriverBatch::updateTcvitals()
 //        pollThread->setConfig(configData);
 //        thread->start();
 //    }
+}
+
+
+void DriverBatch::updateCappiDisplay(bool hasImage)
+{
+//    This is void AnalysisPage::updateCappiDisplay(bool hasImage)
+
+    if(hasImage) {
+        QChar deg(0x00B0);
+        QString vel = QString().setNum(cappiDisplay->getMaxApp(),'f', 1);
+        QString loc = "at " + QString().setNum(cappiDisplay->getMaxAppHeight(),'f', 1) + " km alt, " +
+            QString().setNum(cappiDisplay->getMaxAppDir(),'f', 1) + deg + ", " +
+            QString().setNum(cappiDisplay->getMaxAppDist(),'f', 1) + " km range";
+        appMaxWind->setText(vel);
+        appMaxLabel2->setText(loc);
+        QString msg = "Maximum inbound velocity of " + vel + " m/s " + loc + " (";
+        vel = QString().setNum(cappiDisplay->getMaxApp()*1.9438445,'f', 1);
+        loc = "at " + QString().setNum(cappiDisplay->getMaxAppHeight()*3280.8399,'f', 1) + " feet alt, " +
+        QString().setNum(cappiDisplay->getMaxAppDir(),'f', 1) + deg + ", " +
+        QString().setNum(cappiDisplay->getMaxAppDist()*0.5399568,'f', 1) + " nm range";
+        msg += vel + " kts " + loc + " )";
+        emit log(Message(msg,0,this->objectName()));
+
+        vel = QString().setNum(cappiDisplay->getMaxRec(),'f', 1);
+        loc = "at " + QString().setNum(cappiDisplay->getMaxRecHeight(),'f', 1) + " km alt, " +
+            QString().setNum(cappiDisplay->getMaxRecDir(),'f', 1) + deg + ", " +
+            QString().setNum(cappiDisplay->getMaxRecDist(),'f', 1) + " km range";
+        recMaxWind->setText(vel);
+        recMaxLabel2->setText(loc);
+        msg = "Maximum outbound velocity of " + vel + " m/s " + loc + " (";
+        vel = QString().setNum(cappiDisplay->getMaxRec()*1.9438445,'f', 1);
+        loc = "at " + QString().setNum(cappiDisplay->getMaxRecHeight()*3280.8399,'f', 1) + " feet alt, " +
+        QString().setNum(cappiDisplay->getMaxRecDir(),'f', 1) + deg + ", " +
+        QString().setNum(cappiDisplay->getMaxRecDist()*0.5399568,'f', 1) + " nm range";
+        msg += vel + " kts " + loc + " )";
+        emit log(Message(msg,0,this->objectName()));
+
+    }
+    else {
+        appMaxWind->setText(QString().setNum(0));
+        recMaxWind->setText(QString().setNum(0));
+        appMaxLabel2->setText(QString());
+        recMaxLabel2->setText(QString());
+    }
+
+}
+
+void DriverBatch::updateCappiInfo(float x, float y, float rmwEstimate, float sMin, float sMax, float vMax,
+                                   float userCenterLat, float userCenterLon, float centerLat, float centerLon)
+{
+//    This is void AnalysisPage::updateCappiInfo
+    lcdCenterLat->setText(QString().setNum(centerLat,'f', 2));
+    lcdCenterLon->setText(QString().setNum(centerLon,'f', 2));
+    lcdUserCenterLat->setText(QString().setNum(userCenterLat,'f', 2));
+    lcdUserCenterLon->setText(QString().setNum(userCenterLon,'f', 2));
+    emit updateMadis(userCenterLat, userCenterLon);
 }

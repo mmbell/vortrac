@@ -29,6 +29,9 @@
 #include "IO/ATCF.h"
 #include "Pressure/MADISFactory.h"
 #include "Radar/FetchRemote.h"
+#include "CappiDisplay.h"
+#include "DiagnosticPanel.h"
+
 
 class DriverBatch  : public QWidget
 {
@@ -45,6 +48,9 @@ public:
 public slots:
     void saveLog();
     void catchLog(const Message& message);
+    void updateCappiDisplay(bool hasImage);
+    void updateCappiInfo(float x, float y, float rmwEstimate, float sMin, float sMax, float vMax,
+                         float userCenterLat, float userCenterLon, float centerLat, float centerLon);
 
 private slots:
     void pollVortexUpdate(VortexList* list);
@@ -80,6 +86,20 @@ private:
     QLabel *currRMW;
     QLabel *currDeficit;
     QLabel* deficitLabel;
+
+    CappiDisplay* cappiDisplay;
+    QLabel *appMaxWind;
+    QLabel *appMaxLabel2;
+    QLabel *recMaxWind;
+    QLabel *recMaxLabel2;
+
+    QLabel *lcdCenterLat;
+    QLabel *lcdCenterLon;
+    QLabel *lcdUserCenterLat;
+    QLabel *lcdUserCenterLon;
+
+    DiagnosticPanel *diagPanel;
+
 
 };
 

@@ -15,7 +15,7 @@ BatchWindow::BatchWindow(QWidget *parent, const QString &fileName)
 
     driver->initialize();
     driver->run();
-    driver->finalize();
+//    driver->finalize();
 }
 
 BatchWindow::~BatchWindow()
