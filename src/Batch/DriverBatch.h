@@ -22,6 +22,7 @@
 #include <QDomDocument>
 
 #include "Config/Configuration.h"
+#include "GUI/ConfigurationDialog.h"
 #include "Threads/workThread.h"
 #include "IO/Log.h"
 #include "IO/Message.h"
@@ -45,8 +46,14 @@ public slots:
     void saveLog();
     void catchLog(const Message& message);
 
+private slots:
+    void pollVortexUpdate(VortexList* list);
+    void updateTcvitals();
+
 signals:
     void log(const Message& message);
+    void updateMadis(float userCenterLat, float userCenterLon);
+    void vortexListChanged(VortexList* list);
 
 protected:
     workThread *pollThread;
@@ -60,12 +67,19 @@ private:
     QString vortexLabel;
     QString configFileName;
     Configuration *configData;
+    ConfigurationDialog *configDialog;
+
     Log *statusLog;
     QTextEdit *statusText;
 
     ATCF *atcf;
     MADISFactory *madis;
     FetchRemote *fetchremote;
+
+    QLabel *currPressure;
+    QLabel *currRMW;
+    QLabel *currDeficit;
+    QLabel* deficitLabel;
 
 };
 

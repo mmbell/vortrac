@@ -16,7 +16,7 @@
 #include "DataObjects/SimplexList.h"
 
 workThread::workThread(QObject *parent)
-    : QThread(parent)
+    : QObject(parent)
 {
     this->setObjectName("Master");
     abort = false;
@@ -25,13 +25,12 @@ workThread::workThread(QObject *parent)
     dataSource= NULL;
     pressureSource= NULL;
     configData= NULL;
-
 }
 
 workThread::~workThread()
 {
-    stop();
-    this->quit();
+//    stop();
+//    this->quit();
 }
 
 void workThread::stop()
@@ -41,7 +40,7 @@ void workThread::stop()
 
 void workThread::run()
 {
-
+    std::cout << "Running workThread ...\n";
     //Initialize configuration
     QString mode = configData->getParam(configData->getConfig("vortex"), "mode");
     QDir workingDir(configData->getParam(configData->getConfig("vortex"),"dir"));
@@ -74,7 +73,8 @@ void workThread::run()
     connect(dataSource, SIGNAL(log(const Message&)),this, SLOT(catchLog(const Message&)));
     PressureFactory *pressureSource = new PressureFactory(configData);
     connect(pressureSource, SIGNAL(log(const Message&)),this, SLOT(catchLog(const Message&)));
-    
+
+
     // Begin working loop
     while(!abort) {
         //STEP 1: Check for new data
@@ -279,7 +279,12 @@ void workThread::run()
         }
         else{
             //if there's no data, have a little rest
-            sleep(2);
+            sleep(2);  
+            //if in batch mode, abort
+            if (this->parent()){
+            abort = true;
+            emit finished();
+            }
         }
     }
     delete dataSource;

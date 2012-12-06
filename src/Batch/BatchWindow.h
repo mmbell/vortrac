@@ -15,9 +15,11 @@ public:
 
 public slots:
     void catchLog(const Message& message);
+    void closeWindow();
 
 signals:
     void log(const Message& message);
+    void finished();
 
 protected:
     DriverBatch *driver;

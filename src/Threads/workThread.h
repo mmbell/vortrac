@@ -27,7 +27,7 @@
 #include "ChooseCenter.h"
 #include "IO/ATCF.h"
 
-class workThread : public QThread
+class workThread : public QObject
 {
     Q_OBJECT
 
@@ -46,6 +46,7 @@ public slots:
                         float userLat,float userLon,float lat,float lon);
     void setOnlyRunOnce(const bool newRunOnce = true);
     void setContinuePreviousRun(const bool &decision);
+    void run();
 
 signals:
     void log(const Message& message);
@@ -54,9 +55,7 @@ signals:
     void newCappi(const GriddedData& cappi);
     void newCappiInfo(float x,float y,float rmwEstimate,float sMin,float sMax,float vMax,
                       float userLat,float userLon,float lat,float lon);
-
-protected:
-    void run();
+    void finished();
 
 private:
     bool runOnce;

@@ -16,7 +16,6 @@ BatchWindow::BatchWindow(QWidget *parent, const QString &fileName)
     driver->initialize();
     driver->run();
     driver->finalize();
-
 }
 
 BatchWindow::~BatchWindow()
@@ -27,4 +26,10 @@ BatchWindow::~BatchWindow()
 void BatchWindow::catchLog(const Message& message)
 {
     emit log(message);
+}
+
+void BatchWindow::closeWindow()
+{
+    std::cout << "Closing main window. \n";
+    this->close();
 }

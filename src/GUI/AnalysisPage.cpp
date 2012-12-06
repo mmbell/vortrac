@@ -11,6 +11,7 @@
 
 #include <QtGui>
 #include <QtNetwork>
+#include <QThread>
 #include "AnalysisPage.h"
 #include "Message.h"
 #include "thredds_Config.h"
@@ -504,7 +505,15 @@ void AnalysisPage::runThread()
 
     emit log(Message(QString(),0,this->objectName(),AllOff,QString(),Ok, QString()));
 
-    pollThread = new workThread();
+    QThread* thread = new QThread;
+    workThread* pollThread = new workThread();
+    pollThread->moveToThread(thread);
+
+    connect(thread, SIGNAL(started()), pollThread, SLOT(run()));
+    connect(pollThread, SIGNAL(finished()), thread, SLOT(quit()));
+    connect(pollThread, SIGNAL(finished()), pollThread, SLOT(deleteLater()));
+    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+    connect(thread, SIGNAL(finished()),this,SLOT(close()));
 
     connect(pollThread, SIGNAL(log(const Message&)),this, SLOT(catchLog(const Message&)));
     connect(pollThread, SIGNAL(newVCP(const int)),diagPanel, SLOT(updateVCP(const int)));
@@ -572,7 +581,8 @@ void AnalysisPage::runThread()
 	} else {
         pollThread->setContinuePreviousRun(continuePreviousRun);
         pollThread->setConfig(configData);
-        pollThread->start();
+        thread->start();
+//        pollThread->start();
     }
 }
 
@@ -612,10 +622,10 @@ void AnalysisPage::updateTcvitals()
         errCfg.exec();
         return;
     }
-    if (!pollThread->isRunning()) {
+    if (!thread->isRunning()) {
         pollThread->setContinuePreviousRun(false);
         pollThread->setConfig(configData);
-        pollThread->start();
+        thread->start();
     }
 }
 
@@ -626,7 +636,7 @@ void AnalysisPage::abortThread()
     // Try to kill the threads
     if(pollThread!=NULL) {
         pollThread->stop();
-        pollThread->wait();
+        thread->wait();
         delete pollThread;
         pollVortexUpdate(NULL);
         cappiDisplay->clearImage();

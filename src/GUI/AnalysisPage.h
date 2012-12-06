@@ -17,6 +17,7 @@
 #include <QFile>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QThread>
 #include "Config/Configuration.h"
 #include "IO/Log.h"
 #include "ConfigTree.h"
@@ -100,6 +101,7 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 private:
+    QThread* thread;
     QString vortexLabel;
     QString configFileName;
     Configuration *configData;
