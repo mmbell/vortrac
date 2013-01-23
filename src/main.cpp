@@ -55,11 +55,20 @@ int main(int argc, char *argv[])
         // Successful file read
         file.close();
 
-        // Check the root node to make sure this is really a SAMURAI configuration file
+        // Check the root node to make sure this is really a VORTRAC configuration file
         QDomElement root = domDoc.documentElement();
         if (root.tagName() != "vortrac") {
             std::cout << "The XML file " << xmlfile.toStdString() << " is not an VORTRAC configuration file\n.";
             return EXIT_FAILURE;
+        }
+
+        // Check to see if folders for output exist. If not create them
+        QList<QString> dirnames;
+        dirnames << "cappi" << "pressure" << "center" << "choosecenter" << "vtd";
+        for (int i = 0; i < dirnames.size(); ++i) {
+            if (!QDir(dirnames.at(i)).exists()) {
+                QDir().mkdir(dirnames.at(i));
+            }
         }
 
 
