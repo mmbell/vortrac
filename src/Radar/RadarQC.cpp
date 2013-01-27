@@ -45,7 +45,7 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
     validBinCount = new float*[numSweeps];
     for (int i = 0; i < numSweeps; i++) {
         Sweep *currentSweep = radarData->getSweep(i);
-        int numBins = currentSweep->getVel_numgates();
+        int numBins = (currentSweep->getVel_numgates() > 0) ? currentSweep->getVel_numgates() : 1;
         validBinCount[i] = new float[numBins];
     }
 
@@ -532,7 +532,7 @@ bool RadarQC::terminalVelocity()
         numVGates = currentRay->getVel_numgates();
         float *vGates = currentRay->getVelData();
         float *rGates = currentRay->getRefData();
-        if((currentRay->getRef_gatesp()!=0)&&(currentRay->getVel_gatesp()!=0))
+        if((currentRay->getRef_gatesp()!=0)&&(currentRay->getVel_gatesp()!=0)&&(currentRay->getRef_numgates()!=0))
         {
             for(int j = 0; j < numVGates; j++)
             {
@@ -569,8 +569,9 @@ bool RadarQC::terminalVelocity()
                     // unevenly divisible by rgatesp.
 
                     if(currentRay->getRef_gatesp()!=currentRay->getVel_gatesp()) {
-                        zgate = int(floor(0.5+range));
-                        if(zgate<1) zgate = 1;
+                        zgate = int(floor(0.5+(currentRay->getFirst_vel_gate()-currentRay->getFirst_ref_gate())+
+                                          +j*currentRay->getRef_gatesp()/currentRay->getVel_gatesp()));
+                        //if(zgate<1) zgate = 1;
                         // Why don't we use the first gate? -LM
                         // PH 10/2007.  Because it is at range = 0 km for current 88D VCPs.
                     }
