@@ -71,14 +71,11 @@ int main(int argc, char *argv[])
             }
         }
 
-
         std::cout << "Batch Mode started for " << xmlfile.toStdString() << " ...\n";
         QApplication app(argc,argv);
         BatchWindow mainWin(0, xmlfile);
 
         app.exec();
-
-
 
     //If no xml file is parsed, start GUI
     } else if (argc ==1) {

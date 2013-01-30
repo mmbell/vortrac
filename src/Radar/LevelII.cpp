@@ -59,7 +59,7 @@ void LevelII::addSweep(Sweep* newSweep)
   // Already allocated memory for the sweep in the LevelII constructor
   //Sweep *newSweep = new Sweep;
   numSweeps += 1;
-  newSweep->setSweepIndex( numSweeps );
+  newSweep->setSweepIndex( numSweeps -1 );
   newSweep->setFirstRay(numRays);
   if (sweepMsgType == 1) {
 	newSweep->setElevation( (msg1Header->elevation) * NEX_FIXED_ANGLE );

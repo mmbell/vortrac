@@ -126,6 +126,8 @@ bool DriverBatch::run()
     fetchremote = new FetchRemote(configData);
     connect(fetchremote, SIGNAL(log(const Message&)),this, SLOT(catchLog(const Message&)));
 
+    bool continuePreviousRun = false;
+
     //set a flag in pollThread if continue previous run or not
     // Try to fetch new radar data every 5 minutes
     QString mode = configData->getParam(configData->getConfig("vortex"), "mode");
@@ -146,7 +148,7 @@ bool DriverBatch::run()
         madisTimer->start(1800000);
 
     } else {
-//        pollThread->setContinuePreviousRun(continuePreviousRun);
+        pollThread->setContinuePreviousRun(continuePreviousRun);
         pollThread->setConfig(configData);
         thread->start();
 
