@@ -63,11 +63,14 @@ int main(int argc, char *argv[])
         }
 
         // Check to see if folders for output exist. If not create them
+
+        QFileInfo fileInfo = QFileInfo(file);
+        QString filePath = fileInfo.absolutePath();
         QList<QString> dirnames;
         dirnames << "cappi" << "pressure" << "center" << "choosecenter" << "vtd";
         for (int i = 0; i < dirnames.size(); ++i) {
-            if (!QDir(dirnames.at(i)).exists()) {
-                QDir().mkdir(dirnames.at(i));
+            if (!QDir(filePath + "/" + dirnames.at(i)).exists()) {
+                QDir().mkdir(filePath + "/" + dirnames.at(i));
             }
         }
 
