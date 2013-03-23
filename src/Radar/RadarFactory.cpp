@@ -11,6 +11,7 @@
 #include "RadarFactory.h"
 #include <iostream>
 #include <QPushButton>
+#include <unistd.h>
 
 RadarFactory::RadarFactory(Configuration* radarConfig, QObject *parent): QObject(parent)
 {

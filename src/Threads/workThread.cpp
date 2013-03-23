@@ -1,5 +1,5 @@
 /*
- *  PollThread.cpp
+ *  workThread.cpp
  *  VORTRAC
  *
  *  Created by Michael Bell on 7/25/05.
@@ -12,7 +12,7 @@
 #include "Message.h"
 #include <math.h>
 #include "Radar/RadarQC.h"
-
+#include <unistd.h>
 #include "DataObjects/SimplexList.h"
 
 workThread::workThread(QObject *parent)

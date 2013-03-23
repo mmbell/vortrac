@@ -13,6 +13,7 @@
 #include <iostream>
 #include <QPushButton>
 #include <math.h>
+#include <unistd.h>
 
 PressureFactory::PressureFactory(Configuration *mainCfg, QObject *parent) : QObject(parent)
 {
