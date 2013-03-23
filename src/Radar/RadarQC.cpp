@@ -569,8 +569,9 @@ bool RadarQC::terminalVelocity()
                     // unevenly divisible by rgatesp.
 
                     if(currentRay->getRef_gatesp()!=currentRay->getVel_gatesp()) {
-                        zgate = int(floor(0.5+(currentRay->getFirst_vel_gate()-currentRay->getFirst_ref_gate())+
-                                          +j*currentRay->getRef_gatesp()/currentRay->getVel_gatesp()));
+						zgate = (int)(floor(0.5+(range*1000.0 - currentRay->getFirst_ref_gate())/currentRay->getRef_gatesp()));
+                        /*zgate = int(floor(0.5+(currentRay->getFirst_vel_gate()-currentRay->getFirst_ref_gate())+
+                                          +j*currentRay->getRef_gatesp()/currentRay->getVel_gatesp())); */
                         //if(zgate<1) zgate = 1;
                         // Why don't we use the first gate? -LM
                         // PH 10/2007.  Because it is at range = 0 km for current 88D VCPs.
@@ -581,6 +582,7 @@ bool RadarQC::terminalVelocity()
                     }
                     if(zgate >= currentRay->getRef_numgates())
                         zgate = currentRay->getRef_numgates()-1;
+					if (zgate < 1) zgate = 1;
                     float zData = rGates[zgate];
                     //                  int zwhere=currentRay->getSweepIndex();
                     //                  if ((zwhere < 22)&&(zData > 0.)&&(zData < 100.))
