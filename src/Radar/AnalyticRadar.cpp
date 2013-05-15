@@ -151,8 +151,8 @@ Ray* AnalyticRadar::addRay()
   }
   // determines the distance from the radar where there is sufficient data
   // for readings
-
-  float *ref_data = new float[numRefGates];
+  newRay->allocateRefData( numRefGates );
+  float *ref_data = newRay->getRefData();
   float gateBoundary = 0;
   
   // This loop checks the positions of all the points in the ray
@@ -197,8 +197,11 @@ Ray* AnalyticRadar::addRay()
 					     elevAngle, numPoints);
   raw_vel_positions = data->getSphericalRangePosition(azimAngle, elevAngle, 
 						      numPoints);
-  float *vel_data = new float[numVelGates];
-  float *sw_data = new float[numVelGates];
+  newRay->allocateVelData( numVelGates );
+  newRay->allocateSwData( numVelGates );
+							  
+  float *vel_data = newRay->getVelData();
+  float *sw_data = newRay->getVelData();
   gateBoundary = 0;
   
   // This loop checks the positions of all the points in the ray
@@ -283,9 +286,6 @@ Ray* AnalyticRadar::addRay()
   delete[] raw_vel_data;
   delete[] raw_vel_positions;
     
-  newRay->setRefData( ref_data );
-  newRay->setVelData( vel_data );
-  newRay->setSwData( sw_data );
   newRay->setRef_numgates( numRefGates );
   newRay->setVel_numgates( numVelGates ); 
   newRay->setRef_gatesp( 1000*refGateSp );
@@ -294,9 +294,6 @@ Ray* AnalyticRadar::addRay()
   ref_data = NULL;
   vel_data = NULL;
   sw_data = NULL;
-  delete ref_data;
-  delete vel_data;
-  delete sw_data;
   /*
   QDateTime* temp = QDateTime::currentDateTime();
   temp = temp.toUTC();

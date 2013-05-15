@@ -10,6 +10,7 @@
 
 #include "LevelII.h"
 #include "RadarQC.h"
+#include <unistd.h>
 
 LevelII::LevelII(const QString &radarname, const float &lat, const float &lon, const QString &filename) 
 	: RadarData(radarname, lat, lon, filename)
@@ -129,23 +130,23 @@ void LevelII::addRay(Ray* newRay)
 	newRay->setVel_numgates( vel_num_gates );
 	newRay->setVcp( volume_block->vol_coverage_pattern );
   }
-  
-  newRay->setRefData( ref_data );
+  /* newRay->setRefData( ref_data );
   newRay->setVelData( vel_data );
   newRay->setSwData( sw_data );
 
   vel_data = NULL;
   sw_data = NULL;
-  ref_data = NULL;
+  ref_data = NULL; */
 
   //return *newRay;
 }
 
-float* LevelII::decode_ref(const char *buffer, short int numGates)
+void LevelII::decode_ref(Ray* newRay, const char *buffer, short int numGates)
 {
 
+  newRay->allocateRefData( numGates );
+  float* refArray = newRay->getRefData();
   // Decode each byte
-  float* const refArray = new float[numGates];
   for (short int i = 0; i <= numGates - 1; i++) {
     unsigned char encoded = (unsigned char)buffer[i];
     if (encoded == 0) {
@@ -158,16 +159,15 @@ float* LevelII::decode_ref(const char *buffer, short int numGates)
     }
   }
 
-  return refArray;
-
 }
 
-float* LevelII::decode_vel(const char *buffer, short int numGates,
+void LevelII::decode_vel(Ray* newRay, const char *buffer, short int numGates,
 			   short int velRes)
 {
 
+  newRay->allocateVelData( numGates );
+  float* velArray = newRay->getVelData();
   // Decode each byte
-  float* const velArray = new float[numGates];
   for (int i = 0; i <= numGates - 1; i++) {
     unsigned char encoded = (unsigned char)buffer[i];
     if (encoded == 0) {
@@ -183,15 +183,14 @@ float* LevelII::decode_vel(const char *buffer, short int numGates,
     }
   }
 
-  return velArray;
-
 }
 
-float* LevelII::decode_sw(const char *buffer, short int numGates)
+void LevelII::decode_sw(Ray* newRay, const char *buffer, short int numGates)
 {
 
+  newRay->allocateSwData( numGates );
+  float* swArray = newRay->getSwData();
   // Decode each byte
-  float* const swArray = new float[numGates];
   for (int i = 0; i <= numGates - 1; i++) {
     unsigned char encoded = (unsigned char)buffer[i];
     if (encoded == 0) {
@@ -202,8 +201,6 @@ float* LevelII::decode_sw(const char *buffer, short int numGates)
       swArray[i] = (((float)encoded - 2.)/2.) - 63.5;
     }
   }
-
-  return swArray;
 
 }
 

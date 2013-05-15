@@ -71,16 +71,16 @@ void Ray::setSweepIndex(const int &value) {
   sweepIndex = value;
 }
 
-void Ray::setRefData(float *data) {
-  refData = data;
+void Ray::allocateRefData(const short int numGates) {
+  refData = new float[numGates];
 }
 
-void Ray::setVelData(float *data) {
-  velData = data;
+void Ray::allocateVelData(const short int numGates) {
+  velData = new float[numGates];
 }
 
-void Ray::setSwData(float *data) {
-  swData = data;
+void Ray::allocateSwData(const short int numGates) {
+  swData = new float[numGates];
 }
 
 void Ray::setUnambig_range(const float &value) {

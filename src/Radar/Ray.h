@@ -24,9 +24,9 @@ class Ray
   void setVelResolution(const int &value);
   void setRayIndex(const int &value);
   void setSweepIndex(const int &value);
-  void setRefData(float *data);
-  void setVelData(float *data);
-  void setSwData(float *data);
+  void allocateRefData(const short int numGates);
+  void allocateVelData(const short int numGates);
+  void allocateSwData(const short int numGates);
   void setUnambig_range(const float &value);
   void setNyquist_vel(const float &value);
   void setFirst_ref_gate(const int &value);

@@ -50,9 +50,9 @@ class LevelII : public RadarData
   int ref_num_gates;
   int vel_num_gates;
   
-  float* decode_ref(const char *buffer, short int numGates);
-  float* decode_vel(const char *buffer, short int numGates, short int velRes);
-  float* decode_sw(const char *buffer,  short int numGates);
+  void decode_ref(Ray* newRay, const char *buffer, short int numGates);
+  void decode_vel(Ray* newRay, const char *buffer, short int numGates, short int velRes);
+  void decode_sw(Ray* newRay, const char *buffer,  short int numGates);
   long int volumeTime;
   short int volumeDate;
   void swapVolHeader();

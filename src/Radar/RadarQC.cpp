@@ -219,7 +219,7 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
                 refValues1 = radarData->getRay(ipt1[m])->getRefData();
                 refValues2 = radarData->getRay(ipt2[m])->getRefData();
                 Ray *current = radarData->getRay(m+upperFirst);
-                float *newRef = new float[current->getRef_numgates()];
+                float *newRef = current->getRefData();
                 for(int k=current->getFirst_ref_gate();
                     k<current->getRef_numgates();k++) {
                     a = refValues1[k];
@@ -242,11 +242,10 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
                         newRef[k] = velNull;
                     }
                 }
-                current->setRefData(newRef);
                 refValues1 = NULL;
                 refValues2 = NULL;
-                delete refValues1;
-                delete refValues2;
+                //delete refValues1;
+                //delete refValues2;
             }
         }
 

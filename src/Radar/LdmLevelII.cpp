@@ -167,19 +167,15 @@ bool LdmLevelII::readVolume()
 			  // Read ray of data
 			  if (msg1Header->ref_ptr) {
 				  char* const ref_buffer = readPtr + sizeof(nexrad_message_header) + msg1Header->ref_ptr;
-				  ref_data = decode_ref(ref_buffer,
-										msg1Header->ref_num_gates);
+				  decode_ref(&Rays[numRays], ref_buffer, msg1Header->ref_num_gates);
 			  }
 			  if (msg1Header->vel_ptr) {
 				  char* const vel_buffer = readPtr + sizeof(nexrad_message_header) + msg1Header->vel_ptr;
-				  vel_data = decode_vel(vel_buffer,
-										msg1Header->vel_num_gates,
-										msg1Header->velocity_resolution);
+				  decode_vel(&Rays[numRays], vel_buffer, msg1Header->vel_num_gates, msg1Header->velocity_resolution);
 			  }
 			  if (msg1Header->sw_ptr) {
 				  char* const sw_buffer = readPtr + sizeof(nexrad_message_header) + msg1Header->sw_ptr;
-				  sw_data = decode_sw(sw_buffer,
-									  msg1Header->vel_num_gates);
+				  decode_sw(&Rays[numRays], sw_buffer, msg1Header->vel_num_gates);
 			  }
 			  
 			  // Put more rays in the volume, associated with the current Sweep;
@@ -222,8 +218,7 @@ bool LdmLevelII::readVolume()
 					//continue;
 				  }
 				  char* const ref_buffer = (char *)ref_block + sizeof(moment_data_block);
-				  ref_data = decode_ref(ref_buffer,
-										ref_block->num_gates);
+				  decode_ref(&Rays[numRays], ref_buffer, ref_block->num_gates);
 				  ref_num_gates = ref_block->num_gates;
 				  ref_gate1 = ref_block->gate1;
 				  ref_gate_width = ref_block->gate_width;
@@ -245,9 +240,7 @@ bool LdmLevelII::readVolume()
 					//continue;
 				  }
 				  char* const vel_buffer = (char *)vel_block + sizeof(moment_data_block);
-				  vel_data = decode_vel(vel_buffer,
-										vel_block->num_gates,
-										vel_block->scale);
+				  decode_vel(&Rays[numRays], vel_buffer, vel_block->num_gates, vel_block->scale);
 				  vel_num_gates = vel_block->num_gates;
 				  vel_gate1 = vel_block->gate1;
 				  vel_gate_width = vel_block->gate_width;
@@ -264,8 +257,7 @@ bool LdmLevelII::readVolume()
 					swapMomentDataBlock(sw_block);
 				  }
 				  char* const sw_buffer = (char *)sw_block + sizeof(moment_data_block);
-				  sw_data = decode_sw(sw_buffer,
-									  sw_block->num_gates);
+				  decode_sw(&Rays[numRays], sw_buffer, sw_block->num_gates);
 			  }
 
 			  
