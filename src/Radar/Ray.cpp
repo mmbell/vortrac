@@ -198,3 +198,14 @@ int Ray::getVel_numgates() {
 int Ray::getVcp() {
   return vcp ;
 }
+
+void Ray::emptyRefgates(const short int numGates) {
+	if (ref_numgates == 0) {
+	  allocateRefData(numGates);
+	  for (int i = 0; i < numGates; i++) {
+		  refData[i] = -999.0;
+	  }
+	  ref_numgates = numGates;
+	}
+
+}

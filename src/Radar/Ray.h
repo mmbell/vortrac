@@ -42,6 +42,7 @@ class Ray
   void setRef_numgates(const int &value);
   void setVel_numgates(const int &value);
   void setVcp(const int &value);
+  void emptyRefgates(const short int numGates);
 
   int getTime();
   int getDate();
@@ -62,7 +63,7 @@ class Ray
   int getRef_numgates();
   int getVel_numgates();
   int getVcp();
-
+  
  private:
   int sweepIndex;
   int time;

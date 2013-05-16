@@ -180,7 +180,7 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
                                 int firstGate = radarData->getRay(j+first)->getFirst_ref_gate();
                                 if(radarData->getRay(r+first)->getFirst_ref_gate() > firstGate)
                                     firstGate = radarData->getRay(r+first)->getFirst_ref_gate();
-                                radarData->getRay(m+upperFirst)->setRef_numgates(numGates);
+                                radarData->getRay(m+upperFirst)->emptyRefgates(numGates);
                                 radarData->getRay(m+upperFirst)->setFirst_ref_gate(firstGate);
                                 float sp1 = radarData->getRay(j+first)->getRef_gatesp();
                                 float sp2 = radarData->getRay(r+first)->getRef_gatesp();
