@@ -45,17 +45,22 @@ bool RadarData::readVolume()
 
 Sweep* RadarData::getSweep(int index)
 {
-
-  return &Sweeps[index];
-
+  if ((index >= 0) and (index < numSweeps)) {
+    return &Sweeps[index];
+  } else {
+	return NULL;
+  }
 }
 
 Ray* RadarData::getRay(int index)
 {
   // do we want to do error checking here?
   // if(index > numRays) ErrorMessage/ return 0;
-  return &Rays[index];
-
+  if ((index >= 0) and (index < numRays)) {
+    return &Rays[index];
+  } else {
+	return NULL;
+  }
 }
 
 int RadarData::getNumSweeps()
