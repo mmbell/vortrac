@@ -1711,10 +1711,13 @@ bool RadarQC::derivativeDealias()
 					ray_index = m + currentSweep->getFirstRay();
 					if (ray_index < currentSweep->getFirstRay()) ray_index += rays;
 					if (ray_index > currentSweep->getLastRay()) ray_index -= rays;
-					float* raydata = radarData->getRay(ray_index)->getVelData();
+					Ray* currentRay = radarData->getRay(ray_index);
+					float* raydata = currentRay->getVelData();
 					int ri = (m >= rays) ? (m-rays) : m;
 					ri = (ri < 0) ? (ri+rays) : ri;
-					if (raydata != NULL) veldata[ri][j] = raydata[j];
+					if ((raydata != NULL) and (j < currentRay->getVel_numgates())) {
+					   veldata[ri][j] = raydata[j];
+				    }
 					if (veldata[ri][j] != velNull) {
 						sum += weights[m-i+2]*veldata[ri][j];
 						//sum += weights[m-i]*veldata[i][j];
@@ -1787,8 +1790,11 @@ bool RadarQC::derivativeDealias()
 						{
 							veldata[i][j]+= 2.0*minfold*(nyquistVelocity);
 							ray_index = i + currentSweep->getFirstRay();
-							float* raydata = radarData->getRay(ray_index)->getVelData();
-							raydata[j] = veldata[i][j];
+							Ray* currentRay = radarData->getRay(ray_index);
+							float* raydata = currentRay->getVelData();
+							if ((raydata != NULL) and (j < currentRay->getVel_numgates())) {
+							   raydata[j] = veldata[i][j];
+						    }
 						}
 					}
 				}
