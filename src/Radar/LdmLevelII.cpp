@@ -331,6 +331,11 @@ bool LdmLevelII::readVolume()
 
   isDealiased(false);
 
+  if(numSweeps < 5) {
+    // Corrupt radar volume
+    return false;
+  }
+
   return true;
 
 }

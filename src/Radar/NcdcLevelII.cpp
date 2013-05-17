@@ -266,6 +266,11 @@ bool NcdcLevelII::readVolume()
     delete[] headBuffer;
     delete[] nexBuffer;
 
+    if(numSweeps < 5) {
+      // Corrupt radar volume
+      return false;
+    }
+
     return true;
 
 }

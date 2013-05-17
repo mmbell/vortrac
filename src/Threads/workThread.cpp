@@ -91,12 +91,11 @@ void workThread::run()
             }
             emit log(Message("Found file:" + newVolume->getFileName(), -1, this->objectName()));
             // Check to makes sure that the file still exists and is readable
-            if(!newVolume->fileIsReadable()) {
+            if((!newVolume->fileIsReadable()) or (!newVolume->readVolume())) {
                 emit log(Message(QString("The radar data file "+newVolume->getFileName()+" is not readable"), -1,this->objectName()));
                 delete newVolume;
                 continue;
             }
-            newVolume->readVolume();
             emit newVCP(newVolume->getVCP());
             //radar data quality control
             RadarQC* dealiaser=new RadarQC(newVolume);
