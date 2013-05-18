@@ -464,7 +464,14 @@ void RadarQC::thresholdData()
             emit log(Message(QString(),1,this->objectName()));
         currentRay = radarData->getRay(i);
         int sweepIndex = currentRay->getSweepIndex();
-        numVGates = currentRay->getVel_numgates();
+        Sweep *currentSweep = radarData->getSweep(sweepIndex);
+        int numSweepGates = currentSweep->getVel_numgates();
+		int numRayGates = currentRay->getVel_numgates();
+		if (numRayGates < numSweepGates) {
+			numVGates = numRayGates;
+		} else {
+		    numVGates = numSweepGates;
+		}
         //      float velGateSp = currentRay->getVel_gatesp();
         //      float refGateSp = currentRay->getRef_gatesp();
         float *vGates = currentRay->getVelData();
@@ -1264,6 +1271,8 @@ bool RadarQC::GVAD(float* &vel, Sweep* &currentSweep,float &speed, float &direct
 
     if((nyqVel == 0)||(fabs(nyqVel)>90)) {
         emit log(Message(QString("Nyquist Velocity Not Defined - Dealiasing Not Possible"),0,this->objectName()));
+	    delete [] gvr;
+	    delete [] gve;
         return false;
     }
 
@@ -1453,8 +1462,18 @@ bool RadarQC::GVAD(float* &vel, Sweep* &currentSweep,float &speed, float &direct
     coEff = new float[gvadnumCoEff];
     stError = new float[gvadnumCoEff];
 
-    if(! Matrix::lls(gvadnumCoEff, numData, X, Y, stDeviation, coEff, stError))
-        return false;
+    if(! Matrix::lls(gvadnumCoEff, numData, X, Y, stDeviation, coEff, stError)) {
+	    for(int i = 0; i < numCoEff; i++) {
+	        delete [] X[i];
+	    }
+	    delete [] X;
+	    delete [] Y;
+	    delete [] coEff;
+	    delete [] stError;
+	    delete [] gvr;
+	    delete [] gve;
+        return false;	
+	}
 
     // PH 10/2007. Elevation calculated previously, but not used.
     // Replaced redundant elevAngle that was not in original FORTRAN code.
