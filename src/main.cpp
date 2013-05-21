@@ -75,6 +75,7 @@ int main(int argc, char *argv[])
         }
 
         std::cout << "Batch Mode started for " << xmlfile.toStdString() << " ...\n";
+        QCoreApplication::setAttribute(Qt::AA_ImmediateWidgetCreation);
         QApplication app(argc,argv);
         BatchWindow mainWin(0, xmlfile);
 

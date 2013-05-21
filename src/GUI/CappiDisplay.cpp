@@ -488,7 +488,14 @@ void CappiDisplay::setGBVTDResults(float x, float y,float rmw, float sMin, float
     hasGBVTDInfo = true;
     imageHolder.unlock();
     emit hasImage(true);
-    update();
+    //update();
+
+    repaint();
+    QImage visibleImage = image;
+
+    sleep(5);
+    std::cout << "Plotting Cappi ... \n";
+    visibleImage.save("./cappi_vel","PNG");
 }
 
 void CappiDisplay::toggleRadarDisplay()

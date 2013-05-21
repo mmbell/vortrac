@@ -56,6 +56,7 @@ public slots:
     void manualParameter(const QString& name, const float num);
     void manualParameter(const QString& name, const QString& time);
     void catchLog(const Message& message);
+    void plotPressure();
 
 protected:
     void paintEvent (QPaintEvent *event);

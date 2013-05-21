@@ -26,6 +26,7 @@
 #include "Pressure/MADISFactory.h"
 #include "Radar/FetchRemote.h"
 #include "CappiDisplay.h"
+#include "GraphFace.h"
 #include "DiagnosticPanel.h"
 
 #ifndef DRIVERANALYSIS_H
@@ -76,6 +77,7 @@ protected:
     QLabel *currDeficit;
     QLabel* deficitLabel;
 
+    GraphFace* graph;
     CappiDisplay* cappiDisplay;
     QLabel *appMaxWind;
     QLabel *appMaxLabel2;

@@ -1737,3 +1737,25 @@ void GraphFace::setImageFileName(QString newName)
 {
   autoImageName = newName;
 }
+
+void GraphFace::plotPressure()
+{
+    repaint();
+
+    QImage *visibleImage = new QImage(this->width(),this->height(),
+                      QImage::Format_ARGB32_Premultiplied);
+
+    QPainter *painter = new QPainter(visibleImage);
+    painter = updateImage(painter);
+    if (painter->isActive())
+      painter->end();
+    delete painter;
+
+    sleep(5);
+    if(!visibleImage->save("./pressure_rmw","PNG")) {
+        emit log(Message("GraphFace was unable to save"));
+      }
+
+
+    std::cout << "Plotting Pressure ... \n";
+}

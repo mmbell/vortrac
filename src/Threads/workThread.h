@@ -55,6 +55,7 @@ signals:
     void newCappi(const GriddedData& cappi);
     void newCappiInfo(float x,float y,float rmwEstimate,float sMin,float sMax,float vMax,
                       float userLat,float userLon,float lat,float lon);
+    void newPressurePlot();
     void finished();
 
 private:

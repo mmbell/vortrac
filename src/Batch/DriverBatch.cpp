@@ -45,6 +45,7 @@ DriverBatch::DriverBatch(QWidget *parent, const QString &fileName)
     currPressure = new QLabel(tr("0"));
     currRMW = new QLabel(tr("0"));
 
+    graph = new GraphFace();
     cappiDisplay = new CappiDisplay();
     appMaxWind = new QLabel();
     appMaxWind->setText(QString().setNum(cappiDisplay->getMaxApp(),'f', 1));
@@ -113,6 +114,8 @@ bool DriverBatch::run()
     connect(pollThread, SIGNAL(newCappiInfo(float, float, float, float, float, float, float ,float ,float, float)),
             cappiDisplay, SLOT(setGBVTDResults(float, float, float, float, float, float, float ,float ,float, float)),Qt::DirectConnection);
     connect(pollThread, SIGNAL(vortexListUpdate(VortexList*)),this, SLOT(pollVortexUpdate(VortexList*)),Qt::DirectConnection);
+    connect(pollThread, SIGNAL(newPressurePlot()),graph, SLOT(plotPressure()),Qt::DirectConnection);
+
 
     atcf = new ATCF(configData);
     connect(atcf, SIGNAL(log(const Message&)),this, SLOT(catchLog(const Message&)));

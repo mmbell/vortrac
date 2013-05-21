@@ -200,6 +200,7 @@ void workThread::run()
             float sMax = configData->getParam(simplex, "outerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
             float vMax = configData->getParam(vtd, "outerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
             emit newCappiInfo(xPercent, yPercent, rmwEstimate, sMin, sMax, vMax, _firstGuessLat, _firstGuessLon, simplexLat, simplexLon);
+            emit newPressurePlot();
             delete [] xyValues;
             if(abort) {
                 delete newVolume;
