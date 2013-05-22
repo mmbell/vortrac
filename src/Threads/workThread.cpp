@@ -149,7 +149,7 @@ void workThread::run()
                 delete centerFinder;
                 float userDistance = GriddedData::getCartesianDistance(_firstGuessLat,_firstGuessLon,vortexData.getLat(0),vortexData.getLon(0));
                 float range = GriddedData::getCartesianDistance(radarLat,radarLon,vortexData.getLat(0),vortexData.getLon(0));
-                if((userDistance>25.0f) or (range > newVolume->getMaxUnambig_range())) {
+                if((userDistance>25.0f) or (range > newVolume->getMaxUnambig_range()- vortexData.getRMW())) {
                     Message newMsg(QString(),5,this->objectName(),
                                    Yellow,"Center Not Found");
                     emit log(newMsg);
@@ -240,7 +240,9 @@ void workThread::run()
             }
             pVtd->getWinds(configData,gridData,newVolume,&vortexData,&_pressureList);
             delete pVtd;
-            if (vortexData.getMaxValidRadius() != -999) {
+			float range = GriddedData::getCartesianDistance(radarLat,radarLon,vortexData.getLat(0),vortexData.getLon(0));
+            if ((vortexData.getMaxValidRadius() != -999) 
+			  and (range < (newVolume->getMaxUnambig_range() - vortexData.getRMW()))) {
                 _vortexList.append(vortexData);
                 QString values;
                 QString result = "Central Pressure estimate " + values.setNum(vortexData.getPressure());
