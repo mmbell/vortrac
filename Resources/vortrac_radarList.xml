@@ -6,12 +6,6 @@
         <latitude>0.000</latitude>
         <altitude>0.000</altitude>
     </NONE>
-    <RCWF>
-        <text>RCWF in Taiwan</text>
-        <longitude>121.773</longitude>
-        <latitude>25.073</latitude>
-        <altitude>757.0</altitude>
-    </RCWF>
     <TJUA>
         <text>TJUA in San Juan Puerto Rico</text>
         <longitude>-66.078</longitude>
@@ -66,12 +60,6 @@
         <latitude>25.916</latitude>
         <altitude>17.1</altitude>
     </KBRO>
-    <RKSG>
-        <text>RKSG in Camp Humphreys, South Korea</text>
-        <longitude>127.021</longitude>
-        <latitude>36.956</latitude>
-        <altitude>35.9</altitude>
-    </RKSG>
     <KCLX>
         <text>KCLX in Charleston, SC</text>
         <longitude>-81.042</longitude>
@@ -228,6 +216,11 @@
         <latitude>21.894</latitude>
         <altitude>84.6</altitude>
     </PHKI>
+	<KNKX>
+		<text>KNKX in San Diego, CA</text>
+		<longitude>-117.037</longitude>
+		<latitude>32.915</latitude>
+		<altitude>311.1</altitude>
     <KLWX>
         <text>KLWX in Sterling, VA</text>
         <longitude>-77.478</longitude>
