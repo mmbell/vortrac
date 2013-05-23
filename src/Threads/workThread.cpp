@@ -149,7 +149,9 @@ void workThread::run()
                 delete centerFinder;
                 float userDistance = GriddedData::getCartesianDistance(_firstGuessLat,_firstGuessLon,vortexData.getLat(0),vortexData.getLon(0));
                 float range = GriddedData::getCartesianDistance(radarLat,radarLon,vortexData.getLat(0),vortexData.getLon(0));
-                if((userDistance>25.0f) or (range > newVolume->getMaxUnambig_range()- vortexData.getRMW())) {
+                if((userDistance>25.0f) 
+				  or (range > newVolume->getMaxUnambig_range() - 
+				      configData->getParam(configData->getConfig("center"), "innerradius").toFloat())) {
                     Message newMsg(QString(),5,this->objectName(),
                                    Yellow,"Center Not Found");
                     emit log(newMsg);
@@ -232,34 +234,39 @@ void workThread::run()
             }
             //STEP 7: GBVTD to calculate the wind
             //if simplex algorithm successfully find the center, then perform the GBVTD
-            emit log(Message("Estimating pressure",1,this->objectName()));
-            VortexThread* pVtd=new VortexThread();
-            if (mode == "operational") {
-                pVtd->setEnvPressure(atcf->getEnvPressure());
-                pVtd->setOuterRadius(atcf->getOuterRadius());
-            }
-            pVtd->getWinds(configData,gridData,newVolume,&vortexData,&_pressureList);
-            delete pVtd;
 			float range = GriddedData::getCartesianDistance(radarLat,radarLon,vortexData.getLat(0),vortexData.getLon(0));
-            if ((vortexData.getMaxValidRadius() != -999) 
-			  and (range < (newVolume->getMaxUnambig_range() - vortexData.getRMW()))) {
-                _vortexList.append(vortexData);
-                QString values;
-                QString result = "Central Pressure estimate " + values.setNum(vortexData.getPressure());
-                result += " +/- " + values.setNum(vortexData.getPressureUncertainty()) + " hPa";
-                result += " at " + vortexData.getTime().toString("hh:mm");
-                emit log(Message(result,0,this->objectName()));
-                // Print out summary information to log
-                QString summary = "VORTRAC ATCF,";
-                summary += vortexData.getTime().toString(Qt::ISODate) + ",";
-                summary += values.setNum(vortexData.getLat()) + ",";
-                summary += values.setNum(vortexData.getLon()) + ",";
-                summary += values.setNum(vortexData.getPressure()) + ",";
-                summary += values.setNum(vortexData.getPressureUncertainty()) + ",";
-                summary += values.setNum(vortexData.getRMW()) + ",";
-                summary += values.setNum(vortexData.getRMWUncertainty());
-                emit log(Message(summary,0,this->objectName()));
-            } else  {
+			if (range < (newVolume->getMaxUnambig_range() - configData->getParam(simplex, "innerradius").toFloat())) {
+	            emit log(Message("Estimating pressure",1,this->objectName()));
+	            VortexThread* pVtd=new VortexThread();
+	            if (mode == "operational") {
+	                pVtd->setEnvPressure(atcf->getEnvPressure());
+	                pVtd->setOuterRadius(atcf->getOuterRadius());
+	            }
+	            pVtd->getWinds(configData,gridData,newVolume,&vortexData,&_pressureList);
+	            delete pVtd;
+	            if (vortexData.getMaxValidRadius() != -999) {
+	                _vortexList.append(vortexData);
+	                QString values;
+	                QString result = "Central Pressure estimate " + values.setNum(vortexData.getPressure());
+	                result += " +/- " + values.setNum(vortexData.getPressureUncertainty()) + " hPa";
+	                result += " at " + vortexData.getTime().toString("hh:mm");
+	                emit log(Message(result,0,this->objectName()));
+	                // Print out summary information to log
+	                QString summary = "VORTRAC ATCF,";
+	                summary += vortexData.getTime().toString(Qt::ISODate) + ",";
+	                summary += values.setNum(vortexData.getLat()) + ",";
+	                summary += values.setNum(vortexData.getLon()) + ",";
+	                summary += values.setNum(vortexData.getPressure()) + ",";
+	                summary += values.setNum(vortexData.getPressureUncertainty()) + ",";
+	                summary += values.setNum(vortexData.getRMW()) + ",";
+	                summary += values.setNum(vortexData.getRMWUncertainty());
+	                emit log(Message(summary,0,this->objectName()));
+	            } else  {
+	                QString status = "No Central Pressure Estimate at " + vortexData.getTime().toString("hh:mm");
+	                Message newMsg(status,0,this->objectName(),Yellow,"Pressure Not Found");
+	                emit log(newMsg);
+	            }
+		    } else {
                 QString status = "No Central Pressure Estimate at " + vortexData.getTime().toString("hh:mm");
                 Message newMsg(status,0,this->objectName(),Yellow,"Pressure Not Found");
                 emit log(newMsg);

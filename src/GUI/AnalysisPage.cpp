@@ -121,7 +121,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     font.setPointSize(24);
     appMaxWind->setFont(font);
     appMaxWind->setText(QString().setNum(cappiDisplay->getMaxApp(),'f', 1));
-    QLabel* appMaxLabel = new QLabel(tr("Maximum Approaching Wind (m/s)"));
+    QLabel* appMaxLabel = new QLabel(tr("Maximum Approaching Wind (kts)"));
     appMaxLabel2 = new QLabel();
 
     recMaxWind = new QLabel();
@@ -129,7 +129,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     recMaxWind->resize(100,100);
     recMaxWind->setFont(font);
     recMaxWind->setText(QString().setNum(cappiDisplay->getMaxRec(),'f', 1));
-    QLabel* recMaxLabel = new QLabel(tr("Maximum Receding Wind (m/s)"));
+    QLabel* recMaxLabel = new QLabel(tr("Maximum Receding Wind (kts)"));
     recMaxLabel2 = new QLabel();
     QLabel* emptyLabel = new QLabel();
     QLabel* emptyLabel2 = new QLabel();

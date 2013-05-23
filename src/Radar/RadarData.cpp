@@ -250,7 +250,7 @@ float RadarData::getMaxUnambig_range()
     float maxRange = -999;
     for (int i = 0; i < numSweeps; ++i) {
         float range = Sweeps[i].getUnambig_range();
-        if (range > maxRange) maxRange = range;
+        if ((range > maxRange) and (Sweeps[i].getVel_numgates() > 0)) maxRange = range;
     }
     return maxRange;
 }
