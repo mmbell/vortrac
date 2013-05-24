@@ -57,6 +57,7 @@ signals:
 
 protected:
     workThread *pollThread;
+	QThread *thread;
     bool isUntitled;
     QDir workingDirectory;
     QString vortexLabel;

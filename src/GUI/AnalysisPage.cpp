@@ -505,8 +505,8 @@ void AnalysisPage::runThread()
 
     emit log(Message(QString(),0,this->objectName(),AllOff,QString(),Ok, QString()));
 
-    QThread* thread = new QThread;
-    workThread* pollThread = new workThread();
+    thread = new QThread;
+    pollThread = new workThread();
     pollThread->moveToThread(thread);
 
     connect(thread, SIGNAL(started()), pollThread, SLOT(run()));

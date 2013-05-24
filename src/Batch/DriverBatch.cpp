@@ -91,8 +91,8 @@ bool DriverBatch::initialize()
 
 bool DriverBatch::run()
 {
-    QThread* thread = new QThread;
-    workThread* pollThread = new workThread(this);
+    thread = new QThread;
+    pollThread = new workThread(this);
     pollThread->moveToThread(thread);
 
     connect(thread, SIGNAL(started()), pollThread, SLOT(run()));
