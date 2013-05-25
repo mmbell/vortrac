@@ -84,13 +84,13 @@ void StormSignal::paintEvent(QPaintEvent *event)
     case Nothing:
         break;
     case RapidIncrease:
-        stormMessage = QString("Rapid Pressure Rise");
+        stormMessage = QString("Rising");
         break;
     case RapidDecrease:
-        stormMessage = QString("Rapid Pressure Fall");
+        stormMessage = QString("Falling");
         break;
     case Ok:
-        stormMessage = QString("OK");
+        stormMessage = QString("Steady");
         break;
     case OutOfRange:
         stormMessage = QString("Center out of Range");

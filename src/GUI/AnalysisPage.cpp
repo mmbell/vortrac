@@ -69,7 +69,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 
 
     // Construct Analysis Page Layout
-    deficitLabel = new QLabel(tr("Pressure Deficit From 0 km (mb):"));
+    deficitLabel = new QLabel(tr("Pressure Deficit From 0 nm (mb):"));
     currDeficit = new QLabel(tr("0"));
     currDeficit->setFrameStyle(QFrame::StyledPanel);
     currDeficit->resize(100,100);
@@ -83,7 +83,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     currPressure->resize(100,100);
     currPressure->setFont(font);
     
-    QLabel *rmwLabel = new QLabel(tr("Current RMW (km):"));
+    QLabel *rmwLabel = new QLabel(tr("Current RMW (nm):"));
     currRMW = new QLabel(tr("0"));
     currRMW->setFrameStyle(QFrame::StyledPanel);
     currRMW->resize(100,100);
@@ -153,14 +153,14 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     lcdUserCenterLat->resize(100,100);
     lcdUserCenterLat->setFont(font);
     lcdUserCenterLat->setText(QString().setNum(0));
-    QLabel* lcdUserCenterLatLabel = new QLabel(tr("User Estimated TC Latitude"));
+    QLabel* lcdUserCenterLatLabel = new QLabel(tr("ATCF TC Latitude"));
 
     lcdUserCenterLon = new QLabel();
     lcdUserCenterLon->setFrameStyle(QFrame::StyledPanel);
     lcdUserCenterLon->resize(100,100);
     lcdUserCenterLon->setFont(font);
     lcdUserCenterLon->setText(QString().setNum(0));
-    QLabel* lcdUserCenterLonLabel = new QLabel(tr("User Estimated TC Longitude"));
+    QLabel* lcdUserCenterLonLabel = new QLabel(tr("ATCF TC Longitude"));
 
     QGroupBox *fieldDisplay = new QGroupBox(tr("Radar display"));
     QRadioButton *velocity = new QRadioButton(tr("Velocity"), fieldDisplay);
