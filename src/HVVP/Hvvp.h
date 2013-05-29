@@ -38,6 +38,7 @@ public:
     float getAvAcrossBeamWinds() { return av_VmSin; }
     float getAvAcrossBeamWindsStdError() { return stdErr_VmSin; }
     void setPrintOutput(const bool printToLog);
+    float computeCrossBeamWind(float height, float Xt);
 
 public slots:
     void catchLog(const Message& message);

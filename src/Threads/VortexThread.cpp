@@ -14,6 +14,7 @@
 #include "DataObjects/Coefficient.h"
 #include "DataObjects/Center.h"
 #include "VTD/GBVTD.h"
+#include "VTD/mgbvtd.h"
 #include "Math/Matrix.h"
 #include "HVVP/Hvvp.h"
 
@@ -133,6 +134,29 @@ void VortexThread::run()
             emit log(Message(QString("Simplex center is outside CAPPI"),0,this->objectName(),Yellow));
             continue;
         }
+        
+        // compute crossbeam wind to correct GBVTD result
+        int gradientIndex = vortexData->getHeightIndex(gradientHeight);
+        QDomElement radar = configData->getConfig("radar");
+        float radarLat = configData->getParam(radar,"lat").toFloat();
+        float radarLon = configData->getParam(radar,"lon").toFloat();
+        float vortexLat = vortexData->getLat(gradientIndex);
+        float vortexLon = vortexData->getLon(gradientIndex);
+
+        float* distance = gridData->getCartesianPoint(&radarLat, &radarLon,&vortexLat, &vortexLon);
+        float rt = sqrt(distance[0]*distance[0]+distance[1]*distance[1]);
+        float cca = atan2(distance[0], distance[1])*180/acos(-1);
+        delete [] distance;
+
+        Hvvp *hvvp = new Hvvp;
+        hvvp->setConfig(configData);
+        hvvp->setRadarData(radarVolume,rt, cca, vortexData->getAveRMW());
+
+        MGBVTD mgbvtd(gridData->getCartesianRefPointI(), 
+                      gridData->getCartesianRefPointJ(),
+                      height, vortexData->getAveRMW(), *gridData);
+        float Vm = mgbvtd.computeCrossBeamWind(30.f, velField, vtd, hvvp);
+        std::cout<<"TEST: mean crossbeam wind="<<Vm<<std::endl;
 
         // should we be incrementing radius using ringwidth? -LM
         for (float radius = firstRing; radius <= lastRing; radius++) {
