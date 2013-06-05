@@ -40,16 +40,16 @@ void DriverAnalysis::pollVortexUpdate(VortexList* list)
     if(list->count() > 0) {
 
         // Find the outermost vtd mean wind coefficient that is not equal to -999
-        float maxRadius = list->last().getMaxValidRadius();
+        float maxRadius = list->last().getMaxValidRadiusnm();
         currPressure->setText(QString().setNum((int)list->last().getPressure()));
 
         if(list->last().getAveRMW()==-999.0)
             currRMW->setText(QString().setNum(0));
         else
-            currRMW->setText(QString().setNum(list->last().getAveRMW()*0.5399568, 'f', 0));
+            currRMW->setText(QString().setNum(list->last().getAveRMWnm(), 'f', 0));
 
         currDeficit->setText(QString().setNum(list->last().getPressureDeficit(), 'f', 1));
-        deficitLabel->setText(tr("Pressure Deficit From ")+QString().setNum(maxRadius*0.5399568, 'f', 0)+tr(" nm (mb):"));
+        deficitLabel->setText(tr("Pressure Deficit From ")+QString().setNum(maxRadius, 'f', 0)+tr(" nm (mb):"));
         emit vortexListChanged(list);
     }
     else {

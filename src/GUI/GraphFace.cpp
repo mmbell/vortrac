@@ -182,7 +182,7 @@ bool GraphFace::event(QEvent *event)
       else {
 	if ((unScalePressure(find->y()) > (pGMin)) && showPressure) {
 	  // Pressure Point
-	  measurement.setNum(VortexDataList->value(index).getPressure());
+	  measurement.setNum(VortexDataList->value(index).getPressure(), 'f', 0);
 	  time = VortexDataList->value(index).getTime().toString("dd-hh:mm");
 	  QString message("Pressure Estimate\nPressure = "
 			  + measurement + " mb\n"+ time);
@@ -201,10 +201,10 @@ bool GraphFace::event(QEvent *event)
 	  }
 	  else {
 	    // RMW Point
-	    measurement.setNum(VortexDataList->value(index).getAveRMW());
+	    measurement.setNum(VortexDataList->value(index).getAveRMWnm(), 'f', 0);
 	    time = VortexDataList->value(index).getTime().toString("dd-hh:mm");
 	    QString message("Radius of Maximum Wind Estimate\nRMW = "
-			    +measurement+" km\n"+time);
+			    +measurement+" nm\n"+time);
 	    QToolTip::showText(find->globalPos(), message , this);
 	  }
 	}
@@ -767,8 +767,8 @@ void GraphFace::checkRmw(VortexData* point)
   
   // We want to get statistics on all the rmws and then take the average
 
-  float aveRmw = point->getAveRMW();
-  float aveRmwUn = point->getAveRMWUncertainty();
+  float aveRmw = int(point->getAveRMWnm() + 0.5);
+  float aveRmwUn = point->getAveRMWUncertaintynm();
 
   if ((aveRmw + aveRmwUn) > autoRmwMax) {
     // Update the Max and Min for rmw
@@ -828,10 +828,10 @@ QPointF GraphFace::makeRmwPoint(VortexData d)
   // ready for graphing (meters -> QPointF)
 
   QPointF temp;  
-  if((d.getAveRMW()< rGMax)&&(d.getAveRMW()>rGMin)) {
+  if((d.getAveRMWnm()< rGMax)&&(d.getAveRMWnm()>rGMin)) {
     float tempTime = scaleTime(d.getTime());
     if(tempTime != -999)
-      temp = QPointF(tempTime, scaleRmw(d.getAveRMW()));
+      temp = QPointF(tempTime, scaleRmw(d.getAveRMWnm()));
   }
   return(temp);
 }
@@ -846,10 +846,10 @@ QPointF GraphFace::makeRmwPoint(VortexData d, int bestLevel)
   // ready for graphing (meters -> QPointF)
 
   QPointF temp;  
-  if((d.getRMW(bestLevel)< rGMax)&&(d.getRMW(bestLevel)>rGMin)) {
+  if((d.getRMWnm(bestLevel)< rGMax)&&(d.getRMWnm(bestLevel)>rGMin)) {
     float tempTime = scaleTime(d.getTime());
     if(tempTime != -999)
-      temp = QPointF(tempTime ,scaleRmw(d.getRMW(bestLevel)));
+      temp = QPointF(tempTime ,scaleRmw(d.getRMWnm(bestLevel)));
   }
   return(temp);
 }
@@ -1012,8 +1012,8 @@ int GraphFace::pointAt(const QPointF & position, bool& ONDropSonde)
 	   && showPressure) {
 	  return i;
 	}
-	if((VortexDataList->at(i).getAveRMW() <= rmax) 
-	   && (VortexDataList->at(i).getAveRMW() >= rmin)) {
+	if((VortexDataList->at(i).getAveRMWnm() <= rmax) 
+	   && (VortexDataList->at(i).getAveRMWnm() >= rmin)) {
 	  return i;
 	}
 	if((-1*VortexDataList->at(i).getPressureDeficit() <= dmax)
@@ -1563,8 +1563,8 @@ QPainter* GraphFace::updateImage(QPainter* painter)
 	
 	// uses the loop to move through all data points
 
-	float aveRmw = VortexDataList->at(i).getAveRMW();
-	float aveRmwUn = VortexDataList->at(i).getAveRMWUncertainty();
+	float aveRmw = VortexDataList->at(i).getAveRMWnm();
+	float aveRmwUn = VortexDataList->at(i).getAveRMWUncertaintynm();
 
 	float rawErrorBarHeight = aveRmwUn;
 
