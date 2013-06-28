@@ -26,10 +26,11 @@ float MGBVTD::computeCrossBeamWind(float guessMax, QString& velField, GBVTD* gbv
 	float Rt = sqrt(m_centerx*m_centerx+m_centery*m_centery);
 	float curDev = 999.;
 	float tmpBest= 0.;
-	for(float currentWind=-fabs(guessMax); currentWind<fabs(guessMax)+0.1; currentWind+=0.1){
+	//Iterate through all possible values of cross-beam wind
+	for(float currentWind=-fabs(guessMax); currentWind<fabs(guessMax)+0.5; currentWind+=0.5){
 		std::vector<float> vt;
 		std::vector<float> vt_rng;
-		//1. compute Vt radial profile
+		//1. compute the radial profile of symmetric tangential wind  
 		for(float rng=m_rmw; rng<=1.7*m_rmw; rng+=1.){
 			m_cappi.setCartesianReferencePoint(m_centerx, m_centery, m_centerz);
 			int numData = m_cappi.getCylindricalAzimuthLength(rng, m_centerz);
@@ -41,10 +42,12 @@ float MGBVTD::computeCrossBeamWind(float guessMax, QString& velField, GBVTD* gbv
 			float vtdDev;
 			if(gbvtd->analyzeRing(m_centerx, m_centery, rng, m_centerz, numData, ringData, ringAzi, coeff, vtdDev)){
 				if(coeff[0].getParameter()=="VTC0"){
-					vt.push_back(coeff[0].getValue());
+					vt.push_back(coeff[0].getValue()-currentWind*rng/Rt);
 					vt_rng.push_back(rng);
 				}
 			}
+			delete[] ringAzi;
+			delete[] ringData;
 			delete[] coeff;
 		}
 		//2. fit Xt using Vt profile
@@ -59,6 +62,7 @@ float MGBVTD::computeCrossBeamWind(float guessMax, QString& velField, GBVTD* gbv
 
 		//3. do HVVP
 		float hvvp_crossBeamWind = hvvp->computeCrossBeamWind(m_centerz, x[0]);
+		//std::cout<<currentWind<<", "<<x[0]<<", "<<hvvp_crossBeamWind<<std::endl;
 		if(fabs(currentWind-hvvp_crossBeamWind)<curDev){
 			curDev  = fabs(currentWind-hvvp_crossBeamWind);
 			tmpBest = hvvp_crossBeamWind;
