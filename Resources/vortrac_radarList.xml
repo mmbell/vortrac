@@ -216,11 +216,12 @@
         <latitude>21.894</latitude>
         <altitude>84.6</altitude>
     </PHKI>
-	<KNKX>
-		<text>KNKX in San Diego, CA</text>
-		<longitude>-117.037</longitude>
-		<latitude>32.915</latitude>
-		<altitude>311.1</altitude>
+    <KNKX>
+        <text>KNKX in San Diego, CA</text>
+	<longitude>-117.037</longitude>
+	<latitude>32.915</latitude>
+	<altitude>311.1</altitude>
+    </KNKX>
     <KLWX>
         <text>KLWX in Sterling, VA</text>
         <longitude>-77.478</longitude>

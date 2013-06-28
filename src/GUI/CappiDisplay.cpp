@@ -370,6 +370,7 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
         for (float j = minJ; j < maxJ; j++) {
             float vel = cappi.getIndexValue(velfield,i,j,k);
             if (vel != -999) {
+				vel *= 1.9438445;
                 if (vel > maxVel) {
                     maxVel = vel;
                     maxRecXindex = i;
@@ -453,6 +454,7 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
             if (value == -999) {
                 color = 0;
             } else {
+				if (displayType == velocity) value *= 1.9438445;				
                 color = (int)((value - minValue)/contourIncr) + 2;
                 if ((color < 0) or (color > 43)) {
                     // Bad color

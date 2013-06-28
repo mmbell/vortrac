@@ -755,7 +755,7 @@ CappiPanel::CappiPanel():AbstractPanel()
     QLabel *zGrid = new QLabel(tr("Z Grid Spacing (km)"));
     zGridBox = new QDoubleSpinBox;
     zGridBox->setDecimals(1);
-    zGridBox->setRange(1,1);
+    zGridBox->setRange(1,3);
     zGridBox->setValue(1);
 
     QGridLayout *gridLayout = new QGridLayout;

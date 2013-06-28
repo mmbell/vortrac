@@ -44,18 +44,23 @@ public:
     inline float getMaxVT(int index=0) const    { return (index<_numLevels)?_maxVT[index]:-999.0f; }
     inline void setMaxVT(int index,float value){ if(index<_numLevels) _maxVT[index]=value; }
     inline float getRMW(int index=0) const      { return (index<_numLevels)?_RMW[index]:_fillv;}
+	inline float getRMWnm(int index=0) const      { return (index<_numLevels)?_RMW[index]*0.5399568:_fillv;}
     inline void  setRMW(int index,float value)  { if(index<_numLevels) _RMW[index]=value;}
     inline void  setRMW(float a[],int howMany)  { for(int i=0;i<howMany;i++) setRMW(i,a[i]);}
     inline float getRMWUncertainty(int index=0) const      { return (index<_numLevels)?_RMWUncertainty[index]:_fillv;}
+	inline float getRMWUncertaintynm(int index=0) const      { return (index<_numLevels)?_RMWUncertainty[index]*0.5399568:_fillv;}
     inline void  setRMWUncertainty(int index,float value)  { if(index<_numLevels) _RMWUncertainty[index]=value;}
     inline void  setRMWUncertainty(float a[],int howMany)  { for(int i=0;i<howMany;i++) setRMW(i,a[i]);}
 
 
     inline float getAveRMW() const      { return _aveRMW; }
+	inline float getAveRMWnm() const      { return _aveRMW*0.5399568; }
     inline void  setAveRMW(float value) { _aveRMW=value; }
     inline float getAveRMWUncertainty() const      { return _aveRMWUncertainty; }
+	inline float getAveRMWUncertaintynm() const      { return _aveRMWUncertainty*0.5399568; }
     inline void  setAveRMWUncertainty(float value) { _aveRMWUncertainty=value; }
     inline float getMaxValidRadius() const      { return _maxValidRadius; }
+	inline float getMaxValidRadiusnm() const      { return _maxValidRadius*0.5399568; }
     inline void  setMaxValidRadius(float value) { _maxValidRadius=value; }
 
     inline float getPressure() const       { return centralPressure; }
