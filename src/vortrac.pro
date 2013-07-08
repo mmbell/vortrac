@@ -122,4 +122,4 @@ SOURCES += main.cpp \
 RESOURCES += vortrac.qrc
 LIBS += -lbz2 
 QT += xml network
-CONFIG += debug
+CONFIG -= app_bundle
