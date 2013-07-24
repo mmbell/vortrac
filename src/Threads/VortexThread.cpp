@@ -176,6 +176,9 @@ void VortexThread::run()
                                  ringAzimuths, vtdCoeffs, vtdStdDev)) {
                 if (vtdCoeffs[0].getParameter() == "VTC0") {
                     // VT[v] = vtdCoeffs[0].getValue();
+                    if(vtdCoeffs[0].getValue() != -999.f){
+                        vtdCoeffs[0].setValue( vtdCoeffs[0].getValue()-Vm*radius/rt );
+                    }
                 } else {
                     emit log(Message(QString("Error retrieving VTC0 in vortex!"),0,this->objectName(), Yellow));
                 }
