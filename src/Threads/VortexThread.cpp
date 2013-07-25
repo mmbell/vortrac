@@ -150,13 +150,12 @@ void VortexThread::run()
 
         Hvvp *hvvp = new Hvvp;
         hvvp->setConfig(configData);
-        hvvp->setRadarData(radarVolume,rt, cca, vortexData->getAveRMW());
+        hvvp->setRadarData(radarVolume, rt, cca, vortexData->getAveRMW());
 
         MGBVTD mgbvtd(gridData->getCartesianRefPointI(), 
                       gridData->getCartesianRefPointJ(),
                       height, vortexData->getAveRMW(), *gridData);
         float Vm = mgbvtd.computeCrossBeamWind(30.f, velField, vtd, hvvp);
-        std::cout<<"TEST: mean crossbeam wind="<<Vm<<std::endl;
 
         // should we be incrementing radius using ringwidth? -LM
         for (float radius = firstRing; radius <= lastRing; radius++) {

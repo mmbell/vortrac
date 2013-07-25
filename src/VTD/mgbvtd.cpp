@@ -50,31 +50,44 @@ float MGBVTD::computeCrossBeamWind(float guessMax, QString& velField, GBVTD* gbv
 		delete[] coeff;
 	}
 
-	std::cout<<vt.size()<<", "<<*std::min_element(vt.begin(), vt.end())<<", "<<*std::max_element(vt.begin(), vt.end())<<std::endl;
-
+	//Compute hvvp first
+	float cc0, cc6, vt_std, hvvp_std;
+	if(!hvvp->computeCrossBeamWind(m_centerz, cc0, cc6, hvvp_std))
+		return 0.f;
+	
 	//Iterate through all possible values of cross-beam wind
-	float curDev = 999.;
-	float tmpBest= 0.;
-	for(float currentWind=-fabs(guessMax); currentWind<fabs(guessMax)+0.5; currentWind+=0.5){
-
-		// fit Xt using Vt profile
-		arma::fmat A(vt.size(), 2);
-		arma::fvec b(vt.size());
+	arma::fmat A(vt.size(), 2);
+	for(int ii=0; ii<vt.size(); ++ii){
+		A(ii,0) = log(Rt/vt_rng[ii]);
+		A(ii,1) = 1;
+	}
+	
+	std::vector<float> guessWinds;
+	for(float currentWind=-fabs(guessMax); currentWind<fabs(guessMax)+0.5; currentWind+=0.5)
+		guessWinds.push_back(currentWind);
+	
+	arma::fmat B(vt.size(), guessWinds.size());
+	for(std::vector<float>::iterator it=guessWinds.begin(); it!=guessWinds.end(); ++it){
 		for(int ii=0; ii<vt.size(); ++ii){
-			A(ii,0) = log(Rt/vt_rng[ii]);
-			A(ii,1) = 1;
-			b(ii)   = log(vt[ii]-currentWind*vt_rng[ii]/Rt);
-		}
-		arma::fvec x=arma::solve(A, b);
-
-		// do HVVP
-		float hvvp_crossBeamWind = hvvp->computeCrossBeamWind(m_centerz, x[0]);
-		//std::cout<<currentWind<<", "<<x[0]<<", "<<hvvp_crossBeamWind<<std::endl;
-		if(fabs(currentWind-hvvp_crossBeamWind)<curDev){
-			curDev  = fabs(currentWind-hvvp_crossBeamWind);
-			tmpBest = currentWind;
+			B(ii, std::distance(guessWinds.begin(), it)) = log(vt[ii]-*it*vt_rng[ii]/Rt);
 		}
 	}
-	std::cout<<curDev<<std::endl;
+	arma::fmat X=arma::solve(A, B);
+	arma::fmat E=(A*X-B);
+	vt_std = sqrt(arma::accu(arma::square(E))/E.size());
+	
+	//Compare results and find the best one
+	float curDev=999., tmpBest=0.;
+	for(std::vector<float>::iterator it=guessWinds.begin(); it!=guessWinds.end(); ++it){
+		int idx = std::distance(guessWinds.begin(), it);
+		float hvvp_vm = cc0-Rt*cc6/(X(0,idx)+1.);
+		if(fabs(*it-hvvp_vm)<curDev){
+			curDev  = fabs(*it-hvvp_vm);
+			tmpBest = *it;
+		}
+	}
+	
+	printf("num_vt_fit=%3d, vt_std=%5.2f, hvvp_std=%5.2f, vm=%5.2f, dev=%5.2f\n", vt.size(), vt_std, hvvp_std, tmpBest, curDev);
+		
 	return tmpBest;
 }

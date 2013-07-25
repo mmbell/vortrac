@@ -35,10 +35,11 @@ public:
     float* getUWinds() { return u; }
     float* getVWinds() { return v; }
     float* getAcrossBeamWinds() { return vm_sin; }
+	float  getrt() {return rt;}
     float getAvAcrossBeamWinds() { return av_VmSin; }
     float getAvAcrossBeamWindsStdError() { return stdErr_VmSin; }
     void setPrintOutput(const bool printToLog);
-    float computeCrossBeamWind(float height, float Xt);
+    bool computeCrossBeamWind(float height, float& cc0, float& cc6, float& sse);
 
 public slots:
     void catchLog(const Message& message);
