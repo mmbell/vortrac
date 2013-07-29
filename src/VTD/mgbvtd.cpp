@@ -30,7 +30,7 @@ float MGBVTD::computeCrossBeamWind(float guessMax, QString& velField, GBVTD* gbv
 	std::vector<float> vt;
 	std::vector<float> vt_rng;
 	//1. compute the radial profile of symmetric tangential wind  
-	for(float rng=m_rmw; rng<=1.7*m_rmw; rng+=1.){
+	for(float rng=m_rmw; rng<=.7*Rt; rng+=1.){
 		m_cappi.setCartesianReferencePoint(m_centerx, m_centery, m_centerz);
 		int numData = m_cappi.getCylindricalAzimuthLength(rng, m_centerz);
 		float* ringData = new float[numData];
@@ -49,11 +49,17 @@ float MGBVTD::computeCrossBeamWind(float guessMax, QString& velField, GBVTD* gbv
 		delete[] ringData;
 		delete[] coeff;
 	}
-
+	if(vt.size()<15) {
+		std::cout<<std::endl;
+		return 0.f;
+	}
+	
 	//Compute hvvp first
 	float cc0, cc6, vt_std, hvvp_std;
-	if(!hvvp->computeCrossBeamWind(m_centerz, cc0, cc6, hvvp_std))
+	if(!hvvp->computeCrossBeamWind(m_centerz, cc0, cc6, hvvp_std)) {
+		std::cout<<std::endl;
 		return 0.f;
+	}
 	
 	//Iterate through all possible values of cross-beam wind
 	arma::fmat A(vt.size(), 2);
@@ -63,23 +69,32 @@ float MGBVTD::computeCrossBeamWind(float guessMax, QString& velField, GBVTD* gbv
 	}
 	
 	std::vector<float> guessWinds;
-	for(float currentWind=-fabs(guessMax); currentWind<fabs(guessMax)+0.5; currentWind+=0.5)
+	for(float currentWind=-fabs(guessMax); currentWind<fabs(guessMax)+1.; currentWind+=1.)
 		guessWinds.push_back(currentWind);
 	
+	std::vector<bool> flag(guessWinds.size(), false);
 	arma::fmat B(vt.size(), guessWinds.size());
+	B.fill(0.f);
+	arma::fvec b(vt.size());
 	for(std::vector<float>::iterator it=guessWinds.begin(); it!=guessWinds.end(); ++it){
-		for(int ii=0; ii<vt.size(); ++ii){
-			B(ii, std::distance(guessWinds.begin(), it)) = log(vt[ii]-*it*vt_rng[ii]/Rt);
+		int idx = std::distance(guessWinds.begin(), it);
+		for(int ii=0; ii<vt.size(); ++ii)
+			b(ii) = vt[ii]-*it*vt_rng[ii]/Rt;
+		if( b.min()>0.f){
+			B.col(idx) = arma::log(b);
+			flag[idx]  = true;
 		}
 	}
 	arma::fmat X=arma::solve(A, B);
 	arma::fmat E=(A*X-B);
 	vt_std = sqrt(arma::accu(arma::square(E))/E.size());
+	printf("min_Xt=%5.2f, max_Xt=%5.2f, ", arma::min(X.row(0)), arma::max(X.row(0)));
 	
 	//Compare results and find the best one
 	float curDev=999., tmpBest=0.;
 	for(std::vector<float>::iterator it=guessWinds.begin(); it!=guessWinds.end(); ++it){
 		int idx = std::distance(guessWinds.begin(), it);
+		if(!flag[idx] || X(0,idx)<=0.f ) continue;
 		float hvvp_vm = cc0-Rt*cc6/(X(0,idx)+1.);
 		if(fabs(*it-hvvp_vm)<curDev){
 			curDev  = fabs(*it-hvvp_vm);

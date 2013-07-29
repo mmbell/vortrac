@@ -773,9 +773,7 @@ bool Hvvp::computeCrossBeamWind(float height, float& cc0, float& cc6, float& sse
 	sse = 999.f;
 	if(volume->getNumSweeps() < 0) {
 		// For Analytic No Volume Case
-		emit log(Message(QString("Found No Volume To Process"),0,
-		this->objectName(),Red,
-		QString("Could Not Locate Volume")));
+		std::cout<<"Found No Volume To Process"<<std::endl;
 		return false;
 	}
 
@@ -843,8 +841,14 @@ bool Hvvp::computeCrossBeamWind(float height, float& cc0, float& cc6, float& sse
 			// Across-beam component of the environmental wind
 			cc0 = cc[0];
 			cc6 = cc[6];
+			delete[] stand_err;
+			delete[] cc;
 			return true;
 		} 
+		else{
+			delete[] stand_err;
+			delete[] cc;
+		}
 	}
 	return false;
 }

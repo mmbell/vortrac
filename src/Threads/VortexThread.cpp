@@ -155,7 +155,7 @@ void VortexThread::run()
         MGBVTD mgbvtd(gridData->getCartesianRefPointI(), 
                       gridData->getCartesianRefPointJ(),
                       height, vortexData->getAveRMW(), *gridData);
-        float Vm = mgbvtd.computeCrossBeamWind(30.f, velField, vtd, hvvp);
+        float Vm = mgbvtd.computeCrossBeamWind(50.f, velField, vtd, hvvp);
 
         // should we be incrementing radius using ringwidth? -LM
         for (float radius = firstRing; radius <= lastRing; radius++) {
