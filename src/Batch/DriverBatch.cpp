@@ -78,7 +78,7 @@ DriverBatch::~DriverBatch()
     delete configData;
     delete statusLog;
     delete statusText;
-    delete pollThread;
+    if(!pollThread) delete pollThread;
 }
 
 bool DriverBatch::initialize()
