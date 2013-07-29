@@ -530,7 +530,7 @@ void GraphFace::makeKey()
   pressureErrorLabel2->setAlignment(Qt::AlignLeft);
   confidence2->chop(42);
   
-  QLabel* rmwLabel = new QLabel(tr("Radius of Maximum Wind Estimate(km)"));
+  QLabel* rmwLabel = new QLabel(tr("Radius of Maximum Wind Estimate(nm)"));
   rmwLabel->setFont(labelFont);
   rmwLabel->setAlignment(Qt::AlignLeft);
 
