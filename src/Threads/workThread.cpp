@@ -270,6 +270,7 @@ void workThread::run()
 					emit log(newMsg);
 				}
 			} else {
+				std::cout<<"No Central Pressure Estimate at "<< vortexData.getTime().toString("hh:mm").toStdString()<<std::endl;
 				QString status = "No Central Pressure Estimate at " + vortexData.getTime().toString("hh:mm");
 				Message newMsg(status,0,this->objectName(),Yellow,"Pressure Not Found");
 				emit log(newMsg);
@@ -293,6 +294,7 @@ void workThread::run()
 			sleep(2);  
 			//if in batch mode, abort
 			if (this->parent()){
+				std::cout<<"finish processing all files in batch mode\n";
 				abort = true;
 				emit finished();
 			}

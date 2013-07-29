@@ -60,6 +60,7 @@ float MGBVTD::computeCrossBeamWind(float guessMax, QString& velField, GBVTD* gbv
 		std::cout<<std::endl;
 		return 0.f;
 	}
+	printf("cc0=%5.2f, cc6=%5.2f, ", cc0, cc6);
 	
 	//Iterate through all possible values of cross-beam wind
 	arma::fmat A(vt.size(), 2);
@@ -91,7 +92,7 @@ float MGBVTD::computeCrossBeamWind(float guessMax, QString& velField, GBVTD* gbv
 	printf("min_Xt=%5.2f, max_Xt=%5.2f, ", arma::min(X.row(0)), arma::max(X.row(0)));
 	
 	//Compare results and find the best one
-	float curDev=999., tmpBest=0.;
+	float curDev=999., tmpBest=0., tmpXt=999.;
 	for(std::vector<float>::iterator it=guessWinds.begin(); it!=guessWinds.end(); ++it){
 		int idx = std::distance(guessWinds.begin(), it);
 		if(!flag[idx] || X(0,idx)<=0.f ) continue;
@@ -99,10 +100,11 @@ float MGBVTD::computeCrossBeamWind(float guessMax, QString& velField, GBVTD* gbv
 		if(fabs(*it-hvvp_vm)<curDev){
 			curDev  = fabs(*it-hvvp_vm);
 			tmpBest = *it;
+			tmpXt   = X(0,idx);
 		}
 	}
 	
-	printf("num_vt_fit=%3d, vt_std=%5.2f, hvvp_std=%5.2f, vm=%5.2f, dev=%5.2f\n", vt.size(), vt_std, hvvp_std, tmpBest, curDev);
+	printf("num_vt_fit=%3d, vt_std=%5.2f, hvvp_std=%5.2f, tmpXt=%5.2f, vm=%5.2f, dev=%5.2f\n", vt.size(), vt_std, hvvp_std, tmpXt, tmpBest, curDev);
 		
 	return tmpBest;
 }
