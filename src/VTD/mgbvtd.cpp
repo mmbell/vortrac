@@ -30,7 +30,7 @@ float MGBVTD::computeCrossBeamWind(float guessMax, QString& velField, GBVTD* gbv
 	std::vector<float> vt;
 	std::vector<float> vt_rng;
 	//1. compute the radial profile of symmetric tangential wind  
-	for(float rng=m_rmw; rng<=.7*Rt; rng+=1.){
+	for(float rng=m_rmw*1.2; rng<=.6*Rt; rng+=1.){
 		m_cappi.setCartesianReferencePoint(m_centerx, m_centery, m_centerz);
 		int numData = m_cappi.getCylindricalAzimuthLength(rng, m_centerz);
 		float* ringData = new float[numData];
