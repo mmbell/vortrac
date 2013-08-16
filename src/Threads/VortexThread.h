@@ -88,6 +88,8 @@ class VortexThread : public QObject
      void storePressureUncertaintyData(QString& fileLocation);
      void readInConfig();
      bool calcHVVP(bool printOutput);
+	 void getMaxSfcWind(VortexData* data);
+	 float fixAngle(float& angle);
 
 };
 

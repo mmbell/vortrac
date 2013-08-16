@@ -259,7 +259,8 @@ void workThread::run()
 	                summary += values.setNum(vortexData.getPressure()) + ",";
 	                summary += values.setNum(vortexData.getPressureUncertainty()) + ",";
 	                summary += values.setNum(vortexData.getRMW()) + ",";
-	                summary += values.setNum(vortexData.getRMWUncertainty());
+	                summary += values.setNum(vortexData.getRMWUncertainty()) + ",";
+					summary += values.setNum(vortexData.getMaxSfcWind());
 	                emit log(Message(summary,0,this->objectName()));
 	            } else  {
 	                QString status = "No Central Pressure Estimate at " + vortexData.getTime().toString("hh:mm");

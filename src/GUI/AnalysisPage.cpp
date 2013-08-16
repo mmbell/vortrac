@@ -229,7 +229,8 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 	// History Table
 	historyTable = new QTableWidget(0, 8);
 	QStringList headers;
-	headers << "Time" << "Latitude" << "Longitude" << "Pressure" << "RMW" << "Max Approaching Wind" << "Max Receding Wind" << "Max Analyzed Wind";
+	headers << "Time" << "Latitude" << "Longitude" << "Pressure (hPa)" << "RMW (nm)" << "Max Approaching (kt)" 
+		<< "Max Receding (kt)" << "Max Analyzed (kt)";
 	historyTable->setHorizontalHeaderLabels(headers);
 	historyTable->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
 	visuals->addTab(historyTable, "Storm History");

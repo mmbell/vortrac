@@ -191,6 +191,10 @@ void VortexThread::run()
         vortexData->setDeficitUncertainty(-999.0);
         vortexData->setAveRMWUncertainty(-999.0);
     }
+	
+	// Get the estimated surface wind
+	getMaxSfcWind(vortexData);
+	
     delete [] vtdCoeffs;
     delete [] pressureDeficit;
 }
@@ -648,5 +652,97 @@ bool VortexThread::calcHVVP(bool printOutput)
     delete envWindFinder;
 
     return hasHVVP;
+}
+
+void VortexThread::getMaxSfcWind(VortexData* data)
+{
+    float xCenter = -999;
+    float yCenter = -999;
+	double maxwind = 0;
+	double xmax = 0;
+	double ymax = 0;
+
+    for(int h = 0; h < gridData->getKdim(); h++) {
+        float height = gridData->getCartesianPointFromIndexK(h);
+        if((height<firstLevel)||(height>lastLevel)) { continue; }
+        // Set the reference point
+        float referenceLat = vortexData->getLat(h);
+        float referenceLon = vortexData->getLon(h);
+        gridData->setAbsoluteReferencePoint(referenceLat, referenceLon, height);
+        if ((gridData->getRefPointI() < 0) ||(gridData->getRefPointJ() < 0) ||(gridData->getRefPointK() < 0)) {
+            emit log(Message(QString("Simplex center is outside CAPPI"),0,this->objectName(),Yellow));
+            continue;
+        }
+
+        for (float radius = firstRing; radius <= lastRing; radius++) {
+            // Get the cartesian points
+            xCenter = gridData->getCartesianRefPointI();
+            yCenter = gridData->getCartesianRefPointJ();
+
+		    // Get thetaT
+			float thetaT = atan2(yCenter,xCenter);
+		    thetaT = fixAngle(thetaT);
+		    float centerDistance = sqrt(xCenter*xCenter + yCenter*yCenter);
+			
+            // Get the winds
+	        if (!(data->getCoefficient(height, radius, QString("VTC0")) == Coefficient())) {
+	            float vtc0 = data->getCoefficient(height, radius, QString("VTC0")).getValue();
+				float vrc0 = data->getCoefficient(height, radius, QString("VRC0")).getValue();
+				float vmc0 = data->getCoefficient(height, radius, QString("VMC0")).getValue();
+				float vtc1 = data->getCoefficient(height, radius, QString("VTC1")).getValue();
+				float vts1 = data->getCoefficient(height, radius, QString("VTS1")).getValue();
+				double PI = acos(-1.0);
+				for (int i = 0; i < 360; i++) {
+					// Convert to Psi
+					float azimuth = PI*float(i)/180.0;
+			        float angle = azimuth - thetaT;
+			        angle = fixAngle(angle);
+			        float xx = xCenter + radius * cos(angle+thetaT);
+			        float yy = yCenter + radius * sin(angle+thetaT);
+			        float psiCorrection = atan2(yy,xx) - thetaT;
+					float psi = angle - psiCorrection;
+					psi = fixAngle(psi);
+					double vt = 0;
+					double vr = 0;
+					double vm = 0;
+					if (vtc0 != -999) {
+						vt += vtc0;
+					}
+					/* if ((vtc1 != -999) and (vts1 != -999)) {
+						vt += vtc1*cos(psi) + vts1*sin(psi);
+					} */
+					if (vrc0 != -999) {
+						vr = vrc0;
+					}
+					if (vmc0 != -999) {
+						vm = vmc0;
+					}					
+					double u = -vt*sin(azimuth) + vr*cos(azimuth) + vm*cos(angle);
+					double v =  vt*cos(azimuth) + vr*sin(azimuth) + vm*sin(angle);
+					double wspd = sqrt(u*u + v*v);
+					if (wspd > maxwind) {
+						maxwind = wspd;
+						xmax = xx;
+						ymax = yy;
+					}
+				}
+			}
+		}
+	}
+	data->setMaxSfcWind(maxwind*1.9438445); 
+	// 1.652267825 multiplier if reducing to surface;
+}
+
+
+float VortexThread::fixAngle(float& angle)
+{
+
+    // Make sure an angle is between 0 and 2Pi
+	double PI = acos(-1.0);
+    if (fabs(angle) < 1.0e-06) angle = 0.0;
+    if (angle > (2*PI)) angle = angle - 2*PI;
+    if (angle < 0.) angle = angle + 2*PI;
+    return angle;
+
 }
 

@@ -51,6 +51,8 @@ public:
 	inline float getRMWUncertaintynm(int index=0) const      { return (index<_numLevels)?_RMWUncertainty[index]*0.5399568:_fillv;}
     inline void  setRMWUncertainty(int index,float value)  { if(index<_numLevels) _RMWUncertainty[index]=value;}
     inline void  setRMWUncertainty(float a[],int howMany)  { for(int i=0;i<howMany;i++) setRMW(i,a[i]);}
+    inline float getMaxSfcWind() const    { return maxSfcWind; }
+    inline void  setMaxSfcWind(float value){ maxSfcWind=value; }
 
 
     inline float getAveRMW() const      { return _aveRMW; }
@@ -129,6 +131,7 @@ private:
     float centralPressureUncertainty;
     float pressureDeficit;
     float pressureDeficitUncertainty;
+	float maxSfcWind;
 
 };
 

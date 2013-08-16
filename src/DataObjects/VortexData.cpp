@@ -42,6 +42,7 @@ VortexData::VortexData()
     centralPressureUncertainty = -999;
     pressureDeficit = -999;
     pressureDeficitUncertainty = -999;
+	maxSfcWind = -999;
     _aveRMW = -999.0;
     _aveRMWUncertainty = -999.0;
     _maxValidRadius = -999;
@@ -74,6 +75,7 @@ VortexData::VortexData(int availLevels, int availRadii, int availWaveNum)
     centralPressureUncertainty = -999;
     pressureDeficit = -999;
     pressureDeficitUncertainty = -999;
+	maxSfcWind = -999;
     _aveRMW = -999.0;
     _aveRMWUncertainty = -999.0;
     _maxValidRadius = -999;
@@ -107,6 +109,7 @@ VortexData::VortexData(const VortexData &other)
     this->centralPressureUncertainty = other.centralPressureUncertainty;
     this->pressureDeficit = other.pressureDeficit;
     this->pressureDeficitUncertainty = other.pressureDeficitUncertainty;
+	this->maxSfcWind = other.maxSfcWind;
     this->_aveRMW = other._aveRMW;
     this->_aveRMWUncertainty = other._aveRMWUncertainty;
     this->_maxValidRadius = other._maxValidRadius;
