@@ -89,6 +89,12 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     currRMW->resize(100,100);
     currRMW->setFont(font);
     
+    QLabel *maxWindLabel = new QLabel(tr("Current Wind Speed (kt):"));
+    currMaxWind = new QLabel(tr("0"));
+    currMaxWind->setFrameStyle(QFrame::StyledPanel);
+    currMaxWind->resize(100,100);
+    currMaxWind->setFont(font);
+	
     QGroupBox *pressureGraph = new QGroupBox;
 
     QPushButton *legend = new QPushButton("See Legend");
@@ -246,6 +252,9 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     lcdLayout->addStretch();
     lcdLayout->addWidget(rmwLabel);
     lcdLayout->addWidget(currRMW);
+    lcdLayout->addStretch();
+    lcdLayout->addWidget(maxWindLabel);
+    lcdLayout->addWidget(currMaxWind);	
     lcdLayout->addStretch();
 
     QHBoxLayout *runLayout = new QHBoxLayout;

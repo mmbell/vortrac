@@ -675,6 +675,8 @@ void VortexThread::getMaxSfcWind(VortexData* data)
         }
 
         for (float radius = firstRing; radius <= lastRing; radius++) {
+			
+			if(fabs(radius - vortexData->getAveRMW()) > 20) continue;
             // Get the cartesian points
             xCenter = gridData->getCartesianRefPointI();
             yCenter = gridData->getCartesianRefPointJ();
@@ -708,9 +710,9 @@ void VortexThread::getMaxSfcWind(VortexData* data)
 					if (vtc0 != -999) {
 						vt += vtc0;
 					}
-					/* if ((vtc1 != -999) and (vts1 != -999)) {
+					if ((vtc1 != -999) and (vts1 != -999)) {
 						vt += vtc1*cos(psi) + vts1*sin(psi);
-					} */
+					}
 					if (vrc0 != -999) {
 						vr = vrc0;
 					}

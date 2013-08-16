@@ -75,7 +75,8 @@ protected:
     QLabel *currPressure;
     QLabel *currRMW;
     QLabel *currDeficit;
-    QLabel* deficitLabel;
+    QLabel *deficitLabel;
+	QLabel *currMaxWind;
 
     CappiDisplay* cappiDisplay;
     QLabel *appMaxWind;
