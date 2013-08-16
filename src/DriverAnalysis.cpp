@@ -39,17 +39,32 @@ void DriverAnalysis::pollVortexUpdate(VortexList* list)
     //Message::toScreen("Made it too pollVortexUpdate in AnalysisPage");
     if(list->count() > 0) {
 
+		int currRow = historyTable->rowCount()-1;
+		QString currTime = list->last().getTime().toString("dd/hh:mm");
+		QTableWidgetItem *time= new QTableWidgetItem(currTime);
+		time->setFlags(Qt::ItemIsSelectable);
+		historyTable->setItem(currRow, 0, time);
+		
         // Find the outermost vtd mean wind coefficient that is not equal to -999
         float maxRadius = list->last().getMaxValidRadiusnm();
         currPressure->setText(QString().setNum((int)list->last().getPressure()));
+		QTableWidgetItem *pressure = new QTableWidgetItem(QString().setNum((int)list->last().getPressure()));
+		historyTable->setItem(currRow, 3, pressure);
 
-        if(list->last().getAveRMW()==-999.0)
+        if(list->last().getAveRMW()==-999.0) {
             currRMW->setText(QString().setNum(0));
-        else
+			QTableWidgetItem *rmw= new QTableWidgetItem(QString().setNum(0));
+			rmw->setFlags(Qt::ItemIsSelectable);
+			historyTable->setItem(currRow, 4, rmw);
+		} else {
             currRMW->setText(QString().setNum(list->last().getAveRMWnm(), 'f', 0));
-
+			QTableWidgetItem *rmw= new QTableWidgetItem(QString().setNum(list->last().getAveRMWnm(), 'f', 0));
+			rmw->setFlags(Qt::ItemIsSelectable);
+			historyTable->setItem(currRow, 4, rmw);
+		}
         currDeficit->setText(QString().setNum(list->last().getPressureDeficit(), 'f', 1));
         deficitLabel->setText(tr("Pressure Deficit From ")+QString().setNum(maxRadius, 'f', 0)+tr(" nm (mb):"));
+		
         emit vortexListChanged(list);
     }
     else {
@@ -94,6 +109,14 @@ void DriverAnalysis::updateCappiDisplay(bool hasImage)
         msg += vel + " kts " + loc + " )";
         emit log(Message(msg,0,this->objectName()));
 
+		int currRow = historyTable->rowCount()-1;
+		QTableWidgetItem *appwind = new QTableWidgetItem(QString().setNum(cappiDisplay->getMaxApp(),'f', 1));
+		appwind->setFlags(Qt::ItemIsSelectable);
+		historyTable->setItem(currRow, 5, appwind);
+		QTableWidgetItem *recwind = new QTableWidgetItem(QString().setNum(cappiDisplay->getMaxRec(),'f', 1));
+		recwind->setFlags(Qt::ItemIsSelectable);
+		historyTable->setItem(currRow, 6, recwind);
+		
     }
     else {
         appMaxWind->setText(QString().setNum(0));
@@ -111,5 +134,14 @@ void DriverAnalysis::updateCappiInfo(float x, float y, float rmwEstimate, float 
     lcdCenterLon->setText(QString().setNum(centerLon,'f', 2));
     lcdUserCenterLat->setText(QString().setNum(userCenterLat,'f', 2));
     lcdUserCenterLon->setText(QString().setNum(userCenterLon,'f', 2));
+	int currRow = historyTable->rowCount();
+	historyTable->insertRow(currRow);
+	QTableWidgetItem *lat = new QTableWidgetItem(QString().setNum(centerLat,'f', 2));
+	lat->setFlags(Qt::ItemIsSelectable);
+	historyTable->setItem(currRow, 1, lat);
+	QTableWidgetItem *lon = new QTableWidgetItem(QString().setNum(centerLon,'f', 2));
+	lon->setFlags(Qt::ItemIsSelectable);
+	historyTable->setItem(currRow, 2, lon);
+
     emit updateMadis(userCenterLat, userCenterLon);
 }

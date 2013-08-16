@@ -226,6 +226,14 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     progressBar->setMaximum(100);
     progressBar->reset();
 
+	// History Table
+	historyTable = new QTableWidget(0, 8);
+	QStringList headers;
+	headers << "Time" << "Latitude" << "Longitude" << "Pressure" << "RMW" << "Max Approaching Wind" << "Max Receding Wind" << "Max Analyzed Wind";
+	historyTable->setHorizontalHeaderLabels(headers);
+	historyTable->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+	visuals->addTab(historyTable, "Storm History");
+
     // Lay them out
     QHBoxLayout *lcdLayout = new QHBoxLayout;
     lcdLayout->addStretch();
@@ -304,6 +312,7 @@ AnalysisPage::~AnalysisPage()
     delete currDeficit;
     delete deficitLabel;
     delete quickstart;
+	delete historyTable;
 }
 
 void AnalysisPage::newFile()

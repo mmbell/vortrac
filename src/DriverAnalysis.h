@@ -90,6 +90,7 @@ protected:
 
     DiagnosticPanel *diagPanel;
 
+	QTableWidget *historyTable;
 
 };
 
