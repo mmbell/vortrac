@@ -1141,7 +1141,7 @@ QPainter* GraphFace::updateImage(QPainter* painter)
   painter->rotate(90);
   painter->setPen(rmwPen);
   painter->drawText(QRectF(0,0,graph_height,.4*RIGHT_MARGIN_WIDTH), 
-		    tr("Radius of Maximum Wind (km)"), 
+		    tr("Radius of Maximum Wind (nm)"), 
 		    QTextOption(Qt::AlignCenter)); 
   painter->restore();
 
