@@ -34,12 +34,12 @@ HEADERS += Threads/workThread.h \
            GUI/StopLight.h \ 
            GUI/CappiDisplay.h \
            GUI/StormSignal.h \
-	   GUI/StartDialog.h \
-	   HVVP/Hvvp.h \
+	         GUI/StartDialog.h \
+	         HVVP/Hvvp.h \
            IO/Message.h \
            IO/Log.h \
-	   IO/ATCF.h \
-	   Radar/RadarFactory.h \
+	         IO/ATCF.h \
+	         Radar/RadarFactory.h \
            Radar/LevelII.h \
            Radar/NcdcLevelII.h \
            Radar/LdmLevelII.h \
@@ -50,6 +50,7 @@ HEADERS += Threads/workThread.h \
            Radar/Ray.h \
            Radar/Sweep.h \
            VTD/GBVTD.h \
+           VTD/mgbvtd.h \
            Math/Matrix.h \
            ChooseCenter.h \
            Pressure/PressureData.h \
@@ -57,12 +58,13 @@ HEADERS += Threads/workThread.h \
            Pressure/PressureFactory.h \
            Pressure/HWind.h \
            Pressure/AWIPS.h \
-	   Pressure/MADIS.h \
-	   Pressure/MADISFactory.h \
+	         Pressure/MADIS.h \
+	         Pressure/MADISFactory.h \
            Radar/FetchRemote.h \
            Batch/DriverBatch.h \
            Batch/BatchWindow.h \
-    DriverAnalysis.h
+           DriverAnalysis.h
+
 SOURCES += main.cpp \
            Threads/workThread.cpp \
            Threads/SimplexThread.cpp \
@@ -91,11 +93,11 @@ SOURCES += main.cpp \
            GUI/StopLight.cpp \
            GUI/CappiDisplay.cpp \
            GUI/StormSignal.cpp \
-	   GUI/StartDialog.cpp \
+	         GUI/StartDialog.cpp \
            HVVP/Hvvp.cpp \
            IO/Message.cpp \
            IO/Log.cpp \
-	   IO/ATCF.cpp \
+	         IO/ATCF.cpp \
            Radar/RadarFactory.cpp \
            Radar/LevelII.cpp \
            Radar/NcdcLevelII.cpp \
@@ -106,6 +108,7 @@ SOURCES += main.cpp \
            Radar/Ray.cpp \
            Radar/Sweep.cpp \
            VTD/GBVTD.cpp \
+           VTD/mgbvtd.cpp \
            Math/Matrix.cpp \
            ChooseCenter.cpp \
            Pressure/PressureData.cpp \
@@ -113,13 +116,14 @@ SOURCES += main.cpp \
            Pressure/PressureFactory.cpp \
            Pressure/HWind.cpp \
            Pressure/AWIPS.cpp \
-	   Pressure/MADIS.cpp \
-	   Pressure/MADISFactory.cpp \
+	         Pressure/MADIS.cpp \
+	         Pressure/MADISFactory.cpp \
            Radar/FetchRemote.cpp \
            Batch/DriverBatch.cpp \
            Batch/BatchWindow.cpp \
-    DriverAnalysis.cpp
+           DriverAnalysis.cpp
 RESOURCES += vortrac.qrc
-LIBS += -lbz2 
+LIBS += -lbz2 -larmadillo
 QT += xml network
+CONFIG += release
 CONFIG -= app_bundle
