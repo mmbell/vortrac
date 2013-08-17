@@ -270,7 +270,7 @@ void workThread::run()
 					emit log(newMsg);
 				}
 			} else {
-				std::cout<<"No Central Pressure Estimate at "<< vortexData.getTime().toString("hh:mm").toStdString()<<std::endl;
+				// std::cout<<"No Central Pressure Estimate at "<< vortexData.getTime().toString("hh:mm").toStdString()<<std::endl;
 				QString status = "No Central Pressure Estimate at " + vortexData.getTime().toString("hh:mm");
 				Message newMsg(status,0,this->objectName(),Yellow,"Pressure Not Found");
 				emit log(newMsg);
