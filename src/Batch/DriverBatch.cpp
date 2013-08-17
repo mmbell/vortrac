@@ -45,6 +45,7 @@ DriverBatch::DriverBatch(QWidget *parent, const QString &fileName)
     currPressure = new QLabel(tr("0"));
     currRMW = new QLabel(tr("0"));
 	currMaxWind = new QLabel(tr("0"));
+	historyTable = new QTableWidget(0, 8);
 	
     cappiDisplay = new CappiDisplay();
     appMaxWind = new QLabel();
