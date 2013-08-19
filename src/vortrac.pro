@@ -10,6 +10,7 @@ INCLUDEPATH += . GUI Config IO Radar
 HEADERS += Threads/workThread.h \
            Threads/SimplexThread.h \
            Threads/VortexThread.h \
+		   Threads/pca.h \
            DataObjects/VortexData.h \
            DataObjects/SimplexData.h \
            DataObjects/VortexList.h \
@@ -69,6 +70,7 @@ SOURCES += main.cpp \
            Threads/workThread.cpp \
            Threads/SimplexThread.cpp \
            Threads/VortexThread.cpp \
+		   Threads/pca.cpp \
            DataObjects/VortexData.cpp \
            DataObjects/SimplexData.cpp \
            DataObjects/VortexList.cpp \

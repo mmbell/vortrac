@@ -14,6 +14,7 @@
 #include "Radar/RadarQC.h"
 #include <unistd.h>
 #include "DataObjects/SimplexList.h"
+#include "Threads/pca.h"
 
 workThread::workThread(QObject *parent)
 	: QObject(parent)
@@ -111,6 +112,16 @@ void workThread::run()
 				delete newVolume;
 				break;
 			}
+			
+			//PCA findcenter
+			float azCenter, rgCenter, pcaRMW;
+			pca pca_obj(*newVolume);
+			//pca pca_obj;
+			//pca_obj.simulateVortex(360., 100., 20.);
+			pca_obj.findCenter(azCenter, rgCenter);
+			std::cout<<"pca az_center= "<<azCenter<<", rg_center= "<<rgCenter<<std::endl;
+			
+			
 			//STEP 3: get the first guess of center Lat,Lon for simplex
 			_latlonFirstGuess(newVolume);
 			QString currentCenter("Processing radar volume at "+ newVolume->getDateTime().toString("hh:mm") + " with (" +
@@ -129,6 +140,7 @@ void workThread::run()
 				delete gridData;
 				break;
 			}
+			
 			//STEP 5: simplex to find a new center
 			emit log(Message("Finding center",1,this->objectName()));
 			VortexData vortexData;
@@ -339,7 +351,7 @@ void workThread::checkIntensification()
 	QDomElement pressure = configData->getConfig("pressure");
 	// Units of mb/hr
 	float rapidRate = configData->getParam(pressure, QString("rapidlimit")).toFloat();
-	if(isnan(rapidRate)) {
+	if(std::isnan(rapidRate)) {
 		emit log(Message(QString("Could Not Find Rapid Intensification Rate, Using 3 mb/hr"),0,this->objectName()));
 		rapidRate = 3.0;
 	}
@@ -347,7 +359,7 @@ void workThread::checkIntensification()
 	// So we don't report falsely there must be a rapid increase trend which
 	// spans several measurements Number of volumes which are averaged.
 	int volSpan = configData->getParam(pressure, QString("av_interval")).toInt();
-	if(isnan(volSpan)) {
+	if(std::isnan(volSpan)) {
 		emit log(Message(QString("Could Not Find Pressure Averaging Interval for Rapid Intensification, Using 8 volumes"),0,this->objectName()));
 		volSpan = 8;
 	}
