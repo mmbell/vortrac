@@ -89,7 +89,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     currRMW->resize(100,100);
     currRMW->setFont(font);
     
-    QLabel *maxWindLabel = new QLabel(tr("Current Wind Speed (kt):"));
+    QLabel *maxWindLabel = new QLabel(tr("Current Wind Speed (kt):\n(90% reduction)"));
     currMaxWind = new QLabel(tr("0"));
     currMaxWind->setFrameStyle(QFrame::StyledPanel);
     currMaxWind->resize(100,100);
@@ -159,14 +159,14 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     lcdUserCenterLat->resize(100,100);
     lcdUserCenterLat->setFont(font);
     lcdUserCenterLat->setText(QString().setNum(0));
-    QLabel* lcdUserCenterLatLabel = new QLabel(tr("ATCF TC Latitude"));
+    QLabel* lcdUserCenterLatLabel = new QLabel(tr("TC Vitals TC Latitude"));
 
     lcdUserCenterLon = new QLabel();
     lcdUserCenterLon->setFrameStyle(QFrame::StyledPanel);
     lcdUserCenterLon->resize(100,100);
     lcdUserCenterLon->setFont(font);
     lcdUserCenterLon->setText(QString().setNum(0));
-    QLabel* lcdUserCenterLonLabel = new QLabel(tr("ATCF TC Longitude"));
+    QLabel* lcdUserCenterLonLabel = new QLabel(tr("TC Vitals TC Longitude"));
 
     QGroupBox *fieldDisplay = new QGroupBox(tr("Radar display"));
     QRadioButton *velocity = new QRadioButton(tr("Velocity"), fieldDisplay);
@@ -236,7 +236,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 	historyTable = new QTableWidget(0, 8);
 	QStringList headers;
 	headers << "Time" << "Latitude" << "Longitude" << "Pressure (hPa)" << "RMW (nm)" << "Max Approaching (kt)" 
-		<< "Max Receding (kt)" << "Max Analyzed (kt)";
+		<< "Max Receding (kt)" << "Max Analyzed Sfc(kt)";
 	historyTable->setHorizontalHeaderLabels(headers);
 	historyTable->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
 	visuals->addTab(historyTable, "Storm History");
@@ -303,6 +303,8 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     // Connect the cappi toggle buttons
     connect(velocity, SIGNAL(toggled(const bool)),
             cappiDisplay, SLOT(toggleRadarDisplay()));
+			
+	thread = new QThread;
 
 }
 
@@ -323,6 +325,7 @@ AnalysisPage::~AnalysisPage()
     delete deficitLabel;
     delete quickstart;
 	delete historyTable;
+	delete thread;
 }
 
 void AnalysisPage::newFile()
@@ -524,7 +527,7 @@ void AnalysisPage::runThread()
 
     emit log(Message(QString(),0,this->objectName(),AllOff,QString(),Ok, QString()));
 
-    thread = new QThread;
+    //thread = new QThread;
     pollThread = new workThread();
     pollThread->moveToThread(thread);
 
@@ -654,14 +657,21 @@ void AnalysisPage::abortThread()
     // Try to kill the threads
     if(pollThread!=NULL) {
         pollThread->stop();
-        thread->wait();
+        thread->wait(1000);
         delete pollThread;
         pollVortexUpdate(NULL);
         cappiDisplay->clearImage();
+	    emit log(Message(QString("Analysis Aborted"),0,this->objectName(),AllOff,QString(),Ok, QString()));
     }
     delete atcf;
+	delete madis;
+	delete fetchremote;
     configDialog->turnOffMembers(false);
-    runButton->setEnabled(true);
+	/* thread->quit();
+	delete thread;
+	thread = NULL; 
+	pollThread = NULL; */
+    //runButton->setEnabled(true);
 }
 
 

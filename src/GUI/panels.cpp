@@ -58,7 +58,7 @@ VortexPanel::VortexPanel():AbstractPanel()
     autoLayout->addLayout(level3Layout);
     autoLayout->addLayout(atcfLayout);
     autoParameters->setLayout(autoLayout);
-    autoParameters->hide();
+    //autoParameters->hide();
 
     QFrame *manualParameters = new QFrame;
     
@@ -137,7 +137,7 @@ VortexPanel::VortexPanel():AbstractPanel()
     manualLayout->addLayout(obs);
     manualLayout->addLayout(rmwLayout);
     manualParameters->setLayout(manualLayout);
-    manualParameters->hide();
+    //manualParameters->hide();
     
     QLabel *workingDirLabel = new QLabel(tr("Working Directory"));
     QGridLayout *dirLayout = new QGridLayout();
@@ -166,8 +166,8 @@ VortexPanel::VortexPanel():AbstractPanel()
     
     connect(operational, SIGNAL(toggled(const bool)),
             this, SLOT(valueChanged()));
-    connect(operational, SIGNAL(toggled(bool)),
-            autoParameters, SLOT(setVisible(bool)));
+   // connect(operational, SIGNAL(toggled(bool)),
+   //         autoParameters, SLOT(setVisible(bool)));
     connect(idName, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
     connect(level2url, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
     connect(level3url, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
@@ -175,8 +175,8 @@ VortexPanel::VortexPanel():AbstractPanel()
     
     connect(manual, SIGNAL(toggled(const bool)),
             this, SLOT(valueChanged()));
-    connect(manual, SIGNAL(toggled(bool)),
-            manualParameters, SLOT(setVisible(bool)));
+   // connect(manual, SIGNAL(toggled(bool)),
+   //         manualParameters, SLOT(setVisible(bool)));
     connect(vortexName, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
     connect(latBox, SIGNAL(valueChanged(const QString&)), this, SLOT(valueChanged()));
     connect(longBox, SIGNAL(valueChanged(const QString&)), this, SLOT(valueChanged()));

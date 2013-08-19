@@ -68,7 +68,7 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 private:
-    QThread* thread;
+    //QThread* thread;
     // ConfigTree *configTree;
     QTextEdit *textPopUp;
     QDialog *popUp;

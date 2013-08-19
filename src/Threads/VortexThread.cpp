@@ -152,10 +152,11 @@ void VortexThread::run()
         hvvp->setConfig(configData);
         hvvp->setRadarData(radarVolume, rt, cca, vortexData->getAveRMW());
 
-        MGBVTD mgbvtd(gridData->getCartesianRefPointI(), 
+        /* MGBVTD mgbvtd(gridData->getCartesianRefPointI(), 
                       gridData->getCartesianRefPointJ(),
                       height, vortexData->getAveRMW(), *gridData);
-        float Vm = mgbvtd.computeCrossBeamWind(50.f, velField, vtd, hvvp);
+        float Vm = mgbvtd.computeCrossBeamWind(50.f, velField, vtd, hvvp); */
+		float Vm = 0.0;
 
         // should we be incrementing radius using ringwidth? -LM
         for (float radius = firstRing; radius <= lastRing; radius++) {
@@ -757,8 +758,8 @@ void VortexThread::getMaxSfcWind(VortexData* data)
 			}
 		}
 	}
-	data->setMaxSfcWind(maxwind*1.9438445); 
-	// 1.652267825 multiplier if reducing to surface;
+	data->setMaxSfcWind(maxwind * 1.9438445 * 0.90); 
+	// 1.652267825 multiplier if reducing by 85%;
 }
 
 

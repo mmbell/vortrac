@@ -62,7 +62,7 @@ void DriverAnalysis::pollVortexUpdate(VortexList* list)
 			rmw->setFlags(Qt::ItemIsSelectable);
 			historyTable->setItem(currRow, 4, rmw);
 		}
-        currDeficit->setText(QString().setNum(list->last().getPressureDeficit(), 'f', 1));
+        currDeficit->setText(QString().setNum(list->last().getPressureDeficit(), 'f', 0));
         deficitLabel->setText(tr("Pressure Deficit From ")+QString().setNum(maxRadius, 'f', 0)+tr(" nm (mb):"));
 		
 		currMaxWind->setText(QString().setNum(list->last().getMaxSfcWind(), 'f', 0));
