@@ -36,6 +36,7 @@
      <xgridsp>1.0</xgridsp>
      <ygridsp>1.0</ygridsp>
      <zgridsp>1.0</zgridsp>
+     <zmin>1.0</zmin>
      <interpolation>cressman</interpolation>
   </cappi>
   <center>

@@ -135,7 +135,7 @@ private:
    * for the location of the cappi output directory.
    */
 
-    QDoubleSpinBox *xDimBox, *yDimBox, *zDimBox, *xGridBox, *yGridBox, *zGridBox;
+    QDoubleSpinBox *xDimBox, *yDimBox, *zDimBox, *xGridBox, *yGridBox, *zGridBox, *zMinBox;
     // These boxes take in the lengths of the 3-D grid for mapping radar data
     // onto (xDimBox is for length in x dimension etc). The members labeled x,
     // y and x GridBoxes are for collecting and editing the distance between

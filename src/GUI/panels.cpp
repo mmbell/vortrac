@@ -722,7 +722,7 @@ CappiPanel::CappiPanel():AbstractPanel()
     cappiDir->addWidget(dir, 1, 0, 1, 3);
     cappiDir->addWidget(browse, 1,3);
 
-    QGroupBox *grid = new QGroupBox(tr("Griding Configurations"));
+    QGroupBox *grid = new QGroupBox(tr("Gridding Configurations"));
 
     QLabel *xdim = new QLabel(tr("Grid Dimension in X Direction"));
     QLabel *ydim = new QLabel(tr("Grid Dimension in Y Direction"));
@@ -758,6 +758,12 @@ CappiPanel::CappiPanel():AbstractPanel()
     zGridBox->setRange(1,3);
     zGridBox->setValue(1);
 
+    QLabel *zMin = new QLabel(tr("Z Minimum (km)"));
+    zMinBox = new QDoubleSpinBox;
+    zMinBox->setDecimals(1);
+    zMinBox->setRange(1,3);
+    zMinBox->setValue(1);
+
     QGridLayout *gridLayout = new QGridLayout;
     gridLayout->addWidget(xdim, 0, 0);
     gridLayout->addWidget(ydim, 0, 1);
@@ -771,6 +777,8 @@ CappiPanel::CappiPanel():AbstractPanel()
     gridLayout->addWidget(xGridBox, 3, 0);
     gridLayout->addWidget(yGridBox, 3, 1);
     gridLayout->addWidget(zGridBox, 3, 2);
+	gridLayout->addWidget(zMin, 4, 2);
+	gridLayout->addWidget(zMinBox, 5, 2);
     grid->setLayout(gridLayout);
 
     /*
@@ -843,6 +851,8 @@ CappiPanel::CappiPanel():AbstractPanel()
             this, SLOT(valueChanged()));
     connect(zGridBox, SIGNAL(valueChanged(const QString&)),
             this, SLOT(valueChanged()));
+    connect(zMinBox, SIGNAL(valueChanged(const QString&)),
+            this, SLOT(valueChanged()));
     /*
   connect(advUWindBox, SIGNAL(valueChanged(const QString&)),
    this, SLOT(valueChanged()));
@@ -869,6 +879,7 @@ CappiPanel::~CappiPanel()
     delete xGridBox;
     delete yGridBox;
     delete zGridBox;
+	delete zMinBox;
     /*
     delete advUWindBox;
     delete advVWindBox;
@@ -909,6 +920,8 @@ void CappiPanel::updatePanel(const QDomElement panelElement)
             yGridBox->setValue(parameter.toDouble()); }
         if (name == "zgridsp") {
             zGridBox->setValue(parameter.toDouble()); }
+        if (name == "zmin") {
+            zMinBox->setValue(parameter.toDouble()); }			
         /*
     if (name == "adv_u") {
       advUWindBox->setValue(parameter.toDouble()); }
@@ -961,6 +974,10 @@ bool CappiPanel::updateConfig()
         if(fabs(getFromElement("zgridsp").toDouble()-zGridBox->value())>=0.1) {
             emit changeDom(element, QString("zgridsp"),
                            QString().setNum(zGridBox->value()));
+        }
+        if(fabs(getFromElement("zmin").toDouble()-zMinBox->value())>=0.1) {
+            emit changeDom(element, QString("zmin"),
+                           QString().setNum(zMinBox->value()));
         }
         /*
       if(fabs(getFromElement("adv_u").toDouble()-advUWindBox->value())>=0.1) {
@@ -1162,12 +1179,12 @@ CenterPanel::CenterPanel()
 
     QLabel *bottomLevel = new QLabel(tr("Bottom Level (km)"));
     bLBox = new QDoubleSpinBox;
-    bLBox->setRange(1,1);
+    bLBox->setRange(1,3);
     bLBox->setDecimals(2);
     bLBox->setValue(1);
     QLabel *topLevel = new QLabel(tr("Top Level (km)"));
     tLBox = new QDoubleSpinBox;
-    tLBox->setRange(1,1);
+    tLBox->setRange(1,3);
     tLBox->setDecimals(2);
     tLBox->setValue(3);
     QLabel *innerRad = new QLabel(tr("Inner Radius (km)"));
@@ -2146,12 +2163,12 @@ VTDPanel::VTDPanel()
     QGridLayout *search = new QGridLayout;
     QLabel *bottomLevel = new QLabel(tr("Bottom Level (km)"));
     bLBox = new QDoubleSpinBox;
-    bLBox->setRange(1,1);
+    bLBox->setRange(1,3);
     bLBox->setDecimals(2);
     bLBox->setValue(1);
     QLabel *topLevel = new QLabel(tr("Top Level (km)"));
     tLBox = new QDoubleSpinBox;
-    tLBox->setRange(1,1);
+    tLBox->setRange(1,3);
     tLBox->setDecimals(2);
     tLBox->setValue(3);
     QLabel *innerRad = new QLabel(tr("Inner Radius (km)"));

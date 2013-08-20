@@ -77,7 +77,7 @@ void StormSignal::paintEvent(QPaintEvent *event)
     QRectF wordBox(25,25,50,50);
     //QRectF wordBox1(30,30,40,40);
     QRectF wordBox1(25,25,50,50);
-    painter->setFont(QFont(QString("Ariel"),14));
+    painter->setFont(QFont(QString("Ariel"),8));
 
     switch(currentStatus)
     {

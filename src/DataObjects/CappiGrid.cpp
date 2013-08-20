@@ -82,7 +82,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,floa
     latReference = *radarData->getRadarLat();
     lonReference = *radarData->getRadarLon();
 
-    zmin = 1.0;
+    zmin = cappiConfig.firstChildElement("zmin").text().toFloat();;
     zmax = zmin + kDim*kGridsp;
 
     delete[] relDist;
@@ -285,9 +285,9 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
             float theta = deg2rad * fmodf((450. - currentRay->getAzimuth()),360.);
             float phi = deg2rad * (90. - (currentRay->getElevation()));
 
-            if ((currentRay->getVel_numgates() > 0)
+            if ((currentRay->getVel_numgates() > 0)) {
                     // Just grab the lowest elevation sweeps & try to adjust bad folds
-                    and (currentRay->getElevation() < 0.75)) {
+                    //and (currentRay->getElevation() < 0.75)) {
                 float* velData = currentRay->getVelData();
                 float* swData = currentRay->getSwData();
                 float nyquist = currentRay->getNyquist_vel();
