@@ -116,10 +116,10 @@ void workThread::run()
 			//PCA findcenter
 			float azCenter, rgCenter, pcaRMW;
 			pca pca_obj(*newVolume);
-			//pca pca_obj;
-			//pca_obj.simulateVortex(360., 100., 20.);
-			pca_obj.findCenter(azCenter, rgCenter);
-			std::cout<<"pca az_center= "<<azCenter<<", rg_center= "<<rgCenter<<std::endl;
+			// pca pca_obj;
+			// pca_obj.simulateVortex(360., 100., 20.);
+			pca_obj.findCenter(azCenter, rgCenter, pcaRMW);
+			std::cout<<"pca az_center= "<<azCenter<<", rg_center= "<<rgCenter<<", rmw= "<<pcaRMW<<std::endl;
 			
 			
 			//STEP 3: get the first guess of center Lat,Lon for simplex

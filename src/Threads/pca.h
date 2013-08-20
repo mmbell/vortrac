@@ -19,7 +19,7 @@ class pca
 public:
 	pca(RadarData& vol);
 	pca();
-	bool findCenter(float& azCenter, float& rgCenter);
+	bool findCenter(float& azCenter, float& rgCenter, float& rmw);
 	void simulateVortex(float azCenter, float rgCenter, float rmw);
 
 private:

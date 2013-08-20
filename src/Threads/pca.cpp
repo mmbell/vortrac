@@ -37,16 +37,16 @@ pca::pca(RadarData& vol)
 		for(int j=0; j<vol.getSweep(velLayerFlag)->getVel_numgates(); ++j)
 			vr(i-vol.getSweep(velLayerFlag)->getFirstRay(), j) = dataPtr[j];
 	}
+	// std::cout<<vr.min()<<", "<<vr.max()<<std::endl;
 	// std::cout<<"azv: "<<az.min()<<", "<<az.max()<<std::endl;
 	for(int i=0; i<vol.getSweep(velLayerFlag)->getVel_numgates(); ++i)
 		rg(i) = (vol.getSweep(velLayerFlag)->getFirst_vel_gate()+i*vol.getSweep(velLayerFlag)->getVel_gatesp())/1000.;
 	// std::cout<<"rgv: "<<rg.min()<<", "<<rg.max()<<std::endl;
-	// vr.save("test.txt", arma::raw_ascii);
 	
 }
 
 
-bool pca::findCenter(float& azCenter, float& rgCenter)
+bool pca::findCenter(float& azCenter, float& rgCenter, float& rmw)
 {
 	//azimuthal analysis
 	
@@ -64,12 +64,14 @@ bool pca::findCenter(float& azCenter, float& rgCenter)
 			else
 				vr_a(i,j) = 0.;
 	}
+	
 	arma::mat U, Vt, V;
 	arma::vec s;
 	
 	// azimuth eigenvector
 	arma::mat Ya = vr_a.t()/sqrt(vr_a.n_cols-1);
 	arma::svd(U, s, Vt, Ya);
+	
 	arma::vec e1 = Vt.col(0);
 	unsigned int imin,imax;
 	e1.min(imin);
@@ -83,17 +85,18 @@ bool pca::findCenter(float& azCenter, float& rgCenter)
 	// radial eigenvector
 	arma::mat Yr = vr_a/sqrt(vr_a.n_rows-1);
 	arma::svd(U, s, Vt, Yr);
+	
 	arma::vec f1 = Vt.col(0);
 	arma::vec gf = f1;
 	gf.zeros();
 	
 	for(int i=0; i<gf.n_elem-1; ++i)
 		gf(i) = f1(i+1)-f1(i);
-	gf(0) = 0.;
 	
 	gf.min(imin);
 	gf.max(imax);
 	rgCenter = (rg(imin)+rg(imax))/2.;
+	rmw  = fabs(rg(imin)-rg(imax))/2.;
 	// std::cout<<"rg: "<<rg(imin)<<", "<<rg(imax)<<std::endl;
 	// std::cout<<"az center: "<<azCenter<<", rg center: "<<rgCenter<<std::endl;
 	return true;
@@ -110,8 +113,8 @@ void pca::simulateVortex(float azCenter, float rgCenter, float rmw)
 	rg.set_size(400);
 	for(int j=0; j<vr.n_cols; ++j){
 		for(int i=0; i<vr.n_rows; ++i){
-			float x = sin(i/180.*arma::datum::pi)*j;
-			float y = cos(i/180.*arma::datum::pi)*j;
+			float x = sin(i/180.*arma::datum::pi)*(j+1);
+			float y = cos(i/180.*arma::datum::pi)*(j+1);
 			float r = sqrt((x-x0)*(x-x0)+(y-y0)*(y-y0))+1e-20;
 			float vt;
 			if(r<rmw)
