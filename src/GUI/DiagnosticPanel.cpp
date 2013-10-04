@@ -66,6 +66,9 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
     //QPushButton *stormButton = new QPushButton("Next Storm Signal");
     //connect(stormButton, SIGNAL(pressed()), this, SLOT(testStormSignal()));
 
+	// cappiLabel says what the analysis level is
+	cappiLevel = new QLabel(tr("Analysis CAPPI Level"));
+
     // StormSignal is used to alert user to
     // noticable changes in vortex properties
 
@@ -111,6 +114,8 @@ DiagnosticPanel::DiagnosticPanel(QWidget *parent)
     // main->addStretch();
     main->addWidget(clockBox);
     main->addStretch();
+	main->addWidget(cappiLevel);
+	main->addStretch();
     main->addLayout(vcpLayout);
     main->addStretch();
     main->addLayout(stormLayout);
@@ -174,6 +179,11 @@ void DiagnosticPanel::updateVCP(const int newVCP)
     // Still not fixed even though there is no direct connection across threads now
     vcp->clear();
     vcp->insert(*vcpString);
+}
+
+void DiagnosticPanel::updateCappiLevel(const int level)
+{
+	cappiLevel->setText(tr("Analysis CAPPI Level ")+QString().setNum((float)level, 'f', 0)+tr(" km"));	
 }
 /*
 void DiagnosticPanel::updateCappi(const GriddedData* newCappi)

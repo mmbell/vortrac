@@ -38,6 +38,8 @@ AnalysisPage::AnalysisPage(QWidget *parent)
             diagPanel, SLOT(changeStopLight(StopLightColor, const QString)));
     connect(statusLog, SIGNAL(newStormSignalStatus(StormSignalStatus,const QString)),
             diagPanel, SLOT(changeStormSignal(StormSignalStatus,const QString)));
+	connect(this, SIGNAL(updateCappiLevel(const int)),
+		    diagPanel, SLOT(updateCappiLevel(const int)));
 
     // Create a new configuration instance
     configData = new Configuration;
@@ -527,6 +529,9 @@ void AnalysisPage::runThread()
 
     emit log(Message(QString(),0,this->objectName(),AllOff,QString(),Ok, QString()));
 
+	QString cappiLevel = configData->getParam(configData->getConfig("cappi"),"zmin");
+	emit updateCappiLevel(cappiLevel.toFloat());
+		
     //thread = new QThread;
     pollThread = new workThread();
     pollThread->moveToThread(thread);

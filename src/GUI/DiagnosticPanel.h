@@ -40,6 +40,7 @@ Q_OBJECT
       void testLight();
       void testStormSignal();
       void updateVCP(const int newVCP);
+	  void updateCappiLevel(const int level);
       void changeStopLight(StopLightColor newColor, const QString newMessage);
       void changeStormSignal(StormSignalStatus status, 
 			     const QString newMessage);
@@ -67,6 +68,8 @@ Q_OBJECT
       //const GriddedData *cappi;
       //bool hasNewCappi;
 
+	  QLabel* cappiLevel;
+	  
  private slots:
       void updateClock();
 

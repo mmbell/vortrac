@@ -104,8 +104,8 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
     // Cressman Interpolation
 
     // Calculate radius of influence
-    float hROI = 1.0;
-    float vROI = 2.0;
+    float hROI = 2.0;
+    float vROI = 1.0;
     float xRadius = (iGridsp * iGridsp) * (hROI*hROI);
     float yRadius = (jGridsp * jGridsp) * (hROI*hROI);
     float zRadius = (kGridsp * kGridsp) * (vROI*vROI);
