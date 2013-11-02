@@ -62,18 +62,18 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;
         }
 
-        // Check to see if folders for output exist. If not create them
+         //Check to see if folders for output exist. If not create them
 
-        // QFileInfo fileInfo = QFileInfo(file);
-        // QString filePath = fileInfo.absolutePath();
-        // std::cout << filePath.toStdString() << "\n";
-        // QList<QString> dirnames;
-        // dirnames << "cappi" << "pressure" << "center" << "choosecenter" << "vtd";
-        // for (int i = 0; i < dirnames.size(); ++i) {
-        //     if (!QDir(filePath + "/" + dirnames.at(i)).exists()) {
-        //         QDir().mkdir(filePath + "/" + dirnames.at(i));
-        //     }
-        // }
+         QFileInfo fileInfo = QFileInfo(file);
+         QString filePath = fileInfo.absolutePath();
+         std::cout << filePath.toStdString() << "\n";
+         QList<QString> dirnames;
+         dirnames << "cappi" << "pressure" << "center" << "choosecenter" << "vtd";
+         for (int i = 0; i < dirnames.size(); ++i) {
+             if (!QDir(filePath + "/" + dirnames.at(i)).exists()) {
+                 QDir().mkdir(filePath + "/" + dirnames.at(i));
+             }
+         }
 
         std::cout << "Batch Mode started for " << xmlfile.toStdString() << " ...\n";
         QApplication app(argc,argv);

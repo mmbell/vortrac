@@ -43,7 +43,7 @@ void DriverAnalysis::pollVortexUpdate(VortexList* list)
 		int currRow = historyTable->rowCount();
 		QString currTime = list->last().getTime().toString("dd/hh:mm");
 		if (currRow > 0) {
-			QString lastTime = historyTable->item(0,currRow-1)->text();
+                        QString lastTime = historyTable->item(currRow-1,0)->text();
 			if (currTime == lastTime) {
 				// No new analysis
 				return;
