@@ -19,13 +19,13 @@ ATCF::ATCF(Configuration* config, QObject *parent) : QObject(parent)
     connect(&tcvitals_manager, SIGNAL(finished(QNetworkReply*)),
             SLOT(saveTcvitals(QNetworkReply*)));
     stormName = "Unknown";
-    obLat = obLon = obDir = obSpd = 
+    obLat = obLon = obDir = obSpd =
     obCentralPressure = obEnvPressure = obOuterRadius = obRMW = -999.0;
 }
 
 ATCF::~ATCF()
 {
-    
+
 }
 
 void ATCF::setConfiguration(Configuration *config)
@@ -46,18 +46,18 @@ bool ATCF::getTcvitals(bool archive)
     if (archive) {
         if (stormId.contains("L")) {
             stormId.chop(1);
-            dataurl += "al" + stormId + "2013-tcvitals-arch.dat";
+            dataurl += "al" + stormId + "2014-tcvitals-arch.dat";
         } else if (stormId.contains("E")) {
             stormId.chop(1);
-            dataurl += "ep" + stormId + "2013-tcvitals-arch.dat";
+            dataurl += "ep" + stormId + "2014-tcvitals-arch.dat";
         }
     } else {
         if (stormId.contains("L")) {
             stormId.chop(1);
-            dataurl += "al" + stormId + "2013-tcvitals.dat";
+            dataurl += "al" + stormId + "2014-tcvitals.dat";
         } else if (stormId.contains("E")) {
             stormId.chop(1);
-            dataurl += "ep" + stormId + "2013-tcvitals.dat";
+            dataurl += "ep" + stormId + "2014-tcvitals.dat";
         }
     }
     QString server = configData->getParam(vortex,"atcfurl");
@@ -88,7 +88,7 @@ bool ATCF::saveTcvitals(QNetworkReply *reply)
             emit log(Message(QString("Problem saving tcvitals"),0,this->objectName(),Yellow,QString("Problem with remote data")));
             return false;
         }
-        
+
         vitalsfile.write(reply->readAll());
         vitalsfile.close();
         reply->deleteLater();
@@ -126,7 +126,7 @@ bool ATCF::parseTcvitals()
                 lat.chop(1);
                 obLat = lat.toFloat() / 10.0;
             }
-            
+
             QString lon = vitals.at(6);
             if (lon.endsWith("W")) {
                 lon.chop(1);
@@ -145,7 +145,7 @@ bool ATCF::parseTcvitals()
         }
     }
     vitalsfile.close();
-    
+
     if (stormFound == "Not Found") {
         // Try the archive data
         getTcvitals(true);
@@ -183,5 +183,5 @@ float ATCF::getLongitude(const QDateTime& time)
         float LatRadians = obLat * acos(-1.0)/180.0;
     float fac_lon = 111.41513 * cos(LatRadians)
     - 0.09455 * cos(3.0 * LatRadians) + 0.00012 * cos(5.0 * LatRadians);
-    return changeInX/fac_lon + obLon;    
+    return changeInX/fac_lon + obLon;
 }
