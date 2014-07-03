@@ -45,8 +45,8 @@
      <closure>original</closure>
      <reflectivity>DZ</reflectivity>
      <velocity>VE</velocity>
-     <bottomlevel>1</bottomlevel>
-     <toplevel>1</toplevel>
+     <bottomlevel>3</bottomlevel>
+     <toplevel>3</toplevel>
      <innerradius>10</innerradius>
      <outerradius>40</outerradius>
      <ringwidth>1.0</ringwidth>
@@ -81,8 +81,8 @@
      <closure>original_hvvp</closure>
      <reflectivity>DZ</reflectivity>
      <velocity>VE</velocity>
-     <bottomlevel>1</bottomlevel>
-     <toplevel>1</toplevel>
+     <bottomlevel>3</bottomlevel>
+     <toplevel>3</toplevel>
      <innerradius>1</innerradius>
      <outerradius>125</outerradius>
      <ringwidth>1.0</ringwidth>
