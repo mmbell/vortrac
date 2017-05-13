@@ -117,6 +117,10 @@ void workThread::run()
 				QString().setNum(_firstGuessLat)+", "+QString().setNum(_firstGuessLon)+") center estimate");
 			emit log(Message(currentCenter,1,this->objectName()));
 			if(abort) break;
+
+			// TODO: grab data from file instead. Add option in XML file. "use pre gridded data ..."
+			// find trigger for new data.
+			
 			//STEP 4: from Radardata ---> Griddata, make cappi
 			GriddedFactory* gridFactory=new GriddedFactory();
 			GriddedData* gridData=gridFactory->makeCappi(newVolume,configData,&_firstGuessLat,&_firstGuessLon);

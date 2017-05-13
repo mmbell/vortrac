@@ -29,6 +29,8 @@ public:
                               Configuration* analyticConfig,
                               float *vortexLat, float *vortexLon,
                               float *radarLat, float *radarLon);
+    // TODO makeRadx (lrose)
+    
     void setAbort(volatile bool* newAbort);
 
 private:
