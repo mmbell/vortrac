@@ -63,6 +63,8 @@ bool AnalyticGrid::getConfigInfo(Configuration* mainConfig,
   QString fileName("analyticModel");
   outFileName = filePath + "/" + fileName;
 
+  // TODO For pre-gridded, these shouldn't come from the config file
+  
   // Get the dimensions from the configuration
   iDim = mainConfig->getParam(cappi, "xdim").toFloat();
   // iDim: Number of data points running on the i-axis

@@ -175,6 +175,12 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     QRadioButton *reflectivity = new QRadioButton(tr("dBZ"), fieldDisplay);
     velocity->setChecked(true);
 
+    QSpinBox *cappiLevel = new QSpinBox(fieldDisplay);
+    cappiLevel->setRange(1, 15);
+    cappiLevel->setSingleStep(1);
+    cappiLevel->setValue(7);
+    connect(cappiLevel, SIGNAL(valueChanged(int)), cappiDisplay, SLOT(levelChanged(int)));
+
     QVBoxLayout *appRecLayout = new QVBoxLayout();
     appRecLayout->addStretch();
     appRecLayout->addWidget(appMaxLabel, 0, Qt::AlignHCenter);
@@ -198,8 +204,9 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     QVBoxLayout *fieldLayout = new QVBoxLayout;
     fieldLayout->addWidget(velocity);
     fieldLayout->addWidget(reflectivity);
-    fieldDisplay->setLayout(fieldLayout);
+    fieldLayout->addWidget(cappiLevel);
 
+    fieldDisplay->setLayout(fieldLayout);
     QScrollArea* cappiBox = new QScrollArea;
     QHBoxLayout *cappiLayout = new QHBoxLayout(cappiBox);
     cappiLayout->addLayout(appRecLayout);
@@ -211,7 +218,6 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     cappiBox->setLayout(cappiLayout);
     visuals->addTab(cappiBox, "Current Cappi");
     connect(cappiDisplay, SIGNAL(hasImage(bool)),this, SLOT(updateCappiDisplay(bool)));
-
     statusText = new QTextEdit;
     statusText->setReadOnly(true);
     statusText->setFixedHeight(100);

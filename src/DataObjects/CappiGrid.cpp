@@ -60,22 +60,22 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,floa
 
     // Should this be get cartesian point? Don't we use the grid spacing
     // in that calculation? -LM 6/11/07
-    relDist = getCartesianPoint(radarData->getRadarLat(),radarData->getRadarLon(),vortexLat, vortexLon);
+    relDist = getCartesianPoint(radarData->getRadarLat(), radarData->getRadarLon(), vortexLat, vortexLon);
 
     float rXDistance =  0;
     float rYDistance =  0;
 
     // connects the (0,0) point on the cappi grid, to the latitude and
     // longitude of the radar.
-
-    setLatLonOrigin(radarData->getRadarLat(), radarData->getRadarLon(),&rXDistance,&rYDistance);
+    // TODO This sets originLon and originLat. (rX and rY Distance are not modified. Why passing a pointer?)
+    setLatLonOrigin(radarData->getRadarLat(), radarData->getRadarLon(), &rXDistance, &rYDistance);
 
     // Defines iteration indexes for cappi grid
 
-    xmin = nearbyintf(relDist[0] - (iDim/2)*iGridsp);
-    xmax = nearbyintf(relDist[0] + (iDim/2)*iGridsp);
-    ymin = nearbyintf(relDist[1] - (jDim/2)*jGridsp);
-    ymax = nearbyintf(relDist[1] + (jDim/2)*jGridsp);
+    xmin = nearbyintf(relDist[0] - (iDim / 2) * iGridsp);
+    xmax = nearbyintf(relDist[0] + (iDim / 2) * iGridsp);
+    ymin = nearbyintf(relDist[1] - (jDim / 2) * jGridsp);
+    ymax = nearbyintf(relDist[1] + (jDim / 2) * jGridsp);
 
     //  Message::toScreen("Xmin = "+QString().setNum(xmin)+" Xmax = "+QString().setNum(xmax)+" Ymin = "+QString().setNum(ymin)+" Ymax = "+QString().setNum(ymax));
 
@@ -95,9 +95,7 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,floa
 
     // Set the initial field names
     fieldNames << "DZ" << "VE" << "HT";
-
 }
-
 
 void CappiGrid::CressmanInterpolation(RadarData *radarData)
 {
@@ -523,6 +521,269 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 
 
 }
+
+// TODO
+// I think all the NetCDF stuff should be kept in the NetCDF.cpp file.
+// Put it here for now. But I can see adding the ability to read different file formats
+// depending on subclassing a "reader"
+
+bool CappiGrid::getOriginLatLon(NcFile &file, float &lat, float &lon)
+{
+  NcVar *lat0 = file.get_var("lat0");
+  if ( lat0 == NULL )
+    return false;
+  
+  NcVar *lon0 = file.get_var("lon0");
+  if ( lon0 == NULL )
+    return false;
+  
+  if (! lat0->set_cur(0, 0) ) {
+    std::cerr << "Couldn't set lat corner" << std::endl;
+    return false;
+  }
+  if (! lon0->set_cur(0, 0) ) {
+    std::cerr << "Couldn't set lat corner" << std::endl;
+    return false;
+  }
+
+  if (! lat0->get(&lat, 1, 1) ) {
+    std::cerr << "Couldn't get lat at (0, 0)" << std::endl;
+    return false;
+  }
+  
+  if (! lon0->get(&lon, 1, 1) ) {
+    std::cerr << "Couldn't get lon at (0, 0)" << std::endl;
+    return false;
+  }
+  std::cout << "** lat(0, 0): " << lat << ", lon(0, 0): " << lon << std::endl;
+
+  return true;
+}
+
+bool CappiGrid::getGridMapping(NcFile &file, float &radar_lat, float &radar_lon)
+{
+  NcVar *grid_mapping = file.get_var("grid_mapping_0");
+  if (grid_mapping == NULL)
+    return false;
+  NcAtt *olat = grid_mapping->get_att("latitude_of_projection_origin");
+  if (olat == NULL)
+    return false;
+  radar_lat = olat->as_float(0);
+  
+  NcAtt *olon = grid_mapping->get_att("longitude_of_projection_origin");
+  if (olon == NULL)
+    return false;
+  radar_lon = olon->as_float(0);
+  return true;
+}
+
+bool CappiGrid::getDimInfo(NcFile &file, int dim, const char *varName, float &spacing, float &min, float &max)
+{
+  NcVar *var = file.get_var(varName);
+  if (var == NULL) return false;
+    
+  float *vals = new float[dim];
+  bool retVal = var->get(vals, dim);
+  
+  if(retVal) {
+    spacing = vals[1] - vals[0];
+    min = vals[0];
+    max = vals[dim - 1];
+  }
+  delete[] vals;
+  return retVal;
+}
+
+bool CappiGrid::getFillValue(NcVar *var, float &val)
+{
+  NcAtt *fv = var->get_att("_FillValue");
+  if (fv == NULL)
+    return false;
+  val = fv->as_float(0);
+  return true;
+}
+
+// TODO
+// There are some values set in CappiGrid::gridRadarData that I am not setting yet.
+// Find out if they are needed
+
+// Example: fieldNames.
+
+void CappiGrid::loadPreGridded(RadarData *radarData, QDomElement cappiConfig)
+{
+  kDisplayIndex = 7;   // Default level at which the cappi display gets its data
+  QDomElement n = cappiConfig.firstChildElement("cappi_display_level");
+  if (! n.isNull())
+    kDisplayIndex = n.text().toInt();
+  
+  NcError ncError(NcError::verbose_nonfatal); // Prevent NertCDF error from exiting the program
+
+  // Fill in the grid from a NetCdf file containing pre-gridded data.
+  QString fname = radarData->getFileName();
+
+  // Open the file
+  NcFile file(fname.toLatin1().data(), NcFile::ReadOnly);
+
+  if (! file.is_valid() ) {
+    std::cerr << "ERROR - reading file: " << fname.toLatin1().data()
+	      << std::endl;
+    // std::cerr << file.getErrStr() << std::endl;
+    return;
+  }
+
+  // Read the dimentions
+
+  NcDim *x0 = file.get_dim("x0");
+  NcDim *y0 = file.get_dim("y0");
+  NcDim *z0 = file.get_dim("z0");
+  
+  iDim = x0->size();
+  jDim = y0->size();
+  kDim = z0->size();
+  
+  // Get grid info
+  
+  if (! getDimInfo(file, iDim, "x0", iGridsp, xmin, xmax) )
+    std::cerr << "Can't get x0 array from file" << std::endl;
+
+  if (! getDimInfo(file, jDim, "y0", jGridsp, ymin, ymax) )
+    std::cerr << "Can't get y0 array from file" << std::endl;
+
+  if (! getDimInfo(file, kDim, "z0", kGridsp, zmin, zmax) )
+    std::cerr << "Can't get z0 array from file" << std::endl;
+
+  // TODO: Some debug stuff
+  // std::cout << "x0: " << iDim << ", y0: " << jDim << ", z0: " << kDim << std::endl;
+  // std::cout << "xmin: " << xmin << ", xmax: " << xmax << std::endl;
+  // std::cout << "ymin: " << ymin << ", ymax: " << ymax << std::endl;
+  // std::cout << "zmin: " << zmin << ", zmax: " << zmax << std::endl;
+
+  // TODO There is confusion about latReference/lonReference, and originLat/originLon
+  // SimplexThread assume thar Reference is the radar position
+  
+  if (! getGridMapping(file,  originLat, originLon) )
+    std::cerr << "Can't get grid mapping from " << fname.toLatin1().data() << std::endl;
+
+  if (! getOriginLatLon(file, latReference, lonReference) )
+    std::cerr << "Can't get origin Lat and Lon from " << fname.toLatin1().data() << std::endl;
+
+  // Debug stuff
+  // std::cout << "Grid spacing: x = " << iGridsp << ", y = " << jGridsp << ", k = " << kGridsp << std::endl;
+  
+  NcVar *reflectivity = file.get_var("REF");	// radar_reflexivity
+  if (reflectivity == NULL) {
+    std::cerr << "Can't get reflexivity (REF) from " << fname.toLatin1().data() << std::endl;
+  }
+
+  // This can be user specified. Default: VU
+  QString velVarName = "VU";
+  QDomElement s = cappiConfig.firstChildElement("velocity");
+  if (! s.isNull())
+    velVarName = s.text();
+
+  // std::cout << "Velocity Variable: " << velVarName.toLatin1().data() << std::endl;
+  
+  NcVar *velocity = file.get_var(velVarName.toLatin1().data());
+  if( velocity == NULL)
+    std::cerr << "Can't get velocity (" << velVarName.toLatin1().data() << ") from " << fname.toLatin1().data() << std::endl;
+
+  NcVar *spectrum = file.get_var("SW");
+  if( spectrum == NULL) {
+    std::cerr << "Can't get spectrum width (SW) from " << fname.toLatin1().data() << std::endl;
+  }
+
+  // relDist was only temporarily used for (dist between center of huricane and radar -- will need to come from xml file
+
+  int time = 0;	// only one time in this file. TODO handle more than one
+
+  // TODO
+  // latReference, lonReference, (from grid_mapping in .nc file and xml, warn if way different like full degree)
+  // maxRRefIndex, maxVelIndex,  not used??
+
+  float *ref = (float *) malloc(sizeof(float)  * iDim * jDim);
+  float *vel = (float *) malloc(sizeof(float)  * iDim * jDim);
+  float *spec = (float *) malloc(sizeof(float) * iDim * jDim);
+
+  if (ref == NULL || vel == NULL || spec == NULL) {
+    std::cerr << "Error: CappiGrid::loadPreGriddedCouldn't allocate memory" << std::endl;
+    return;
+  }
+
+  // code uses -999 for invalid values.
+  // find out fill values for the 3 variables
+
+  float ref_fill;
+  float vel_fill;
+  float spec_fill;
+
+  if (! getFillValue(reflectivity, ref_fill) ) 
+    std::cerr << "Can't get reflectivity fill value from " << fname.toLatin1().data() << std::endl;
+  if (! getFillValue(velocity, vel_fill) ) 
+    std::cerr << "Can't get velocity fill value from " << fname.toLatin1().data() << std::endl;
+  if (! getFillValue(spectrum, spec_fill) ) 
+    std::cerr << "Can't get spectrum fill value from " << fname.toLatin1().data() << std::endl;
+
+  // iDim, jDim, and kDim are float. That doesn't work very well for pointer arithmetic
+  int xDim = (int) iDim;
+  int yDim = (int) jDim;
+  int zDim = (int) kDim;
+
+  for(int k = 0; k < zDim; k++) {
+    if (! reflectivity->set_cur(time, k, 0, 0, -1) ) {
+	std::cerr << "Couldn't set reflectivity corner" << std::endl;
+	break;
+      }
+    if (! velocity->set_cur(time, k, 0, 0, -1) ) {
+	std::cerr << "Couldn't set velocity corner" << std::endl;
+	break;
+      }
+    if (! spectrum->set_cur(time, k, 0, 0, -1) ) {
+	std::cerr << "Couldn't set spectrum width corner" << std::endl;
+	break;
+    }
+    if (! reflectivity->get(ref, 1, 1, yDim, xDim) ) {
+      std::cerr << "Couldn't get velocity value" << std::endl;
+      break;
+    }
+    if (! velocity->get(vel, 1, 1, yDim, xDim) ) {
+      std::cerr << "Couldn't get Velocity value" << std::endl;
+      break;
+    }
+    if (! spectrum->get(spec, 1, 1, yDim, xDim) ) {
+      std::cerr << "Couldn't get Spectrum Width value" << std::endl;
+      break;
+    }
+    //	std::cerr << "[" << i << ", " << j << ", " << k << "] " <<
+    //	  "ref: " << ref << ", vel: " << vel << std::endl;
+    float v;
+
+    // Looks like x and y are swapped in the NetCDF file.
+      
+    for(int i = 0; i < xDim; i++) {
+      for(int j = 0; j < yDim; j++) {
+	v = *(ref + i * yDim + j);		// reflectivity (REF)
+	if (v <= ref_fill)
+	  v = -999;
+	dataGrid[0][j][i][k] = v;	
+
+	v = *(vel + i * yDim + j);		// dopler velocity magnitude (VU)
+	if (v <= vel_fill)
+	  v = -999;
+	dataGrid[1][j][i][k] = v;
+
+	v = *(spec + i * yDim + j);		// spectral grid width (SW)
+	if (v <= spec_fill)
+	  v = -999;
+	dataGrid[2][j][i][k] = v;
+      }
+    }
+  }
+  
+  free(ref);
+  free(vel);
+  free(spec);
+}
+
 /*
 void CappiGrid::ClosestPointInterpolation()
 {

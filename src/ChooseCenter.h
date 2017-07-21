@@ -23,7 +23,7 @@ public:
      ChooseCenter(Configuration* newConfig,const SimplexList* newList,VortexData* vortexPtr);
     ~ChooseCenter();
 
-    bool findCenter();
+    bool findCenter(int level);
 
 private:
     const int MAX_ORDER ;

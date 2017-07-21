@@ -413,6 +413,7 @@ RadarPanel::RadarPanel():AbstractPanel()
                                QString(""));
     radarFormatOptions->insert(QString("NCDC Level II"), QString("NCDCLEVELII"));
     radarFormatOptions->insert(QString("LDM Level II"), QString("LDMLEVELII"));
+    radarFormatOptions->insert(QString("NetCDF"), QString("NETCDF"));
     //radarFormatOptions->insert(QString("Analytic Model"), QString("MODEL"));
     radarFormat = new QComboBox();
     QList<QString> options = radarFormatOptions->keys();
@@ -644,6 +645,7 @@ bool RadarPanel::checkValues()
     // Returning True means that all the values check out...
 
     QString temp(radarName->currentText().left(4));
+    std::cout << "******* radar: " << temp.toLatin1().data() << std::endl;
     int index = radarName->findText(temp, Qt::MatchStartsWith);
     if (index <= 0) {
         emit log(Message(QString(),0,this->objectName(),Red,
@@ -653,6 +655,7 @@ bool RadarPanel::checkValues()
 
 
     temp = QString(radarFormat->currentText());
+    std::cout << "******* format: " << temp.toLatin1().data() << std::endl;
     if(radarFormatOptions->value(temp)==QString("")) {
         emit log(Message(QString(), 0, this->objectName(), Red,
                          QString(tr("Please select a radar file type"))));
@@ -668,7 +671,7 @@ bool RadarPanel::setDefaultDirectory(QDir* newDir)
     QString subDirectory("radar");
     if(!newDir->isAbsolute())
         newDir->makeAbsolute();
-    if(newDir->exists(subDirectory))
+    if(newDir->exists(subDirectory)) {
         if(newDir->cd(subDirectory)){
             if(newDir->isReadable()){
                 defaultDirectory->cd(newDir->path());
@@ -687,6 +690,7 @@ bool RadarPanel::setDefaultDirectory(QDir* newDir)
             delete newDir;
             return false;
         }
+    }
     if(newDir->mkdir(subDirectory)) {
         if(newDir->cd(subDirectory)){
             if(newDir->isReadable()){
@@ -1008,7 +1012,7 @@ bool CappiPanel::setDefaultDirectory(QDir* newDir)
     if(!newDir->exists())
         newDir->mkpath(newDir->path());
     QString subDirectory("cappi");
-    if(newDir->exists(subDirectory))
+    if(newDir->exists(subDirectory)) {
         if(newDir->cd(subDirectory)){
             if(newDir->isReadable()){
                 // NewDir+/cappi/ is used as working directory
@@ -1030,7 +1034,7 @@ bool CappiPanel::setDefaultDirectory(QDir* newDir)
             delete newDir;
             return false;
         }
-
+    }
     // Otherwise make the subdirectory is it does not already exist
     if(newDir->mkpath(subDirectory)) {
         if(newDir->cd(subDirectory)){
@@ -1179,12 +1183,12 @@ CenterPanel::CenterPanel()
 
     QLabel *bottomLevel = new QLabel(tr("Bottom Level (km)"));
     bLBox = new QDoubleSpinBox;
-    bLBox->setRange(1,3);
+    bLBox->setRange(1,15);
     bLBox->setDecimals(2);
     bLBox->setValue(1);
     QLabel *topLevel = new QLabel(tr("Top Level (km)"));
     tLBox = new QDoubleSpinBox;
-    tLBox->setRange(1,3);
+    tLBox->setRange(1,15);
     tLBox->setDecimals(2);
     tLBox->setValue(3);
     QLabel *innerRad = new QLabel(tr("Inner Radius (km)"));
@@ -1589,7 +1593,7 @@ bool CenterPanel::setDefaultDirectory(QDir* newDir)
     QString subDirectory("center");
     if(!newDir->isAbsolute())
         newDir->makeAbsolute();
-    if(newDir->exists(subDirectory))
+    if(newDir->exists(subDirectory)) {
         if(newDir->cd(subDirectory)){
             if(newDir->isReadable()){
                 defaultDirectory->cd(newDir->path());
@@ -1608,6 +1612,7 @@ bool CenterPanel::setDefaultDirectory(QDir* newDir)
             delete newDir;
             return false;
         }
+    }
     if(newDir->mkdir(subDirectory)) {
         if(newDir->cd(subDirectory)){
             if(newDir->isReadable()){
@@ -1999,7 +2004,7 @@ bool ChooseCenterPanel::setDefaultDirectory(QDir* newDir)
     QString subDirectory("choosecenter");
     if(!newDir->isAbsolute())
         newDir->makeAbsolute();
-    if(newDir->exists(subDirectory))
+    if(newDir->exists(subDirectory)) {
         if(newDir->cd(subDirectory)){
             if(newDir->isReadable()){
                 defaultDirectory->cd(newDir->path());
@@ -2018,6 +2023,7 @@ bool ChooseCenterPanel::setDefaultDirectory(QDir* newDir)
             delete newDir;
             return false;
         }
+    }
     if(newDir->mkdir(subDirectory)) {
         if(newDir->cd(subDirectory)){
             if(newDir->isReadable()){
@@ -2449,7 +2455,7 @@ bool VTDPanel::setDefaultDirectory(QDir* newDir)
     QString subDirectory("vtd");
     if(!newDir->isAbsolute())
         newDir->makeAbsolute();
-    if(newDir->exists(subDirectory))
+    if(newDir->exists(subDirectory)) {
         if(newDir->cd(subDirectory)){
             if(newDir->isReadable()){
                 defaultDirectory->cd(newDir->path());
@@ -2468,6 +2474,7 @@ bool VTDPanel::setDefaultDirectory(QDir* newDir)
             delete newDir;
             return false;
         }
+    }
     if(newDir->mkdir(subDirectory)) {
         if(newDir->cd(subDirectory)){
             if(newDir->isReadable()){
@@ -3015,7 +3022,7 @@ bool PressurePanel::setDefaultDirectory(QDir* newDir)
     QString subDirectory("pressure");
     if(!newDir->isAbsolute())
         newDir->makeAbsolute();
-    if(newDir->exists(subDirectory))
+    if(newDir->exists(subDirectory)) {
         if(newDir->cd(subDirectory)){
             if(newDir->isReadable()){
                 defaultDirectory->cd(newDir->path());
@@ -3034,6 +3041,7 @@ bool PressurePanel::setDefaultDirectory(QDir* newDir)
             delete newDir;
             return false;
         }
+    }
     if(newDir->mkdir(subDirectory)) {
         if(newDir->cd(subDirectory)){
             if(newDir->isReadable()){

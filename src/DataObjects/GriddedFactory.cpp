@@ -37,6 +37,13 @@ GriddedData* GriddedFactory::makeCappi(RadarData *radarData,Configuration* mainC
     return cappi;
 }
 
+GriddedData* GriddedFactory::fillPreGriddedData(RadarData *radarData, Configuration* mainConfig)
+{
+  CappiGrid *cappi = new CappiGrid;
+  cappi->loadPreGridded(radarData, mainConfig->getConfig("cappi"));
+  return cappi;
+}
+
 GriddedData* GriddedFactory::makeAnalytic(RadarData *radarData,
                                           Configuration* mainConfig,
                                           Configuration* analyticConfig,

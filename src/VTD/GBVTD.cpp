@@ -63,13 +63,13 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
         thetaT = fixAngle(thetaT);
         centerDistance = sqrt(xCenter*xCenter + yCenter*yCenter);
 
-        for (int i=0; i <= numData-1; i++) {
+        for (int i = 0; i <= numData - 1; i++) {
             // Convert to Psi
-            float angle = ringAzimuths[i]*DEG2RAD - thetaT;
+            float angle = ringAzimuths[i] * DEG2RAD - thetaT;
             angle = fixAngle(angle);
-            float xx = xCenter + radius * cos(angle+thetaT);
-            float yy = yCenter + radius * sin(angle+thetaT);
-            float psiCorrection = atan2(yy,xx) - thetaT;
+            float xx = xCenter + radius * cos(angle + thetaT);
+            float yy = yCenter + radius * sin(angle + thetaT);
+            float psiCorrection = atan2(yy, xx) - thetaT;
             ringPsi[i] = angle - psiCorrection;
             ringPsi[i] = fixAngle(ringPsi[i]);
        }
@@ -77,7 +77,7 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
         // Threshold bad values
         int goodCount = 0;
 
-        for (int i=0; i <= numData-1; i++) {
+        for (int i = 0; i <= numData - 1; i++) {
             if (ringData[i] != -999.) {
                 // Good point
                 vel[goodCount] = ringData[i];
@@ -92,7 +92,7 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
 
         if (numCoeffs == 0) {
             // Too much missing data, set everything to 0 and return
-            for (int i=0; i<=(_maxWaveNum*2 + 2); i++) {
+            for (int i = 0; i <= (_maxWaveNum * 2 + 2); i++) {
                 FourierCoeffs[i] = 0.;
             }
             vtdStdDev = -999;
@@ -105,23 +105,23 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
 
         // Least squares
         float** xLLS = new float*[numCoeffs];
-        for (int i = 0; i<=numCoeffs-1; i++) {
+        for (int i = 0; i <= numCoeffs - 1; i++) {
             xLLS[i] = new float[numData];
         }
         float* yLLS = new float[numData];
-        for (int i=0; i <= numData-1; i++) {
+        for (int i = 0; i <= numData - 1; i++) {
             xLLS[0][i] = 1.;
-            for (int j=1; j <= (numCoeffs/2); j++) {
-                xLLS[2*j-1][i] = sin(float(j)*psi[i]);
-                xLLS[2*j][i] = cos(float(j)*psi[i]);
+            for (int j = 1; j <= (numCoeffs / 2); j++) {
+                xLLS[2 * j - 1][i] = sin(float(j) * psi[i]);
+                xLLS[ 2 * j][i] = cos(float(j) * psi[i]);
             }
             yLLS[i] = vel[i];
         }
 
         float* stdError = new float[numCoeffs];
-        if(!Matrix::lls(numCoeffs, numData, xLLS, yLLS, vtdStdDev, FourierCoeffs, stdError)) {
+        if( ! Matrix::lls(numCoeffs, numData, xLLS, yLLS, vtdStdDev, FourierCoeffs, stdError)) {
             //Message::toScreen("GBVTD Returned Nothing from LLS");
-            for (int i = 0; i<=numCoeffs-1; i++)
+            for (int i = 0; i <= numCoeffs - 1; i++)
                 delete[] xLLS[i];
             delete[] yLLS;
             delete[] stdError;
@@ -133,7 +133,7 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
 
         // Convert Fourier coefficients into wind coefficients
         setWindCoefficients(radius, height, numCoeffs, FourierCoeffs, vtdCoeffs);
-        for (int i = 0; i<=numCoeffs-1; i++)
+        for (int i = 0; i <= numCoeffs - 1; i++)
             delete[] xLLS[i];
         delete[] xLLS;
         delete[] yLLS;
@@ -141,11 +141,9 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
         delete[] ringPsi;
         delete[] vel;
         delete[] psi;
-
     }
 
     return true;
-
 }
 
 void GBVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, float*& FourierCoeffs, Coefficient*& vtdCoeffs)
@@ -154,10 +152,10 @@ void GBVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, flo
     // Allocate and initialize the A & B coefficient arrays
     float* A;
     float* B;
-    int maxIndex = numCoeffs/2 + 1;
+    int maxIndex = numCoeffs / 2 + 1;
     if (maxIndex > 5) {
-        A = new float[numCoeffs/2 + 1];
-        B = new float[numCoeffs/2 + 1];
+        A = new float[numCoeffs / 2 + 1];
+        B = new float[numCoeffs / 2 + 1];
     } else {
         A = new float[5];
         B = new float[5];
@@ -168,50 +166,51 @@ void GBVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, flo
     }
 
     float sinAlphamax = radius/centerDistance;
-    float cosAlphamax = sqrt(centerDistance * centerDistance - radius*radius)/centerDistance;
+    float cosAlphamax = sqrt(centerDistance * centerDistance - radius * radius) / centerDistance;
     A[0] = FourierCoeffs[0];
     B[0] = 0.;
     for (int i=1; i <= (numCoeffs/2); i++) {
-        A[i] = FourierCoeffs[2*i];
-        B[i] = FourierCoeffs[2*i-1];
+        A[i] = FourierCoeffs[2 * i];
+        B[i] = FourierCoeffs[2 * i - 1];
     }
 
     // Use the specified closure method to set VT, VR, and VM
-    if (closure.contains(QString("original"),Qt::CaseInsensitive)) {
+    if (closure.contains(QString("original"), Qt::CaseInsensitive)) {
         vtdCoeffs[0].setLevel(level);
         vtdCoeffs[0].setRadius(radius);
         vtdCoeffs[0].setParameter("VTC0");
         float value;
-        if(closure.contains(QString("hvvp"),Qt::CaseInsensitive) and
+        if(closure.contains(QString("hvvp"), Qt::CaseInsensitive) and
                 (B[1] != 0)) {
-            value = -B[1]-B[3]-_hvvpMean*sinAlphamax;
+            value = - B[1] - B[3] - _hvvpMean * sinAlphamax;
         }
         else {
-            value = -B[1]-B[3];
+            value = - B[1] - B[3];
         }
         vtdCoeffs[0].setValue(value);
 
         vtdCoeffs[1].setLevel(level);
         vtdCoeffs[1].setRadius(radius);
         vtdCoeffs[1].setParameter("VRC0");
-        value = A[1]+A[3];
+        value = A[1] +A[3];
         vtdCoeffs[1].setValue(value);
 
         vtdCoeffs[2].setLevel(level);
         vtdCoeffs[2].setRadius(radius);
         vtdCoeffs[2].setParameter("VMC0");
-        value = A[0]+A[2]+A[4];
+        value = A[0] + A[2]+ A[4];
         vtdCoeffs[2].setValue(value);
 
         vtdCoeffs[3].setLevel(level);
         vtdCoeffs[3].setRadius(radius);
         vtdCoeffs[3].setParameter("VTS1");
+
         if ((sinAlphamax < 0.8) and (numCoeffs >= 5)) {
-            value = A[2]-A[0]+A[4]+(A[0]+A[2]+A[4])*cosAlphamax;
+            value = A[2] - A[0] + A[4] + (A[0] + A[2] + A[4]) * cosAlphamax;
             if (value < vtdCoeffs[0].getValue()) {
                 vtdCoeffs[3].setValue(value);
             } else {
-                vtdCoeffs[3].setValue(value);
+                vtdCoeffs[3].setValue(0);
             }
         } else {
             vtdCoeffs[3].setValue(0);
@@ -220,30 +219,32 @@ void GBVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, flo
         vtdCoeffs[4].setLevel(level);
         vtdCoeffs[4].setRadius(radius);
         vtdCoeffs[4].setParameter("VTC1");
+	
         if ((sinAlphamax < 0.8) and (numCoeffs >= 5)) {
-            value = -2.*(B[2]+B[4]);
+            value = -2. * (B[2] + B[4]);
             if (value < vtdCoeffs[0].getValue()) {
                 vtdCoeffs[4].setValue(value);
             } else {
-                vtdCoeffs[4].setValue(value);
+                vtdCoeffs[4].setValue(0);
             }
         } else {
             vtdCoeffs[4].setValue(0);
         }
-        for (int i=5; i <= numCoeffs-1; i+=2) {
+	
+        for (int i=5; i <= numCoeffs - 1; i += 2) {
             vtdCoeffs[i].setLevel(level);
             vtdCoeffs[i].setRadius(radius);
-            QString param = "VTC" + QString().setNum(int(i/2));
+            QString param = "VTC" + QString().setNum(int(i / 2));
             vtdCoeffs[i].setParameter(param);
-            value = -2*B[i/2+1];
+            value = -2. * B[i / 2 + 1];
             vtdCoeffs[i].setValue(value);
 
             vtdCoeffs[i+1].setLevel(level);
             vtdCoeffs[i+1].setRadius(radius);
-            param = "VTS" + QString().setNum(int(i/2));
-            vtdCoeffs[i+1].setParameter(param);
-            value = 2*A[i/2+1];
-            vtdCoeffs[i+1].setValue(value);
+            param = "VTS" + QString().setNum(int(i / 2));
+            vtdCoeffs[i + 1].setParameter(param);
+            value = 2 * A[i / 2 + 1];
+            vtdCoeffs[i + 1].setValue(value);
         }
     }
     // Other closure methods here (including HVVP)

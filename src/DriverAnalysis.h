@@ -57,7 +57,7 @@ signals:
 
 protected:
     workThread *pollThread;
-	QThread *thread;
+    QThread *thread;
     bool isUntitled;
     QDir workingDirectory;
     QString vortexLabel;
@@ -76,7 +76,7 @@ protected:
     QLabel *currRMW;
     QLabel *currDeficit;
     QLabel *deficitLabel;
-	QLabel *currMaxWind;
+    QLabel *currMaxWind;
 
     CappiDisplay* cappiDisplay;
     QLabel *appMaxWind;
@@ -91,7 +91,7 @@ protected:
 
     DiagnosticPanel *diagPanel;
 
-	QTableWidget *historyTable;
+    QTableWidget *historyTable;
 
 };
 

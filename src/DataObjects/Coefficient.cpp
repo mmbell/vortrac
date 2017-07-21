@@ -35,6 +35,11 @@ Coefficient::Coefficient(const Coefficient &other)
     this->parameter = other.parameter;
 }
 
+bool Coefficient::isValid() const {
+  return (level != -999)
+    && (radius != -999)
+    && value != -999;
+}
 
 void Coefficient::setLevel(const float &newLevel)
 {

@@ -390,6 +390,8 @@ void ConfigurationDialog::setSimplexRadii()
 	configData->setParam(configData->getConfig(panelForString.key(center)), QString("innerradius"), radii);
 	radii.setNum(sMax);
 	configData->setParam(configData->getConfig(panelForString.key(center)), QString("outerradius"), radii);
+
+	// TODO: When this is called after reading a config file, it will overwrite values from the file with values from the Panel.
 	center->updatePanel(center->getPanelElement());
 	center->setPanelChanged(true);
 	center->updateConfig();

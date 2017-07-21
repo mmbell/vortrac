@@ -46,32 +46,32 @@ SimplexData::SimplexData()
 
 SimplexData::SimplexData(int availLevels, int availRadii, int availCenters)
 {
-    numLevels = availLevels;
-    numRadii = availRadii;
-    numCenters = availCenters;
-    numPointsUsed = 0;
+  numLevels = availLevels;        // TODO numLevels could be larger than MAXLEVELS
+  numRadii = availRadii;
+  numCenters = availCenters;
+  numPointsUsed = 0;
 
-    for(int i = 0; i < numLevels; i++)
+  for(int i = 0; i < numLevels; i++)
     {
-        height[i] = _fillv;
-        for(int j = 0; j < numRadii; j++)
+      height[i] = _fillv;
+      for(int j = 0; j < numRadii; j++)
         {
-            meanX[i][j] = _fillv;
-            meanY[i][j] = _fillv;
-            centerStdDeviation[i][j] = _fillv;
-            meanVT[i][j] = _fillv;
-            meanVTUncertainty[i][j] = _fillv;
-            numConvergingCenters[i][j]= int(_fillv);
-            radius[j] = _fillv;
-            for(int k = 0; k < numCenters; k++) {
-                centers[i][j][k] = Center();
-                initialX[i][j][k] = _fillv;
-                initialY[i][j][k] = _fillv;
-            }
+	  meanX[i][j] = _fillv;
+	  meanY[i][j] = _fillv;
+	  centerStdDeviation[i][j] = _fillv;
+	  meanVT[i][j] = _fillv;
+	  meanVTUncertainty[i][j] = _fillv;
+	  numConvergingCenters[i][j]= int(_fillv);
+	  radius[j] = _fillv;
+	  for(int k = 0; k < numCenters; k++) {
+	    centers[i][j][k] = Center();
+	    initialX[i][j][k] = _fillv;
+	    initialY[i][j][k] = _fillv;
+	  }
         }
     }
 
-    time = QDateTime();
+  time = QDateTime();
 }
 
 SimplexData::SimplexData(const SimplexData& other)
@@ -133,9 +133,10 @@ void SimplexData::setMeanX(const float** a, const int& numLev, const int& numRad
 
 float SimplexData::getMeanY(const int& lev, const int& rad) const
 {
-    if ((lev < numLevels)&&(rad < numRadii))
+    if ((lev < numLevels) && (rad < numRadii))
         return meanY[lev][rad];
-    Message::toScreen("SimplexData: getY: Outside Bounds: Level = "+QString().setNum(lev)+" Radius = "+QString().setNum(rad));
+    Message::toScreen("SimplexData: getY: Outside Bounds: Level = "+QString().setNum(lev) +
+		      " Radius = " + QString().setNum(rad));
     return meanY[0][0];
 }
 
@@ -286,9 +287,10 @@ void SimplexData::setVTUncertainty(const float** a, const int& numLev,
 
 int SimplexData::getNumConvergingCenters(const int& lev, const int& rad) const
 {
-    if((lev < numLevels)&&(rad < numRadii))
+    if((lev < numLevels) && (rad < numRadii))
         return numConvergingCenters[lev][rad];
-    Message::toScreen("SimplexData: getNumConvergingCenters: Outside Bounds Level = "+QString().setNum(lev)+" radius = "+QString().setNum(rad));
+    Message::toScreen("SimplexData: getNumConvergingCenters: Outside Bounds Level = " + QString().setNum(lev)
+		      + " radius = " + QString().setNum(rad));
     return numConvergingCenters[0][0];
 }
 

@@ -96,7 +96,8 @@ public:
     void printString();
 
 private:
-    static const int MAXLEVELS  = 15;
+    // static const int MAXLEVELS  = 15;
+    static const int MAXLEVELS  = 25;
     static const int MAXRADII   = 31;
     static const int MAXCENTERS = 25;
 

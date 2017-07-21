@@ -32,7 +32,8 @@ VortexList::~VortexList()
 
 bool VortexList::saveXML()
 {
-    VortexData record;
+  // VortexData record;
+    const VortexData *record;
     if(isEmpty())
         return false;
     QFile file(_filePath);
@@ -50,14 +51,18 @@ bool VortexList::saveXML()
     QString tmpStr;
     for(int ii=0;ii<count();ii++){
         xmlWriter.writeStartElement("record");
-        record=this->at(ii);
-        xmlWriter.writeTextElement("time",record.getTime().toString("yyyy/MM/dd hh:mm:ss"));
+        // record=this->at(ii);
+	record = &(this->at(ii));
+        // xmlWriter.writeTextElement("time",record.getTime().toString("yyyy/MM/dd hh:mm:ss"));
+	xmlWriter.writeTextElement("time",record->getTime().toString("yyyy/MM/dd hh:mm:ss"));
         //center lat,lon,alt
-        tmpStr.sprintf("%6.2f,%6.2f,%6.2f",record.getLat(),record.getLon(),record.getHeight());
+        // tmpStr.sprintf("%6.2f,%6.2f,%6.2f",record.getLat(),record.getLon(),record.getHeight());
+	tmpStr.sprintf("%6.2f,%6.2f,%6.2f", record->getLat(), record->getLon(), record->getHeight());
         xmlWriter.writeTextElement("center", tmpStr);
 
         //maxVT, RMW, Pressure, Pressure deficit (check for uninitialized)
-        tmpStr.sprintf("%6.2f,%6.2f,%6.2f,%6.2f",record.getMaxVT(),record.getRMW(),record.getPressure(),record.getPressureDeficit());
+        // tmpStr.sprintf("%6.2f,%6.2f,%6.2f,%6.2f",record.getMaxVT(),record.getRMW(),record.getPressure(),record.getPressureDeficit());
+	tmpStr.sprintf("%6.2f,%6.2f,%6.2f,%6.2f", record->getMaxVT(), record->getRMW(), record->getPressure(), record->getPressureDeficit());
         xmlWriter.writeTextElement("strength",tmpStr);
         xmlWriter.writeEndElement();
     }

@@ -42,6 +42,8 @@ GriddedData::GriddedData()
     jGridsp = 0;
     kGridsp = 0;
 
+    // TODO:
+    kDisplayIndex = 0;
 }
 
 GriddedData::~GriddedData()
@@ -94,22 +96,19 @@ void GriddedData::setKGridsp(const float& kSpacing)
   kGridsp = kSpacing;
 }
 */
-void GriddedData::setLatLonOrigin(float *knownLat, float *knownLon,float *relX, float *relY)
+void GriddedData::setLatLonOrigin(float *knownLat, float *knownLon, float *relX, float *relY)
 {
     // takes a Lat Lon point and its cooresponding grid coordinates in km
     // to set zero Lat Lon coordinates for later use.
 
     // Thanks to Peter Dodge for some code used here
-    float knownLatRadians = *knownLat * acos(-1.0)/180.0;
+    float knownLatRadians = *knownLat * acos(-1.0) / 180.0;
     float fac_lat = 111.13209 - 0.56605 * cos(2.0 * knownLatRadians)+ 0.00012 * cos(4.0 * knownLatRadians) - 0.000002 * cos(6.0 * knownLatRadians);
     float fac_lon = 111.41513 * cos(knownLatRadians)- 0.09455 * cos(3.0 * knownLatRadians) + 0.00012 * cos(5.0 * knownLatRadians);
-
-    originLon = *knownLon-*relX/fac_lon;
-    originLat = *knownLat-*relY/fac_lat;
+    originLon = *knownLon - *relX / fac_lon;
+    originLat = *knownLat - *relY / fac_lat;
 
     // testing Message::toScreen("Set Zero: ZeroLat = "+QString().setNum(zeroLat)+" ZeroLon = "+QString().setNum(zeroLon));
-
-
 }
 
 float GriddedData::fixAngle(float angle) {
@@ -122,9 +121,7 @@ float GriddedData::fixAngle(float angle) {
     if (angle < 0.)
     { fixangle=angle+(2.*Pi); }
     return (fixangle);
-
 }
-
 
 void GriddedData::setReferencePoint(int ii, int jj, int kk)
 {
@@ -139,7 +136,6 @@ void GriddedData::setReferencePoint(int ii, int jj, int kk)
     refPointJ = jj;
     refPointK = kk;
 }
-
 
 void GriddedData::setCartesianReferencePoint(float ii, float jj, float kk)
 {
@@ -163,32 +159,39 @@ void GriddedData::setCartesianReferencePoint(float ii, float jj, float kk)
    */
 }
 
+// TODO What if Lat and/or Lon is -999. refPoint* will be non-sensical
 
 void GriddedData::setAbsoluteReferencePoint(float Lat, float Lon, float Height) 
 {
     // Overloaded version of setCartesianReferencePoint used when Latitude and
     // Longitude data is known.
 
-    float *locations = getCartesianPoint(&originLat, &originLon, &Lat, &Lon);
+  if(Lat == -999)
+    std::cout << "** GriddedData::setAbsoluteReferencePoint: Lat is -999" << std::endl;
+  if(Lon == -999)
+    std::cout << "** GriddedData::setAbsoluteReferencePoint: Lon is -999" << std::endl;
+
+  // TODO This assumes that the originLat and originLon are the radar coordinates.
+  
+  float *locations = getCartesianPoint(&originLat, &originLon, &Lat, &Lon);
+  
     // Floor is used to round to the nearest integer
 
-    refPointI = int(floor((locations[0]-xmin)/iGridsp +.5));
-    refPointJ = int(floor((locations[1]-ymin)/jGridsp +.5));
-    refPointK = int(floor((Height-zmin)/kGridsp +.5));
+    refPointI = int(floor((locations[0] - xmin) / iGridsp + .5));
+    refPointJ = int(floor((locations[1] - ymin) / jGridsp + .5));
+    refPointK = int(floor((Height - zmin) / kGridsp + .5));
     // testing Message::toScreen("I = "+QString().setNum(refPointI)+" J = "+QString().setNum(refPointJ)+" K = "+QString().setNum(refPointK));
     delete[] locations;
-
 }
 
-float* GriddedData::getCartesianPoint(float *Lat, float *Lon,float *relLat, float *relLon)
+float* GriddedData::getCartesianPoint(float *Lat, float *Lon, float *relLat, float *relLon)
 {
-
     // Returns the distance between the two (Lat,Lon) points in km
     // Thanks to Peter Dodge for some code used here
 
-    float LatRadians = *Lat * acos(-1.0)/180.0;
-    float fac_lat = 111.13209 - 0.56605 * cos(2.0 * LatRadians)+ 0.00012 * cos(4.0 * LatRadians) - 0.000002 * cos(6.0 * LatRadians);
-    float fac_lon = 111.41513 * cos(LatRadians)- 0.09455 * cos(3.0 * LatRadians) + 0.00012 * cos(5.0 * LatRadians);
+    float LatRadians = *Lat * acos(-1.0) / 180.0;
+    float fac_lat = 111.13209 - 0.56605 * cos(2.0 * LatRadians) + 0.00012 * cos(4.0 * LatRadians) - 0.000002 * cos(6.0 * LatRadians);
+    float fac_lon = 111.41513 * cos(LatRadians) - 0.09455 * cos(3.0 * LatRadians) + 0.00012 * cos(5.0 * LatRadians);
 
     float relX = (*relLon - *Lon) * fac_lon;
     float relY = (*relLat - *Lat) * fac_lat;
@@ -197,10 +200,9 @@ float* GriddedData::getCartesianPoint(float *Lat, float *Lon,float *relLat, floa
     relArray[0] = relX;
     relArray[1] = relY;
     return relArray;
-
 }
 
-float GriddedData::getCartesianDistance(float Lat, float Lon,float relLat, float relLon)
+float GriddedData::getCartesianDistance(float Lat, float Lon, float relLat, float relLon)
 {
     // Thanks to Peter Dodge for some code used here
     float LatRadians = Lat * acos(-1.0)/180.0;
@@ -213,10 +215,9 @@ float GriddedData::getCartesianDistance(float Lat, float Lon,float relLat, float
     return dist;
 
     // This value is returned in KM ???? -LM
-
 }
 
-float* GriddedData::getAdjustedLatLon(const float startLat,const float startLon,const float changeInX,const float changeInY)
+float* GriddedData::getAdjustedLatLon(const float startLat, const float startLon, const float changeInX, const float changeInY)
 {
     // This function acts like the inverse of the one above.
     // If it is given an initial latitude and longitude
@@ -228,7 +229,6 @@ float* GriddedData::getAdjustedLatLon(const float startLat,const float startLon,
             + 0.00012 * cos(4.0 * LatRadians) - 0.000002 * cos(6.0 * LatRadians);
     float fac_lon = 111.41513 * cos(LatRadians)
             - 0.09455 * cos(3.0 * LatRadians) + 0.00012 * cos(5.0 * LatRadians);
-
     float* newLatLon = new float[2];
     newLatLon[0] = changeInY/fac_lat +startLat;
     newLatLon[1] = changeInX/fac_lon +startLon;
@@ -256,17 +256,17 @@ float GriddedData::getRefPointK ()
 // mins are all in km 
 float GriddedData::getCartesianRefPointI ()
 {
-    return refPointI*iGridsp+xmin;
+    return refPointI * iGridsp + xmin;
 }
 
 float GriddedData::getCartesianRefPointJ ()
 {
-    return refPointJ*jGridsp+ymin;
+    return refPointJ * jGridsp + ymin;
 }
 
 float GriddedData::getCartesianRefPointK ()
 {
-    return refPointK*kGridsp+zmin;
+    return refPointK * kGridsp + zmin;
 }
 
 // These functions convert between indices and cartesian points
@@ -305,8 +305,8 @@ float GriddedData::getCartesianPointFromIndexJ (const float& indexJ) const
 float GriddedData::getCartesianPointFromIndexK (const float& indexK) const
 {
     //	return (indexK + zmin)*kGridsp;
-    if((indexK >= 0)&&(indexK < kDim)) {
-        float distance =  indexK*kGridsp+zmin;
+    if((indexK >= 0) && (indexK < kDim)) {
+        float distance =  indexK * kGridsp + zmin;
         if((distance >= zmin) && (distance <= zmax)) {
             return distance;
         }
@@ -385,7 +385,7 @@ int GriddedData::getFieldIndex(const QString& fieldName) const
     int field = -1;
     if((fieldName == "dz")||(fieldName == "DZ"))
         field = 0;
-    if((fieldName == "ve")||(fieldName == "VE"))
+    if((fieldName == "ve") || (fieldName == "VE") || (fieldName == "VU") ) // TODO: VU?
         field = 1;
     if((fieldName == "ht")||(fieldName == "HT"))
         field = 2;
@@ -1113,6 +1113,8 @@ void GriddedData::getCylindricalAzimuthData(QString& fieldName,
                     if((k <= (((height-zmin)/kGridsp)+cylindricalHeightSpacing/2))
                             && (k > (((height-zmin)/kGridsp)-cylindricalHeightSpacing/2))) {
                         values[count] = dataGrid[field][i][j][k];
+			// TODO debug
+			// std::cout << "val[" << count << "] = " << values[count] << std::endl;
                         count++;
                         if(count > numPoints) {
                             // Memory overflow ... bail out

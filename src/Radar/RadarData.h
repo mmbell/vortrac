@@ -46,6 +46,9 @@ public:
     bool fileIsReadable();
     QString getFileName();
     float getMaxUnambig_range();
+    void setMaxRange(float f) { maxRange = f; }
+    void setPreGridded() { preGridded = true; }
+    bool isPreGridded()  { return preGridded; }
 
 protected:
     QString radarName;
@@ -66,7 +69,8 @@ protected:
 
 private:
     bool dealiased;
-
+    float maxRange;   // max unambiguated range
+    bool preGridded;
 };
 
 
