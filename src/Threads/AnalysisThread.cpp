@@ -1,3 +1,5 @@
+// TODO It appears this file isn't being compiled/linked in.
+
 /*
  *  AnalysisThread.cpp
  *  VORTRAC

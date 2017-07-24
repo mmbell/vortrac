@@ -38,6 +38,7 @@ void ATCF::catchLog(const Message& message)
     emit log(message);
 }
 
+// TODO 
 bool ATCF::getTcvitals(bool archive)
 {
     QDomElement vortex = configData->getConfig("vortex");

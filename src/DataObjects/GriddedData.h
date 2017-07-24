@@ -24,8 +24,11 @@ class GriddedData
   GriddedData();
   virtual ~GriddedData();
 
+  // These 2 currently do nothing
   virtual void writeAsi(); // = 0;
   virtual bool writeAsi(const QString& fileName); // = 0;
+
+  // TODO read Radx grid (netcdf)
   
   float getIdim() const { return iDim; }
   float getJdim() const { return jDim; }
@@ -40,7 +43,11 @@ class GriddedData
   //void setJGridsp(const float& jSpacing);
   //void setKGridsp(const float& kSpacing);
   float fixAngle(float angle);
+  
   void setLatLonOrigin(float *knownLat, float *knownLon, float *relX,float *relY);
+  float getOriginLat()	{ return originLat; }
+  float getOriginLon()	{ return originLon; }
+  
   void setReferencePoint(int ii, int jj, int kk);
   void setCartesianReferencePoint(float ii, float jj, float kk); 
   void setAbsoluteReferencePoint(float Lat, float Lon, float Height);
@@ -48,10 +55,11 @@ class GriddedData
   static float* getCartesianPoint(float *Lat, float *Lon,float *relLat, float* relLon);
   static float  getCartesianDistance(float Lat, float Lon,float relLat, float relLon);
   static float* getAdjustedLatLon(const float startLat, const float startLon,const float changeInX,const float changeInY);
+
   float getRefPointI();
   float getRefPointJ();
   float getRefPointK();
-  
+
   float getCartesianRefPointI();
   float getCartesianRefPointJ();
   float getCartesianRefPointK();
@@ -87,7 +95,6 @@ class GriddedData
   float* getCartesianYslice(const QString& fieldName, const float& x, const float& z);
   float* getCartesianZslice(const QString& fieldName, const float& x, const float& y);
   float  getCartesianValue(const QString& fieldName, const float& x,const float& y, const float& z);
-
  
   // Spherical Coordinates
   int    getSphericalRangeLength(float azimuth, float elevation);
@@ -138,7 +145,11 @@ class GriddedData
 
   float getCylindricalAzimuthSpacing() { return cylindricalAzimuthSpacing; }
   void  setCylindricalAzimuthSpacing(const float& newSpacing);
-  
+
+  // TODO: This is really a graphic attribute.
+  //       But I find no other way to cleanly pass a value to CappiDisplay::constructImage()
+  int getDisplayKIndex() const { return kDisplayIndex; }
+    
  protected:
   float iDim;
   float jDim;
@@ -153,9 +164,9 @@ class GriddedData
   QStringList fieldNames;
 
   static const int maxFields = 3;
-  static const int maxIDim = 256;
-  static const int maxJDim = 256;
-  static const int maxKDim = 20;
+  static const int maxIDim = 1024; // 256;
+  static const int maxJDim = 1024; // 256;
+  static const int maxKDim = 40;   // 20;
 
   float dataGrid[maxFields][maxIDim][maxJDim][maxKDim];
   //dataGrid[0] = reflectivity
@@ -184,6 +195,9 @@ class GriddedData
   // zmin & zmax have units in km relative to radar altitude
   float zmin, zmax;
 
+  // At what k index CappiDisplay gets its data
+  int kDisplayIndex;
+  
   bool test();
   
 };

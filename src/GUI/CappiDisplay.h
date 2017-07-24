@@ -46,17 +46,20 @@ public slots:
     void setGBVTDResults(float x, float y,float rmwEstimate, float sMin, float sMax, float vMax,
                          float userlat, float userlon,float lat, float lon);
     void toggleRadarDisplay();
+    void levelChanged(int level);
 
 signals:
     void hasImage(bool imageAvailable);
-
+    
 protected:
     void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
     void paintEvent(QPaintEvent *event);
     void resizeEvent(QResizeEvent *event);
 
 private:
     void resizeImage(QImage *image, const QSize &newSize);
+    int getDisplayLevel();
     QString cappiLabel;
     QImage image;
     QMutex imageHolder;
@@ -88,7 +91,7 @@ private:
     float heightMaxApp, heightMaxRec;
     float distMaxApp, distMaxRec;
     float dirMaxApp, dirMaxRec;
-    
+    int displayLevel; // default level comes from cappi, unless overwritten here.
 };
 
 #endif

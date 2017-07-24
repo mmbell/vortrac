@@ -52,7 +52,7 @@ public:
 signals:
     void tabLabelChanged(QWidget* labelWidget, const QString& new_Label);
     void saveGraphImage(const QString& name);
-	void updateCappiLevel(const int level);
+    void updateCappiLevel(const int level);
 
 private slots:
     void updateTcvitals();

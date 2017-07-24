@@ -47,8 +47,9 @@ RadarFactory::RadarFactory(Configuration* radarConfig, QObject *parent): QObject
         radarFormat = ncdclevelII;
     } else if (format == "MODEL") {
         radarFormat = model;
-    }
-    else {
+    } else if (format == "NETCDF") {
+        radarFormat = netcdf;
+    } else {
         // Will implement more later but give error for now
         emit log(Message("Data format not supported"));
     }
@@ -117,8 +118,10 @@ RadarData* RadarFactory::getUnprocessedData()
     }
     case netcdf:
     {
-        // Not yet implemented
-        break;
+      // TODO Any other info?
+      NetCDF *radarData = new NetCDF(radarName, radarLat, radarLon, fileName);
+      radarData->setAltitude(radarAlt);
+      return radarData;
     }
     }
 
@@ -130,7 +133,6 @@ RadarData* RadarFactory::getUnprocessedData()
 
 bool RadarFactory::hasUnprocessedData()
 {
-
     // Check the unprocessed list first, if it has files no need to reread directory yet
     if(!radarQueue->isEmpty()) {
         return true;
@@ -268,15 +270,52 @@ bool RadarFactory::hasUnprocessedData()
     case dorade:
     {
         // Not yet implemented
-        break;
+      std::cout << "Format dorade not implemented yet" << std::endl;
+      break;
     }
+    
     case netcdf:
     {
-        // Not yet implemented
-        break;
-    }
+      // Need to agree how we deal with NetCDF files.
+      //    Put a bunch in a directory with some encoding in the name?
+      //    For example:
+      //         KAMX_20161007_044754.nc
+      //         <radar>_<date>_<time>.nc
+      // File name should start with the radar ID
+      // Any restriction on the suffix?
 
-    }
+      dataPath.setNameFilters(QStringList(radarName + "_*"));
+      dataPath.setFilter(QDir::Files);
+      dataPath.setSorting(QDir::Name);
+      QStringList filenames = dataPath.entryList();
+
+      // TODO Do we need to sort based on file name?
+      //      Do we want to restrict on suffix?
+
+      for (int i = 0; i < filenames.size(); ++i) {
+	QString file = filenames.at(i);
+	QFileInfo fi(file);
+	QString base = fi.baseName();
+	QStringList parts = base.split("_");
+	if(parts.size() >= 3) {
+	  // TODO: what does QDate::fromString do in case of invalid file name?
+	  QDate fileDate = QDate::fromString(parts.at(1), "yyyyMMdd");
+	  QTime fileTime = QTime::fromString(parts.at(2), "hhmmss");
+	  QDateTime fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
+
+	  if (fileDateTime >= startDateTime && fileDateTime <= endDateTime) {
+	    // Valid time and radar name, check to see if it has been processed
+	    if (!fileAnalyzed[dataPath.filePath(file)]) {
+	      // File has not been analyzed, add it to the queue
+	      radarQueue->enqueue(file);
+	    }
+	  }
+	}
+      }
+      break;
+    } // netcdf
+
+    } // switch
 
     // See if we added any new files to the queue
     if(!radarQueue->isEmpty()) {
@@ -295,7 +334,7 @@ void RadarFactory::catchLog(const Message& message)
 
 void RadarFactory::updateDataQueue(const VortexList* list)
 {
-    if(!list->count()>0)
+  if(!(list->count()>0))
         return;
     int totalFiles = radarQueue->count();
     for(int i = totalFiles-1; i >= 0; i--)

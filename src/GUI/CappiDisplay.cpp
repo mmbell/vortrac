@@ -33,6 +33,7 @@ CappiDisplay::CappiDisplay(QWidget *parent)
     distMaxApp = distMaxRec = 0;
     dirMaxApp = dirMaxRec = 0;
 
+    displayLevel = -1;  // default level comes from cappi, unless overwritten here.
     contourIncr = 1;
     
     //Set the palette
@@ -191,11 +192,52 @@ void CappiDisplay::clearImage()
     update();
 }
 
+// Print a line showing grid coordinates, and lat and lon at that point.
+// This can be used for debugging (to copyt/paste a location for example)
+
 void CappiDisplay::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
         lastPoint = event->pos();
+
+	// Display origin is at the top left. Cappi origin is at the radar.
+	
+	int x = currentCappi.getCartesianPointFromIndexI((float)lastPoint.x());
+	int y = currentCappi.getCartesianPointFromIndexJ(currentCappi.getJdim() - lastPoint.y());
+
+	float *coords = currentCappi.getAdjustedLatLon(currentCappi.getOriginLat(),
+						       currentCappi.getOriginLon(),
+						       x, y);
+	// coords[0] -> Lon
+	// coords[1] -> Lat
+	
+	std::cout << "Left press at " << "(" << lastPoint.x() << ", " << lastPoint.y()
+		  << ") -> (" << x << ", " << y << "), "
+		  << "(" << coords[0] << ", " << coords[1] << ")"
+		  << std::endl;
+	delete[] coords;
     }
+}
+
+// Show a tooltip with lat and lon at the mouse position
+// Since setMouseTracking() hasn't been called, this will only happen when one button is pressed down.
+
+void CappiDisplay::mouseMoveEvent(QMouseEvent *event)
+{
+  lastPoint = event->pos();
+
+  // Display origin is at the top left. Cappi origin is at the radar.
+	
+  int x = currentCappi.getCartesianPointFromIndexI((float)lastPoint.x());
+  int y = currentCappi.getCartesianPointFromIndexJ(currentCappi.getJdim() - lastPoint.y());
+
+  float *coords = currentCappi.getAdjustedLatLon(currentCappi.getOriginLat(),
+						 currentCappi.getOriginLon(),
+						 x, y);
+
+  QToolTip::showText(event->globalPos(),
+		     QString("(") + QString::number(coords[0]) + ", " + QString::number(coords[1]) + ")" );
+  delete[] coords;
 }
 
 void CappiDisplay::paintEvent(QPaintEvent * /* event */)
@@ -244,6 +286,7 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
     painter.drawImage(QPoint(image.size().width()*0,0), image);
 
     painter.save();
+    
     if(hasGBVTDInfo) {
         // Given the relevant GBVTD and config parameters
         // Draw an X (small hurricane symbol?) at (x, y) to mark
@@ -251,21 +294,34 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
         // Draw circles of one color for simplex max & simplex min
         // Draw circles of another color for GBVTD max radius
         // All these values should arrive scaled to percentages of cappi size
+      
+        QPen xPen(Qt::white);
+	xPen.setWidth(5);
+	painter.setPen(xPen);
+
+	// Draw a small X at the radar
+	float zero = 0.0;
+    
+	int radX = (int) currentCappi.getIndexFromCartesianPointI(zero);
+	int radY = (int) currentCappi.getIndexFromCartesianPointJ(zero);
+	// Display origin is top left corner. Cappi origin is bottom left. Adjust radY accordingly
+	radY = currentCappi.getJdim() - radY;
+
+	painter.drawLine(QPointF(radX - 2, radY - 2), QPointF(radX + 2, radY + 2));
+	painter.drawLine(QPointF(radX - 2, radY + 2), QPointF(radX + 2, radY - 2));
 
         float w = image.size().width();
         float h = image.size().height();
-        QPen xPen(Qt::white);
-        xPen.setWidth(5);
-        painter.setPen(xPen);
+	
         // Draw a small X in the vortex center
         painter.drawLine(QPointF((xPercent-.01)*w,(1-(yPercent-.01))*h),
                          QPointF((xPercent+.01)*w,(1-(yPercent+.01))*h));
         painter.drawLine(QPointF((xPercent-.01)*w,(1-(yPercent+.01))*h),
                          QPointF((xPercent+.01)*w,(1-(yPercent-.01))*h));
+
         // Annotate the maximum and minimum velocities
         painter.drawLine(QPointF((maxVelXpercent)*w,(1-(maxVelYpercent-.01))*h),QPointF((maxVelXpercent)*w,(1-(maxVelYpercent+.01))*h));
         painter.drawLine(QPointF((maxVelXpercent-.01)*w,(1-(maxVelYpercent))*h),QPointF((maxVelXpercent+.01)*w,(1-(maxVelYpercent))*h));
-
         painter.drawLine(QPointF((minVelXpercent-.01)*w,(1-(minVelYpercent))*h),
                          QPointF((minVelXpercent+.01)*w,(1-(minVelYpercent))*h));
 
@@ -340,7 +396,9 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
     // Get the minimum and maximum Doppler velocities
     maxVel = -9999;
     minVel= 9999;
-    float k = 0;
+    
+    float k = getDisplayLevel();
+      
     QString velfield("ve");
     QString dbzfield("dz");
     QString heightfield("ht");
@@ -468,13 +526,32 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
             }
         }
     }
-    image = image.scaled((int)500,(int)500);
+    //    image = image.scaled((int)500,(int)500);
+    image = image.scaled((int)iDim,(int)jDim);
     legendImage = legendImage.scaled(70,500);
     legendImage.fill(qRgb(backColor.red(),backColor.green(),backColor.blue()));
 
     this->setMinimumSize(QSize(int(image.size().width()*1.2),int(image.size().height())));
     this->resize(this->minimumSize());
     imageHolder.unlock();
+}
+
+// If level was overwritten from the GUI, return that.
+// Otherwise, ask the cappi what level to use
+
+int CappiDisplay::getDisplayLevel()
+{
+  if (displayLevel >= 0)
+    return displayLevel;
+  return currentCappi.getDisplayKIndex();
+}
+
+void CappiDisplay::levelChanged(int level)
+{
+  displayLevel = level;
+  if (hasCappi)
+    constructImage(currentCappi);
+  update();
 }
 
 void CappiDisplay::setGBVTDResults(float x, float y,float rmw, float sMin, float sMax, float vMax,

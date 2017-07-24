@@ -17,6 +17,9 @@
 #include "Math/Matrix.h"
 #include "HVVP/Hvvp.h"
 
+// TODO debug
+# include <iostream>
+
 SimplexThread::SimplexThread(QObject* parent):QObject(parent)
 {
     this->setObjectName("Simplex");
@@ -52,7 +55,7 @@ void SimplexThread::initParam(Configuration *wholeConfig,GriddedData *dataPtr,fl
 bool SimplexThread::findCenter(SimplexList* simplexList)
 {   
 
-    //STEP 1: retrieval all the parameters for Simplex algrithm
+    //STEP 1: retrieval all the parameters for Simplex algorithm
     QDomElement simplexCfg = configData->getConfig("center");
     QString geometry = configData->getParam(simplexCfg,QString("geometry"));
     QString velField = configData->getParam(simplexCfg,QString("velocity"));
@@ -65,6 +68,12 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
 
     float boxSize = configData->getParam(simplexCfg,QString("boxdiameter")).toFloat();
     float numPoints = configData->getParam(simplexCfg,QString("numpoints")).toFloat();
+
+    if(numPoints >= 25) {
+      std::cerr << "*** Error: <numpoints> is greater than 25 (the size of the data structures in the simplex thread)" << std::endl;
+      return false;
+    }
+    
     float boxRowLength = sqrt(numPoints);
     float boxIncr = boxSize / sqrt(numPoints);
 
@@ -80,23 +89,23 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
         _dataGaps[i] = configData->getParam(simplexCfg,QString("maxdatagap"), QString("wavenum"),QString().setNum(i)).toFloat();
     }
 
-
     //SETP 2: initialize a GBVTD object for whole simplex to use
     _simplexVTD = new GBVTD(geometry, closure, maxWave, _dataGaps);
     _vtdCoeffs  = new Coefficient[20];
 
 
-    //STEP 3: perform simplex algrithm
+    //STEP 3: perform simplex algorithm
+
     // Set ring width in cappi so that griddedData access function use this
     gridData->setCylindricalAzimuthSpacing(ringWidth);
 
     QDomElement cappi = configData->getConfig("cappi");
     float zgridsp = configData->getParam(cappi, "zgridsp").toFloat();
-    int nTotalLevels = (int)floor((lastLevel - firstLevel)/zgridsp +1.5);
+    int nTotalLevels = (int)floor((lastLevel - firstLevel) / zgridsp + 1.5);
     // We want 1 km spaced rings regardless of ring width
     int nTotalRings = (int)floor((lastRing - firstRing) + 1.5);
     // Create a simplexData object to hold the results;
-    SimplexData* simplexData = new SimplexData(nTotalLevels, nTotalRings,(int)numPoints);
+    SimplexData* simplexData = new SimplexData(nTotalLevels, nTotalRings, (int)numPoints);
 
     // the number of levels should be divided by the zgridsp (cappi) because
     // those are measurements in km
@@ -104,27 +113,31 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
     simplexData->setNumPointsUsed((int)numPoints);
 
     // Allocate memory for the vertices
-    float** vertex=new float*[3];
-    vertex[0]=new float[2];
-    vertex[1]=new float[2];
-    vertex[2]=new float[2];
-    float* VT=new float[3];
-    float* vertexSum=new float[2];
+    float** vertex = new float*[3];
+    vertex[0 ]= new float[2];
+    vertex[1] = new float[2];
+    vertex[2] = new float[2];
+    float* VT = new float[3];
+    float* vertexSum = new float[2];
 
     // Loop through the levels and rings, Should this have some reference to grid spacing?
+    
     for (float height = firstLevel; height <= lastLevel; height++) {
         for (float radius = firstRing; radius <= lastRing; radius++) {
             gridData->setAbsoluteReferencePoint(_latGuess, _lonGuess, height);
             // Set the corner of the box
             float CornerI = gridData->getCartesianRefPointI();
             float CornerJ = gridData->getCartesianRefPointJ();
-            //std::cout<<"ring: "<<radius<<"RefI: "<<CornerI<<"RefJ: "<<CornerJ<<std::endl;
+	    
+            // std::cout << "** ring: "<< radius <<" RefI: " << CornerI << " RefJ: "<< CornerJ << std::endl;
+	    
             float RefK = gridData->getCartesianRefPointK();
             float RefI = CornerI;
             float RefJ = CornerJ;
+	    
             if ((gridData->getRefPointI() < 0) || (gridData->getRefPointJ() < 0) || (gridData->getRefPointK() < 0))  {
                 emit log(Message(QString("Initial simplex guess is outside CAPPI"),0,this->objectName()));
-                archiveNull(simplexData,radius, height, numPoints);
+                archiveNull(simplexData, radius, height, numPoints);
                 continue;
             }
             // Initialize mean values
@@ -136,13 +149,15 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
             convergingCenters = 0;
 
             // Loop through the initial guesses
-            for (int point = 0; point <= numPoints-1; point++) {
+	    // std::cout << "** Num of points: " << numPoints << std::endl;
+	    
+            for (int point = 0; point < numPoints; point++) {
                 if (point < boxRowLength)
                     RefI = CornerI + float(point) * boxIncr;
                 else
-                    RefI = CornerI + float((point)%int(boxRowLength)) * boxIncr;
+                    RefI = CornerI + float((point) % int(boxRowLength)) * boxIncr;
 
-                RefJ = CornerJ + float(point/int(boxRowLength)) * boxIncr;
+                RefJ = CornerJ + float(point / int(boxRowLength)) * boxIncr;
 
                 startX[point] = RefI;
                 startY[point] = RefJ;
@@ -151,22 +166,24 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
                 float sqr32 = 0.866025;
                 vertex[0][0] = RefI;
                 vertex[0][1] = RefJ + radiusOfInfluence;
-                vertex[1][0] = RefI + sqr32*radiusOfInfluence;
-                vertex[1][1] = RefJ - 0.5*radiusOfInfluence;
-                vertex[2][0] = RefI - sqr32*radiusOfInfluence;
-                vertex[2][1] = RefJ - 0.5*radiusOfInfluence;
+                vertex[1][0] = RefI + sqr32 * radiusOfInfluence;
+                vertex[1][1] = RefJ - 0.5 * radiusOfInfluence;
+                vertex[2][0] = RefI - sqr32 * radiusOfInfluence;
+                vertex[2][1] = RefJ - 0.5 * radiusOfInfluence;
                 vertexSum[0] = 0;
                 vertexSum[1] = 0;
 
-                for (int v=0; v <= 2; v++) {
+                for (int v = 0; v <= 2; v++) {
                     //Calculate mean wind at each vertex
-                    VT[v]=_getSymWind(vertex[v][0],vertex[v][1],int(RefK),radius,height,velField);
+		  // TODO look at that GBVTD.cpp
+                    VT[v] = _getSymWind(vertex[v][0], vertex[v][1], int(RefK), radius, height, velField);
                 }
+
                 // Run the simplex search loop
-                float VTsolution=.0,Xsolution=0.,Ysolution=0.;
-                _getVertexSum(vertex,vertexSum);
-                _centerIterate(vertex,vertexSum,VT,maxIterations,convergeCriterion,RefK,radius,height,velField,
-                               VTsolution,Xsolution,Ysolution);
+                float VTsolution = .0, Xsolution = 0. , Ysolution=0.;
+                _getVertexSum(vertex, vertexSum);
+                _centerIterate(vertex, vertexSum, VT, maxIterations, convergeCriterion, RefK, radius, height, velField,
+                               VTsolution, Xsolution, Ysolution);
 
                 // Done with simplex loop, should have values for the current point
                 if ((VTsolution < 100.) and (VTsolution > 0.)) {
@@ -186,26 +203,28 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
                 }
             }//point loop end
 
+	    // std::cout << "Mean count before: " << meanCount << std::endl;
+	    
             if (meanCount == 0) {
-                archiveNull(simplexData,radius, height, numPoints);
+                archiveNull(simplexData, radius, height, numPoints);
             } else {
                 meanXall = meanXall / float(meanCount);
                 meanYall = meanYall / float(meanCount);
                 meanVTall = meanVTall / float(meanCount);
-                for (int i=0;i<numPoints;i++) {
-                    if ((endX[i] != -999.) and (endY[i] != -999.)and (VTind[i] != -999.)) {
-                        stdDevVertexAll += ((endX[i] - meanXall)*(endX[i] - meanXall)+ (endY[i] - meanYall)*(endY[i] - meanYall));
-                        stdDevVTAll += (VTind[i] - meanVTall)*(VTind[i] - meanVTall);
+                for (int i = 0; i < numPoints; i++) {
+                    if ((endX[i] != -999.) and (endY[i] != -999.) and (VTind[i] != -999.)) {
+                        stdDevVertexAll += ((endX[i] - meanXall) * (endX[i] - meanXall) + (endY[i] - meanYall) * (endY[i] - meanYall));
+                        stdDevVTAll += (VTind[i] - meanVTall) * (VTind[i] - meanVTall);
                     }
                 }
-                stdDevVertexAll = sqrt(stdDevVertexAll/float(meanCount-1));
-                stdDevVTAll = sqrt(stdDevVTAll/float(meanCount-1));
+                stdDevVertexAll = sqrt(stdDevVertexAll/float(meanCount - 1));
+                stdDevVTAll = sqrt(stdDevVTAll/float(meanCount - 1));
 
                 // Now remove centers beyond 1 standard deviation
                 meanCount = 0;
-                for (int i=0;i<numPoints;i++) {
+                for (int i = 0; i < numPoints; i++) {
                     if ((endX[i] != -999.) and (endY[i] != -999.) and (VTind[i] != -999.)) {
-                        float vertexDist = sqrt((endX[i]-meanXall)*(endX[i] - meanXall)+ (endY[i] - meanYall)*(endY[i] - meanYall));
+                        float vertexDist = sqrt((endX[i] - meanXall) * (endX[i] - meanXall) + (endY[i] - meanYall) * (endY[i] - meanYall));
                         if (vertexDist < stdDevVertexAll) {
                             Xconv[meanCount] = endX[i];
                             Yconv[meanCount] = endY[i];
@@ -217,22 +236,24 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
                         }
                     }
                 }
+		// std::cout << "Mean count after: " << meanCount << std::endl;
+		
                 if (meanCount == 0) {
-                    archiveNull(simplexData,radius, height, numPoints);
+                    archiveNull(simplexData, radius, height, numPoints);
                 } else {
                     meanX = meanX / float(meanCount);
                     meanY = meanY / float(meanCount);
                     meanVT = meanVT / float(meanCount);
                     convergingCenters = meanCount;
-                    for (int i=0;i<convergingCenters-1;i++) {
-                        stdDevVertex += ((Xconv[i] - meanX)*(Xconv[i] - meanX)+ (Yconv[i] - meanY)*(Yconv[i] - meanY));
-                        stdDevVT += (VTconv[i] - meanVT)*(VTconv[i] - meanVT);
+                    for (int i = 0; i < convergingCenters - 1; i++) {
+                        stdDevVertex += ((Xconv[i] - meanX) * (Xconv[i] - meanX)+ (Yconv[i] - meanY) * (Yconv[i] - meanY));
+                        stdDevVT += (VTconv[i] - meanVT) * (VTconv[i] - meanVT);
                     }
-                    stdDevVertex = sqrt(stdDevVertex/float(meanCount-1));
-                    stdDevVT = sqrt(stdDevVT/float(meanCount-1));
+                    stdDevVertex = sqrt(stdDevVertex / float(meanCount - 1));
+                    stdDevVT = sqrt(stdDevVT / float(meanCount - 1));
 
                     // All done with this radius and height, archive it
-                    archiveCenters(simplexData,radius, height, numPoints);
+                    archiveCenters(simplexData, radius, height, numPoints);
                 }
             }
         }//ring loop end
@@ -251,7 +272,7 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
     return true;
 }
 
-void SimplexThread::archiveCenters(SimplexData* simplexData,float radius, float height, float numPoints)
+void SimplexThread::archiveCenters(SimplexData* simplexData, float radius, float height, float numPoints)
 {
     // Save the centers to the SimplexData object
     int level =int(height - firstLevel);
@@ -269,15 +290,14 @@ void SimplexThread::archiveCenters(SimplexData* simplexData,float radius, float 
         // later so these should be given in km
         // The level and ring integers are the storage positions
         // these values are used for the indexing - LM 02/6/07
-        Center indCenter(startX[point],startY[point],endX[point], endY[point], VTind[point],height, radius);
+        Center indCenter(startX[point], startY[point], endX[point], endY[point], VTind[point], height, radius);
         simplexData->setCenter(level, ring, point, indCenter);
         simplexData->setInitialX(level, ring, point, startX[point]);
         simplexData->setInitialY(level, ring, point, startY[point]);
     }
-
 }
 
-void SimplexThread::archiveNull(SimplexData* simplexData,float& radius, float& height, float& numPoints)
+void SimplexThread::archiveNull(SimplexData* simplexData, float& radius, float& height, float& numPoints)
 {
 
     // Save the centers to the SimplexData object
@@ -292,7 +312,7 @@ void SimplexThread::archiveNull(SimplexData* simplexData,float& radius, float& h
     simplexData->setVTUncertainty(level, ring, -999);
     simplexData->setNumConvergingCenters(level, ring, (int)0);
     for (int point = 0; point < (int)numPoints; point++) {
-        Center indCenter(Center::_fillv,Center::_fillv,Center::_fillv,Center::_fillv,
+        Center indCenter(Center::_fillv, Center::_fillv, Center::_fillv,Center::_fillv,
                          Center::_fillv, level, ring);
         simplexData->setCenter(level, ring, point, indCenter);
     }
@@ -369,15 +389,21 @@ float SimplexThread::_getSymWind(float vertex_x,float vertex_y,int RefK,float ra
 {
     float VT=-999.0f;
     gridData->setCartesianReferencePoint(int(vertex_x),int(vertex_y),RefK);
-    int numData = gridData->getCylindricalAzimuthLength(radius, height);
+    int numData = gridData->getCylindricalAzimuthLength(radius, height);    // TODO
     float* ringData = new float[numData];
     float* ringAzimuths = new float[numData];
-    gridData->getCylindricalAzimuthData(velField, numData,radius, height, ringData);
-    gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);
-
+    gridData->getCylindricalAzimuthData(velField, numData, radius, height, ringData);
+    gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);    // azimuth data should look like sine wave
+#if 0
+    // TODO debug
+    for(int d = 0; d < numData; d++) {
+      std::cout <<  "d: " << d << " val: " << ringData[d] 
+		<< " azimuth: " << ringAzimuths[d] << std::endl;
+    }
+#endif
     Coefficient*  vtdCoeffs=new Coefficient[20];
     float   vtdStdDev;
-    if (_simplexVTD->analyzeRing(vertex_x, vertex_y, radius,height, numData, ringData,ringAzimuths, vtdCoeffs, vtdStdDev)) {
+    if (_simplexVTD->analyzeRing(vertex_x, vertex_y, radius, height, numData, ringData, ringAzimuths, vtdCoeffs, vtdStdDev)) {
         if (vtdCoeffs[0].getParameter() == "VTC0")
             VT = vtdCoeffs[0].getValue();
     }
@@ -386,11 +412,12 @@ float SimplexThread::_getSymWind(float vertex_x,float vertex_y,int RefK,float ra
     delete[] vtdCoeffs;
     return VT;
 }
-void SimplexThread::_centerIterate(float** vertex,float* vertexSum, float* VT,int maxIterations,float convergeCriterion,
-                                   float RefK,float radius,float height,QString velField,
-                                   float& VTsolution,float& Xsolution,float& Ysolution)
+
+void SimplexThread::_centerIterate(float** vertex, float* vertexSum, float* VT, int maxIterations, float convergeCriterion,
+                                   float RefK, float radius, float height, QString velField,
+                                   float& VTsolution, float& Xsolution, float& Ysolution)
 {
-    VTsolution=Xsolution=Ysolution=0.0f;
+    VTsolution = Xsolution = Ysolution = 0.0f;
 
     int numIterations = 0;
     int low = 0;

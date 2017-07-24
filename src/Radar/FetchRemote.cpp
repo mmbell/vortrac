@@ -43,6 +43,13 @@ void FetchRemote::fetchRemoteData()
     QString catalogurl = "thredds/catalog/nexrad/level2/";
     QDomElement radar = configData->getConfig("radar");
     QString radarName = configData->getParam(radar,"name");
+
+    // TODO Check on this
+
+    QString format = configData->getParam(radar, "format");
+    if(format == "NETCDF")
+      return;
+    
     QString currdate = QDateTime::currentDateTimeUtc().date().toString("yyyyMMdd");
     QUrl catalog = QUrl(server + catalogurl + radarName + "/" + currdate + "/catalog.xml");
     //QString url = catalog.toString();

@@ -96,10 +96,10 @@ GraphFace::~GraphFace()
 
   delete image;
   delete imageFile;
-  VortexDataList = NULL;
   delete VortexDataList;
-  dropList = NULL;
+  VortexDataList = NULL;
   delete dropList;
+  dropList = NULL;
   // delete key;
   
 }
@@ -160,11 +160,11 @@ void GraphFace::paintEvent(QPaintEvent *event)
 
 //-------------------------------event----------------------------------------
 
-bool GraphFace::event(QEvent *event)
+bool GraphFace::event(QEvent *e)
 {
-  if (event->type() == QEvent::ToolTip) {
+  if (e->type() == QEvent::ToolTip) {
     //    Message::toScreen("Got ToolTip Event!");
-    QHelpEvent *find = static_cast<QHelpEvent *>(event);
+    QHelpEvent *find = static_cast<QHelpEvent *>(e);
     bool ONDropSonde = false;
     QString time, measurement;
     //Message::toScreen(" x = "+QString().setNum(find->pos().x())+" y = "+QString().setNum(find->pos().y()));
@@ -211,7 +211,7 @@ bool GraphFace::event(QEvent *event)
       }
     }
   }  
-  return QWidget::event(event); // Something wrong with this guy...
+  return QWidget::event(e); // Something wrong with this guy...
 }
 
 
@@ -351,7 +351,7 @@ void GraphFace::newInfo(VortexList* gList)
     if (timeRange == 0)
       timeRange = 60;
   }
-  VortexDataList = NULL;
+  VortexDataList = NULL;     // TODO ??
   VortexDataList = gList;
   imageAltered = true;
   emit update(); 

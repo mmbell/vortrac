@@ -28,6 +28,8 @@ RadarData::RadarData(QString radarname, float lat, float lon, QString filename)
     Message::toScreen("Radar File: "+filename+" does NOT exist");
   Sweeps = NULL;
   Rays = NULL;
+  maxRange = 148; // default max unambiguated range. Can be overwritten in the config
+  preGridded = false;
 }
 
 RadarData::~RadarData()
@@ -247,6 +249,9 @@ QString RadarData::getFileName()
 
 float RadarData::getMaxUnambig_range()
 {
+    if (preGridded)
+      return maxRange;
+
     float maxRange = -999;
     for (int i = 0; i < numSweeps; ++i) {
         float range = Sweeps[i].getUnambig_range();

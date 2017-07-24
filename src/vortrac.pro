@@ -34,14 +34,15 @@ HEADERS += Threads/workThread.h \
            GUI/StopLight.h \ 
            GUI/CappiDisplay.h \
            GUI/StormSignal.h \
-	         GUI/StartDialog.h \
-	         HVVP/Hvvp.h \
+           GUI/StartDialog.h \
+           HVVP/Hvvp.h \
            IO/Message.h \
            IO/Log.h \
-	         IO/ATCF.h \
-	         Radar/RadarFactory.h \
+           IO/ATCF.h \
+           Radar/RadarFactory.h \
            Radar/LevelII.h \
            Radar/NcdcLevelII.h \
+           Radar/NetCDF.h \
            Radar/LdmLevelII.h \
            Radar/AnalyticRadar.h \
            Radar/nexh.h \
@@ -58,8 +59,8 @@ HEADERS += Threads/workThread.h \
            Pressure/PressureFactory.h \
            Pressure/HWind.h \
            Pressure/AWIPS.h \
-	         Pressure/MADIS.h \
-	         Pressure/MADISFactory.h \
+           Pressure/MADIS.h \
+           Pressure/MADISFactory.h \
            Radar/FetchRemote.h \
            Batch/DriverBatch.h \
            Batch/BatchWindow.h \
@@ -101,6 +102,7 @@ SOURCES += main.cpp \
            Radar/RadarFactory.cpp \
            Radar/LevelII.cpp \
            Radar/NcdcLevelII.cpp \
+           Radar/NetCDF.cpp \
            Radar/LdmLevelII.cpp \
            Radar/AnalyticRadar.cpp\
            Radar/RadarQC.cpp \
@@ -116,14 +118,15 @@ SOURCES += main.cpp \
            Pressure/PressureFactory.cpp \
            Pressure/HWind.cpp \
            Pressure/AWIPS.cpp \
-	         Pressure/MADIS.cpp \
-	         Pressure/MADISFactory.cpp \
+           Pressure/MADIS.cpp \
+           Pressure/MADISFactory.cpp \
            Radar/FetchRemote.cpp \
            Batch/DriverBatch.cpp \
            Batch/BatchWindow.cpp \
            DriverAnalysis.cpp
 RESOURCES += vortrac.qrc
-LIBS += -lbz2 -larmadillo
+# LIBS += -ludunits2 -lRadx -lbz2 -larmadillo -lhdf5_cpp -lnetcdf_c++
+LIBS += -lbz2 -larmadillo -lnetcdf_c++
 QT += xml network
-#CONFIG += debug
+CONFIG += debug
 #CONFIG -= app_bundle

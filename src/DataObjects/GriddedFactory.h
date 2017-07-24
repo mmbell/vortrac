@@ -24,11 +24,16 @@ public:
     GriddedData* makeCappi(RadarData *radarData,
                            Configuration* mainConfig,
                            float *vortexLat, float *vortexLon);
+    GriddedData* fillPreGriddedData(RadarData *radarData,
+				    Configuration* mainConfig);
     GriddedData* makeAnalytic(RadarData *radarData,
                               Configuration* mainConfig,
                               Configuration* analyticConfig,
                               float *vortexLat, float *vortexLon,
                               float *radarLat, float *radarLon);
+    // TODO makeRadx (lrose)
+    GriddedData* makeRadx(/* TODO */);
+    
     void setAbort(volatile bool* newAbort);
 
 private:

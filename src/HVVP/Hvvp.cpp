@@ -318,7 +318,7 @@ bool Hvvp::findHVVPWinds(bool both)
 	*
 	*/
 
-	if(volume->getNumSweeps() < 0) {
+  if(volume->getNumSweeps() < 0) {    // TODO: no sweep with pre-gridded
 		// For Analytic No Volume Case
 		emit log(Message(QString("Found No Volume To Process"),0,
 		this->objectName(),Red,

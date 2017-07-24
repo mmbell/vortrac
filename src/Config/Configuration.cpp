@@ -54,7 +54,8 @@ bool Configuration::read(const QString &filename)
 
     QFile file(filename);
     if (!file.open(QIODevice::ReadOnly)) {
-        emit log(Message(QString("Error Opening Configuration File, Check Permissions on "+filename),0,this->objectName(),Red, QString("Check File Permissions")));
+        emit log(Message(QString("Error Opening Configuration File, Check Permissions on " + filename),
+			 0, this->objectName(), Red, QString("Check File Permissions")));
         return false;
     }
 

@@ -20,6 +20,7 @@
 #include "Radar/RadarData.h"
 #include "Radar/LevelII.h"
 #include "Radar/NcdcLevelII.h"
+#include "Radar/NetCDF.h"
 #include "Radar/LdmLevelII.h"
 #include "Radar/AnalyticRadar.h"
 #include "IO/Message.h"

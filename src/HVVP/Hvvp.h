@@ -35,7 +35,7 @@ public:
     float* getUWinds() { return u; }
     float* getVWinds() { return v; }
     float* getAcrossBeamWinds() { return vm_sin; }
-	float  getrt() {return rt;}
+    float  getrt() {return rt;}
     float getAvAcrossBeamWinds() { return av_VmSin; }
     float getAvAcrossBeamWindsStdError() { return stdErr_VmSin; }
     void setPrintOutput(const bool printToLog);

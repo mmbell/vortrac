@@ -31,6 +31,8 @@ class workThread : public QObject
 {
     Q_OBJECT
 
+    typedef QHash<qint64, float *> HashOfLocations;
+
 public:
     workThread(QObject *parent = 0);
     ~workThread();
@@ -72,11 +74,15 @@ private:
 
     float _firstGuessLat;
     float _firstGuessLon;
+    
     void _latlonFirstGuess(RadarData* radarVolume);
     void checkIntensification();
     void checkListConsistency();
-
+    void loadCenterLocations(QString centerFile);
+    
     ATCF *atcf;
+
+    HashOfLocations centerLocations;
 };
 
 #endif
