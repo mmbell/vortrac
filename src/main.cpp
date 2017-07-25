@@ -12,12 +12,27 @@
 #include <QtCore>
 #include <QtXml>
 #include <iostream>
+#include <sys/resource.h>
 
 #include "GUI/MainWindow.h"
 #include "Batch/BatchWindow.h"
 
 int main(int argc, char *argv[])
 {
+
+    // Increase the size of the stack to account for some of the large 3D array local variables
+    // (unless the user has already done it from the command line
+    // limit.rlim_max / 2 is arbitrary. But that works both on iMac and Linux
+  
+    struct rlimit limit;
+    getrlimit(RLIMIT_STACK, &limit);
+    if (limit.rlim_cur < limit.rlim_max / 2) {
+      limit.rlim_cur = limit.rlim_max / 2;
+      if ( setrlimit(RLIMIT_STACK, &limit) )
+	std::cout << "setrlimit failed. Set 'ulimit -s 48000' "
+		  << "in the shell if Vortrac crashes after reading the config file"
+		  << std::endl;
+    }
 
     // Read the command line argument to get the XML configuration file
     if (argc >=2) {
