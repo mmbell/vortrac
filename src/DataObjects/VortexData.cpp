@@ -15,7 +15,7 @@
 #include "Message.h"
 #include <math.h>
 
-const float VortexData::_fillv;
+constexpr float VortexData::_fillv;
 
 VortexData::VortexData()
 {

@@ -16,6 +16,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QDomDocument>
+#include <QTableWidget>
 
 #include "Config/Configuration.h"
 #include "GUI/ConfigurationDialog.h"

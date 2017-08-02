@@ -265,7 +265,7 @@ bool Log::writeToFile()
         //Message::toScreen("LOG: WRITETOFILE: Trying To Open "+logFile->fileName());
         if(logFile->open(QIODevice::Append)) {
             while((messagesWaiting.count() > 0)) {
-                logFile->write(messagesWaiting.first().toAscii());
+                logFile->write(messagesWaiting.first().toLatin1());
                 QString message = messagesWaiting.takeFirst();
             }
             logFile->close();

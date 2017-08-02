@@ -191,8 +191,8 @@ private:
     static const int TOP_MARGIN_HEIGHT =25;
 
     // These constants define the percentiles of the error bars
-    static const float Z1 = .67;
-    static const float Z2 = .95;
+    static constexpr float Z1 = .67;
+    static constexpr float Z2 = .95;
 
     QPainter* updateImage(QPainter* painter);
     void altUpdateImage();

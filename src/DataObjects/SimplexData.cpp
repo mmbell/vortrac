@@ -12,7 +12,7 @@
 #include "Message.h"
 #include <QTextStream>
 
-const float SimplexData::_fillv;
+constexpr float SimplexData::_fillv;
 
 SimplexData::SimplexData()
 {

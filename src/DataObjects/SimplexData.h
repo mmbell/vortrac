@@ -23,7 +23,7 @@ public:
     SimplexData(const SimplexData& other);
     ~SimplexData();
 
-    static const float _fillv   =-999.0f;
+    static constexpr float _fillv   = -999.0f;
 
     float getMeanX(const int& lev, const int& rad) const;
     void setMeanX(const int& lev, const int& rad, const float& newX);

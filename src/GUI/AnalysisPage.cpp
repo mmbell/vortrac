@@ -12,6 +12,13 @@
 #include <QtGui>
 #include <QtNetwork>
 #include <QThread>
+#include <QScrollArea>
+#include <QToolButton>
+#include <QProgressBar>
+#include <QScrollBar>
+#include <QHeaderView>
+#include <QFileDialog>
+
 #include "AnalysisPage.h"
 #include "Message.h"
 #include "thredds_Config.h"
@@ -246,7 +253,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
 	headers << "Time" << "Latitude" << "Longitude" << "Pressure (hPa)" << "RMW (nm)" << "Max Approaching (kt)" 
 		<< "Max Receding (kt)" << "Max Analyzed Sfc(kt)";
 	historyTable->setHorizontalHeaderLabels(headers);
-	historyTable->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+	historyTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 	visuals->addTab(historyTable, "Storm History");
 
     // Lay them out
