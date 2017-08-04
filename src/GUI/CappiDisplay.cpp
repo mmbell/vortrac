@@ -10,6 +10,7 @@
  */
 
 #include <QtGui>
+#include <QToolTip>
 
 #include "CappiDisplay.h"
 #include <math.h>
@@ -40,7 +41,7 @@ CappiDisplay::CappiDisplay(QWidget *parent)
     imageHolder.lock();
     
     image = QImage(50,50,QImage::Format_Indexed8);
-    image.setNumColors(44);
+    // image.setNumColors(44); deprecated in qt5. I didn't find a replacement
     image.setColor(0, qRgb(0,0,0));
     image.setColor(1, qRgb(255, 255, 255));
     image.setColor(2, qRgb((int)(.469*255), (int)(.020*255), (int)(.640*255)));

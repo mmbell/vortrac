@@ -23,7 +23,7 @@ public:
     VortexData(const VortexData &other);
     ~VortexData();
 
-    static const float _fillv  =-999.0f;
+    static constexpr float _fillv  =-999.0f;
 
     //functions about the center info of vortex
     inline float getLat(int index=0) const     { return (index < _numLevels) ? _centerLat[index] : _fillv;}

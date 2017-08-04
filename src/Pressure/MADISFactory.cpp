@@ -104,7 +104,7 @@ bool MADISFactory::savePressureObs(QNetworkReply *reply)
         }
 
         //madisfile.write(reply->readAll());
-        madisfile.write(pressureObs.toAscii().data());
+        madisfile.write(pressureObs.toLatin1().data());
         madisfile.close();
         reply->deleteLater();
         QString msg = "MADIS data downloaded successfully";

@@ -10,7 +10,7 @@
  */
 
 #include "Center.h"
-const float Center::_fillv;
+constexpr float Center::_fillv;
 
 Center::Center(const float& startX, const float& startY, const float& endX, const float& endY,
                const float& maxVT,  const float& level,  const float& radius)

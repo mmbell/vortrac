@@ -11,6 +11,12 @@
  */
 
 #include <QtGui>
+#include <QFileDialog>
+#include <QStatusBar>
+#include <QAction>
+#include <QMenu>
+#include <QMenuBar>
+#include <QToolBar>
 
 #include "MainWindow.h"
 #include "DataObjects/GriddedData.h"
