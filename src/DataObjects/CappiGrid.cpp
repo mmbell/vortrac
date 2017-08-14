@@ -667,12 +667,15 @@ void CappiGrid::loadPreGridded(RadarData *radarData, QDomElement cappiConfig)
   if (! getOriginLatLon(file, latReference, lonReference) )
     std::cerr << "Can't get origin Lat and Lon from " << fname.toLatin1().data() << std::endl;
 
-  // Debug stuff
-  // std::cout << "Grid spacing: x = " << iGridsp << ", y = " << jGridsp << ", k = " << kGridsp << std::endl;
+  QString refVarName = "REF";	// default value
+  QDomElement r = cappiConfig.firstChildElement("reflectivity");
+  if (! r.isNull())
+    refVarName = r.text();
   
-  NcVar *reflectivity = file.get_var("REF");	// radar_reflexivity
+  NcVar *reflectivity = file.get_var(refVarName.toLatin1().data());	// radar_reflexivity
   if (reflectivity == NULL) {
-    std::cerr << "Can't get reflexivity (REF) from " << fname.toLatin1().data() << std::endl;
+    std::cerr << "Can't get reflexivity '" << refVarName.toLatin1().data()
+	      << "' from " << fname.toLatin1().data() << std::endl;
   }
 
   // This can be user specified. Default: VU

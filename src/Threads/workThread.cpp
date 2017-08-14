@@ -92,6 +92,12 @@ void workThread::run()
 	PressureFactory *pressureSource = new PressureFactory(configData);
 	connect(pressureSource, SIGNAL(log(const Message&)),this, SLOT(catchLog(const Message&)));
 
+
+	// Flag to just construct the cappi.
+	// Useful if all you want to do is look at the radar data on the display
+
+	bool just_display = "true" == configData->getParam(configData->getConfig("cappi"),
+							 "just_display");
 	// Begin working loop
 	
 	while(!abort) {
@@ -118,7 +124,7 @@ void workThread::run()
 			}
 			std::cout << newVolume->getDateTimeString().toStdString() << ": ";
 
-			// TODO what do we do with that? not needed =, will it break anything "volume coverage pattern"
+			// TODO what do we do with that? not needed, will it break anything "volume coverage pattern"
 			emit newVCP(newVolume->getVCP());
 
 			GriddedFactory *gridFactory = new GriddedFactory();
@@ -179,6 +185,12 @@ void workThread::run()
 			  delete gridFactory;
 			  delete gridData;
 			  break;
+			}
+
+			if(just_display) {
+			  // sleep 3 seconds to give the user a chance to click around
+			  sleep(3);	
+			  continue;
 			}
 			
 			//STEP 5: simplex to find a new center
@@ -686,7 +698,8 @@ void workThread::loadCenterLocations(QString fName)
     }
     int i = entries.size();
     if (i < 3) {
-      std::cout << "Unsupported line format: " << line.toLatin1().data() << std::endl;
+      std::cout << "Unsupported line format in " << fName.toLatin1().data()
+		<< ": '" << line.toLatin1().data() << "'" << std::endl;
       continue;
     }
     float *loc = new float[2];

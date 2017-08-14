@@ -123,22 +123,10 @@ void VortexThread::run()
     // int endPercent = 7 - int(gridData->getKdim() * loopPercent);
     int storageIndex = -1;
 
-    // TODO There seeme to be a disconnect between simplexData and vortexData
-    //      vortexData is only going to have valid Lat and Lon for 0..n, where n is simplexData->getNumLevels()
-    //      getNumLevels() returns a number set in SimplexThread::findCenter() and computed as
-    //	                  int nTotalLevels = (int)floor((lastLevel - firstLevel) / zgridsp + 1.5);
-    //      BUT lastLevel and firsLevel in this context come from the "center" section in the config file, not the "vtd" section.
-    //      So for my KAMX example: firstLevel = 2, lastLevel = 7 in the "vtd" section,
-    //            and these are the values used below to control the loop
-    //            But vortexData is only going to have valid Lat/Lon from 0..3,
-    //                because in "center" firstLevel is 2 and lastLevel is 3
-
-    // HOW did this entire chunck of code get lost??? 
-    
-    // How do I get simplexDate->getNumLevels from here?
-    int maxIndex = (lastLevel - firstLevel) / gridData->getKGridsp() ;
+    // How do I get simplexData->getNumLevels() from here?
+    int maxIndex = (int) floor( (lastLevel - firstLevel) / gridData->getKGridsp() + 1.5);
 	
-    for(storageIndex = 0; storageIndex <= maxIndex; storageIndex++) {
+    for(storageIndex = 0; storageIndex < maxIndex; storageIndex++) {
 	// TODO: firstLevel and lastLevel come from the config file 
 	//       getLat will return -999 if h is > 5 (hardcoded to MAXLEVELS)
 	//       If _numLevel in the VortexData::get* refers to (toplevel - bottomlevel) in the config file <vtd> section
@@ -158,7 +146,14 @@ void VortexThread::run()
 #if 0	
 	std::cout << "storageIndex: " << storageIndex << ", lat: " << referenceLat
 		  << ", lon: " << referenceLon << ", height: " << height << std::endl;
-#endif	
+#endif
+	// This can happen due to how the SimplexThread::findCenter fills the data structure
+	// It iterates from firstLevel to lastLevel, letting the griddedData map that to a level.
+	// If the z spacing isn't 1, the last 1 or 2 levels are not filled.
+	
+	if ( (referenceLat == -999) || (referenceLon == -999) )
+	  continue;
+	
         gridData->setAbsoluteReferencePoint(referenceLat, referenceLon, height);
         if ((gridData->getRefPointI() < 0) || (gridData->getRefPointJ() < 0) ||(gridData->getRefPointK() < 0)) {
             emit log(Message(QString("Simplex center is outside CAPPI"), 0, this->objectName(), Yellow));
@@ -651,7 +646,15 @@ void VortexThread::readInConfig()
     if(maxObTimeDiff == -999){
         maxObTimeDiff = 59 * 60;
     }
-    gradientHeight = firstLevel;
+    // gradientHeight = firstLevel;
+    gradientHeight = 2; // There is a "presumably 2km" in a comment in the run() method
+    QString gradientConfig = configData->getParam(pressureConfig, "gradient_height");
+    if(gradientConfig != "")
+      gradientHeight = gradientConfig.toFloat();
+    if(gradientHeight < firstLevel) {
+      gradientHeight = firstLevel;
+      std::cout << "Warning: VortexThread gradientHeight adjusted to " << firstLevel << std::endl;
+    }
     envPressure = -999;
 }
 
@@ -733,8 +736,9 @@ void VortexThread::getMaxSfcWind(VortexData* data)
         float referenceLon = vortexData->getLon(storageIndex);
 	float height = firstLevel + storageIndex * gridData->getKGridsp();
 
-	if ( (referenceLat == -999) || (referenceLon == -999) )
-	  continue;
+	// TODO Why would lat and lon be -999?
+	// if ( (referenceLat == -999) || (referenceLon == -999) )
+	// continue;
 	
 	// Set the reference point
 	

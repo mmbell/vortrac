@@ -242,9 +242,6 @@ void CappiDisplay::mouseMoveEvent(QMouseEvent *event)
 
 void CappiDisplay::paintEvent(QPaintEvent * /* event */)
 {
-
-    //Message::toScreen("Hit Paint Event in CappiDisplay");
-
     // Draw the legend image .....
     imageHolder.lock();
 
@@ -534,6 +531,7 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
     this->setMinimumSize(QSize(int(image.size().width()*1.2),int(image.size().height())));
     this->resize(this->minimumSize());
     imageHolder.unlock();
+    update();
 }
 
 // If level was overwritten from the GUI, return that.
