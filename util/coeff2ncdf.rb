@@ -221,8 +221,9 @@ radiiDim = file.def_dim('nradii', h_radii.size())
 # Variables
 
 vlevel = file.def_var('levels', 'sfloat', [levelDim])
-vlevel.put_att('min', "#{h_levels.keys[0]}")
-vlevel.put_att('max', "#{h_levels.keys[h_levels.size - 1]}")
+keys = h_levels.keys.sort
+vlevel.put_att('min', "#{keys[0]}")
+vlevel.put_att('max', "#{keys[-1]}")
 
 vtime =  file.def_var('times', 'int', [timeDim])
 vtime.put_att('value', 'Seconds since Unix epoch')
@@ -232,8 +233,9 @@ vtime.put_att('units', 'seconds since 1970-01-01T00:00:00Z')
 vtime.put_att('bounds', 'time_bounds')
 
 vradius = file.def_var('radii', 'int', [radiiDim])
-vradius.put_att('min', "#{h_radii.keys[0]}")
-vradius.put_att('max', "#{h_radii.keys[h_radii.size - 1]}")
+keys = h_radii.keys.sort
+vradius.put_att('min', "#{keys[0]}")
+vradius.put_att('max', "#{keys[-1]}")
 vradius.put_att('units', 'km')
 
 vHash = {}

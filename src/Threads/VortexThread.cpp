@@ -115,6 +115,121 @@ void VortexThread::run()
 
     // Placeholders for centers
     float xCenter = -999;
+    float yCenter = -999;
+
+    // TODO 7.0?
+    
+    int loopPercent = int(7.0 / float(gridData->getKdim()));
+    // int endPercent = 7 - int(gridData->getKdim() * loopPercent);
+    int storageIndex = -1;
+
+    // How do I get simplexData->getNumLevels() from here?
+    int maxIndex = (int) floor( (lastLevel - firstLevel) / gridData->getKGridsp() + 1.5);
+	
+    for(storageIndex = 0; storageIndex < maxIndex; storageIndex++) {
+	// TODO: firstLevel and lastLevel come from the config file 
+	//       getLat will return -999 if h is > 5 (hardcoded to MAXLEVELS)
+	//       If _numLevel in the VortexData::get* refers to (toplevel - bottomlevel) in the config file <vtd> section
+	
+	// Set the reference point
+        // float referenceLat = vortexData->getLat(h);
+        // float referenceLon = vortexData->getLon(h);
+
+	// This works, with storageIndex going from 0 to 12, height 4, 4.5, 5, ... 10
+      
+	// But from storage index 7 on, we are out of cappi box: Lat 16.5929, Lon -90.3586 for all entries.
+	// how where these initialized? -> from ChooseCenter::_useLastMean()
+	
+        float referenceLat = vortexData->getLat(storageIndex);
+        float referenceLon = vortexData->getLon(storageIndex);
+	float height = firstLevel + storageIndex * gridData->getKGridsp();
+#if 0	
+	std::cout << "storageIndex: " << storageIndex << ", lat: " << referenceLat
+		  << ", lon: " << referenceLon << ", height: " << height << std::endl;
+#endif
+	// This can happen due to how the SimplexThread::findCenter fills the data structure
+	// It iterates from firstLevel to lastLevel, letting the griddedData map that to a level.
+	// If the z spacing isn't 1, the last 1 or 2 levels are not filled.
+	
+	if ( (referenceLat == -999) || (referenceLon == -999) )
+	  continue;
+	
+        gridData->setAbsoluteReferencePoint(referenceLat, referenceLon, height);
+        if ((gridData->getRefPointI() < 0) || (gridData->getRefPointJ() < 0) ||(gridData->getRefPointK() < 0)) {
+            emit log(Message(QString("Simplex center is outside CAPPI"), 0, this->objectName(), Yellow));
+            continue;
+        }
+        
+        // compute crossbeam wind to correct GBVTD result
+        int gradientIndex = vortexData->getHeightIndex(gradientHeight);
+        QDomElement radar = configData->getConfig("radar");
+        float radarLat = configData->getParam(radar,"lat").toFloat();
+        float radarLon = configData->getParam(radar,"lon").toFloat();
+        float vortexLat = vortexData->getLat(gradientIndex);
+        float vortexLon = vortexData->getLon(gradientIndex);
+
+        float* distance = gridData->getCartesianPoint(&radarLat, &radarLon, &vortexLat, &vortexLon);
+        float rt = sqrt(distance[0]*distance[0]+distance[1]*distance[1]);
+        float cca = atan2(distance[0], distance[1])*180/acos(-1);
+        delete [] distance;
+
+        Hvvp *hvvp = new Hvvp;
+        hvvp->setConfig(configData);
+        hvvp->setRadarData(radarVolume, rt, cca, vortexData->getAveRMW());
+
+        /* MGBVTD mgbvtd(gridData->getCartesianRefPointI(), 
+                      gridData->getCartesianRefPointJ(),
+                      height, vortexData->getAveRMW(), *gridData);
+        float Vm = mgbvtd.computeCrossBeamWind(50.f, velField, vtd, hvvp); */
+	float Vm = 0.0;
+
+        // should we be incrementing radius using ringwidth? -LM
+        for (float radius = firstRing; radius <= lastRing; radius++) {
+            // Get the cartesian points
+            xCenter = gridData->getCartesianRefPointI();
+            yCenter = gridData->getCartesianRefPointJ();
+
+            // Get the data
+            int numData = gridData->getCylindricalAzimuthLength(radius, height);
+            float* ringData = new float[numData];
+            float* ringAzimuths = new float[numData];
+            gridData->getCylindricalAzimuthData(velField, numData, radius, height, ringData);
+            gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);
+
+            // Call gbvtd
+            if (vtd->analyzeRing(xCenter, yCenter, radius, height, numData, ringData,
+                                 ringAzimuths, vtdCoeffs, vtdStdDev)) {
+                if (vtdCoeffs[0].getParameter() == "VTC0") {
+                    // VT[v] = vtdCoeffs[0].getValue();
+                    if(vtdCoeffs[0].getValue() != -999.f){
+                        vtdCoeffs[0].setValue( vtdCoeffs[0].getValue()-Vm*radius/rt );
+                    }
+                } else {
+                    emit log(Message(QString("Error retrieving VTC0 in vortex!"),0,this->objectName(), Yellow));
+                }
+            } else {
+                QString err("Insufficient data for VTD winds: radius ");
+                QString loc;
+                err.append(loc.setNum(radius));
+                err.append(", height ");
+                err.append(loc.setNum(height));
+                emit log(Message(err));
+            }
+
+            delete[] ringData;
+            delete[] ringAzimuths;
+
+            // All done with this radius and height, archive it
+            archiveWinds(radius, storageIndex, maxCoeffs, vtdCoeffs);
+        }
+    }
+    emit log(Message(QString(),15,this->objectName()));
+
+    // Clean up
+    delete vtd;
+
+    // Integrate the winds to get the pressure deficit at the 2nd level (presumably 2km)  TODO Asumption on level here.
+    
     float* pressureDeficit = new float[ (int) lastRing + 1];
     getPressureDeficit(vortexData, pressureDeficit, gradientHeight);
 
@@ -531,7 +646,15 @@ void VortexThread::readInConfig()
     if(maxObTimeDiff == -999){
         maxObTimeDiff = 59 * 60;
     }
-    gradientHeight = firstLevel;
+    // gradientHeight = firstLevel;
+    gradientHeight = 2; // There is a "presumably 2km" in a comment in the run() method
+    QString gradientConfig = configData->getParam(pressureConfig, "gradient_height");
+    if(gradientConfig != "")
+      gradientHeight = gradientConfig.toFloat();
+    if(gradientHeight < firstLevel) {
+      gradientHeight = firstLevel;
+      std::cout << "Warning: VortexThread gradientHeight adjusted to " << firstLevel << std::endl;
+    }
     envPressure = -999;
 }
 
@@ -613,8 +736,9 @@ void VortexThread::getMaxSfcWind(VortexData* data)
         float referenceLon = vortexData->getLon(storageIndex);
 	float height = firstLevel + storageIndex * gridData->getKGridsp();
 
-	if ( (referenceLat == -999) || (referenceLon == -999) )
-	  continue;
+	// TODO Why would lat and lon be -999?
+	// if ( (referenceLat == -999) || (referenceLon == -999) )
+	// continue;
 	
 	// Set the reference point
 	

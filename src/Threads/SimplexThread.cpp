@@ -101,7 +101,12 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
 
     QDomElement cappi = configData->getConfig("cappi");
     float zgridsp = configData->getParam(cappi, "zgridsp").toFloat();
-    int nTotalLevels = (int)floor((lastLevel - firstLevel) / zgridsp + 1.5);
+
+    // TODO zgridsp might not match gridData->getKGridsp() in VortexThread.cpp
+
+    //    int nTotalLevels = (int)floor((lastLevel - firstLevel) / zgridsp + 1.5);
+    int nTotalLevels = (int) floor( (lastLevel - firstLevel) / gridData->getKGridsp() + 1.5 );
+    
     // We want 1 km spaced rings regardless of ring width
     int nTotalRings = (int)floor((lastRing - firstRing) + 1.5);
     // Create a simplexData object to hold the results;
@@ -120,10 +125,13 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
     float* VT = new float[3];
     float* vertexSum = new float[2];
 
-    // Loop through the levels and rings, Should this have some reference to grid spacing?
+    // Loop through the levels and rings,
+    // TODO Should this have some reference to grid spacing?
+    // see GriddedData::setAbsoluteReferencePoint
     
     for (float height = firstLevel; height <= lastLevel; height++) {
         for (float radius = firstRing; radius <= lastRing; radius++) {
+
             gridData->setAbsoluteReferencePoint(_latGuess, _lonGuess, height);
             // Set the corner of the box
             float CornerI = gridData->getCartesianRefPointI();
