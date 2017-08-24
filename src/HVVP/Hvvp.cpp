@@ -734,7 +734,7 @@ bool Hvvp::findHVVPWinds(bool both)
 				HVVPLogFile.close();
 			}
 			if(HVVPLogFile.open(QIODevice::Append)) {
-				HVVPLogFile.write(shortMessage.toAscii());
+				HVVPLogFile.write(shortMessage.toLatin1());
 				HVVPLogFile.close();
 			}
 		}
@@ -749,7 +749,7 @@ bool Hvvp::findHVVPWinds(bool both)
 				HVVPLogFile.close();
 			}
 			if(HVVPLogFile.open(QIODevice::Append)) {
-				HVVPLogFile.write(message.toAscii());
+				HVVPLogFile.write(message.toLatin1());
 				HVVPLogFile.close();
 			}
 

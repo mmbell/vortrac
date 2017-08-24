@@ -39,7 +39,7 @@ public:
     bool operator == (const Center &other);
     bool isValid();
 
-    static const float _fillv=-999.0f;
+    static constexpr float _fillv=-999.0f;
 
 private:
     float _startX;

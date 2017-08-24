@@ -28,8 +28,6 @@ class GriddedData
   virtual void writeAsi(); // = 0;
   virtual bool writeAsi(const QString& fileName); // = 0;
 
-  // TODO read Radx grid (netcdf)
-  
   float getIdim() const { return iDim; }
   float getJdim() const { return jDim; }
   float getKdim() const { return kDim; }

@@ -10,6 +10,7 @@
  */
 
 #include <QtGui>
+#include <QHeaderView>
 
 #include "ConfigTree.h"
 
@@ -23,7 +24,7 @@ ConfigTree::ConfigTree(QWidget *parent, Configuration *initialConfig)
   QStringList labels;
   labels << tr("Category") << tr("Parameter");
   
-  header()->setResizeMode(QHeaderView::Stretch);
+  header()->setSectionResizeMode(QHeaderView::Stretch);
   setHeaderLabels(labels);
   
   folderIcon.addPixmap(style()->standardPixmap(QStyle::SP_DirClosedIcon),
