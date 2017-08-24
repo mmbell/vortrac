@@ -29,9 +29,11 @@ class VortexThread : public QObject
   Q_OBJECT
     
  public:
+  
   VortexThread(QObject *parent = 0);
   ~VortexThread();
-  void getWinds(Configuration *wholeConfig, GriddedData *dataPtr, RadarData *radarPtr, VortexData *vortexPtr, PressureList *pressurePtr);
+  void getWinds(Configuration *wholeConfig, GriddedData *dataPtr, RadarData *radarPtr,
+		VortexData *vortexPtr, PressureList *pressurePtr);
   void run();
     void setEnvPressure(const float& pressure) { envPressure = pressure; }
     void setOuterRadius(const float& radius) { maxObRadius = radius; }
@@ -45,6 +47,7 @@ class VortexThread : public QObject
      void log(const Message& message);
  
  private:
+     
      GriddedData *gridData;
      RadarData *radarVolume;
      VortexData *vortexData;
@@ -78,6 +81,7 @@ class VortexThread : public QObject
      float vtdStdDev;
      float convergingCenters;
      float rhoBar[16];
+
      void archiveWinds(float radius,int height,int maxCoeffs, Coefficient *vtdCoeffs);
      void archiveWinds(VortexData& data, float& radius,int& height,int& maxCoeffs, Coefficient *vtdCoeffs);
      // void getPressureDeficit(const float& height);
@@ -88,9 +92,11 @@ class VortexThread : public QObject
      void storePressureUncertaintyData(QString& fileLocation);
      void readInConfig();
      bool calcHVVP(bool printOutput);
-	 void getMaxSfcWind(VortexData* data);
-	 float fixAngle(float& angle);
+     void getMaxSfcWind(VortexData* data);
+     float fixAngle(float& angle);
 
+     int heightToIndex(const float height);
+     float indexToHeight(const int index);
 };
 
 #endif

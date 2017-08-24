@@ -1183,12 +1183,12 @@ CenterPanel::CenterPanel()
 
     QLabel *bottomLevel = new QLabel(tr("Bottom Level (km)"));
     bLBox = new QDoubleSpinBox;
-    bLBox->setRange(1,15);
+    bLBox->setRange(0.5, 15);
     bLBox->setDecimals(2);
     bLBox->setValue(1);
     QLabel *topLevel = new QLabel(tr("Top Level (km)"));
     tLBox = new QDoubleSpinBox;
-    tLBox->setRange(1,15);
+    tLBox->setRange(0.5, 15);
     tLBox->setDecimals(2);
     tLBox->setValue(3);
     QLabel *innerRad = new QLabel(tr("Inner Radius (km)"));
@@ -1410,9 +1410,9 @@ void CenterPanel::updatePanel(const QDomElement panelElement)
         if (name == "boxdiameter") {
             diameterBox->setValue(parameter.toDouble()); }
         if (name == "bottomlevel") {
-            bLBox->setValue(parameter.toInt()); }
+	  bLBox->setValue(parameter.toDouble()); }
         if (name == "toplevel") {
-            tLBox->setValue(parameter.toInt()); }
+            tLBox->setValue(parameter.toDouble()); }
         if (name == "innerradius") {
             iRBox->setValue(parameter.toInt()); }
         if (name == "outerradius") {

@@ -1,4 +1,4 @@
-// TODO It appears this file isn't being compiled/linked in.
+// TODO This file is deprecated
 
 /*
  *  AnalysisThread.cpp
@@ -392,7 +392,7 @@ void AnalysisThread::run()
             vortexData->setLat(i,vortexLat);
             vortexData->setLon(i,vortexLon);
         }
-
+	
         mutex.unlock();
         if(abort)
             return;
@@ -500,9 +500,11 @@ void AnalysisThread::run()
         simplexTime.setNum((float)analysisTime.elapsed() / 60000);
         simplexTime.append(" minutes elapsed");
         emit log(Message(simplexTime));
+
         int vortexIndex = vortexData->getHeightIndex(1);
         if(vortexIndex == -1)
             vortexIndex = 0;
+	
         float levelLat = vortexData->getLat(vortexIndex);
         float levelLon = vortexData->getLon(vortexIndex);
 

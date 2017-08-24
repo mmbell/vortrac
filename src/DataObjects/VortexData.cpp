@@ -69,7 +69,7 @@ VortexData::VortexData(int availLevels, int availRadii, int availWaveNum)
     centralPressureUncertainty = -999;
     pressureDeficit = -999;
     pressureDeficitUncertainty = -999;
-	maxSfcWind = -999;
+    maxSfcWind = -999;
     _aveRMW = -999.0;
     _aveRMWUncertainty = -999.0;
     _maxValidRadius = -999;
@@ -114,6 +114,9 @@ VortexData::~VortexData()
 {
 }
 
+// TODO
+// This would be a lot simpler if the VortexData had access to minlevel, maxlevel, and grid spacing...
+
 int VortexData::getHeightIndex(const float& height) const
 {
     // Takes height in KM
@@ -136,6 +139,7 @@ int VortexData::getHeightIndex(const float& height) const
         Message::toScreen("VORTEXDATA:UNABLE TO FIND SUITABLE INDEX");
         return -1;
     }
+    // std::cout << "getHeightIndex: height: " << height << ", index: " << closestIndex << std::endl;
     return closestIndex;
 }
 
@@ -170,7 +174,7 @@ Coefficient VortexData::getCoefficient(const float& height, const float& rad,
                                        const QString& parameter) const
 {
     int level = getHeightIndex(height);
-	if (level < 0) return Coefficient();
+    if (level < 0) return Coefficient();
     float minRad = getCoefficient(level, 0, parameter).getRadius();
     if(minRad == -999)
         minRad = 0;

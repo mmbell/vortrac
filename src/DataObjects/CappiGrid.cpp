@@ -555,8 +555,10 @@ bool CappiGrid::getOriginLatLon(NcFile &file, float &lat, float &lon)
     std::cerr << "Couldn't get lon at (0, 0)" << std::endl;
     return false;
   }
+#if 0
   std::cout << "** lat(0, 0): " << lat << ", lon(0, 0): " << lon << std::endl;
-
+#endif
+  
   return true;
 }
 
