@@ -148,7 +148,6 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
 
 void GBVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, float*& FourierCoeffs, Coefficient*& vtdCoeffs)
 {
-
     // Allocate and initialize the A & B coefficient arrays
     float* A;
     float* B;

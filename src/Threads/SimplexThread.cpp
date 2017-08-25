@@ -100,11 +100,7 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
     gridData->setCylindricalAzimuthSpacing(ringWidth);
 
     QDomElement cappi = configData->getConfig("cappi");
-    float zgridsp = configData->getParam(cappi, "zgridsp").toFloat();
 
-    // TODO zgridsp might not match gridData->getKGridsp() in VortexThread.cpp
-
-    //    int nTotalLevels = (int)floor((lastLevel - firstLevel) / zgridsp + 1.5);
     int nTotalLevels = (int) floor( (lastLevel - firstLevel) / gridData->getKGridsp() + 1.5 );
     
     // We want 1 km spaced rings regardless of ring width
@@ -112,8 +108,6 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
     // Create a simplexData object to hold the results;
     SimplexData* simplexData = new SimplexData(nTotalLevels, nTotalRings, (int)numPoints);
 
-    // the number of levels should be divided by the zgridsp (cappi) because
-    // those are measurements in km
     // the ring count should be divided by the ring width
     simplexData->setNumPointsUsed((int)numPoints);
 
@@ -128,8 +122,10 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
     // Loop through the levels and rings,
     // TODO Should this have some reference to grid spacing?
     // see GriddedData::setAbsoluteReferencePoint
+    // TODO firstLevel is 1. How come not 0.5?
     
-    for (float height = firstLevel; height <= lastLevel; height++) {
+    // for (float height = firstLevel; height <= lastLevel; height++) {
+    for (float height = firstLevel; height <= lastLevel; height += gridData->getKGridsp()) {
         for (float radius = firstRing; radius <= lastRing; radius++) {
 
             gridData->setAbsoluteReferencePoint(_latGuess, _lonGuess, height);
@@ -190,8 +186,8 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
                 // Run the simplex search loop
                 float VTsolution = .0, Xsolution = 0. , Ysolution=0.;
                 _getVertexSum(vertex, vertexSum);
-                _centerIterate(vertex, vertexSum, VT, maxIterations, convergeCriterion, RefK, radius, height, velField,
-                               VTsolution, Xsolution, Ysolution);
+                _centerIterate(vertex, vertexSum, VT, maxIterations, convergeCriterion, RefK, radius,
+			       height, velField, VTsolution, Xsolution, Ysolution);
 
                 // Done with simplex loop, should have values for the current point
                 if ((VTsolution < 100.) and (VTsolution > 0.)) {
@@ -264,8 +260,8 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
                     archiveCenters(simplexData, radius, height, numPoints);
                 }
             }
-        }//ring loop end
-    }//height loop end
+        } //ring loop end
+    } //height loop end
 
     simplexList->append(*simplexData);
     delete simplexData;
@@ -283,7 +279,8 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
 void SimplexThread::archiveCenters(SimplexData* simplexData, float radius, float height, float numPoints)
 {
     // Save the centers to the SimplexData object
-    int level =int(height - firstLevel);
+  // int level =int(height - firstLevel);
+    int level =(int) ( (height - firstLevel) / gridData->getKGridsp() );
     int ring  =int(radius - firstRing);
     simplexData->setHeight(level, height);
     simplexData->setRadius(ring, radius);
@@ -309,7 +306,8 @@ void SimplexThread::archiveNull(SimplexData* simplexData, float& radius, float& 
 {
 
     // Save the centers to the SimplexData object
-    int level = int(height - firstLevel);
+    // int level = int(height - firstLevel);
+    int level = (int) ( (height - firstLevel) / gridData->getKGridsp() );
     int ring = int(radius - firstRing);
     simplexData->setHeight(level, height);
     simplexData->setRadius(ring, radius);
@@ -366,7 +364,8 @@ float SimplexThread::_simplexTest(float**& vertex,float*& VT,float*& vertexSum,
     gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);
 
     // Call gbvtd
-    if (_simplexVTD->analyzeRing(vertexTest[0], vertexTest[1], radius, height, numData, ringData,ringAzimuths, _vtdCoeffs, vtdStdDev)) {
+    if (_simplexVTD->analyzeRing(vertexTest[0], vertexTest[1], radius, height, numData,
+				 ringData,ringAzimuths, _vtdCoeffs, vtdStdDev)) {
         if (_vtdCoeffs[0].getParameter() == "VTC0") {
             VTtest = _vtdCoeffs[0].getValue();
         } else {

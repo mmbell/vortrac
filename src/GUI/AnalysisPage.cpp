@@ -45,8 +45,8 @@ AnalysisPage::AnalysisPage(QWidget *parent)
             diagPanel, SLOT(changeStopLight(StopLightColor, const QString)));
     connect(statusLog, SIGNAL(newStormSignalStatus(StormSignalStatus,const QString)),
             diagPanel, SLOT(changeStormSignal(StormSignalStatus,const QString)));
-	connect(this, SIGNAL(updateCappiLevel(const int)),
-		    diagPanel, SLOT(updateCappiLevel(const int)));
+    connect(this, SIGNAL(updateCappiLevel(const int)),
+	    diagPanel, SLOT(updateCappiLevel(const int)));
 
     // Create a new configuration instance
     configData = new Configuration;
@@ -247,14 +247,14 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     progressBar->setMaximum(100);
     progressBar->reset();
 
-	// History Table
-	historyTable = new QTableWidget(0, 8);
-	QStringList headers;
-	headers << "Time" << "Latitude" << "Longitude" << "Pressure (hPa)" << "RMW (nm)" << "Max Approaching (kt)" 
-		<< "Max Receding (kt)" << "Max Analyzed Sfc(kt)";
-	historyTable->setHorizontalHeaderLabels(headers);
-	historyTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-	visuals->addTab(historyTable, "Storm History");
+    // History Table
+    historyTable = new QTableWidget(0, 8);
+    QStringList headers;
+    headers << "Time" << "Latitude" << "Longitude" << "Pressure (hPa)" << "RMW (nm)"
+	    << "Max Approaching (kt)" << "Max Receding (kt)" << "Max Analyzed Sfc(kt)";
+    historyTable->setHorizontalHeaderLabels(headers);
+    historyTable->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    visuals->addTab(historyTable, "Storm History");
 
     // Lay them out
     QHBoxLayout *lcdLayout = new QHBoxLayout;
@@ -339,8 +339,8 @@ AnalysisPage::~AnalysisPage()
     delete currDeficit;
     delete deficitLabel;
     delete quickstart;
-	delete historyTable;
-	delete thread;
+    delete historyTable;
+    delete thread;
 }
 
 void AnalysisPage::newFile()

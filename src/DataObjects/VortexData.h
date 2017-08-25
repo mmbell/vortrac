@@ -29,6 +29,7 @@ public:
     inline float getLat(int index=0) const     { return (index < _numLevels) ? _centerLat[index] : _fillv;}
     inline void  setLat(int index,float lat)   { if(index<_numLevels) _centerLat[index]=lat;}
     inline void  setLat(float a[],int howMany) { for(int i=0;i<howMany;i++) setLat(i,a[i]);}
+
     inline float getLon(int index=0) const     { return (index<_numLevels)?_centerLon[index]:_fillv;}
     inline void  setLon(int index,float lon)   { if(index<_numLevels) _centerLon[index]=lon;}
     inline void  setLon(float a[],int howMany) { for(int i=0;i<howMany;i++) setLon(i,a[i]);}
@@ -106,7 +107,7 @@ public:
     static int getMaxRadii()   { return MAXRADII; }
     static int getMaxWaveNum() { return MAXWAVENUM; }
 
-    int        getBestLevel()		{ return _bestLevel; }
+    int        getBestLevel()	const	{ return _bestLevel; }
     inline void setBestLevel(int l)	{ _bestLevel = l; }
     
 private:

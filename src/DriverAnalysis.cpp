@@ -32,77 +32,76 @@ void DriverAnalysis::pollVortexUpdate(VortexList* list)
         currPressure->setText(QString().setNum(0));
         currRMW->setText(QString().setNum(0));
         currDeficit->setText(QString().setNum(0));
-		currMaxWind->setText(QString().setNum(0));
+	currMaxWind->setText(QString().setNum(0));
         deficitLabel->setText(tr("Pressure Deficit Unavailable"));
         emit vortexListChanged(NULL);
-    return;
+	return;
     }
-    //Message::toScreen("Made it too pollVortexUpdate in AnalysisPage");
-    if(list->count() > 0) {
 
-		int currRow = historyTable->rowCount();
-		QString currTime = list->last().getTime().toString("dd/hh:mm");
-		if (currRow > 0) {
-                        QString lastTime = historyTable->item(currRow-1,0)->text();
-			if (currTime == lastTime) {
-				// No new analysis
-				return;
-			}
-		}
-		historyTable->insertRow(currRow);
-		QTableWidgetItem *time= new QTableWidgetItem(currTime);
-		time->setFlags(Qt::ItemIsSelectable);
-		historyTable->setItem(currRow, 0, time);
+    if(list->count() > 0) {
+        int currRow = historyTable->rowCount();
+	QString currTime = list->last().getTime().toString("dd/hh:mm");
+	if (currRow > 0) {
+	  QString lastTime = historyTable->item(currRow-1,0)->text();
+	  if (currTime == lastTime) {
+	    // No new analysis
+	    return;
+	  }
+	}
+	historyTable->insertRow(currRow);
+	QTableWidgetItem *time= new QTableWidgetItem(currTime);
+	time->setFlags(Qt::ItemIsSelectable);
+	historyTable->setItem(currRow, 0, time);
 		
         // Find the outermost vtd mean wind coefficient that is not equal to -999
         float maxRadius = list->last().getMaxValidRadiusnm();
         currDeficit->setText(QString().setNum(list->last().getPressureDeficit(), 'f', 0));
         deficitLabel->setText(tr("Pressure Deficit From ")+QString().setNum(maxRadius, 'f', 0)+tr(" nm (mb):"));
+
+	int bestLevel = list->last().getBestLevel();
+	QTableWidgetItem *lat = new QTableWidgetItem(QString().setNum(list->last().getLat(bestLevel),'f', 2));
+	lat->setFlags(Qt::ItemIsSelectable);
+	historyTable->setItem(currRow, 1, lat);
 		
-		QTableWidgetItem *lat = new QTableWidgetItem(QString().setNum(list->last().getLat(),'f', 2));
-		lat->setFlags(Qt::ItemIsSelectable);
-		historyTable->setItem(currRow, 1, lat);
-		
-		QTableWidgetItem *lon = new QTableWidgetItem(QString().setNum(list->last().getLon(),'f', 2));
-		lon->setFlags(Qt::ItemIsSelectable);
-		historyTable->setItem(currRow, 2, lon);
+	QTableWidgetItem *lon = new QTableWidgetItem(QString().setNum(list->last().getLon(bestLevel),'f', 2));
+	lon->setFlags(Qt::ItemIsSelectable);
+	historyTable->setItem(currRow, 2, lon);
 				
         currPressure->setText(QString().setNum((int)list->last().getPressure()));
-		QTableWidgetItem *pressure = new QTableWidgetItem(QString().setNum((int)list->last().getPressure()));
-		historyTable->setItem(currRow, 3, pressure);
+	QTableWidgetItem *pressure = new QTableWidgetItem(QString().setNum((int)list->last().getPressure()));
+	historyTable->setItem(currRow, 3, pressure);
 		
         if(list->last().getAveRMW()==-999.0) {
             currRMW->setText(QString().setNum(0));
-			QTableWidgetItem *rmw= new QTableWidgetItem(QString().setNum(0));
-			rmw->setFlags(Qt::ItemIsSelectable);
-			historyTable->setItem(currRow, 4, rmw);
-		} else {
-            currRMW->setText(QString().setNum(list->last().getAveRMWnm(), 'f', 0));
-			QTableWidgetItem *rmw= new QTableWidgetItem(QString().setNum(list->last().getAveRMWnm(), 'f', 0));
-			rmw->setFlags(Qt::ItemIsSelectable);
-			historyTable->setItem(currRow, 4, rmw);
-		}
+	    QTableWidgetItem *rmw= new QTableWidgetItem(QString().setNum(0));
+	    rmw->setFlags(Qt::ItemIsSelectable);
+	    historyTable->setItem(currRow, 4, rmw);
+	} else {
+	  currRMW->setText(QString().setNum(list->last().getAveRMWnm(), 'f', 0));
+	  QTableWidgetItem *rmw= new QTableWidgetItem(QString().setNum(list->last().getAveRMWnm(), 'f', 0));
+	  rmw->setFlags(Qt::ItemIsSelectable);
+	  historyTable->setItem(currRow, 4, rmw);
+	}
 		
-		QTableWidgetItem *appwind = new QTableWidgetItem(QString().setNum(cappiDisplay->getMaxApp(),'f', 1));
-		appwind->setFlags(Qt::ItemIsSelectable);
-		historyTable->setItem(currRow, 5, appwind);
+	QTableWidgetItem *appwind = new QTableWidgetItem(QString().setNum(cappiDisplay->getMaxApp(),'f', 1));
+	appwind->setFlags(Qt::ItemIsSelectable);
+	historyTable->setItem(currRow, 5, appwind);
 		
-		QTableWidgetItem *recwind = new QTableWidgetItem(QString().setNum(cappiDisplay->getMaxRec(),'f', 1));
-		recwind->setFlags(Qt::ItemIsSelectable);
-		historyTable->setItem(currRow, 6, recwind);
+	QTableWidgetItem *recwind = new QTableWidgetItem(QString().setNum(cappiDisplay->getMaxRec(),'f', 1));
+	recwind->setFlags(Qt::ItemIsSelectable);
+	historyTable->setItem(currRow, 6, recwind);
 		
-		currMaxWind->setText(QString().setNum(list->last().getMaxSfcWind(), 'f', 0));
-		QTableWidgetItem *maxwind = new QTableWidgetItem(QString().setNum(list->last().getMaxSfcWind(), 'f', 0));
-		historyTable->setItem(currRow, 7, maxwind);
+	currMaxWind->setText(QString().setNum(list->last().getMaxSfcWind(), 'f', 0));
+	QTableWidgetItem *maxwind = new QTableWidgetItem(QString().setNum(list->last().getMaxSfcWind(), 'f', 0));
+	historyTable->setItem(currRow, 7, maxwind);
 		
         emit vortexListChanged(list);
-    }
-    else {
+    } else {
         currPressure->setText(QString().setNum(0));
         currRMW->setText(QString().setNum(0));
         currDeficit->setText(QString().setNum(0));
         deficitLabel->setText(tr("Pressure Deficit Unavailable"));
-		currMaxWind->setText(QString().setNum(0));
+	currMaxWind->setText(QString().setNum(0));
         emit vortexListChanged(NULL);
     }
 }

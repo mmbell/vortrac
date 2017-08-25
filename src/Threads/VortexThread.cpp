@@ -123,26 +123,16 @@ void VortexThread::run()
     // int endPercent = 7 - int(gridData->getKdim() * loopPercent);
     int storageIndex = -1;
 
+    float kGridSpacing = gridData->getKGridsp();
+    
     // How do I get simplexData->getNumLevels() from here?
-    int maxIndex = (int) floor( (lastLevel - firstLevel) / gridData->getKGridsp() + 1.5);
+    int maxIndex = (int) floor( (lastLevel - firstLevel) / kGridSpacing + 1.5);
 	
     for(storageIndex = 0; storageIndex < maxIndex; storageIndex++) {
-	// TODO: firstLevel and lastLevel come from the config file 
-	//       getLat will return -999 if h is > 5 (hardcoded to MAXLEVELS)
-	//       If _numLevel in the VortexData::get* refers to (toplevel - bottomlevel) in the config file <vtd> section
-	
-	// Set the reference point
-        // float referenceLat = vortexData->getLat(h);
-        // float referenceLon = vortexData->getLon(h);
-
-	// This works, with storageIndex going from 0 to 12, height 4, 4.5, 5, ... 10
-      
-	// But from storage index 7 on, we are out of cappi box: Lat 16.5929, Lon -90.3586 for all entries.
-	// how where these initialized? -> from ChooseCenter::_useLastMean()
 	
         float referenceLat = vortexData->getLat(storageIndex);
         float referenceLon = vortexData->getLon(storageIndex);
-	float height = firstLevel + storageIndex * gridData->getKGridsp();
+	float height = firstLevel + storageIndex * kGridSpacing;
 #if 0	
 	std::cout << "storageIndex: " << storageIndex << ", lat: " << referenceLat
 		  << ", lon: " << referenceLon << ", height: " << height << std::endl;
@@ -161,7 +151,7 @@ void VortexThread::run()
         }
         
         // compute crossbeam wind to correct GBVTD result
-        int gradientIndex = vortexData->getHeightIndex(gradientHeight);
+        int gradientIndex = heightToIndex(gradientHeight);
         QDomElement radar = configData->getConfig("radar");
         float radarLat = configData->getParam(radar,"lat").toFloat();
         float radarLon = configData->getParam(radar,"lon").toFloat();
@@ -228,13 +218,14 @@ void VortexThread::run()
     // Clean up
     delete vtd;
 
-    // Integrate the winds to get the pressure deficit at the 2nd level (presumably 2km)  TODO Asumption on level here.
+    // Integrate the winds to get the pressure deficit at the 2nd level (presumably 2km)
+    // Gradient height is in km
     
     float* pressureDeficit = new float[ (int) lastRing + 1];
     getPressureDeficit(vortexData, pressureDeficit, gradientHeight);
 
     // Get the central pressure
-    calcCentralPressure(vortexData, pressureDeficit, gradientHeight); // is firstLevel right?
+    calcCentralPressure(vortexData, pressureDeficit, gradientHeight); 
     if (vortexData->getPressure() != -999.0) {
         calcPressureUncertainty(1, QString());
     } else {
@@ -289,7 +280,7 @@ void VortexThread::getPressureDeficit(VortexData* data, float* pDeficit,const fl
     float* dpdr = new float[ (int) lastRing + 1];
 
     // get the index of the height we want
-    int heightIndex = data->getHeightIndex(height);
+    int heightIndex = heightToIndex(height);
 
     // Assuming radius is in KM here, when we correct for units later change this
     float deltar = 1000;
@@ -337,7 +328,7 @@ void VortexThread::getPressureDeficit(VortexData* data, float* pDeficit,const fl
 
 void VortexThread::calcCentralPressure(VortexData* vortex, float* pD, float height)
 {
-    int heightIndex = vortex->getHeightIndex(height);
+    int heightIndex = heightToIndex(height);
     float centralPressure = 0;
     float pressureDeficit = pD[(int)lastRing] - pD[0];
     if (pressureDeficit == 0) {
@@ -358,6 +349,7 @@ void VortexThread::calcCentralPressure(VortexData* vortex, float* pD, float heig
     //Message::toScreen("Size of searching List = "+QString().setNum(pressureList->size())+" within time "+QString().setNum(maxObTimeDiff)+" of vortex time "+vortex->getTime().toString(Qt::ISODate));
     for (int i = 0; i < pressureList->size(); i++) {
         float obPressure = pressureList->at(i).getPressure();
+	
         if (obPressure > 0) {
             // Check the time
             QString obTime = pressureList->at(i).getTime().toString(Qt::ISODate);
@@ -439,7 +431,7 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
     // Calculates the uncertanty in pressure by perturbing the center of the vortex
 
     // Acquire vortexData center uncertainty for the second level we examined
-    int goodLevel = 0;
+    int goodLevel = heightToIndex(gradientHeight);
     float height = vortexData->getHeight(goodLevel);
     int   maxCoeffs = maxWave * 2 + 3;
     float centerStd = vortexData->getCenterStdDev(goodLevel);
@@ -516,8 +508,7 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
                 }
 
                 // All done with this radius and height, archive it
-                int vertexLevel = 0;
-                archiveWinds(*errorVertex, radius, vertexLevel, maxCoeffs, vtdCoeffs);
+                archiveWinds(*errorVertex, radius, goodLevel, maxCoeffs, vtdCoeffs);
 
                 // Clean up
                 delete[] ringData;
@@ -604,6 +595,16 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
     vortexData->setAveRMWUncertainty(aveRMWUncertainty / (1.0 * goodrmw));
 }
 
+int VortexThread::heightToIndex(const float height)
+{
+  return  (int) ( (height - firstLevel) / gridData->getKGridsp() );
+}
+
+float VortexThread::indexToHeight(const int index)
+{
+  return firstLevel + index * gridData->getKGridsp();
+}
+
 void VortexThread::readInConfig()
 {
     QDomElement vtdConfig = configData->getConfig("vtd");
@@ -647,7 +648,7 @@ void VortexThread::readInConfig()
         maxObTimeDiff = 59 * 60;
     }
     // gradientHeight = firstLevel;
-    gradientHeight = 2; // There is a "presumably 2km" in a comment in the run() method
+    gradientHeight = 2; // Default. There is a "presumably 2km" in a comment in the run() method
     QString gradientConfig = configData->getParam(pressureConfig, "gradient_height");
     if(gradientConfig != "")
       gradientHeight = gradientConfig.toFloat();
@@ -671,7 +672,7 @@ bool VortexThread::calcHVVP(bool printOutput)
    *      center outward.
    */
 
-    int gradientIndex = vortexData->getHeightIndex(gradientHeight);
+    int gradientIndex = heightToIndex(gradientHeight);
     QDomElement radar = configData->getConfig("radar");
     float radarLat = configData->getParam(radar,"lat").toFloat();
     float radarLon = configData->getParam(radar,"lon").toFloat();
