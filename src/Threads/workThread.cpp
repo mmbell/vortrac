@@ -48,7 +48,7 @@ void workThread::run()
 							 "pre_gridded");
 
 	float bottomLevel = configData->getParam(configData->getConfig("center"), "bottomlevel").toFloat();
-	
+
 	// Load vortex centers if the config file specifies a path
 	loadCenterLocations(configData->getParam(configData->getConfig("vortex"), "centers"));
 
@@ -93,7 +93,6 @@ void workThread::run()
 	connect(dataSource, SIGNAL(log(const Message&)),this, SLOT(catchLog(const Message&)));
 	PressureFactory *pressureSource = new PressureFactory(configData);
 	connect(pressureSource, SIGNAL(log(const Message&)),this, SLOT(catchLog(const Message&)));
-
 
 	// Flag to just construct the cappi.
 	// Useful if all you want to do is look at the radar data on the display
@@ -698,7 +697,8 @@ void workThread::_latlonFirstGuess(RadarData* radarVolume)
   qint64 key = volDT.toMSecsSinceEpoch();
 #if 0
   std::cout << "** " << volDT.toString("yyyy-MM-dd:hh:mm:ss").toLatin1().data()
-#endif	    << " key: " << key << std::endl;
+    	    << " key: " << key << std::endl;
+#endif
   
   if(centerLocations.contains(key)) {
     float *loc = centerLocations.value(key);

@@ -89,7 +89,7 @@ public:
     Coefficient getCoefficient(const float& height, const float& rad,const QString& parameter) const;
     void	setCoefficient(const int& lev, const int& rad,const int& coeffNum, const Coefficient &coefficient);
     void	saveCoefficients(QString &fname);
-    
+
     // void operator = (const VortexData &other);
     bool operator ==(const VortexData &other);
     bool operator < (const VortexData &other);

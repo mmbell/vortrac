@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 
-# Read a vortrac *_simplexlist.xml file
+#!/usr/bin/env ruby
+
+# Read a vortrac *_coefficientlist.csv , and *_vortexSummary.csv Vortrac output files
 # Write a NetCDF file
 
 require 'date'
@@ -16,10 +18,11 @@ FILL_VALUE = -999.0
 class ArgParser < Hash
   def initialize(argv)
     OptionParser.new do |opts|
-      opts.banner = 'Usage: coeff2ncdf -i <xml file> -o <NetCDF file>'
-      opts.on('-i', '--input <xml file>', 'xml File')           { |v| self[:input] = v }
-      opts.on('-o', '--output <NetCDF file>',   'NetCDF file')  { |v| self[:output] = v }
-      opts.on('-d', '--debug <coeff, time, level>',   'debug string')  { |v| self[:debug] = v }
+      opts.banner = 'Usage: vo2nc -c <*_coefficientlist.csv> [ -v <*_vortexSummary.csv> ] -o <NetCDF file>'
+      opts.on('-c', '--coeff <coeff file>', 'coeff File')               { |v| self[:coeff] = v }
+      opts.on('-l', '--log <log file>', 'Log File')                     { |v| self[:log] = v }
+      opts.on('-o', '--output <NetCDF file>',   'NetCDF file')          { |v| self[:output] = v }
+      opts.on('-d', '--debug <coeff, time, level>',   'debug string')   { |v| self[:debug] = v }
     end.parse!
   end
 end
@@ -37,7 +40,7 @@ h_radii = {}
 times  = []
 
 # Push the item if it isn't already in the table
-# Return the value of the index (which is its position in the table
+# Return the value of the index (which is its position in the table)
 
 def push(table, value)
   table[value] = table.size unless table.has_key?(value)
@@ -142,11 +145,57 @@ def debug(str, coeffs)  # coeff, time, level
   end
 end
 
+def str_to_epoch(str)
+  if str =~ /^\s*(\d+)-(\d+)-(\d+):(\d+):(\d+)/
+    year = $1.to_i
+    month = $2.to_i
+    day = $3.to_i
+    hour = $4.to_i
+    mins = $5.to_i
+    
+    return DateTime.new(year, month, day, hour, mins).strftime('%s').to_i
+  end
+  0
+end
+
+def parse_log(fName, times, lats, lons, pressure, rmw, maxIn, maxOut, maxWind)
+  count = -1
+  File.open(fName).each do |line|
+    line.encode!('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '')
+    next if line =~ /\s*#/
+    
+    if line =~ /Found file:.*_(\d+)_(\d+)/
+      date_str = $1
+      time_str = $2
+
+      year  = date_str[0..3]
+      month = date_str[4..5]
+      day   = date_str[6..7]
+      hour  = time_str[0..1]
+      min   = time_str[2..3]
+      this_time = str_to_epoch("#{year}-#{month}-#{day}:#{hour}:#{min}")
+      count += 1
+      puts "Time mismatch #{count} #{this_time} #{times[count]}" unless this_time == times[count]
+    end
+
+    if line =~ /Position estimate (\S+) \S+ (\S+)/
+      lats << $1.to_f
+      lons << $2.to_f
+    end
+    
+    rmw      << $1.to_f if line =~ /^RMW estimate (\S+)/
+    maxIn    << $1.to_f if line =~ /^Maximum inbound velocity of (\S+)/
+    maxOut   << $1.to_f if line =~ /^Maximum outbound velocity of (\S+)/
+    pressure << $1.to_f if line =~ /^Central Pressure estimate (\S+)/
+    maxWind  << $1.to_f if line =~ /^VORTRAC ATCF.*([^,]+)\s*$/
+  end
+end
+
 # Main program
 
 opts = ArgParser.new(ARGV)
 
-unless opts.has_key?(:input)
+unless opts.has_key?(:coeff)
   puts '-i option is required. Use the -h option for usage'
   exit 1
 end
@@ -156,27 +205,26 @@ unless opts.has_key?(:output)
   exit 1
 end
 
-unless File.file?(opts[:input])
-  puts "Cannot read #{opts[:input]})"
+unless File.file?(opts[:coeff])
+  puts "Cannot read #{opts[:coeff]})"
+  exit 1;
+end
+
+if opts.has_key?(:log) and ! File.file?(opts[:log])
+  puts "Cannot read #{opts[:log]})"
   exit 1;
 end
 
 time_index = -1
 
-# Process the file one line at a time
+# Process the coefficient file one line at a time
 
-File.open(opts[:input]).each do |line|
+File.open(opts[:coeff]).each do |line|
 
   # New time stamp.
   
-  if line =~ /^# Vortex time:\s+(\d+)-(\d+)-(\d+):(\d+):(\d+)/
-    year = $1.to_i
-    month = $2.to_i
-    day = $3.to_i
-    hour = $4.to_i
-    mins = $5.to_i
-    
-    times << DateTime.new(year, month, day, hour, mins).strftime('%s').to_i
+  if line =~ /^# Vortex time:\s+(.*)/
+    times << str_to_epoch($1)
     time_index += 1
     next
   end
@@ -204,10 +252,20 @@ end
 
 debug(opts[:debug], coeffHash) if opts.has_key?(:debug)
 
-# netcdf doesn't like missing entries
-# def_fill(coeffHash, times.size(), h_coeffs.size(), h_levels.size(), h_radii.size(), FILL_VALUE)
+# Done with processing the coeff.
 
-# Done with processing the input.
+# Process the log file
+
+lats = []
+lons = []
+pressure = []
+rmw = []
+maxIn = []
+maxOut = []
+maxWind = []
+
+parse_log(opts[:log], times, lats, lons, pressure, rmw, maxIn, maxOut, maxWind) if opts.has_key?(:log)
+
 # Create and fill the NetCDF file
 
 file = NetCDF.create(opts[:output], false)
@@ -248,6 +306,29 @@ coeffHash.keys.each do |coeff|
   vHash[coeff] = vvalues
 end
 
+if opts.has_key?(:log)
+  vlat = file.def_var('vortex_lats', 'sfloat', [timeDim])
+  vlat.put_att('value', 'vortex latitude (N)')
+  
+  vlon = file.def_var('vortex_lons', 'sfloat', [timeDim])
+  vlon.put_att('value', 'vortex longitude (E)')
+  
+  vpress = file.def_var('vortex_pressure', 'sfloat', [timeDim])
+  vpress.put_att('value', 'vortex pressure (hPa)')
+  
+  vrmw = file.def_var('vortex_rmw', 'sfloat', [timeDim])
+  vrmw.put_att('value', 'vortex RMW (nm)')
+  
+  vmaxIn = file.def_var('vortex_max_in', 'sfloat', [timeDim])
+  vmaxIn.put_att('value', 'vortex max approaching wind (kt)')
+  
+  vmaxOut = file.def_var('vortex_max_out', 'sfloat', [timeDim])
+  vmaxOut.put_att('value', 'vortex max receding wind (kt)')
+  
+  vwind = file.def_var('vortex_wind', 'sfloat', [timeDim])
+  vwind.put_att('value', 'vortex max surface wind (kt)')
+end
+
 # Done with defs
 file.enddef
 
@@ -267,6 +348,16 @@ vHash.keys.each do |coeff|
   vHash[coeff].put(ordered)
 end
 
-# ALl done
+if opts.has_key?(:log)
+  vlat.put(lats)
+  vlon.put(lons)
+  vpress.put(pressure)
+  vrmw.put(rmw)
+  vmaxIn.put(maxIn)
+  vmaxOut.put(maxOut)
+  vwind.put(maxWind)
+end
+
+# All done
 
 file.close
