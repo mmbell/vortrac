@@ -9,14 +9,15 @@
  *
  */
 
-#include<QtGui>
-
-#include<QLabel>
-#include<QGridLayout>
-#include<QHelpEvent>
-#include<QToolTip>
-#include<QImage>
-#include<math.h>
+#include <QtGui>
+#include <QFileDialog>
+#include <QGroupBox>
+#include <QLabel>
+#include <QGridLayout>
+#include <QHelpEvent>
+#include <QToolTip>
+#include <QImage>
+#include <math.h>
 
 #include "GraphFace.h"
 
@@ -267,6 +268,9 @@ void GraphFace::saveImage()
   for(int i = 0; i < byteList.count(); i++) {
     imageTypes.append(QString("Image (*."+byteList[i]+")"));
   }
+  #if 0
+  // TODO: This doesn't compile with qt5
+  // setFilters() and selectedFilter() don't exist
   fd->setFilters(imageTypes);
   //fd->setDefaultSuffix("png");
   if(fd->exec()==1) {
@@ -278,13 +282,15 @@ void GraphFace::saveImage()
     }
     filter = filter.remove("Image (*.");
     filter = filter.remove(")");
-    byteList.move(byteList.indexOf(filter.toAscii()),0);
+    byteList.move(byteList.indexOf(filter.toLatin1()),0);
     if(fileName.isEmpty())
       return;
     if(!visibleImage->save(fileName[0], byteList[0])) {
       emit log(Message("GraphFace was unable to save"));
     } 
   }
+#endif
+  
   Message::toScreen("Made it out of GraphFace:SaveImage()");
 }
 

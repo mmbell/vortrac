@@ -12,6 +12,13 @@
 #include <QtGui>
 #include <QtNetwork>
 #include <QThread>
+#include <QScrollArea>
+#include <QToolButton>
+#include <QProgressBar>
+#include <QScrollBar>
+#include <QHeaderView>
+#include <QFileDialog>
+
 #include "AnalysisPage.h"
 #include "Message.h"
 #include "thredds_Config.h"

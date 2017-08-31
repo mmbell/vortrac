@@ -6,6 +6,7 @@ TEMPLATE = app
 DEPENDPATH += . Config Grids GUI IO Radar
 INCLUDEPATH += . GUI Config IO Radar
 
+QMAKE_CXXFLAGS += -std=c++0x
 # Input
 HEADERS += Threads/workThread.h \
            Threads/SimplexThread.h \
@@ -127,6 +128,6 @@ SOURCES += main.cpp \
 RESOURCES += vortrac.qrc
 # LIBS += -ludunits2 -lRadx -lbz2 -larmadillo -lhdf5_cpp -lnetcdf_c++
 LIBS += -lbz2 -larmadillo -lnetcdf_c++
-QT += xml network
+QT += xml network widgets
 CONFIG += debug
 #CONFIG -= app_bundle

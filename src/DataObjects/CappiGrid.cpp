@@ -1157,8 +1157,8 @@ void CappiGrid::writeAsi()
     for(int n = 0; n < id[175]; n++) {
         QString name_1 = fieldNames.at(n).left(1);
         QString name_2 = fieldNames.at(n).mid(1,1);
-        int int_1 = *name_1.toAscii().data();
-        int int_2 = *name_2.toAscii().data();
+        int int_1 = *name_1.toLatin1().data();
+        int int_2 = *name_2.toLatin1().data();
         id[176 + (5 * n)] = (int_1 * 256) + int_2;
         id[177 + (5 * n)] = 8224;
         id[178 + (5 * n)] = 8224;

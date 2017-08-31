@@ -31,7 +31,6 @@ public:
                               Configuration* analyticConfig,
                               float *vortexLat, float *vortexLon,
                               float *radarLat, float *radarLon);
-    // TODO makeRadx (lrose)
     GriddedData* makeRadx(/* TODO */);
     
     void setAbort(volatile bool* newAbort);
