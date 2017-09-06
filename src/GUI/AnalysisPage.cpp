@@ -253,7 +253,7 @@ AnalysisPage::AnalysisPage(QWidget *parent)
     headers << "Time" << "Latitude" << "Longitude" << "Pressure (hPa)" << "RMW (nm)"
 	    << "Max Approaching (kt)" << "Max Receding (kt)" << "Max Analyzed Sfc(kt)";
     historyTable->setHorizontalHeaderLabels(headers);
-    historyTable->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    historyTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     visuals->addTab(historyTable, "Storm History");
 
     // Lay them out

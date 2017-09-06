@@ -1,3 +1,5 @@
+// This looks deprecated
+
 /*
  * TabPage.cpp
  * VORTRAC
@@ -76,7 +78,7 @@ TabPage::TabPage(QWidget *parent)
 
   // Connect the run and abort buttons
   connect(runButton, SIGNAL(clicked()), this, SLOT(runThread()));
-  connect(abortButton, SIGNAL(clicked()), this, SLOT(abortThread());
+  connect(abortButton, SIGNAL(clicked()), this, SLOT(abortThread()));
 
 }
 

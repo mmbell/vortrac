@@ -426,7 +426,7 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
         for (float j = minJ; j < maxJ; j++) {
             float vel = cappi.getIndexValue(velfield,i,j,k);
             if (vel != -999) {
-				vel *= 1.9438445;
+	        vel *= 1.9438445;
                 if (vel > maxVel) {
                     maxVel = vel;
                     maxRecXindex = i;
@@ -457,8 +457,7 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
         if(maxVel>fabs(minVel)) {
             velRange = 2*maxVel;
             minVel = -1*maxVel;
-        }
-        else {
+        } else {
             velRange = 2*fabs(minVel);
             maxVel = -1*minVel;
         }

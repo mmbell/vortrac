@@ -4,7 +4,8 @@
 
 TEMPLATE = app
 DEPENDPATH += . Config Grids GUI IO Radar
-INCLUDEPATH += . GUI Config IO Radar
+INCLUDEPATH += . GUI Config IO Radar $$(NETCDF_INCLUDE) $$(ARMADILLO_INCLUDE)
+LIBPATH += $$(NETCDF_LIB) $$(ARMADILLO_LIB)
 
 QMAKE_CXXFLAGS += -std=c++0x
 # Input
@@ -95,11 +96,11 @@ SOURCES += main.cpp \
            GUI/StopLight.cpp \
            GUI/CappiDisplay.cpp \
            GUI/StormSignal.cpp \
-	         GUI/StartDialog.cpp \
+           GUI/StartDialog.cpp \
            HVVP/Hvvp.cpp \
            IO/Message.cpp \
            IO/Log.cpp \
-	         IO/ATCF.cpp \
+           IO/ATCF.cpp \
            Radar/RadarFactory.cpp \
            Radar/LevelII.cpp \
            Radar/NcdcLevelII.cpp \

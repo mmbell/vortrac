@@ -140,8 +140,7 @@ void GraphFace::paintEvent(QPaintEvent *event)
     
     delete imagePainter;
     
-  }
-  else {
+  } else {
     painter->drawImage(QPoint(0,0), *image);
     resize(this->size());
       

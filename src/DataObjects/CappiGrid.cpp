@@ -17,7 +17,6 @@
 
 CappiGrid::CappiGrid() : GriddedData()
 {
-
     //  coordSystem = cartesian; outdated -LM
     iDim = jDim = kDim = 0;
     iGridsp = jGridsp = kGridsp = 0.0;
@@ -31,6 +30,15 @@ CappiGrid::~CappiGrid()
 {
 }
 
+void CappiGrid::setDisplayIndex(QDomElement cappiConfig, float kSpacing) {
+  QDomElement n = cappiConfig.firstChildElement("cappi_display_level");
+  if (! n.isNull()) {
+    kDisplayIndex = n.text().toInt();
+  } else {
+    // No value given. Set it to 3km as default
+    kDisplayIndex = (int) (3.0 / kSpacing);
+  }
+}
 
 void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,float *vortexLat, float *vortexLon)
 {
@@ -58,6 +66,8 @@ void CappiGrid::gridRadarData(RadarData *radarData, QDomElement cappiConfig,floa
     jGridsp = cappiConfig.firstChildElement("ygridsp").text().toFloat();
     kGridsp = cappiConfig.firstChildElement("zgridsp").text().toFloat();
 
+    setDisplayIndex(cappiConfig, kGridsp);
+    
     // Should this be get cartesian point? Don't we use the grid spacing
     // in that calculation? -LM 6/11/07
     relDist = getCartesianPoint(radarData->getRadarLat(), radarData->getRadarLon(), vortexLat, vortexLon);
@@ -613,11 +623,6 @@ bool CappiGrid::getFillValue(NcVar *var, float &val)
 
 void CappiGrid::loadPreGridded(RadarData *radarData, QDomElement cappiConfig)
 {
-  kDisplayIndex = 7;   // Default level at which the cappi display gets its data
-  QDomElement n = cappiConfig.firstChildElement("cappi_display_level");
-  if (! n.isNull())
-    kDisplayIndex = n.text().toInt();
-  
   NcError ncError(NcError::verbose_nonfatal); // Prevent NertCDF error from exiting the program
 
   // Fill in the grid from a NetCdf file containing pre-gridded data.
@@ -654,6 +659,8 @@ void CappiGrid::loadPreGridded(RadarData *radarData, QDomElement cappiConfig)
   if (! getDimInfo(file, kDim, "z0", kGridsp, zmin, zmax) )
     std::cerr << "Can't get z0 array from file" << std::endl;
 
+  setDisplayIndex(cappiConfig, kGridsp);
+  
   // TODO: Some debug stuff
   // std::cout << "x0: " << iDim << ", y0: " << jDim << ", z0: " << kDim << std::endl;
   // std::cout << "xmin: " << xmin << ", xmax: " << xmax << std::endl;

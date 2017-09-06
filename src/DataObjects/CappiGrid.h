@@ -39,6 +39,8 @@ public:
 
 private:
 
+    void setDisplayIndex(QDomElement cappiConfig, float kSpacing);
+    
     float latReference;
     float lonReference;
 
