@@ -1151,8 +1151,8 @@ CenterPanel::CenterPanel()
 
     QLabel *reflectivity = new QLabel(tr("Reflectivity"));
     reflectivityOptions = new QHash<QString, QString>;
-    reflectivityOptions->insert(QString("DZ"),
-                                QString("DZ"));
+    reflectivityOptions->insert(QString("DZ"), QString("DZ"));
+    reflectivityOptions->insert(QString("REF"), QString("REF"));
     reflectivityOptions->insert(QString("Select reflectivity"),
                                 QString(""));
     // Add additional options here
@@ -1167,6 +1167,7 @@ CenterPanel::CenterPanel()
     QLabel *velocity = new QLabel(tr("Velocity"));
     velocityOptions = new QHash<QString, QString>;
     velocityOptions->insert(QString("VE"), QString("VE"));
+        velocityOptions->insert(QString("VU"), QString("VU"));
     velocityOptions->insert(QString("Select Velocity"),
                             QString(""));
     // Add additional options here

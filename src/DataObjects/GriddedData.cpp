@@ -289,7 +289,7 @@ float GriddedData::getCartesianPointFromIndexI (const float& indexI) const
 float GriddedData::getCartesianPointFromIndexJ (const float& indexJ) const
 {
     //return (indexJ + ymin)*jGridsp;
-
+  
     if((indexJ >= 0)&&(indexJ < jDim)) {
         float distance =  indexJ*jGridsp+ymin;
         if((distance >= ymin) && (distance <= ymax)) {

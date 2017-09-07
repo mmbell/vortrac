@@ -87,63 +87,12 @@ CappiDisplay::CappiDisplay(QWidget *parent)
     image.setColor(42, qRgb((int)(.949*255), (int)(.273*255), (int)(.355*255)));
     image.setColor(43, qRgb((int)(1.000*255), (int)(.012*255), (int)(.000*255)));
     
-
-    /*
-    image = QImage(50,50,QImage::Format_RGB32);
-    //image.setNumColors(256);
-    colorMap[0] = qRgb(0,0,0);
-    colorMap[1] = qRgb(255, 255, 255);
-    colorMap[2] = qRgb((int)(.469*255), (int)(.020*255), (int)(.640*255));
-    colorMap[3] = qRgb((int)(.403*255), (int)(.227*255), (int)(.559*255));
-    colorMap[4] = qRgb((int)(.164*255), (int)(.055*255), (int)(.582*255));
-    colorMap[5] = qRgb((int)(.227*255), (int)(.055*255), (int)(.672*255));
-    colorMap[7] = qRgb((int)(.352*255), (int)(.141*255), (int)(.898*255));
-    colorMap[8] = qRgb((int)(.414*255), (int)(.375*255), (int)(.996*255));
-    colorMap[9] = qRgb((int)(.445*255), (int)(.559*255), (int)(.996*255));
-    colorMap[10] = qRgb((int)(.281*255), (int)(.590*255), (int)(.602*255));
-    colorMap[11] = qRgb((int)(.188*255), (int)(.523*255), (int)(.371*255));
-    colorMap[12] = qRgb((int)(.004*255), (int)(.445*255), (int)(.000*255));
-    colorMap[13] = qRgb((int)(.000*255), (int)(.492*255), (int)(.000*255));
-    colorMap[14] = qRgb((int)(.000*255), (int)(.539*255), (int)(.000*255));
-    colorMap[15] = qRgb((int)(.059*255), (int)(.586*255), (int)(.059*255));
-    colorMap[16] = qRgb((int)(.176*255), (int)(.633*255), (int)(.176*255));
-    colorMap[17] = qRgb((int)(.289*255), (int)(.680*255), (int)(.289*255));
-    colorMap[18] = qRgb((int)(.402*255), (int)(.723*255), (int)(.402*255));
-    colorMap[19] = qRgb((int)(.520*255), (int)(.770*255), (int)(.520*255));
-    colorMap[20] = qRgb((int)(.633*255), (int)(.816*255), (int)(.633*255));
-    colorMap[21] = qRgb((int)(.750*255), (int)(.863*255), (int)(.750*255));
-    colorMap[22] = qRgb((int)(.863*255), (int)(.910*255), (int)(.863*255));
-    colorMap[23] = qRgb((int)(.938*255), (int)(.906*255), (int)(.703*255));
-    colorMap[24] = qRgb((int)(.938*255), (int)(.859*255), (int)(.352*255));
-    colorMap[25] = qRgb((int)(.938*255), (int)(.812*255), (int)(.000*255));
-    colorMap[26] = qRgb((int)(.938*255), (int)(.766*255), (int)(.023*255));
-    colorMap[27] = qRgb((int)(.938*255), (int)(.719*255), (int)(.055*255));
-    colorMap[28] = qRgb((int)(.926*255), (int)(.672*255), (int)(.086*255));
-    colorMap[29] = qRgb((int)(.871*255), (int)(.625*255), (int)(.117*255));
-    colorMap[30] = qRgb((int)(.816*255), (int)(.578*255), (int)(.148*255));
-    colorMap[31] = qRgb((int)(.758*255), (int)(.531*255), (int)(.180*255));
-    colorMap[32] = qRgb((int)(.703*255), (int)(.484*255), (int)(.211*255));
-    colorMap[33] = qRgb((int)(.648*255), (int)(.438*255), (int)(.242*255));
-    colorMap[34] = qRgb((int)(.590*255), (int)(.391*255), (int)(.250*255));
-    colorMap[35] = qRgb((int)(.535*255), (int)(.344*255), (int)(.250*255));
-    colorMap[36] = qRgb((int)(.485*255), (int)(.328*255), (int)(.297*255));
-    colorMap[37] = qRgb((int)(.629*255), (int)(.312*255), (int)(.375*255));
-    colorMap[38] = qRgb((int)(.625*255), (int)(.003*255), (int)(.000*255));
-    colorMap[39] = qRgb((int)(.718*255), (int)(.086*255), (int)(.188*255));
-    colorMap[40] = qRgb((int)(.813*255), (int)(.148*255), (int)(.273*255));
-    colorMap[41] = qRgb((int)(.879*255), (int)(.211*255), (int)(.355*255));
-    colorMap[42] = qRgb((int)(.949*255), (int)(.273*255), (int)(.355*255));
-    colorMap[43] = qRgb((int)(1.000*255), (int)(.012*255), (int)(.000*255));
-    */
-    
     imageHolder.unlock();
 
     hasGBVTDInfo = false;
     hasCappi = false;
 
     this->clearImage();
-//    emit hasImage(true);
-//    this->repaint();
     emit hasImage(false);
     this->update();
 }
@@ -196,15 +145,23 @@ void CappiDisplay::clearImage()
 // Print a line showing grid coordinates, and lat and lon at that point.
 // This can be used for debugging (to copyt/paste a location for example)
 
+// Currently we have a 500x500 grid, which has nothing to do with the Cappi grid.
+// In the future we might make this configurable in the config file.
+
 void CappiDisplay::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
         lastPoint = event->pos();
 
 	// Display origin is at the top left. Cappi origin is at the radar.
+
+	// Map the point to the grid:
+	float click_x = lastPoint.x() * currentCappi.getIdim() / 500;
+	float click_y = (500 - lastPoint.y()) * currentCappi.getJdim() / 500;
 	
-	int x = currentCappi.getCartesianPointFromIndexI((float)lastPoint.x());
-	int y = currentCappi.getCartesianPointFromIndexJ(currentCappi.getJdim() - lastPoint.y());
+	int x = currentCappi.getCartesianPointFromIndexI(click_x);
+	// int y = currentCappi.getCartesianPointFromIndexJ(currentCappi.getJdim() - lastPoint.y());
+	int y = currentCappi.getCartesianPointFromIndexJ(click_y);
 
 	float *coords = currentCappi.getAdjustedLatLon(currentCappi.getOriginLat(),
 						       currentCappi.getOriginLon(),
@@ -213,8 +170,9 @@ void CappiDisplay::mousePressEvent(QMouseEvent *event)
 	// coords[1] -> Lat
 	
 	std::cout << "Left press at " << "(" << lastPoint.x() << ", " << lastPoint.y()
-		  << ") -> (" << x << ", " << y << "), "
-		  << "(" << coords[0] << ", " << coords[1] << ")"
+		  << ") -> scaled -> (" << click_x << ", " << click_y << "), "
+	  		  << "Cartesian -> (" << x << ", " << y << ")"
+		  << " coordinates -> (" << coords[0] << ", " << coords[1] << ")"
 		  << std::endl;
 	delete[] coords;
     }
@@ -227,11 +185,15 @@ void CappiDisplay::mouseMoveEvent(QMouseEvent *event)
 {
   lastPoint = event->pos();
 
+  // Map the point to the grid:
   // Display origin is at the top left. Cappi origin is at the radar.
-	
-  int x = currentCappi.getCartesianPointFromIndexI((float)lastPoint.x());
-  int y = currentCappi.getCartesianPointFromIndexJ(currentCappi.getJdim() - lastPoint.y());
 
+  float click_x = lastPoint.x() * currentCappi.getIdim() / 500;
+  float click_y = (500 - lastPoint.y()) * currentCappi.getJdim() / 500;
+	
+  int x = currentCappi.getCartesianPointFromIndexI(click_x);
+  int y = currentCappi.getCartesianPointFromIndexJ(click_y);
+  
   float *coords = currentCappi.getAdjustedLatLon(currentCappi.getOriginLat(),
 						 currentCappi.getOriginLon(),
 						 x, y);
@@ -299,15 +261,18 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
 
 	// Draw a small X at the radar
 	float zero = 0.0;
-    
+
 	int radX = (int) currentCappi.getIndexFromCartesianPointI(zero);
 	int radY = (int) currentCappi.getIndexFromCartesianPointJ(zero);
+	
 	// Display origin is top left corner. Cappi origin is bottom left. Adjust radY accordingly
-	radY = currentCappi.getJdim() - radY;
+	// radY = currentCappi.getJdim() - radY;
+#if 0
+	radY = 500 - radY;
 
 	painter.drawLine(QPointF(radX - 2, radY - 2), QPointF(radX + 2, radY + 2));
 	painter.drawLine(QPointF(radX - 2, radY + 2), QPointF(radX + 2, radY - 2));
-
+#endif
         float w = image.size().width();
         float h = image.size().height();
 	
@@ -318,8 +283,10 @@ void CappiDisplay::paintEvent(QPaintEvent * /* event */)
                          QPointF((xPercent+.01)*w,(1-(yPercent-.01))*h));
 
         // Annotate the maximum and minimum velocities
-        painter.drawLine(QPointF((maxVelXpercent)*w,(1-(maxVelYpercent-.01))*h),QPointF((maxVelXpercent)*w,(1-(maxVelYpercent+.01))*h));
-        painter.drawLine(QPointF((maxVelXpercent-.01)*w,(1-(maxVelYpercent))*h),QPointF((maxVelXpercent+.01)*w,(1-(maxVelYpercent))*h));
+        painter.drawLine(QPointF((maxVelXpercent)*w,(1-(maxVelYpercent-.01))*h),
+			 QPointF((maxVelXpercent)*w,(1-(maxVelYpercent+.01))*h));
+        painter.drawLine(QPointF((maxVelXpercent-.01)*w,(1-(maxVelYpercent))*h),
+			 QPointF((maxVelXpercent+.01)*w,(1-(maxVelYpercent))*h));
         painter.drawLine(QPointF((minVelXpercent-.01)*w,(1-(minVelYpercent))*h),
                          QPointF((minVelXpercent+.01)*w,(1-(minVelYpercent))*h));
 
@@ -523,8 +490,13 @@ void CappiDisplay::constructImage(const GriddedData& cappi)
             }
         }
     }
-    //    image = image.scaled((int)500,(int)500);
-    image = image.scaled((int)iDim,(int)jDim);
+
+    // TODO
+    // Support the ability to have different image size on the config.
+    // image = image.scaled((int)iDim,(int)jDim);
+    
+    image = image.scaled((int)500,(int)500);
+    
     legendImage = legendImage.scaled(70,500);
     legendImage.fill(qRgb(backColor.red(),backColor.green(),backColor.blue()));
 
