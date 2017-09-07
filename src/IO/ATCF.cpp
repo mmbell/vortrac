@@ -44,21 +44,25 @@ bool ATCF::getTcvitals(bool archive)
     QDomElement vortex = configData->getConfig("vortex");
     QString stormId = configData->getParam(vortex,"id");
     QString dataurl = "atcf/com/";
+
+    QDate date = QDate::currentDate();
+    const QString this_year = QString::number(date.year());
+
     if (archive) {
         if (stormId.contains("L")) {
             stormId.chop(1);
-            dataurl += "al" + stormId + "2014-tcvitals-arch.dat";
+            dataurl += "al" + stormId + this_year + "-tcvitals-arch.dat";
         } else if (stormId.contains("E")) {
             stormId.chop(1);
-            dataurl += "ep" + stormId + "2014-tcvitals-arch.dat";
+            dataurl += "ep" + stormId + this_year + "-tcvitals-arch.dat";
         }
     } else {
         if (stormId.contains("L")) {
             stormId.chop(1);
-            dataurl += "al" + stormId + "2014-tcvitals.dat";
+            dataurl += "al" + stormId + this_year + "-tcvitals.dat";
         } else if (stormId.contains("E")) {
             stormId.chop(1);
-            dataurl += "ep" + stormId + "2014-tcvitals.dat";
+            dataurl += "ep" + stormId + this_year + "-tcvitals.dat";
         }
     }
     QString server = configData->getParam(vortex,"atcfurl");
