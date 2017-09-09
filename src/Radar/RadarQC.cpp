@@ -463,20 +463,29 @@ void RadarQC::thresholdData()
         if(i == (int) numRays/2.0)
             emit log(Message(QString(),1,this->objectName()));
         currentRay = radarData->getRay(i);
+	if (currentRay == NULL) {
+	  std::cout << "No ray at index " << i << std::endl;
+	  continue;
+	}
         int sweepIndex = currentRay->getSweepIndex();
         Sweep *currentSweep = radarData->getSweep(sweepIndex);
+	if(currentSweep == NULL) {
+	  std::cout << "No sweep at ray " << i 
+		    << "sweepIndex " << sweepIndex << std::endl;
+	  continue;
+	}
         int numSweepGates = currentSweep->getVel_numgates();
-		int numRayGates = currentRay->getVel_numgates();
-		if (numRayGates < numSweepGates) {
-			numVGates = numRayGates;
-		} else {
-		    numVGates = numSweepGates;
-		}
+	int numRayGates = currentRay->getVel_numgates();
+	if (numRayGates < numSweepGates) {
+	  numVGates = numRayGates;
+	} else {
+	  numVGates = numSweepGates;
+	}
         //      float velGateSp = currentRay->getVel_gatesp();
         //      float refGateSp = currentRay->getRef_gatesp();
         float *vGates = currentRay->getVelData();
         float *swGates = currentRay->getSwData();
-        float *refGates = currentRay->getRefData();
+	// float *refGates = currentRay->getRefData();
         if (swGates != NULL) {
             for (int j = 0; j < numVGates; j++)
             {
@@ -513,7 +522,7 @@ void RadarQC::thresholdData()
         }
         vGates = NULL;
         swGates = NULL;
-        refGates = NULL;
+        // refGates = NULL;
     }
     currentRay = NULL;
     delete currentRay;
@@ -1609,9 +1618,9 @@ bool RadarQC::BB()
         if((numVelocityGates!=0)&&(startVelocity!=velNull))
         {
             float sum = float(numVGatesAveraged)*startVelocity;
-			float median, mean;
-			mean = median = startVelocity;
-            float nyquistSum = float(numVGatesAveraged)*nyquistVelocity;
+	    float median, mean;
+	    mean = median = startVelocity;
+	    // float nyquistSum = float(numVGatesAveraged)*nyquistVelocity;
             int n = 0;
             int overMaxFold = 0;
             bool dealiased;

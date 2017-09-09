@@ -238,9 +238,8 @@ void workThread::run()
 			for (int ridx = 0; ridx < _simplexList.last().getNumRadii(); ridx++)
 			  if (_simplexList.last().getNumConvergingCenters(0, ridx) > 0)  // TODO: Why level 0?
 					convergedRings++;
-#endif
-			
 			int convergedRings = 0;
+#endif
 			int maxConverged = 0;
 			int maxConvergedLevel = -1;
 			int bestLevel = -1;
