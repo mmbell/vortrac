@@ -458,6 +458,9 @@ void RadarQC::thresholdData()
     int numRays = radarData->getNumRays();
     Ray* currentRay;
     int numVGates = 0;
+
+    int warned = false;
+
     for(int i = 0; i < numRays; i++)
     {
         if(i == (int) numRays/2.0)
@@ -469,13 +472,17 @@ void RadarQC::thresholdData()
 	}
         int sweepIndex = currentRay->getSweepIndex();
 	if (sweepIndex < 0) {
-	  std::cout << "Negative sweepIndex at ray index " << i << std::endl;
+	  if ( ! warned )
+	    std::cout << "Negative sweepIndex in RadarQC::thresholdData" << std::endl;
+	  warned = true;
 	  continue;
 	}
         Sweep *currentSweep = radarData->getSweep(sweepIndex);
 	if(currentSweep == NULL) {
-	  std::cout << "No sweep at ray " << i 
-		    << ", sweepIndex " << sweepIndex << std::endl;
+	  if ( ! warned )
+	    std::cout << "No sweep at ray " << i 
+		      << ", sweepIndex " << sweepIndex << std::endl;
+	  warned = true;
 	  continue;
 	}
         int numSweepGates = currentSweep->getVel_numgates();
@@ -545,6 +552,9 @@ bool RadarQC::terminalVelocity()
     int numRays = radarData->getNumRays();
     int numVGates;
     Ray* currentRay;
+
+    bool warned = false;
+
     for(int i = 0; i < numRays; i++)
     {
         currentRay = radarData->getRay(i);
@@ -567,7 +577,9 @@ bool RadarQC::terminalVelocity()
 
 		    int sweepIndex = currentRay->getSweepIndex();
 		    if (sweepIndex < 0) {
-		      std::cout << "Negative sweepIndex at ray index " << i << std::endl;
+		      if ( ! warned )
+			std::cout << "Negative sweepIndex at ray index " << i << std::endl;
+		      warned = true;
 		      continue;
 		    }
 
@@ -1549,15 +1561,20 @@ float RadarQC::getStart(Ray *currentRay)
         float azimuth = currentRay->getAzimuth();
         bool hasDopplerData = false;
         bool envWindFound = false;
+
+	bool warned = false;
+    
         for(int v = 0; (v < numVBins) && (!hasDopplerData); v++) {
             if(velGates[v] != velNull) {
                 hasDopplerData = true;
 
-        int sweepIndex = currentRay->getSweepIndex();
-	if (sweepIndex < 0) {
-	  std::cout << "Negative sweepIndex in RadarQC::getStar" << std::endl;
-	  continue;
-	}
+		int sweepIndex = currentRay->getSweepIndex();
+		if (sweepIndex < 0) {
+		  if ( ! warned )
+		    std::cout << "Negative sweepIndex in RadarQC::getStar" << std::endl;
+		  warned = true;
+		  continue;
+		}
 
 	dataHeight = int(floor((aveVADHeight[sweepIndex][v]-radarHeight)*3.281 + 0.5));
 	//if(isnan(dataHeight)||isinf(dataHeight))
