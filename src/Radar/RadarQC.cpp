@@ -564,7 +564,14 @@ bool RadarQC::terminalVelocity()
                     float range = float(currentRay->getFirst_vel_gate()+(j*currentRay->getVel_gatesp()))/1000.;
                     if (range<0.) range=0.;
                     float elevAngle = currentRay->getElevation();
-                    float height = aveVADHeight[currentRay->getSweepIndex()][j];
+
+		    int sweepIndex = currentRay->getSweepIndex();
+		    if (sweepIndex < 0) {
+		      std::cout << "Negative sweepIndex at ray index " << i << std::endl;
+		      continue;
+		    }
+
+                    float height = aveVADHeight[sweepIndex][j];
                     // height is in km from sea level here
 
                     float rho = 1.1904*exp(-1*height/9.58);
@@ -1545,13 +1552,20 @@ float RadarQC::getStart(Ray *currentRay)
         for(int v = 0; (v < numVBins) && (!hasDopplerData); v++) {
             if(velGates[v] != velNull) {
                 hasDopplerData = true;
-                dataHeight = int(floor((aveVADHeight[currentRay->getSweepIndex()][v]-radarHeight)*3.281 + 0.5));
-                //if(isnan(dataHeight)||isinf(dataHeight))
-                //  Message::toScreen("RadarQC getting funky... sweep = "+QString().setNum(currentRay->getSweepIndex())+" ray# = "+QString().setNum(currentRay->getRayIndex())+" v# = "+QString().setNum(v));
-                if(dataHeight < 0) {
-                    dataHeight = 0;
-                }
-                if(dataHeight > vadLevels-1) dataHeight = vadLevels - 1;
+
+        int sweepIndex = currentRay->getSweepIndex();
+	if (sweepIndex < 0) {
+	  std::cout << "Negative sweepIndex in RadarQC::getStar" << std::endl;
+	  continue;
+	}
+
+	dataHeight = int(floor((aveVADHeight[sweepIndex][v]-radarHeight)*3.281 + 0.5));
+	//if(isnan(dataHeight)||isinf(dataHeight))
+	//  Message::toScreen("RadarQC getting funky... sweep = "+QString().setNum(currentRay->getSweepIndex())+" ray# = "+QString().setNum(currentRay->getRayIndex())+" v# = "+QString().setNum(v));
+	if(dataHeight < 0) {
+	  dataHeight = 0;
+	}
+	if(dataHeight > vadLevels-1) dataHeight = vadLevels - 1;
             }
         }
         velGates = NULL;
