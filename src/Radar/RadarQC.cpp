@@ -468,10 +468,14 @@ void RadarQC::thresholdData()
 	  continue;
 	}
         int sweepIndex = currentRay->getSweepIndex();
+	if (sweepIndex < 0) {
+	  std::cout << "Negative sweepIndex at ray index " << i << std::endl;
+	  continue;
+	}
         Sweep *currentSweep = radarData->getSweep(sweepIndex);
 	if(currentSweep == NULL) {
 	  std::cout << "No sweep at ray " << i 
-		    << "sweepIndex " << sweepIndex << std::endl;
+		    << ", sweepIndex " << sweepIndex << std::endl;
 	  continue;
 	}
         int numSweepGates = currentSweep->getVel_numgates();
