@@ -58,6 +58,8 @@ public:
   int getLastRay();
   int getNumRays();
 
+  void dump();
+  
 private:
   int sweepIndex;
   float elevation;
@@ -70,7 +72,6 @@ private:
   int ref_numgates;
   int vel_numgates;
   int vcp;
-  int numRays;
   int firstRay;
   int lastRay;
 

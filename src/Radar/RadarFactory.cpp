@@ -8,10 +8,12 @@
  *
  */
 
-#include "RadarFactory.h"
 #include <iostream>
 #include <QPushButton>
 #include <unistd.h>
+
+#include "RadarFactory.h"
+#include "DateChecker.h"
 
 RadarFactory::RadarFactory(Configuration* radarConfig, QObject *parent): QObject(parent)
 {
@@ -53,7 +55,6 @@ RadarFactory::RadarFactory(Configuration* radarConfig, QObject *parent): QObject
         // Will implement more later but give error for now
         emit log(Message("Data format not supported"));
     }
-
 }
 
 RadarFactory::~RadarFactory()
@@ -65,7 +66,6 @@ RadarFactory::~RadarFactory()
 
 RadarData* RadarFactory::getUnprocessedData()
 {
-
     // Get the latest files off the queue and make a radar object
 
     if (radarQueue->isEmpty()) {
@@ -92,7 +92,28 @@ RadarData* RadarFactory::getUnprocessedData()
     
     // Now make a new radar object from that file and send it back
     switch(radarFormat) {
-    case ncdclevelII :
+      
+    case ldmlevelII:
+    case model:
+    case ncdclevelII:
+    case dorade: {
+      RadxData *radarData = new RadxData(radarName, radarLat, radarLon, fileName);
+      radarData->setAltitude(radarAlt);
+      return radarData;
+    }
+      
+    case netcdf: {
+      // TODO Any other info?
+      NetCDF *radarData = new NetCDF(radarName, radarLat, radarLon, fileName);
+      radarData->setAltitude(radarAlt);
+      return radarData;
+    }
+      
+    } // switch radarFormat
+    
+#if 0
+    // These are now all taken care of by the Radx library
+    case dorade:
     {
         NcdcLevelII *radarData = new NcdcLevelII(radarName, radarLat,radarLon, fileName);
         radarData->setAltitude(radarAlt);
@@ -116,31 +137,50 @@ RadarData* RadarFactory::getUnprocessedData()
         // Not yet implemented
         break;
     }
-    case netcdf:
-    {
-      // TODO Any other info?
-      NetCDF *radarData = new NetCDF(radarName, radarLat, radarLon, fileName);
-      radarData->setAltitude(radarAlt);
-      return radarData;
     }
-    }
+#endif
 
     // If we get here theres a problem, return a null pointer
-    emit log(Message(QString("Problem with radar data Factory"),0,this->objectName(),Yellow));
+    emit log(Message(QString("Problem with radar data Factory"), 0, this->objectName(), Yellow));
+    std::cerr << "Problem with radar Factory: Unsupported radar format" << std::endl;
     return NULL;
-
 }
 
 bool RadarFactory::hasUnprocessedData()
 {
     // Check the unprocessed list first, if it has files no need to reread directory yet
-    if(!radarQueue->isEmpty()) {
+  
+    if ( ! radarQueue->isEmpty() ) {
         return true;
     }
 
+    // Get a list of files in the radar directory
+    
+    dataPath.setFilter(QDir::Files);
+    dataPath.setSorting(QDir::Name);
+    QStringList filenames = dataPath.entryList();
+
+    DateChecker *checker = DateCheckerFactory::newChecker(radarFormat);
+    
+    for (int i = 0; i < filenames.size(); i++) {
+      QString file = filenames.at(i);
+      
+      if ( fileAnalyzed[dataPath.filePath(file)])	// been there, done that?
+	continue;
+      
+      // Get the date info from the file name
+      if(checker->fileInRange(file, radarName, startDateTime, endDateTime))
+	radarQueue->enqueue(file);
+    }
+
+    delete checker;
+    
+#if 0    
+			     
     // Otherwise, check the directory for appropriate files
 
     switch(radarFormat) {
+      
     case ncdclevelII:
     {
         // Should have filenames starting with radar ID
@@ -184,7 +224,6 @@ bool RadarFactory::hasUnprocessedData()
                 }
             }
         }
-
         break;
     }
     case ldmlevelII:
@@ -269,7 +308,6 @@ bool RadarFactory::hasUnprocessedData()
 
     case dorade:
     {
-        // Not yet implemented
       std::cout << "Format dorade not implemented yet" << std::endl;
       break;
     }
@@ -316,7 +354,9 @@ bool RadarFactory::hasUnprocessedData()
     } // netcdf
 
     } // switch
-
+    
+#endif
+    
     // See if we added any new files to the queue
     if(!radarQueue->isEmpty()) {
         return true;

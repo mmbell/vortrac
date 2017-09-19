@@ -7,6 +7,7 @@
  *  All rights reserved.
  *
  */
+#include <iostream>
 
 #include "Sweep.h"
 
@@ -126,4 +127,21 @@ int Sweep::getLastRay() {
 
 int Sweep::getNumRays() {
   return (lastRay - firstRay + 1);
+}
+
+void Sweep::dump() {
+  std::cout << "---------- Sweep " << getSweepIndex() << " ----------" << std::endl;
+  std::cout << "\t       Elevation: " << getElevation() << std::endl;
+  std::cout << "\t   Unambig Range: " << getUnambig_range() << std::endl;
+  std::cout << "\t     Nyquist Vel: " << getNyquist_vel()  << std::endl;
+  std::cout << "\t    1st ref gate: " << getFirst_ref_gate() << std::endl;
+  std::cout << "\t    1st vel gate: " << getFirst_vel_gate() << std::endl;
+  std::cout << "\t   Vel num gates: " << getVel_numgates() << std::endl;
+  std::cout << "\t   Ref num gates: " << getRef_numgates() << std::endl;
+  std::cout << "\tRef Gate Spacing: " << getRef_gatesp() << std::endl;
+  std::cout << "\tVel Gate Spacing: " << getVel_gatesp() << std::endl;
+  std::cout << "\t             VCP: " << getVcp() << std::endl;
+  std::cout << "\t       First Ray: " << getFirstRay() << std::endl;
+  std::cout << "\t        Last Ray: " << getLastRay() << std::endl;
+  std::cout << "\t        Num Rays: " << getNumRays() << std::endl;
 }

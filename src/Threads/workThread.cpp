@@ -145,7 +145,8 @@ void workThread::run()
 			  
 			  //STEP 3: get the first guess of center Lat,Lon for simplex
 			  _latlonFirstGuess(newVolume);
-			  QString currentCenter("Processing radar volume at " + newVolume->getDateTime().toString("hh:mm")
+			  QString currentCenter("Processing radar volume at "
+						+ newVolume->getDateTime().toString("hh:mm")
 						+ " with (" + QString().setNum(_firstGuessLat)
 						+ ", "+QString().setNum(_firstGuessLon)+") center estimate");
 			  emit log(Message(currentCenter,1,this->objectName()));
@@ -166,10 +167,12 @@ void workThread::run()
 			  }
 			
 			  //STEP 3: get the first guess of center Lat,Lon for simplex
-			  // TODO might need to do that
+
 			  _latlonFirstGuess(newVolume);
-			  QString currentCenter("Processing radar volume at "+ newVolume->getDateTime().toString("hh:mm") + " with (" +
-						QString().setNum(_firstGuessLat)+", "+QString().setNum(_firstGuessLon)+") center estimate");
+			  QString currentCenter("Processing radar volume at "
+						+ newVolume->getDateTime().toString("hh:mm") + " with ("
+						+ QString().setNum(_firstGuessLat)+ ", "
+						+ QString().setNum(_firstGuessLon)+") center estimate");
 			  emit log(Message(currentCenter,1,this->objectName()));
 			  if(abort) break;
 
@@ -197,21 +200,7 @@ void workThread::run()
 			//STEP 5: simplex to find a new center
 			emit log(Message("Finding center",1,this->objectName()));
 
-			// bpmelli 6/17
-			// This causes stack overflows if I increase the size of MAXLEVELS
-			// VortexData vortexData;
-			
-			// The problem is with 15 levels, a vortexData object is about 707k bytes.
-			//    So if these objects are created on the stack, it is very easy to cause a stack overflow
-			//    On a Mac, default thread stack size is 512k I believe. So only one object will cause overflow.
-			
-			// Temporary solution is to create the vortexData on the heap.
-			// TODO Memory management
-			// Understand what happens when such an object is appended to a QList (vortexDataList)
-
 			VortexData *vortexData = new VortexData();
-			
-			// vortexData.setTime(newVolume->getDateTime());
 			vortexData->setTime(newVolume->getDateTime());
 			
 			std::cout << "Vortex time: " << newVolume->getDateTime().toString("hh:mm").toLatin1().data() << std::endl;
@@ -224,7 +213,6 @@ void workThread::run()
 			
 			pSimplex->findCenter(&_simplexList);  // TODO check the return value!
 			delete pSimplex;
-			// _simplexList.last().setTime(vortexData.getTime());
 			_simplexList.last().setTime(vortexData->getTime());
 
 			//Postprocess simplex result

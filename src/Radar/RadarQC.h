@@ -39,6 +39,9 @@ public:
    * various methods to find environmental wind, and BB dealiasing
    */
 
+    void debugDump(RadarData *radarPtr, int sweepNum);
+    void dumpRay(RadarData *radarPtr, int rayNum);
+    
 private:
 
     RadarData *radarData;

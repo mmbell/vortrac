@@ -55,7 +55,8 @@ void SimplexThread::initParam(Configuration *wholeConfig,GriddedData *dataPtr,fl
 bool SimplexThread::findCenter(SimplexList* simplexList)
 {   
 
-    //STEP 1: retrieval all the parameters for Simplex algorithm
+    //STEP 1: retrieve all the parameters for Simplex algorithm
+  
     QDomElement simplexCfg = configData->getConfig("center");
     QString geometry = configData->getParam(simplexCfg,QString("geometry"));
     QString velField = configData->getParam(simplexCfg,QString("velocity"));
@@ -70,7 +71,8 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
     float numPoints = configData->getParam(simplexCfg,QString("numpoints")).toFloat();
 
     if(numPoints >= 25) {
-      std::cerr << "*** Error: <numpoints> is greater than 25 (the size of the data structures in the simplex thread)" << std::endl;
+      std::cerr << "*** Error: <numpoints> is greater than 25 "
+		<< "(the size of the data structures in the simplex thread)" << std::endl;
       return false;
     }
     
@@ -86,13 +88,14 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
     // Define the maximum allowable data gaps
     _dataGaps = new float[maxWave+1];
     for (int i = 0; i <= maxWave; i++) {
-        _dataGaps[i] = configData->getParam(simplexCfg,QString("maxdatagap"), QString("wavenum"),QString().setNum(i)).toFloat();
+        _dataGaps[i] = configData->getParam(simplexCfg, QString("maxdatagap"), QString("wavenum"),
+					    QString().setNum(i)).toFloat();
     }
 
     //SETP 2: initialize a GBVTD object for whole simplex to use
+    
     _simplexVTD = new GBVTD(geometry, closure, maxWave, _dataGaps);
     _vtdCoeffs  = new Coefficient[20];
-
 
     //STEP 3: perform simplex algorithm
 
@@ -144,9 +147,10 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
                 archiveNull(simplexData, radius, height, numPoints);
                 continue;
             }
+	    
             // Initialize mean values
             int meanCount = 0;
-            meanXall = meanYall= meanVTall = 0;
+            meanXall = meanYall = meanVTall = 0;
             meanX = meanY = meanVT = 0;
             stdDevVertexAll = stdDevVTAll = 0;
             stdDevVertex = stdDevVT = 0;
@@ -217,7 +221,9 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
                 meanVTall = meanVTall / float(meanCount);
                 for (int i = 0; i < numPoints; i++) {
                     if ((endX[i] != -999.) and (endY[i] != -999.) and (VTind[i] != -999.)) {
-                        stdDevVertexAll += ((endX[i] - meanXall) * (endX[i] - meanXall) + (endY[i] - meanYall) * (endY[i] - meanYall));
+                        stdDevVertexAll += ((endX[i] - meanXall)
+					    * (endX[i] - meanXall) + (endY[i] - meanYall)
+					    * (endY[i] - meanYall));
                         stdDevVTAll += (VTind[i] - meanVTall) * (VTind[i] - meanVTall);
                     }
                 }
@@ -279,8 +285,7 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
 void SimplexThread::archiveCenters(SimplexData* simplexData, float radius, float height, float numPoints)
 {
     // Save the centers to the SimplexData object
-  // int level =int(height - firstLevel);
-    int level =(int) ( (height - firstLevel) / gridData->getKGridsp() );
+    int level = (int) ( (height - firstLevel) / gridData->getKGridsp() );
     int ring  =int(radius - firstRing);
     simplexData->setHeight(level, height);
     simplexData->setRadius(ring, radius);
@@ -346,7 +351,6 @@ float SimplexThread::_simplexTest(float**& vertex,float*& VT,float*& vertexSum,
                                  float& radius, float& height, float& RefK,
                                  QString& velField, int& low, double factor)
 {
-
     // Test a simplex vertex
     float VTtest = -999;
     float* vertexTest = new float[2];

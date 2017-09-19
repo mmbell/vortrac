@@ -44,6 +44,10 @@ class Ray
   void setVcp(const int &value);
   void emptyRefgates(const short int numGates);
 
+  void setRefData(float *buffer) { refData = buffer; };
+  void setVelData(float *buffer) { velData = buffer; };
+  void setSwData(float *buffer)  { swData = buffer; };
+  
   int getTime();
   int getDate();
   float getAzimuth();
@@ -63,6 +67,11 @@ class Ray
   int getRef_numgates();
   int getVel_numgates();
   int getVcp();
+
+  void dump();
+  void dumpRef();
+  void dumpVel();
+  void dumpFloat(int size, float *buf);
   
  private:
   int sweepIndex;

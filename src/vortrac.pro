@@ -4,8 +4,8 @@
 
 TEMPLATE = app
 DEPENDPATH += . Config Grids GUI IO Radar
-INCLUDEPATH += . GUI Config IO Radar $$(NETCDF_INCLUDE) $$(ARMADILLO_INCLUDE)
-QMAKE_LIBDIR += $$(NETCDF_LIB) $$(ARMADILLO_LIB)
+INCLUDEPATH += . GUI Config IO Radar $$(RADX_INCLUDE) $$(NETCDF_INCLUDE) $$(ARMADILLO_INCLUDE)
+QMAKE_LIBDIR += $$(RADX_LIB) $$(NETCDF_LIB) $$(ARMADILLO_LIB)
 
 QMAKE_CXXFLAGS += -std=c++0x
 # Input
@@ -41,11 +41,13 @@ HEADERS += Threads/workThread.h \
            IO/Message.h \
            IO/Log.h \
            IO/ATCF.h \
+           Radar/DateChecker.h \
            Radar/RadarFactory.h \
            Radar/LevelII.h \
            Radar/NcdcLevelII.h \
            Radar/NetCDF.h \
            Radar/LdmLevelII.h \
+           Radar/RadxData.h \
            Radar/AnalyticRadar.h \
            Radar/nexh.h \
            Radar/RadarQC.h \
@@ -101,11 +103,13 @@ SOURCES += main.cpp \
            IO/Message.cpp \
            IO/Log.cpp \
            IO/ATCF.cpp \
+           Radar/DateChecker.cpp \
            Radar/RadarFactory.cpp \
            Radar/LevelII.cpp \
            Radar/NcdcLevelII.cpp \
            Radar/NetCDF.cpp \
            Radar/LdmLevelII.cpp \
+           Radar/RadxData.cpp \
            Radar/AnalyticRadar.cpp\
            Radar/RadarQC.cpp \
            Radar/RadarData.cpp \
@@ -128,7 +132,7 @@ SOURCES += main.cpp \
            DriverAnalysis.cpp
 RESOURCES += vortrac.qrc
 # LIBS += -ludunits2 -lRadx -lbz2 -larmadillo -lhdf5_cpp -lnetcdf_c++
-LIBS += -lbz2 -larmadillo -lnetcdf_c++
+LIBS += -lbz2 -larmadillo  -L/usr/local/lib -ludunits2 -lRadx -lnetcdf_c++ -lhdf5_cpp
 QT += xml network widgets
 CONFIG += debug
 #CONFIG -= app_bundle
