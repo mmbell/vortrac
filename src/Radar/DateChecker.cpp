@@ -49,13 +49,9 @@ bool LdmLevelIIChecker::fileInRange(QString filePath, QString radarName,
     if (timestamp.size() > 2) {
       fileTime = QTime::fromString(timestamp.at(2), "hhmm");
     } else {
-      std::cerr << "Problem with time in level_II filename '" << filePath.toLatin1().data()
-		<< "'. This may be a NCDC file" << std::endl;
       return false;
     }
   } else {
-      std::cerr << "Problem with time in level_II filename '" << filePath.toLatin1().data()
-		<< "'. This may be a non standard file" << std::endl;
       return false;
   }
   

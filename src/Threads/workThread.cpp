@@ -222,7 +222,8 @@ void workThread::run()
 			// Should we check which level has the more convergence and use that?
 			// Or iterate on each level until we find an appropriate center?
 			// Or ??
-#if 0			
+#if 0
+			_simplexList.dump();
 			for (int ridx = 0; ridx < _simplexList.last().getNumRadii(); ridx++)
 			  if (_simplexList.last().getNumConvergingCenters(0, ridx) > 0)  // TODO: Why level 0?
 					convergedRings++;

@@ -86,6 +86,7 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
     int   maxWave = configData->getParam(simplexCfg,QString("maxwavenumber")).toInt();
 
     // Define the maximum allowable data gaps
+    
     _dataGaps = new float[maxWave+1];
     for (int i = 0; i <= maxWave; i++) {
         _dataGaps[i] = configData->getParam(simplexCfg, QString("maxdatagap"), QString("wavenum"),
@@ -100,6 +101,7 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
     //STEP 3: perform simplex algorithm
 
     // Set ring width in cappi so that griddedData access function use this
+    
     gridData->setCylindricalAzimuthSpacing(ringWidth);
 
     QDomElement cappi = configData->getConfig("cappi");
@@ -108,6 +110,7 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
     
     // We want 1 km spaced rings regardless of ring width
     int nTotalRings = (int)floor((lastRing - firstRing) + 1.5);
+    
     // Create a simplexData object to hold the results;
     SimplexData* simplexData = new SimplexData(nTotalLevels, nTotalRings, (int)numPoints);
 
@@ -149,6 +152,7 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
             }
 	    
             // Initialize mean values
+	    
             int meanCount = 0;
             meanXall = meanYall = meanVTall = 0;
             meanX = meanY = meanVT = 0;
@@ -182,9 +186,9 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
                 vertexSum[1] = 0;
 
                 for (int v = 0; v <= 2; v++) {
-                    //Calculate mean wind at each vertex
+		  //Calculate mean wind at each vertex
 		  // TODO look at that GBVTD.cpp
-                    VT[v] = _getSymWind(vertex[v][0], vertex[v][1], int(RefK), radius, height, velField);
+		  VT[v] = _getSymWind(vertex[v][0], vertex[v][1], int(RefK), radius, height, velField);
                 }
 
                 // Run the simplex search loop
@@ -209,7 +213,7 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
                     endY[point]  = Center::_fillv;
                     VTind[point] = Center::_fillv;
                 }
-            }//point loop end
+            } //point loop end
 
 	    // std::cout << "Mean count before: " << meanCount << std::endl;
 	    
@@ -234,7 +238,8 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
                 meanCount = 0;
                 for (int i = 0; i < numPoints; i++) {
                     if ((endX[i] != -999.) and (endY[i] != -999.) and (VTind[i] != -999.)) {
-                        float vertexDist = sqrt((endX[i] - meanXall) * (endX[i] - meanXall) + (endY[i] - meanYall) * (endY[i] - meanYall));
+                        float vertexDist = sqrt((endX[i] - meanXall) * (endX[i] - meanXall)
+						+ (endY[i] - meanYall) * (endY[i] - meanYall));
                         if (vertexDist < stdDevVertexAll) {
                             Xconv[meanCount] = endX[i];
                             Yconv[meanCount] = endY[i];
@@ -404,7 +409,8 @@ float SimplexThread::_getSymWind(float vertex_x,float vertex_y,int RefK,float ra
     float* ringData = new float[numData];
     float* ringAzimuths = new float[numData];
     gridData->getCylindricalAzimuthData(velField, numData, radius, height, ringData);
-    gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);    // azimuth data should look like sine wave
+    // azimuth data should look like sine wave
+    gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);
 #if 0
     // TODO debug
     for(int d = 0; d < numData; d++) {

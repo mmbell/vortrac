@@ -127,7 +127,6 @@ int Ray::getTime() {
 }
 
 int Ray::getDate() {
-  Message::toScreen("Does this function get used? - getDate");
   return date;
 }
 

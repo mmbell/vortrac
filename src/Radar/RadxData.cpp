@@ -39,7 +39,7 @@ float *RadxData::getRayData(RadxRay *fileRay, const char *fieldName)
   // fieldMap[fielfdName] would be nicer to use. But it returns an index of 0 if fieldName doesn't exist.
   // can't differentiate it with the index of the first field, also 0
   
-  RadxRay::FieldNameMap::const_iterator name_it;
+  RadxRay::FieldNameMapConstIt name_it;
   name_it = fieldMap.find(fieldName);
     
   if (name_it == fieldMap.end())
@@ -55,16 +55,22 @@ float *RadxData::getRayData(RadxRay *fileRay, const char *fieldName)
     return NULL;
   }
 
-  // I could call setMissingFl64(-999.0) but then I get a warning since the field is of type si08...
+  // Convert field to float32
+  field->convertToFl32();
+
+  // When homebrew picks up the fixed version, uncomment the next line, and remove the check
+  // for missingFl32.
+  // field->setMissingFl32(-999.0);
   
-  const float missing64 = field->getMissingFl64();
+  const float missing32 = field->getMissingFl32();
+
+  const Radx::fl32 *fieldPtr = field->getDataFl32();
   for(size_t index = 0; index < field->getNPoints(); index++) {
-    float val = field->getDoubleValue(index);
-    if (val == missing64)
+    float val = fieldPtr[index];
+    if (val == missing32)
       val = -999.0;
     retVal[index] = val;
   }
-
   return retVal;
 }
 
@@ -202,7 +208,8 @@ bool RadxData::readVolume()
     // I don't have access to these values, but it looks like 1..n for each sweep
 
     int rayIndex = 1;
-    for(size_t rayCount = firstRayIndex; rayCount <= file_sweep->getEndRayIndex(); rayCount++, rayIndex++) {
+    for(size_t rayCount = firstRayIndex; rayCount <= file_sweep->getEndRayIndex();
+	rayCount++, rayIndex++) {
       Rays[rayCount].setSweepIndex(sweepCount);
       Rays[rayCount].setRayIndex(rayIndex);
       // gateCount += Rays[rayCount].getRef_numgates();
