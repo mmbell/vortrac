@@ -6,7 +6,6 @@ TEMPLATE = app
 DEPENDPATH += . Config Grids GUI IO Radar
 INCLUDEPATH += . GUI Config IO Radar $$(RADX_INCLUDE) $$(NETCDF_INCLUDE) $$(ARMADILLO_INCLUDE)
 QMAKE_LIBDIR += $$(RADX_LIB) $$(NETCDF_LIB) $$(ARMADILLO_LIB)
-
 QMAKE_CXXFLAGS += -std=c++0x
 # Input
 HEADERS += Threads/workThread.h \
@@ -29,11 +28,11 @@ HEADERS += Threads/workThread.h \
            GUI/AnalysisPage.h \
            GUI/GraphFace.h \
            GUI/KeyPicture.h \
-           GUI/AbstractPanel.h \ 
+           GUI/AbstractPanel.h \
            GUI/panels.h \
            GUI/DiagnosticPanel.h \
            GUI/RadarListDialog.h \
-           GUI/StopLight.h \ 
+           GUI/StopLight.h \
            GUI/CappiDisplay.h \
            GUI/StormSignal.h \
            GUI/StartDialog.h \
@@ -45,7 +44,7 @@ HEADERS += Threads/workThread.h \
            Radar/RadarFactory.h \
            Radar/LevelII.h \
            Radar/NcdcLevelII.h \
-           Radar/NetCDF.h \
+           Radar/CfRadial.h \
            Radar/LdmLevelII.h \
            Radar/RadxData.h \
            Radar/AnalyticRadar.h \
@@ -89,7 +88,7 @@ SOURCES += main.cpp \
            GUI/ConfigurationDialog.cpp \
            GUI/MainWindow.cpp \
            GUI/AnalysisPage.cpp \
-           GUI/GraphFace.cpp \ 
+           GUI/GraphFace.cpp \
            GUI/KeyPicture.cpp \
            GUI/AbstractPanel.cpp \
            GUI/panels.cpp \
@@ -107,7 +106,7 @@ SOURCES += main.cpp \
            Radar/RadarFactory.cpp \
            Radar/LevelII.cpp \
            Radar/NcdcLevelII.cpp \
-           Radar/NetCDF.cpp \
+           Radar/CfRadial.cpp \
            Radar/LdmLevelII.cpp \
            Radar/RadxData.cpp \
            Radar/AnalyticRadar.cpp\

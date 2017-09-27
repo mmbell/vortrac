@@ -25,9 +25,9 @@ VortexPanel::VortexPanel():AbstractPanel()
     operational = new QRadioButton(tr("Automatic operational"), opMode);
     manual = new QRadioButton(tr("Manual operational"), opMode);
     //research = new QRadioButton(tr("Research"), opMode);
-    
+
     QFrame *autoParameters = new QFrame;
-    
+
     QLabel *idNameLabel = new QLabel(tr("Storm ID:"));
     idName = new QLineEdit();
     QHBoxLayout *nameLayout = new QHBoxLayout;
@@ -51,7 +51,7 @@ VortexPanel::VortexPanel():AbstractPanel()
     QHBoxLayout *atcfLayout = new QHBoxLayout;
     atcfLayout->addWidget(atcfLabel);
     atcfLayout->addWidget(atcfurl);
-    
+
     QVBoxLayout *autoLayout = new QVBoxLayout;
     autoLayout->addLayout(nameLayout);
     autoLayout->addLayout(level2Layout);
@@ -61,7 +61,7 @@ VortexPanel::VortexPanel():AbstractPanel()
     //autoParameters->hide();
 
     QFrame *manualParameters = new QFrame;
-    
+
     QLabel *vortexNameLabel = new QLabel(tr("Vortex Name:"));
     vortexName = new QLineEdit();
     QHBoxLayout *name = new QHBoxLayout;
@@ -138,7 +138,7 @@ VortexPanel::VortexPanel():AbstractPanel()
     manualLayout->addLayout(rmwLayout);
     manualParameters->setLayout(manualLayout);
     //manualParameters->hide();
-    
+
     QLabel *workingDirLabel = new QLabel(tr("Working Directory"));
     QGridLayout *dirLayout = new QGridLayout();
     dirLayout->addWidget(workingDirLabel, 0, 0);
@@ -151,7 +151,7 @@ VortexPanel::VortexPanel():AbstractPanel()
     opModeLayout->addWidget(manual);
     opModeLayout->addWidget(manualParameters);
     opMode->setLayout(opModeLayout);
-    
+
     QVBoxLayout *main = new QVBoxLayout;
     main->addWidget(opMode);
     main->addLayout(dirLayout);
@@ -163,7 +163,7 @@ VortexPanel::VortexPanel():AbstractPanel()
     turnOffWhenRunning.append(dir);
     turnOffWhenRunning.append(workingDirLabel);
     turnOffWhenRunning.append(browse);
-    
+
     connect(operational, SIGNAL(toggled(const bool)),
             this, SLOT(valueChanged()));
    // connect(operational, SIGNAL(toggled(bool)),
@@ -172,7 +172,7 @@ VortexPanel::VortexPanel():AbstractPanel()
     connect(level2url, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
     connect(level3url, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
     connect(atcfurl, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
-    
+
     connect(manual, SIGNAL(toggled(const bool)),
             this, SLOT(valueChanged()));
    // connect(manual, SIGNAL(toggled(bool)),
@@ -185,7 +185,7 @@ VortexPanel::VortexPanel():AbstractPanel()
     connect(rmwBox, SIGNAL(valueChanged(const QString&)), this, SLOT(valueChanged()));
     connect(dir, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
     connect(obsDateTime, SIGNAL(dateTimeChanged(const QDateTime&)), this, SLOT(valueChanged()));
-    
+
     connect(this, SIGNAL(workingDirectoryChanged()), this, SLOT(createDirectory()));
 
     setPanelChanged(false);
@@ -277,7 +277,7 @@ bool VortexPanel::updateConfig()
     if (checkPanelChanged())
     {
         if(operational->isChecked()) {
-            
+
             if(getFromElement("mode")!=QString("operational")) {
                 emit changeDom(element, "mode", QString("operational"));
             }
@@ -295,7 +295,7 @@ bool VortexPanel::updateConfig()
             }
         }
         if(manual->isChecked()) {
-            
+
             if(getFromElement("mode")!=QString("manual")) {
                 emit changeDom(element, "mode", QString("manual"));
             }
@@ -413,7 +413,7 @@ RadarPanel::RadarPanel():AbstractPanel()
                                QString(""));
     radarFormatOptions->insert(QString("NCDC Level II"), QString("NCDCLEVELII"));
     radarFormatOptions->insert(QString("LDM Level II"), QString("LDMLEVELII"));
-    radarFormatOptions->insert(QString("NetCDF"), QString("NETCDF"));
+    radarFormatOptions->insert(QString("CfRadial"), QString("CFRADIAL"));
     //radarFormatOptions->insert(QString("Analytic Model"), QString("MODEL"));
     radarFormat = new QComboBox();
     QList<QString> options = radarFormatOptions->keys();
@@ -795,7 +795,7 @@ CappiPanel::CappiPanel():AbstractPanel()
   advVWindBox = new QDoubleSpinBox;
   advVWindBox->setDecimals(1);
   advVWindBox->setRange(0,359.99);
-  
+
   QHBoxLayout *adv = new QHBoxLayout;
   adv->addWidget(advUWindLabel);
   adv->addWidget(advUWindBox);
@@ -925,7 +925,7 @@ void CappiPanel::updatePanel(const QDomElement panelElement)
         if (name == "zgridsp") {
             zGridBox->setValue(parameter.toDouble()); }
         if (name == "zmin") {
-            zMinBox->setValue(parameter.toDouble()); }			
+            zMinBox->setValue(parameter.toDouble()); }
         /*
     if (name == "adv_u") {
       advUWindBox->setValue(parameter.toDouble()); }
@@ -1708,7 +1708,7 @@ bool CenterPanel::checkValues()
                          QString(tr("Number initial centers in simplex exceeds the maximum of ")+QString().setNum(SimplexData::getMaxCenters())+tr(", Please decrease the number of initial centers"))));
         return false;
     }
-    
+
     emit log(Message(QString(), 0, this->objectName(), Green));
     return true;
 }
@@ -2566,7 +2566,7 @@ bool VTDPanel::checkValues()
                          QString(tr("Maximum wave number in vtd exceeds the limit of ")+QString().setNum(VortexData::getMaxWaveNum())+tr(", Please decrease the number of wave numbers used"))));
         return false;
     }
-    
+
     emit log(Message(QString(), 0, this->objectName(), Green));
     return true;
 }
@@ -2730,7 +2730,7 @@ PressurePanel::PressurePanel()
     QHBoxLayout *urlLayout = new QHBoxLayout;
     urlLayout->addWidget(urlLabel);
     urlLayout->addWidget(madisurl);
-    
+
     QLabel *userLabel = new QLabel(tr("MADIS Username"));
     madisuser = new QLineEdit();
     QHBoxLayout *userLayout = new QHBoxLayout;
@@ -2742,13 +2742,13 @@ PressurePanel::PressurePanel()
     QHBoxLayout *passwordLayout = new QHBoxLayout;
     passwordLayout->addWidget(passwordLabel);
     passwordLayout->addWidget(madispassword);
-    
+
     QVBoxLayout *madisLayout = new QVBoxLayout;
     madisLayout->addLayout(urlLayout);
     madisLayout->addLayout(userLayout);
     madisLayout->addLayout(passwordLayout);
     madisBox->setLayout(madisLayout);
-    
+
     QLabel *gradientHeightLabel = new QLabel(tr("Height at which Pressure Gradient is Calculated (km)"));
     gradientHeight = new QDoubleSpinBox;
     gradientHeight->setDecimals(2);
@@ -3786,10 +3786,10 @@ bool QCPanel::checkValues()
   void RadarPanel::fillRadarHash()
   {
 
-  
+
     Was used before the xml file for radar information was created
     This is kept on hand for now incase the info in the xml is overwritten
-    
+
     radarNameOptions = new QHash<QString, QString>;
     radarLocations = new QHash<QString, QPointF>;
     radarNameOptions->insert(QString("Please select a radar"), QString(""));

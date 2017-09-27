@@ -12,14 +12,14 @@ class DateChecker {
 			   QDateTime startDateTime, QDateTime endDateTime) = 0;
 
   QDateTime getTime() { return fileDateTime; }
-  
+
   QString baseName(QString path);
   virtual ~DateChecker() {}
 
  protected:
 
   QDateTime fileDateTime;
-  
+
 };
 
 class NcdcLevelIIChecker : public DateChecker {
@@ -54,24 +54,24 @@ class DoradeChecker : public DateChecker {
 		   QDateTime startDateTime, QDateTime endDateTime);
 };
 
-class NetcdfChecker : public DateChecker {
+class CfRadialChecker : public DateChecker {
 
  public:
 
   bool fileInRange(QString filePath, QString radarName,
 			QDateTime startDateTime, QDateTime endDateTime);
 };
-  
+
 class DateCheckerFactory {
 
- public:  
+ public:
 
   static DateChecker *newChecker(RadarFactory::dataFormat);
 
  private:
 
   // Static class. Don't let anybody create instances
-  
+
   DateCheckerFactory();
 };
 

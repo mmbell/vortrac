@@ -20,7 +20,7 @@
 #include "Radar/RadarData.h"
 #include "Radar/LevelII.h"
 #include "Radar/NcdcLevelII.h"
-#include "Radar/NetCDF.h"
+#include "Radar/CfRadial.h"
 #include "Radar/LdmLevelII.h"
 #include "Radar/AnalyticRadar.h"
 #include "Radar/RadxData.h"
@@ -34,7 +34,7 @@ class RadarFactory : public QObject
     Q_OBJECT
 
 public:
-    
+
     RadarFactory(Configuration* radarConfig, QObject *parent = 0);
     ~RadarFactory();
     RadarData* getUnprocessedData();
@@ -46,7 +46,7 @@ public:
       ldmlevelII,
       model,
       dorade,
-      netcdf
+      cfradial
     };
 
 public slots:
@@ -57,9 +57,9 @@ signals:
     void log(const Message& message);
 
 
-    
+
 private:
-    
+
     QDir dataPath;
     QString radarName;
     float radarLat;
@@ -75,4 +75,3 @@ private:
 };
 
 #endif
-

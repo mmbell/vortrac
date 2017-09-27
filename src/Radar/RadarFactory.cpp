@@ -49,8 +49,8 @@ RadarFactory::RadarFactory(Configuration* radarConfig, QObject *parent): QObject
         radarFormat = ncdclevelII;
     } else if (format == "MODEL") {
         radarFormat = model;
-    } else if (format == "NETCDF") {
-        radarFormat = netcdf;
+    } else if (format == "CFRADIAL") {
+        radarFormat = cfradial;
     } else {
         // Will implement more later but give error for now
         emit log(Message("Data format not supported"));
@@ -89,10 +89,10 @@ RadarData* RadarFactory::getUnprocessedData()
     sleep(1);
     // Mark it as processed
     fileAnalyzed[fileName] = true;
-    
+
     // Now make a new radar object from that file and send it back
     switch(radarFormat) {
-      
+
     case ldmlevelII:
     case model:
     case ncdclevelII:
@@ -101,16 +101,16 @@ RadarData* RadarFactory::getUnprocessedData()
       radarData->setAltitude(radarAlt);
       return radarData;
     }
-      
-    case netcdf: {
+
+    case cfradial: {
       // TODO Any other info?
-      NetCDF *radarData = new NetCDF(radarName, radarLat, radarLon, fileName);
+      CfRadial *radarData = new CfRadial(radarName, radarLat, radarLon, fileName);
       radarData->setAltitude(radarAlt);
       return radarData;
     }
-      
+
     } // switch radarFormat
-    
+
 #if 0
     // These are now all taken care of by the Radx library
     case dorade:
@@ -149,38 +149,38 @@ RadarData* RadarFactory::getUnprocessedData()
 bool RadarFactory::hasUnprocessedData()
 {
     // Check the unprocessed list first, if it has files no need to reread directory yet
-  
+
     if ( ! radarQueue->isEmpty() ) {
         return true;
     }
 
     // Get a list of files in the radar directory
-    
+
     dataPath.setFilter(QDir::Files);
     dataPath.setSorting(QDir::Name);
     QStringList filenames = dataPath.entryList();
 
     DateChecker *checker = DateCheckerFactory::newChecker(radarFormat);
-    
+
     for (int i = 0; i < filenames.size(); i++) {
       QString file = filenames.at(i);
-      
+
       if ( fileAnalyzed[dataPath.filePath(file)])	// been there, done that?
 	continue;
-      
+
       // Get the date info from the file name
       if(checker->fileInRange(file, radarName, startDateTime, endDateTime))
 	radarQueue->enqueue(file);
     }
 
     delete checker;
-    
-#if 0    
-			     
+
+#if 0
+
     // Otherwise, check the directory for appropriate files
 
     switch(radarFormat) {
-      
+
     case ncdclevelII:
     {
         // Should have filenames starting with radar ID
@@ -246,7 +246,7 @@ bool RadarFactory::hasUnprocessedData()
                 timepart.replace(".ar2v", "");
                 QStringList timestamp = timepart.split("_");
                 fileDate = QDate::fromString(timestamp.at(2), "yyyyMMdd");
-                fileTime = QTime::fromString(timestamp.at(3), "hhmm");                
+                fileTime = QTime::fromString(timestamp.at(3), "hhmm");
             } else if (timepart.contains('.')) {
                 // NRL Format
                 // Replace the radarname so we just have timestamps
@@ -311,10 +311,10 @@ bool RadarFactory::hasUnprocessedData()
       std::cout << "Format dorade not implemented yet" << std::endl;
       break;
     }
-    
-    case netcdf:
+
+    case cfradial:
     {
-      // Need to agree how we deal with NetCDF files.
+      // Need to agree how we deal with CfRadial files.
       //    Put a bunch in a directory with some encoding in the name?
       //    For example:
       //         KAMX_20161007_044754.nc
@@ -351,12 +351,12 @@ bool RadarFactory::hasUnprocessedData()
 	}
       }
       break;
-    } // netcdf
+    } // cfradial
 
     } // switch
-    
+
 #endif
-    
+
     // See if we added any new files to the queue
     if(!radarQueue->isEmpty()) {
         return true;
@@ -476,7 +476,7 @@ void RadarFactory::updateDataQueue(const VortexList* list)
             // Not yet implemented
             break;
         }
-        case netcdf:
+        case cfradial:
         {
             // Not yet implemented
             break;
@@ -496,4 +496,3 @@ int RadarFactory::getNumProcessed() const
 
     return fileAnalyzed.keys(true).count();
 }
-
