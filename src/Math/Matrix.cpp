@@ -67,10 +67,10 @@ bool Matrix::lls(const int &numCoeff,const int &numData,float** &x, float* &y, f
     for(long i = 0; i < numData; i++) {
         for(int row = 0; row < numCoeff; row++) {
             for(int col = 0; col < numCoeff; col++) {
-                A[row][col]+=(x[row][i]*x[col][i]);
+                A[row][col] +=(x[row][i]*x[col][i]);
                 AA[row][col]+=(x[row][i]*x[col][i]);
             }
-            B[row] +=(x[row][i]*y[i]);
+            B[row]     +=(x[row][i]*y[i]);
             BB[row][0] +=(x[row][i]*y[i]);
         }
     }

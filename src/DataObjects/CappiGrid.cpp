@@ -754,7 +754,7 @@ void CappiGrid::loadPreGridded(RadarData *radarData, QDomElement cappiConfig)
 	break;
     }
     if (! reflectivity->get(ref, 1, 1, yDim, xDim) ) {
-      std::cerr << "Couldn't get velocity value" << std::endl;
+      std::cerr << "Couldn't get reflectivity value" << std::endl;
       break;
     }
     if (! velocity->get(vel, 1, 1, yDim, xDim) ) {

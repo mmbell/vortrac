@@ -47,8 +47,12 @@ void workThread::run()
 	bool preGridded = "true" == configData->getParam(configData->getConfig("radar"),
 							 "pre_gridded");
 
+	bool runSimplex = "true" !=
+	  configData->getParam(configData->getConfig("center"), "skipsimplex");
+	
 	float bottomLevel = configData->getParam(configData->getConfig("center"), "bottomlevel").toFloat();
-
+	float topLevel = configData->getParam(configData->getConfig("center"), "toplevel").toFloat();
+	
 	// Load vortex centers if the config file specifies a path
 	loadCenterLocations(configData->getParam(configData->getConfig("vortex"), "centers"));
 
@@ -177,7 +181,7 @@ void workThread::run()
 			  if(abort) break;
 
 			  //STEP 4: from Radardata ---> Griddata, make cappi
-			  gridData=gridFactory->makeCappi(newVolume,configData,&_firstGuessLat,&_firstGuessLon);
+			  gridData = gridFactory->makeCappi(newVolume, configData, &_firstGuessLat, &_firstGuessLon);
 			}
 
 			gridData->writeAsi();
@@ -196,181 +200,27 @@ void workThread::run()
 			  sleep(3);	
 			  continue;
 			}
-			
+
 			//STEP 5: simplex to find a new center
-			emit log(Message("Finding center",1,this->objectName()));
 
-			VortexData *vortexData = new VortexData();
-			vortexData->setTime(newVolume->getDateTime());
+			VortexData *vortexData;
+			int bestLevel;
 			
-			std::cout << "Vortex time: " << newVolume->getDateTime().toString("hh:mm").toLatin1().data() << std::endl;
-			
-			SimplexThread* pSimplex = new SimplexThread();
-			pSimplex->initParam(configData, gridData, _firstGuessLat, _firstGuessLon);
-			
-			// TODO this does the work.
-			// We get "Center Not Found" if we pick a center bottomLevel too low in the config file.
-			
-			pSimplex->findCenter(&_simplexList);  // TODO check the return value!
-			delete pSimplex;
-			_simplexList.last().setTime(vortexData->getTime());
-
-			//Postprocess simplex result
-
-			// TODO
-			// This only checks if there are converged centers at level 0.
-			// Should we check which level has the more convergence and use that?
-			// Or iterate on each level until we find an appropriate center?
-			// Or ??
-#if 0			
-			for (int ridx = 0; ridx < _simplexList.last().getNumRadii(); ridx++)
-			  if (_simplexList.last().getNumConvergingCenters(0, ridx) > 0)  // TODO: Why level 0?
-					convergedRings++;
-			int convergedRings = 0;
-#endif
-			int maxConverged = 0;
-			int maxConvergedLevel = -1;
-			int bestLevel = -1;
-			
-			// TODO involve the simplex std deviation into this chosing of a level
-
-			int *numConvRings = new int[_simplexList.last().getNumLevels()]();
-			
-			for (int level = 0; level < _simplexList.last().getNumLevels(); level++) {
-			  int convergedThisLevel = 0;
-			  for (int ridx = 0; ridx < _simplexList.last().getNumRadii(); ridx++)
-			    if (_simplexList.last().getNumConvergingCenters(level, ridx) > 0)
-			      convergedThisLevel++;
-			  numConvRings[level] = convergedThisLevel;
-			  if (convergedThisLevel > maxConverged) {
-			    maxConverged = convergedThisLevel;
-			    maxConvergedLevel = level;
+			if (runSimplex) {
+			  if ( ! findCenter(newVolume, gridData, bottomLevel, &vortexData, &bestLevel) ) {
+			    delete newVolume;
+			    delete gridFactory;
+			    delete gridData;
+			    continue;
 			  }
-			}
-
-			if (maxConvergedLevel > -1) {
-				_simplexList.timeSort();
-
-				ChooseCenter *centerFinder = new ChooseCenter(configData, &_simplexList, vortexData);
-				centerFinder->findCenter(maxConvergedLevel);
-				delete centerFinder;
-				
-				// Find the best std dev among all the levels that have enough converged rings.
-
-				float bestStdDev = 9999;
-				float threashold = _simplexList.last().getNumRadii() / 3; // Go with at least a third for now
-			
-				for (int level = 0; level < _simplexList.last().getNumLevels(); level++) {
-				  if (numConvRings[level] < threashold)
-				    continue;
-				  float dev = vortexData->getCenterStdDev(level);
-#if 0				  
-				  if(dev > 0) // debug
-				    std::cout << "level: " << level << ", stdDev: " << dev << std::endl;
-#endif				  
-				  if( (dev > 0) && (dev < bestStdDev) ) {
-				    bestLevel = level;
-				    bestStdDev = dev;
-				  }
-				}
-#if 0
-				std::cout << "*** Best std dev: " << bestStdDev << ", at level " << bestLevel << std::endl;
-#endif				
-				if(bestLevel == -1)
-				  bestLevel = maxConvergedLevel;
-
-				float userDistance = GriddedData::getCartesianDistance(_firstGuessLat, _firstGuessLon,
-										       vortexData->getLat(bestLevel),
-										       vortexData->getLon(bestLevel));
-
-
-				//  vortexData.getLat(0), vortexData.getLon(0));
-				float range = GriddedData::getCartesianDistance(radarLat, radarLon,
-										vortexData->getLat(bestLevel),
-										vortexData->getLon(bestLevel));
-				if( (userDistance > 25.0f) 
-				   or (range > newVolume->getMaxUnambig_range() - 
-				       configData->getParam(configData->getConfig("center"), "innerradius").toFloat())) {
-					Message newMsg(QString(), 5, this->objectName(),
-						       Yellow, "Center Not Found");
-					emit log(newMsg);
-					std::cout << "*** Center not found (center too far away)" << std::endl;
-				}
-				else {
-					Message newMsg(QString(), 5, this->objectName(),
-						       Green, "Center Found");
-					emit log(newMsg);
-					std::cout << "** New center Lat: " << vortexData->getLat(bestLevel)
-						  << ", Lon: " << vortexData->getLon(bestLevel) << std::endl;
-					QString values;
-					QString result = "Position estimate " + values.setNum(vortexData->getLat(bestLevel));
-					result += " N " + values.setNum(vortexData->getLon(bestLevel)) + " E";
-					emit log(Message(result, 0, this->objectName()));
-					if (vortexData->getRMW() != -999.) {
-					  result = "RMW estimate " + values.setNum(vortexData->getRMW());
-					  result += " +/- " + values.setNum(vortexData->getRMWUncertainty()) + " km";
-					  emit log(Message(result,0,this->objectName()));
-					} else {
-						emit log(Message(QString("RMW not found"),0,this->objectName()));
-					}
-				}
-			} else {  // Not enough converged rings
-			  std::cout << "**** Center not found (not enough converged rings)" << std::endl;
-			  
-			  for(int ll = 0; ll < vortexData->getMaxLevels(); ll++){
-			    vortexData->setLat(ll, _firstGuessLat);
-			    vortexData->setLon(ll, _firstGuessLon);
-			    vortexData->setHeight(ll, bottomLevel + ll * gridData->getKGridsp());
-			    Message newMsg(QString(), 5, this->objectName(),
-					   Yellow,"Center Not Found");
-			    emit log(newMsg);
-			  }
-			}
-
-			delete[] numConvRings;
-			
-			if(abort) {
-				delete newVolume;
-				delete gridFactory;
-				delete gridData;
-				break;
-			}
-
-			if (bestLevel < 0) {
-			  std::cout << "Abandoning this volume since no converged rings found." << std::endl;
-			  delete newVolume;
-			  delete gridFactory;
-			  delete gridData;
-			  continue;
-			}
-			vortexData->setBestLevel(bestLevel);
-			
-			float simplexLat = vortexData->getLat(bestLevel);
-			float simplexLon = vortexData->getLon(bestLevel);
-			
-			QDomElement simplex = configData->getConfig("center");
-			QDomElement vtd   = configData->getConfig("vtd");
-			
-			float* xyValues = gridData->getCartesianPoint(&radarLat, &radarLon, &simplexLat, &simplexLon);
-			float xPercent = float(gridData->getIndexFromCartesianPointI(xyValues[0])+1)/gridData->getIdim();
-			float yPercent = float(gridData->getIndexFromCartesianPointJ(xyValues[1])+1)/gridData->getJdim();
-			float rmwEstimate = vortexData->getRMW(bestLevel)/(gridData->getIGridsp()*gridData->getIdim());
-			float sMin = configData->getParam(simplex, "innerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
-			float sMax = configData->getParam(simplex, "outerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
-			float vMax = configData->getParam(vtd, "outerradius").toFloat()/(gridData->getIGridsp()*gridData->getIdim());
-			emit newCappiInfo(xPercent, yPercent, rmwEstimate, sMin, sMax, vMax, _firstGuessLat, _firstGuessLon, simplexLat, simplexLon);
-			delete [] xyValues;
-
-			if(abort) {
-				delete newVolume;
-				delete gridFactory;
-				delete gridData;
-				break;
-			}
+			} else {
+			  vortexData = useBestGuessCenter(newVolume, bottomLevel, gridData->getKGridsp());
+			  updateCappiDisplayInfo(gridData, vortexData, radarLat, radarLon, _firstGuessLat, _firstGuessLon);
+  			}
 			
 			//STEP 6: Check for new pressure data to process for the current volume
 			
-			if(pressureSource->hasUnprocessedData()) {
+			if( pressureSource->hasUnprocessedData()) {
 				// Create a list of new pressure observations that have not yet been processed
 				QList<PressureData>* newObs = pressureSource->getUnprocessedData();
 				// Add any new observations to the list of observations which are used to calculate the current pressure
@@ -401,11 +251,13 @@ void workThread::run()
 			float range = GriddedData::getCartesianDistance(radarLat, radarLon,
 									vortexData->getLat(bestLevel),
 									vortexData->getLon(bestLevel));
-			if (range < (newVolume->getMaxUnambig_range()
-				     - configData->getParam(simplex, "innerradius").toFloat())) {
+			if (range < newVolume->getMaxUnambig_range()
+			    - configData->getParam(configData->getConfig("center"),
+						   "innerradius").toFloat()) {
+
 			  emit log(Message("Estimating pressure", 1, this->objectName()));
 
-	            VortexThread* pVtd = new VortexThread();
+			  VortexThread* pVtd = new VortexThread();
 		    
 	            if (mode == "operational") {
 	                pVtd->setEnvPressure(atcf->getEnvPressure());
@@ -654,7 +506,7 @@ void workThread::loadCenterLocations(QString fName)
     loc[1] = entries[2].toFloat();
     qint64 key = time.toMSecsSinceEpoch();
     centerLocations.insert(key, loc);
-#if 0
+#if 0    
     std::cout << time.toString("yyyy-MM-dd:hh:mm:ss").toLatin1().data()
 	      << " key: " << key << ", lat: " << loc[0] << ", lon: " << loc[1] << std::endl;
 #endif
@@ -682,10 +534,8 @@ void workThread::_latlonFirstGuess(RadarData* radarVolume)
   
   QDateTime volDT = QDateTime::fromString(radarVolume->getDateTime().toString("yyyy-MM-dd:hh:mm"), ("yyyy-MM-dd:hh:mm"));
   qint64 key = volDT.toMSecsSinceEpoch();
-#if 0
   std::cout << "** " << volDT.toString("yyyy-MM-dd:hh:mm:ss").toLatin1().data()
     	    << " key: " << key << std::endl;
-#endif
   
   if(centerLocations.contains(key)) {
     float *loc = centerLocations.value(key);
@@ -756,4 +606,218 @@ void workThread::_latlonFirstGuess(RadarData* radarVolume)
 
   }
   delete [] extrapLatLon;
+}
+
+bool workThread::findCenter(RadarData *radar_data, GriddedData *grid_data, float bottom_level, VortexData **vortex_data, int *best_level)
+{
+  emit log(Message("Finding center",1,this->objectName()));
+
+  float radarLat = configData->getParam(configData->getConfig("radar"), "lat").toFloat();
+  float radarLon = configData->getParam(configData->getConfig("radar"), "lon").toFloat();
+
+  VortexData *vortexData = new VortexData();
+
+  vortexData->setTime(radar_data->getDateTime());
+			
+  std::cout << "Vortex time: " << radar_data->getDateTime().toString("hh:mm").toLatin1().data() << std::endl;
+			
+  SimplexThread* pSimplex = new SimplexThread();
+  pSimplex->initParam(configData, grid_data, _firstGuessLat, _firstGuessLon);
+			
+  // TODO this does the work.
+  // We get "Center Not Found" if we pick a center bottom_level too low in the config file.
+			
+  pSimplex->findCenter(&_simplexList);  // TODO check the return value!
+  delete pSimplex;
+  _simplexList.last().setTime(vortexData->getTime());
+
+  //Postprocess simplex result
+
+  // TODO
+  // This only checks if there are converged centers at level 0.
+  // Should we check which level has the more convergence and use that?
+  // Or iterate on each level until we find an appropriate center?
+  // Or ??
+#if 0
+  _simplexList.dump();
+  for (int ridx = 0; ridx < _simplexList.last().getNumRadii(); ridx++)
+    if (_simplexList.last().getNumConvergingCenters(0, ridx) > 0)  // TODO: Why level 0?
+      convergedRings++;
+  int convergedRings = 0;
+#endif
+  int maxConverged = 0;
+  int maxConvergedLevel = -1;
+  int bestLevel = -1;
+			
+  // TODO involve the simplex std deviation into this chosing of a level
+
+  int *numConvRings = new int[_simplexList.last().getNumLevels()]();
+			
+  for (int level = 0; level < _simplexList.last().getNumLevels(); level++) {
+    int convergedThisLevel = 0;
+    for (int ridx = 0; ridx < _simplexList.last().getNumRadii(); ridx++)
+      if (_simplexList.last().getNumConvergingCenters(level, ridx) > 0)
+	convergedThisLevel++;
+    numConvRings[level] = convergedThisLevel;
+    if (convergedThisLevel > maxConverged) {
+      maxConverged = convergedThisLevel;
+      maxConvergedLevel = level;
+    }
+  }
+
+  if (maxConvergedLevel > -1) {
+    _simplexList.timeSort();
+
+    ChooseCenter *centerFinder = new ChooseCenter(configData, &_simplexList, vortexData);
+    centerFinder->findCenter(maxConvergedLevel);
+    delete centerFinder;
+				
+    // Find the best std dev among all the levels that have enough converged rings.
+
+    float bestStdDev = 9999;
+    float threashold = _simplexList.last().getNumRadii() / 3; // Go with at least a third for now
+			
+    for (int level = 0; level < _simplexList.last().getNumLevels(); level++) {
+      if (numConvRings[level] < threashold)
+	continue;
+      float dev = vortexData->getCenterStdDev(level);
+#if 0				  
+      if(dev > 0) // debug
+	std::cout << "level: " << level << ", stdDev: " << dev << std::endl;
+#endif				  
+      if( (dev > 0) && (dev < bestStdDev) ) {
+	bestLevel = level;
+	bestStdDev = dev;
+      }
+    }
+#if 0
+    std::cout << "*** Best std dev: " << bestStdDev << ", at level " << bestLevel << std::endl;
+#endif				
+    if(bestLevel == -1)
+      bestLevel = maxConvergedLevel;
+
+    float userDistance = GriddedData::getCartesianDistance(_firstGuessLat, _firstGuessLon,
+							   vortexData->getLat(bestLevel),
+							   vortexData->getLon(bestLevel));
+
+
+    //  vortexData.getLat(0), vortexData.getLon(0));
+    float range = GriddedData::getCartesianDistance(radarLat, radarLon,
+						    vortexData->getLat(bestLevel),
+						    vortexData->getLon(bestLevel));
+    if( (userDistance > 25.0f) 
+	or (range > radar_data->getMaxUnambig_range() - 
+	    configData->getParam(configData->getConfig("center"), "innerradius").toFloat())) {
+      Message newMsg(QString(), 5, this->objectName(),
+		     Yellow, "Center Not Found");
+      emit log(newMsg);
+      std::cout << "*** Center not found (center too far away)" << std::endl;
+    }
+    else {
+      Message newMsg(QString(), 5, this->objectName(),
+		     Green, "Center Found");
+      emit log(newMsg);
+      std::cout << "** New center Lat: " << vortexData->getLat(bestLevel)
+		<< ", Lon: " << vortexData->getLon(bestLevel) << std::endl;
+      QString values;
+      QString result = "Position estimate " + values.setNum(vortexData->getLat(bestLevel));
+      result += " N " + values.setNum(vortexData->getLon(bestLevel)) + " E";
+      emit log(Message(result, 0, this->objectName()));
+      if (vortexData->getRMW() != -999.) {
+	result = "RMW estimate " + values.setNum(vortexData->getRMW());
+	result += " +/- " + values.setNum(vortexData->getRMWUncertainty()) + " km";
+	emit log(Message(result,0,this->objectName()));
+      } else {
+	emit log(Message(QString("RMW not found"),0,this->objectName()));
+      }
+    }
+  } else {  // Not enough converged rings
+    std::cout << "**** Center not found (not enough converged rings)" << std::endl;
+			  
+    for(int ll = 0; ll < vortexData->getMaxLevels(); ll++){
+      vortexData->setLat(ll, _firstGuessLat);
+      vortexData->setLon(ll, _firstGuessLon);
+      vortexData->setHeight(ll, bottom_level + ll * grid_data->getKGridsp());
+      Message newMsg(QString(), 5, this->objectName(),
+		     Yellow,"Center Not Found");
+      emit log(newMsg);
+    }
+  }
+
+  delete[] numConvRings;
+			
+  if (bestLevel < 0) {
+    std::cout << "Abandoning this volume since no converged rings found." << std::endl;
+    return false;
+  }
+  vortexData->setBestLevel(bestLevel);
+			
+  float simplexLat = vortexData->getLat(bestLevel);
+  float simplexLon = vortexData->getLon(bestLevel);
+
+  updateCappiDisplayInfo(grid_data, vortexData, radarLat, radarLon, simplexLat, simplexLon);
+  
+  *vortex_data = vortexData;
+  *best_level = bestLevel;
+  
+  return true;
+}
+
+VortexData *workThread::useBestGuessCenter(RadarData *radar_data, float bottom_level, float k_grid_sp)
+{
+  VortexData *vortexData = new VortexData();
+  int numLevel = vortexData->getMaxLevels();
+  
+  for(int level = 0; level < numLevel; level++) {
+    vortexData->setLat(level, _firstGuessLat);
+    vortexData->setLon(level, _firstGuessLon);
+    vortexData->setHeight(level, bottom_level + level * k_grid_sp);
+  }
+
+  // TODO. This is also done in VortexThread::readInConfig()
+  //       Need to put that in a function
+  
+  int gradientHeight = 2; // default
+  QString gradientConfig = configData->getParam(configData->getConfig("pressure"), "gradient_height");
+  if(gradientConfig != "")
+    gradientHeight = gradientConfig.toFloat();
+  if(gradientHeight < bottom_level) {
+    gradientHeight = bottom_level;
+    std::cout << "Warning: VortexThread gradientHeight adjusted to " << bottom_level << std::endl;
+  }
+  // end TODO
+    
+  vortexData->setTime(radar_data->getDateTime());
+  vortexData->setBestLevel( (gradientHeight - bottom_level) / k_grid_sp);
+
+  Message newMsg(QString(), 5, this->objectName(),
+		 Green, "Using saved center");
+  emit log(newMsg);
+  
+  QString values;
+  QString result = "Position estimate " + values.setNum(_firstGuessLat);
+  result += " N " + values.setNum(_firstGuessLon) + " E";
+  emit log(Message(result, 0, this->objectName()));
+
+  return vortexData;
+}
+
+void workThread::updateCappiDisplayInfo(GriddedData *grid_data, VortexData *vortex_data,
+					float radar_lat, float radar_lon,
+					float simplex_lat, float simplex_lon)
+{
+  QDomElement simplex = configData->getConfig("center");
+  QDomElement vtd   = configData->getConfig("vtd");
+
+  int bestLevel = vortex_data->getBestLevel();
+  
+  float* xyValues = grid_data->getCartesianPoint(&radar_lat, &radar_lon, &simplex_lat, &simplex_lon);
+  float xPercent = float(grid_data->getIndexFromCartesianPointI(xyValues[0])+1)/grid_data->getIdim();
+  float yPercent = float(grid_data->getIndexFromCartesianPointJ(xyValues[1])+1)/grid_data->getJdim();
+  float rmwEstimate = vortex_data->getRMW(bestLevel)/(grid_data->getIGridsp()*grid_data->getIdim());
+  float sMin = configData->getParam(simplex, "innerradius").toFloat()/(grid_data->getIGridsp()*grid_data->getIdim());
+  float sMax = configData->getParam(simplex, "outerradius").toFloat()/(grid_data->getIGridsp()*grid_data->getIdim());
+  float vMax = configData->getParam(vtd, "outerradius").toFloat()/(grid_data->getIGridsp()*grid_data->getIdim());
+  emit newCappiInfo(xPercent, yPercent, rmwEstimate, sMin, sMax, vMax, radar_lat, radar_lon, simplex_lat, simplex_lon);
+  delete [] xyValues;
 }

@@ -430,7 +430,7 @@ private:
    * This panel uses the dir and browse members declared in AbstractPanel
    * for the location of the AWIPS data directory.
    */
-    QRadioButton *gvad, *vad, *user, *known;
+    QRadioButton *gvad, *vad, *user; //, *known; not used anymore
     /*
    * These buttons are all mutually exclusive choices which decide how the
    * environmental winds should be determined.

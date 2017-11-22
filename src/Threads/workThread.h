@@ -34,12 +34,19 @@ class workThread : public QObject
     typedef QHash<qint64, float *> HashOfLocations;
 
 public:
+    
     workThread(QObject *parent = 0);
     ~workThread();
     void setConfig(Configuration *configPtr) {configData = configPtr;}
     void setATCF(ATCF *atcfPtr) {atcf = atcfPtr;}
     void stop();
-
+    bool findCenter(RadarData *radar_data, GriddedData *grid_data, float bottom_evel,
+		    VortexData **vortex_data, int *best_level);
+    VortexData *useBestGuessCenter(RadarData *radar_data, float bottom_level, float k_grid_sp);
+    void updateCappiDisplayInfo(GriddedData *grid_data, VortexData *vortex_data,
+				float radar_lat, float radar_lon,
+    				float simplex_lat, float simplex_lon);
+    
 public slots:
     void catchLog(const Message& message);
     void catchVCP(const int vcp);
@@ -60,6 +67,7 @@ signals:
     void finished();
 
 private:
+    
     bool runOnce;
     volatile bool abort;
     bool continuePreviousRun;

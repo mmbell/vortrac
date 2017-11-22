@@ -54,9 +54,9 @@ bool LdmLevelIIChecker::fileInRange(QString filePath, QString radarName,
       return false;
     }
   } else {
-      std::cerr << "Problem with time in level_II filename '" << filePath.toLatin1().data()
-		<< "'. This may be a non standard file" << std::endl;
-      return false;
+    std::cerr << "Problem with time in level_II filename '" << filePath.toLatin1().data()
+	      << "'. This may be a non standard file" << std::endl;
+    return false;
   }
   
   fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
