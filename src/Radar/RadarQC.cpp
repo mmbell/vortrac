@@ -43,6 +43,7 @@ RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)
     // Allocate memory for the bincount
     int numSweeps = radarData->getNumSweeps();
     validBinCount = new float*[numSweeps];
+
     for (int i = 0; i < numSweeps; i++) {
         Sweep *currentSweep = radarData->getSweep(i);
         int numBins = (currentSweep->getVel_numgates() > 0) ? currentSweep->getVel_numgates() : 1;
@@ -459,8 +460,6 @@ void RadarQC::thresholdData()
     Ray* currentRay;
     int numVGates = 0;
 
-    int warned = false;
-
     for(int i = 0; i < numRays; i++)
     {
         if(i == (int) numRays/2.0)
@@ -471,20 +470,13 @@ void RadarQC::thresholdData()
 	  continue;
 	}
         int sweepIndex = currentRay->getSweepIndex();
-	if (sweepIndex < 0) {
-	  if ( ! warned )
-	    std::cout << "Negative sweepIndex in RadarQC::thresholdData" << std::endl;
-	  warned = true;
+	if (sweepIndex < 0)
 	  continue;
-	}
+	
         Sweep *currentSweep = radarData->getSweep(sweepIndex);
-	if(currentSweep == NULL) {
-	  if ( ! warned )
-	    std::cout << "No sweep at ray " << i 
-		      << ", sweepIndex " << sweepIndex << std::endl;
-	  warned = true;
+	if(currentSweep == NULL)
 	  continue;
-	}
+
         int numSweepGates = currentSweep->getVel_numgates();
 	int numRayGates = currentRay->getVel_numgates();
 	if (numRayGates < numSweepGates) {
@@ -524,8 +516,8 @@ void RadarQC::thresholdData()
             }
         } else {
             // No spectrum width data, so just go with it for now
-            for (int j = 0; j < numVGates; j++)
-            {
+	  if(vGates != NULL)
+            for (int j = 0; j < numVGates; j++) {
                 if(vGates[j]!=velNull) {
                     validBinCount[sweepIndex][j]++;
                 }
@@ -553,14 +545,22 @@ bool RadarQC::terminalVelocity()
     int numVGates;
     Ray* currentRay;
 
-    bool warned = false;
-
     for(int i = 0; i < numRays; i++)
     {
         currentRay = radarData->getRay(i);
+	
+	if (currentRay->getSweepIndex() == -999)
+	  continue;
+
+	
         numVGates = currentRay->getVel_numgates();
         float *vGates = currentRay->getVelData();
         float *rGates = currentRay->getRefData();
+
+	// Some rays might not have VEL data
+	if ( vGates == NULL )
+	  continue;
+
         if((currentRay->getRef_gatesp()!=0)&&(currentRay->getVel_gatesp()!=0)&&(currentRay->getRef_numgates()!=0))
         {
             for(int j = 0; j < numVGates; j++)
@@ -576,12 +576,8 @@ bool RadarQC::terminalVelocity()
                     float elevAngle = currentRay->getElevation();
 
 		    int sweepIndex = currentRay->getSweepIndex();
-		    if (sweepIndex < 0) {
-		      if ( ! warned )
-			std::cout << "Negative sweepIndex at ray index " << i << std::endl;
-		      warned = true;
+		    if (sweepIndex < 0)
 		      continue;
-		    }
 
                     float height = aveVADHeight[sweepIndex][j];
                     // height is in km from sea level here
@@ -707,12 +703,6 @@ bool RadarQC::findEnvironmentalWind()
    *   Provides environmental wind according to user specified methods
    */
 
-    /*
-  if(useAWIPSWinds) {
-    //not implemented
-    return false
-  }
-  */
     if(useUserWinds) {
         // Do nothing move straight to BB
         return true;
@@ -732,10 +722,7 @@ bool RadarQC::findEnvironmentalWind()
         //   determine environmental winds.
 
         else {
-            if(findVADStart(!useGVAD))
-                return true;
-            else
-                return false;
+	  return findVADStart(!useGVAD);
         }
     }
     if(useVADWinds) {
@@ -744,10 +731,7 @@ bool RadarQC::findEnvironmentalWind()
         //  environmental winds
         bool useGVAD = false;
 
-        if(findVADStart(useGVAD))
-            return true;
-        else
-            return false;
+        return findVADStart(useGVAD);
     }
 
     return false;
@@ -1562,19 +1546,17 @@ float RadarQC::getStart(Ray *currentRay)
         bool hasDopplerData = false;
         bool envWindFound = false;
 
-	bool warned = false;
-    
+	// Some rays might not have VEL data
+	if (velGates == NULL)
+	  return startVelocity;
+	
         for(int v = 0; (v < numVBins) && (!hasDopplerData); v++) {
             if(velGates[v] != velNull) {
                 hasDopplerData = true;
 
 		int sweepIndex = currentRay->getSweepIndex();
-		if (sweepIndex < 0) {
-		  if ( ! warned )
-		    std::cout << "Negative sweepIndex in RadarQC::getStar" << std::endl;
-		  warned = true;
+		if (sweepIndex < 0)
 		  continue;
-		}
 
 	dataHeight = int(floor((aveVADHeight[sweepIndex][v]-radarHeight)*3.281 + 0.5));
 	//if(isnan(dataHeight)||isinf(dataHeight))
@@ -1646,7 +1628,16 @@ bool RadarQC::BB()
     for(int i = 0; i < numRays; i++)
     {
         currentRay = radarData->getRay(i);
+	if (currentRay->getSweepIndex() == -999)
+	  continue;
+	
         float *vGates = currentRay->getVelData();
+
+	// Some rays might not have VEL data
+	
+	if(vGates == NULL)
+	  continue;
+	
         float startVelocity = getStart(currentRay);
         float nyquistVelocity = currentRay->getNyquist_vel();
         int numVelocityGates = currentRay->getVel_numgates();
@@ -2021,6 +2012,10 @@ void RadarQC::crazyCheck()
     emit log(Message("Crazy Check Done"));
 }
 
+#if 0
+
+// Not used
+
 void RadarQC::checkRay()
 {
     Ray* check = radarData->getRay(1099);
@@ -2049,6 +2044,8 @@ void RadarQC::checkRay()
     
 }
 
+#endif
+
 float RadarQC::bilinear(float value_high,float value_low,
                         float deltaH_high,float deltaH_low)
 
@@ -2076,4 +2073,44 @@ void RadarQC::catchLog(const Message& message)
 {
     emit log(message);
 }
+
+#if 0
+
+// Debug functions.
+
+void RadarQC::dumpRay(RadarData *radarPtr, int rayNum)
+{
+  Ray *ray = radarPtr->getRay(rayNum);
+  if (ray == NULL)
+    return;
+  ray->dump();
+  ray->dumpRef();
+}
+
+void RadarQC::debugDump(RadarData *radarPtr, int sweepNum)
+{
+  Sweep *sweep = radarPtr->getSweep(sweepNum);
+
+  if(sweep == NULL) {
+    std::cout << "No such sweep " << sweepNum << std::endl;
+    return;
+  }
+  
+  int first_ray = sweep->getFirstRay();
+  int last_ray = sweep->getLastRay();
+
+  std::cout << "Dumping sweep " << sweepNum
+	    << " first ray: " << first_ray
+	    << " last ray: " << last_ray
+	    << ::std::endl;
+
+  Ray *ray = radarPtr->getRay(first_ray);
+  ray->dump();
+  ray->dumpRef();
+
+  ray = radarPtr->getRay(last_ray);
+  ray->dump();
+}
+
+#endif
 

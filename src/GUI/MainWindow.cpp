@@ -111,7 +111,6 @@ void MainWindow::open()
         }
         tabWidget->addTab(child,child->getVortexLabel());
         tabWidget->setCurrentIndex(tabWidget->count() - 1);
-
         connect(this, SIGNAL(log(const Message&)),
                 child, SLOT(catchLog(const Message&)));
 
@@ -162,7 +161,7 @@ void MainWindow::updateMenus()
         connect(abortAct, SIGNAL(triggered()),
                 this->activeAnalysisPage(), SLOT(abortThread()));
     }
-
+    
 }
 
 void MainWindow::updateVortexMenu()
@@ -196,7 +195,7 @@ void MainWindow::updateVortexMenu()
         }
         QAction *action  = vortexMenu->addAction(text);
         action->setCheckable(true);
-        action ->setChecked(child == activeAnalysisPage());
+        action->setChecked(child == activeAnalysisPage());
         connect(action, SIGNAL(triggered()), tabMapper, SLOT(map()));
         tabMapper->setMapping(action, i);
     }
@@ -342,7 +341,7 @@ void MainWindow::createMenus()
 
     vortexMenu = menuBar()->addMenu(tr("&Vortex"));
     connect(vortexMenu, SIGNAL(aboutToShow()), this, SLOT(updateVortexMenu()));
-
+    
     menuBar()->addSeparator();
 
     helpMenu = menuBar()->addMenu(tr("&About"));

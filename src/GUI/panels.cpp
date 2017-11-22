@@ -1119,6 +1119,8 @@ CenterPanel::CenterPanel()
     geometryOptions = new QHash<QString, QString>;
     geometryOptions->insert(QString("GBVTD"),
                             QString("GBVTD"));
+    geometryOptions->insert(QString("GVTD"),
+                            QString("GVTD"));
     geometryOptions->insert(QString("Select Geometry"),
                             QString(""));
     // Add additional option here
@@ -1167,7 +1169,7 @@ CenterPanel::CenterPanel()
     QLabel *velocity = new QLabel(tr("Velocity"));
     velocityOptions = new QHash<QString, QString>;
     velocityOptions->insert(QString("VE"), QString("VE"));
-        velocityOptions->insert(QString("VU"), QString("VU"));
+    velocityOptions->insert(QString("VU"), QString("VU"));
     velocityOptions->insert(QString("Select Velocity"),
                             QString(""));
     // Add additional options here
@@ -1259,7 +1261,7 @@ CenterPanel::CenterPanel()
     QLabel *influenceRadius = new QLabel(tr("Radius of Influence (km)"));
     influenceBox = new QDoubleSpinBox;
     influenceBox->setDecimals(1);
-    influenceBox->setRange(2,10);
+    influenceBox->setRange(0,10); // was 2,10. Try 0 for Ting-Yu
     influenceBox->setValue(4);
 
     QLabel *convergence = new QLabel(tr("Convergence Requirements"));
@@ -2107,6 +2109,8 @@ VTDPanel::VTDPanel()
     geometryOptions = new QHash<QString, QString>;
     geometryOptions->insert(QString("GBVTD"),
                             QString("GBVTD"));
+    geometryOptions->insert(QString("GVTD"),
+                            QString("GVTD"));
     geometryOptions->insert(QString("Select Geometry"),
                             QString(""));
     // Add additional option here
@@ -2139,8 +2143,8 @@ VTDPanel::VTDPanel()
 
     QLabel *reflectivity = new QLabel(tr("Reflectivity"));
     reflectivityOptions = new QHash<QString, QString>;
-    reflectivityOptions->insert(QString("DZ"),
-                                QString("DZ"));
+    reflectivityOptions->insert(QString("DZ"), QString("DZ"));
+    reflectivityOptions->insert(QString("REF"), QString("REF"));
     reflectivityOptions->insert(QString("Select Reflectivity"),
                                 QString(""));
     // Add additional options here
@@ -2155,6 +2159,7 @@ VTDPanel::VTDPanel()
     QLabel *velocity = new QLabel(tr("Velocity"));
     velocityOptions = new QHash<QString, QString>;
     velocityOptions->insert(QString("VE"), QString("VE"));
+    velocityOptions->insert(QString("VU"), QString("VU"));    
     velocityOptions->insert(QString("Select Velocity"),
                             QString(""));
     // Add additional options here
@@ -2170,12 +2175,12 @@ VTDPanel::VTDPanel()
     QGridLayout *search = new QGridLayout;
     QLabel *bottomLevel = new QLabel(tr("Bottom Level (km)"));
     bLBox = new QDoubleSpinBox;
-    bLBox->setRange(1,3);
+    bLBox->setRange(0.5,15);
     bLBox->setDecimals(2);
     bLBox->setValue(1);
     QLabel *topLevel = new QLabel(tr("Top Level (km)"));
     tLBox = new QDoubleSpinBox;
-    tLBox->setRange(1,3);
+    tLBox->setRange(0.5, 15);
     tLBox->setDecimals(2);
     tLBox->setValue(3);
     QLabel *innerRad = new QLabel(tr("Inner Radius (km)"));

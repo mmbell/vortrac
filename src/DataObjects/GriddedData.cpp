@@ -61,41 +61,7 @@ bool GriddedData::writeAsi(const QString& fileName)
     Message::toScreen("Using unimplemented functions from GriddedData to try to write to file "+fileName);
     return false;
 }
-/*
-void GriddedData::setIdim(const int& dim)
-{
-  iDim = dim;
-  if(dim > maxIDim)
-  Message::toScreen("GriddedData: WARNING! Idim is greater than "+QString().setNum(maxIDim)+" limit");
-}
 
-void GriddedData::setJdim(const int& dim)
-{
-  jDim = dim;
-  if(dim > maxJDim)
-    Message::toScreen("GriddedData: WARNING! Jdim is greater than "+QString().setNum(maxJDim)+" limit");
-}
-
-void GriddedData::setKdim(const int& dim)
-{ 
-  kDim = dim;
-  if(dim > maxKDim)
-    Message::toScreen("GriddedData: WARNING! Kdim is greater than "+QString().setNum(maxKDim)+" limit");
-}
-
-void GriddedData::setIGridsp(const float& iSpacing)
-{
-  iGridsp = iSpacing;
-}
-void GriddedData::setJGridsp(const float& jSpacing)
-{
-  jGridsp = jSpacing;
-}
-void GriddedData::setKGridsp(const float& kSpacing)
-{
-  kGridsp = kSpacing;
-}
-*/
 void GriddedData::setLatLonOrigin(float *knownLat, float *knownLon, float *relX, float *relY)
 {
     // takes a Lat Lon point and its cooresponding grid coordinates in km
@@ -171,7 +137,7 @@ void GriddedData::setAbsoluteReferencePoint(float Lat, float Lon, float Height)
   if(Lon == -999)
     std::cout << "** GriddedData::setAbsoluteReferencePoint: Lon is -999" << std::endl;
 
-  // TODO This assumes that the originLat and originLon are the radar coordinates.
+  // This assumes that the originLat and originLon are the radar coordinates.
   
   float *locations = getCartesianPoint(&originLat, &originLon, &Lat, &Lon);
   
@@ -1693,14 +1659,12 @@ bool GriddedData::test()
 int GriddedData::getSphericalRangeLengthTest(float azimuth, float elevation)
 {
     float te1;
-    float te2;
     float ta1;
     float ta2;
     if((elevation-sphericalElevationSpacing/2)<=0)
         te1 = 0;
     else
         te1 = tan((elevation-sphericalElevationSpacing/2)*deg2rad);
-    te2 = tan((elevation+sphericalElevationSpacing/2)*deg2rad);
     if((azimuth - sphericalAzimuthSpacing/2)<0)
         ta1 = tan((azimuth-sphericalAzimuthSpacing/2+360)*deg2rad);
     else
@@ -1723,26 +1687,6 @@ int GriddedData::getSphericalRangeLengthTest(float azimuth, float elevation)
         // if(jMin >= jMax)
         Message::toScreen("Terrible JLimits for k = "+QString().setNum(k)+" jMin = "+QString().setNum(jMin)+" jMax = "+QString().setNum(jMax));
         for(int j = int(jMin); j < jMax; j ++) {
-            /*
-       float iDistMax = sqrt((k*k)/(te1*te1)-j*j);
-       float iPosMax = iDistMax+refPointI;
-       float iNegMax = refPointI-iDistMax;
-       float iDistMin =  sqrt((k*k)/(te2*te2)-j*j);
-       float iPosMin = iDistMin+refPointI;
-       if(iPosMin < 0)
-  iPosMin = 0;
-       if(iPosMax > iDim)
-  iPosMax = iDim;
-       if(iNegMax < 0)
-  iNegMax = 0;
-
-       float iNegMin = refPointI-iDistMin;
-       Message::toScreen("iDistMax = "+QString().setNum(iDistMax));
-       Message::toScreen("iPosMax = "+QString().setNum(iPosMax));
-       Message::toScreen("iPosMin = "+QString().setNum(iPosMin));
-       Message::toScreen("iNegMax = "+QString().setNum(iNegMax));
-       Message::toScreen("iNegMin = "+QString().setNum(iNegMin));
-       */
             if(j == 0)
                 Message::toScreen("In j loop jMin = "+QString().setNum(jMin));
             //if(iNegMin <= iNegMax)

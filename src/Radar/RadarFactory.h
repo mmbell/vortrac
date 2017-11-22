@@ -23,6 +23,7 @@
 #include "Radar/NetCDF.h"
 #include "Radar/LdmLevelII.h"
 #include "Radar/AnalyticRadar.h"
+#include "Radar/RadxData.h"
 #include "IO/Message.h"
 #include "GUI/ConfigTree.h"
 #include "DataObjects/VortexList.h"
@@ -33,11 +34,20 @@ class RadarFactory : public QObject
     Q_OBJECT
 
 public:
+    
     RadarFactory(Configuration* radarConfig, QObject *parent = 0);
     ~RadarFactory();
     RadarData* getUnprocessedData();
     bool hasUnprocessedData();
     int getNumProcessed() const;
+
+    enum dataFormat {
+      ncdclevelII,
+      ldmlevelII,
+      model,
+      dorade,
+      netcdf
+    };
 
 public slots:
     void catchLog(const Message& message);
@@ -46,15 +56,10 @@ public slots:
 signals:
     void log(const Message& message);
 
-private:
-    enum dataFormat {
-        ncdclevelII,
-        ldmlevelII,
-        model,
-        dorade,
-        netcdf
-    };
 
+    
+private:
+    
     QDir dataPath;
     QString radarName;
     float radarLat;
@@ -68,7 +73,6 @@ private:
     QDateTime radarDateTime;
     Configuration* mainConfig;
 };
-
 
 #endif
 

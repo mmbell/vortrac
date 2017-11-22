@@ -16,7 +16,7 @@
 
 SimplexList::SimplexList(QString filePath) : QList<SimplexData>()
 {
-    _filePath =filePath;
+    _filePath = filePath;
 }
 
 SimplexList::~SimplexList()
@@ -51,8 +51,10 @@ bool SimplexList::saveXML()
             for(int ridx=0;ridx<record->getNumRadii();ridx++){
                 xmlWriter.writeStartElement("ring");
                 xmlWriter.writeAttribute("range",QString().setNum(record->getRadius(ridx)));
-                tmpStr.sprintf("%6.2f,%6.2f,%6.2f,%6.2f",record->getMeanX(hidx,ridx),record->getMeanY(hidx,ridx),record->getCenterStdDev(hidx,ridx),
-                               record->getMaxVT(hidx,ridx),record->getVTUncertainty(hidx,ridx));
+                tmpStr.sprintf("%6.2f,%6.2f,%6.2f,%6.2f", record->getMeanX(hidx, ridx),
+			       record->getMeanY(hidx, ridx), record->getCenterStdDev(hidx, ridx),
+                               record->getMaxVT(hidx, ridx) // , record->getVTUncertainty(hidx, ridx)
+			       );
                 xmlWriter.writeTextElement("mean value",tmpStr);
                 for(int pidx=0;pidx<record->getNumPointsUsed();pidx++){
                     Center center=record->getCenter(hidx,ridx,pidx);
@@ -82,4 +84,13 @@ void SimplexList::timeSort()
         for(int j = i+1; j < this->count(); j++)
             if(this->at(i).getTime() > this->at(j).getTime())
                 this->swap(j,i);
+}
+
+void SimplexList::dump() const
+{
+  for(int i = 0; i < count(); i++) {
+    std::cout << "Simplex element at index " << i << std::endl;
+    SimplexData data = at(i);
+    data.printString();
+  }
 }

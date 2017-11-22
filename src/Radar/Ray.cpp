@@ -127,7 +127,6 @@ int Ray::getTime() {
 }
 
 int Ray::getDate() {
-  Message::toScreen("Does this function get used? - getDate");
   return date;
 }
 
@@ -208,4 +207,51 @@ void Ray::emptyRefgates(const short int numGates) {
 	  ref_numgates = numGates;
 	}
 
+}
+
+void Ray::dump()
+{
+  std::cout << "------ Ray " << rayIndex << " --------" << std::endl;
+  std::cout << "\tsweep Index: " << sweepIndex << std::endl;
+  std::cout << "\t      time: " << time << std::endl;
+  std::cout << "\t      date: " << date << std::endl;
+  std::cout << "\t	azimuth: " << azimuth << std::endl;
+  std::cout << "\t    elevation: " << elevation << std::endl;
+  std::cout << "\tvelResolution: " << velResolution << std::endl;
+  std::cout << "\t     rayIndex: " << rayIndex << std::endl;
+  std::cout << "\tunambig range: " << unambig_range << std::endl;
+  std::cout << "\t  nyquist_vel: " << nyquist_vel << std::endl;
+  std::cout << "\t 1st ref gate: " << first_ref_gate << std::endl;
+  std::cout << "\t 1st vel gate: " << first_vel_gate << std::endl;
+  std::cout << "\t  ref gate sp: " << ref_gatesp << std::endl;
+  std::cout << "\t  vel gate sp: " << vel_gatesp << std::endl;
+  std::cout << "\t ref numgates: " << ref_numgates << std::endl;
+  std::cout << "\t vel numgates: " << vel_numgates << std::endl;
+  std::cout << "\t          vcp: " << vcp << std::endl;
+  
+}
+
+void Ray::dumpFloat(int size, float *buf)
+{
+
+  for(int i = 0; i < size; i++) {
+    if ( (i % 10) == 0)
+      std::cout << std::endl << i << ":\t";
+    std::cout << buf[i] << "\t";
+  }
+  std::cout << std::endl;
+}
+
+void Ray::dumpRef()
+{
+  int max = getRef_numgates();
+  float *data = getRefData();
+  dumpFloat(max, data);
+}
+
+void Ray::dumpVel()
+{
+  int max = getVel_numgates();
+  float *data = getVelData();
+  dumpFloat(max, data);
 }

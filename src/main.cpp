@@ -12,14 +12,32 @@
 #include <QtCore>
 #include <QtXml>
 #include <iostream>
+
 #include <sys/resource.h>
+#include <unistd.h>
 
 #include "GUI/MainWindow.h"
 #include "Batch/BatchWindow.h"
 
+void usage(const char *s) {
+  std::cout << "Usage: " << std::endl
+	    << "\t" << s << " \t\t\t\t\t(GUI Mode)"
+	    << std::endl
+	    << "\t" << s << "[-c] <config file>.xml\t\t\t(Batch mode)"
+	    << std::endl
+    	    << "\t" << s << " -c <config file>.xml [input_files]+\t(Just run on these files)"
+    	    << std::endl
+	    << std::endl
+	    << "Optional arguments:"
+    	    << std::endl
+	    << "\t\t-d\t\tTurn on debug flag"
+	    << std::endl
+	    << "\t\t-h\t\tDisplay this help screen and exit"
+    	    << std::endl;
+}
+
 int main(int argc, char *argv[])
 {
-
     // Increase the size of the stack to account for some of the large 3D array local variables
     // (unless the user has already done it from the command line
     // limit.rlim_max / 2 is arbitrary. But that works both on iMac and Linux
@@ -34,11 +52,60 @@ int main(int argc, char *argv[])
 		  << std::endl;
     }
 
+    // Handle options
+    
+    int opt;
+    char *conf_file = NULL;
+    bool debug = false;
+    
+    while( (opt = getopt(argc, argv, "c:hd")) != -1)
+    switch(opt){
+    case 'd':
+      debug = true;
+      break;
+    case 'c':
+      conf_file = strdup(optarg);
+      break;
+    case 'h':
+    case '?':
+      usage(argv[0]);
+      exit(0);
+    }
+
+    // A bit more complex than I'd like, but this preserves the historical usage
+    // vortrac             <- GUI mode
+    // vortrac file.xml    <- Batch mode
+    // vortrac -c file.xml <- Batch mode
+    
+    // vortrac -c file.xml file1 [file2, ....]
+    
+    if (optind == argc) { // All options consumed
+      if (conf_file == NULL)
+	std::cout << "GUI mode" << std::endl;
+      else
+	std::cout << "Batch mode with config " << conf_file << std::endl;
+    } else {
+      if (conf_file == NULL) {
+	conf_file = strdup(argv[optind++]);
+	if (optind == argc)
+	  std::cout << "Batch mode with config " << conf_file << std::endl;
+	else {
+	  std::cerr << "Unexpected arguments. Did you forget the '-c' ?" << std::endl;
+	  usage(argv[0]);
+	}
+      } else {
+	std::cout << "Command mode. Running on these files:" << std::endl;
+	for(int index = optind; index < argc; index++)
+	  std::cout << "\t" << argv[index];
+      }
+    }
+    
     // Read the command line argument to get the XML configuration file
-    if (argc >=2) {
+    if (conf_file != NULL) {
+      // if (readConfig(conf_file) == EXIT_FAILURE
 
         // Check to make sure the argument has the right suffix
-        QString xmlfile(argv[1]);
+        QString xmlfile(conf_file);
         if (xmlfile.right(3) != "xml") {
             std::cout << xmlfile.toStdString() << " does not look like an XML file\n";
             return EXIT_FAILURE;
@@ -97,7 +164,7 @@ int main(int argc, char *argv[])
         app.exec();
 
     //If no xml file is parsed, start GUI
-    } else if (argc ==1) {
+    } else if (argc == 1) {
 
         // Q_INIT_RESOURCE(vortrac);
         QApplication app(argc, argv);

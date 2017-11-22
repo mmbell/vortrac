@@ -28,6 +28,8 @@ public:
     bool restore();
     bool saveXML();
 
+    void dump() const;
+    
 private:
     QString _filePath;
 };
