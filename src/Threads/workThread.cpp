@@ -51,7 +51,6 @@ void workThread::run()
 	  configData->getParam(configData->getConfig("center"), "skipsimplex");
 	
 	float bottomLevel = configData->getParam(configData->getConfig("center"), "bottomlevel").toFloat();
-	float topLevel = configData->getParam(configData->getConfig("center"), "toplevel").toFloat();
 	
 	// Load vortex centers if the config file specifies a path
 	loadCenterLocations(configData->getParam(configData->getConfig("vortex"), "centers"));
@@ -200,8 +199,6 @@ void workThread::run()
 			  sleep(3);	
 			  continue;
 			}
-
-			//STEP 5: simplex to find a new center
 
 			VortexData *vortexData;
 			int bestLevel;

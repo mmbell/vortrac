@@ -1,7 +1,5 @@
 #!/usr/bin/env ruby
 
-#!/usr/bin/env ruby
-
 # Read a vortrac *_coefficientlist.csv , and *_vortexSummary.csv Vortrac output files
 # Write a NetCDF file
 
@@ -18,7 +16,7 @@ FILL_VALUE = -999.0
 class ArgParser < Hash
   def initialize(argv)
     OptionParser.new do |opts|
-      opts.banner = 'Usage: vo2nc -c <*_coefficientlist.csv> [ -v <*_vortexSummary.csv> ] -o <NetCDF file>'
+      opts.banner = 'Usage: vo2nc -c <*_coefficientlist.csv> [ -l <*_vortexSummary.csv> ] -o <NetCDF file>'
       opts.on('-c', '--coeff <coeff file>', 'coeff File')               { |v| self[:coeff] = v }
       opts.on('-l', '--log <log file>', 'Log File')                     { |v| self[:log] = v }
       opts.on('-o', '--output <NetCDF file>',   'NetCDF file')          { |v| self[:output] = v }
@@ -159,11 +157,14 @@ def str_to_epoch(str)
 end
 
 def parse_log(fName, times, lats, lons, pressure, rmw, maxIn, maxOut, maxWind)
+  
   count = -1
+  foundCenter = false
+  
   File.open(fName).each do |line|
     line.encode!('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '')
     next if line =~ /\s*#/
-    
+
     if line =~ /Found file:.*_(\d+)_(\d+)/
       date_str = $1
       time_str = $2
@@ -178,17 +179,29 @@ def parse_log(fName, times, lats, lons, pressure, rmw, maxIn, maxOut, maxWind)
       puts "Time mismatch #{count} #{this_time} #{times[count]}" unless this_time == times[count]
     end
 
+    foundCenter = false if line =~ /Finding center/
+    
     if line =~ /Position estimate (\S+) \S+ (\S+)/
+      foundCenter = true
       lats << $1.to_f
       lons << $2.to_f
     end
+
+    if line =~ /^Maximum inbound velocity of (\S+)/
+      maxIn    << $1.to_f
+      unless foundCenter
+        lats << FILL_VALUE
+        lons << FILL_VALUE
+        rmw  << FILL_VALUE
+      end
+    end
     
-    rmw      << $1.to_f if line =~ /^RMW estimate (\S+)/
-    maxIn    << $1.to_f if line =~ /^Maximum inbound velocity of (\S+)/
     maxOut   << $1.to_f if line =~ /^Maximum outbound velocity of (\S+)/
     pressure << $1.to_f if line =~ /^Central Pressure estimate (\S+)/
     maxWind  << $1.to_f if line =~ /^VORTRAC ATCF.*([^,]+)\s*$/
+    rmw      << $1.to_f if line =~ /^RMW estimate (\S+)/
   end
+  puts "End of log file: #{count + 1} entries"
 end
 
 # Main program
@@ -276,6 +289,8 @@ timeDim  = file.def_dim('ntimes', times.size())
 levelDim = file.def_dim('nlevels', h_levels.size())
 radiiDim = file.def_dim('nradii', h_radii.size())
 
+puts "Dimensions: time: #{times.size()}, level: #{h_levels.size()}, radii: #{h_radii.size()}"
+
 # Variables
 
 vlevel = file.def_var('levels', 'sfloat', [levelDim])
@@ -349,6 +364,9 @@ vHash.keys.each do |coeff|
 end
 
 if opts.has_key?(:log)
+  puts "lats: #{lats.size()}, lons: #{lons.size()}, press: #{pressure.size()}, RMW: #{rmw.size()} " +
+       "maxIn: #{maxIn.size()}, maxOut: #{maxOut.size()} maxWind: #{maxWind.size()} "
+  
   vlat.put(lats)
   vlon.put(lons)
   vpress.put(pressure)
