@@ -13,14 +13,14 @@
 #include "VortexThread.h"
 #include "DataObjects/Coefficient.h"
 #include "DataObjects/Center.h"
-#include "VTD/GBVTD.h"
+#include "VTD/VTDFactory.h"
 #include "VTD/mgbvtd.h"
 #include "Math/Matrix.h"
 #include "HVVP/Hvvp.h"
 
 VortexThread::VortexThread(QObject *parent) : QObject(parent)
 {
-    this->setObjectName("GBVTD");
+    this->setObjectName("VTD");
 
     // Initialize RhoBar for pressure calculations (units are Pascal/m)
     rhoBar[0] = 10.672;
@@ -96,30 +96,30 @@ void VortexThread::run()
     vortexData->setAveRMW(rmw);
     // RMW is the average rmw taken over all levels of the vortexData
 
-    // Create a GBVTD object to process the rings
-    if(closure.contains(QString("hvvp"), Qt::CaseInsensitive)) {
-        if(calcHVVP(true)) {
-            vtd = new GBVTD(geometry, closure, maxWave, dataGaps, hvvpResult);
-            //emit log(Message(QString(),6,this->objectName(),Green));
-        }
-        else {
-            emit log(Message(QString(),5,this->objectName(),Yellow,QString("Could Not Retrieve HVVP Wind")));
-            vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
-        }
+    // Create a {GB|G}VTD object to process the rings
+    
+    hvvpResult = 0.0;
+    
+    if (closure.contains(QString("hvvp"), Qt::CaseInsensitive)) {
+      if ( ! calcHVVP(true))
+	emit log(Message(QString(),5,this->objectName(),Yellow,QString("Could Not Retrieve HVVP Wind")));
     }
     else {
-        vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
-        emit log(Message(QString(),5,this->objectName()));
+      emit log(Message(QString(),5,this->objectName()));
     }
+    
+    vtd = VTDFactory::createVTD(geometry, closure, maxWave, dataGaps,
+				hvvpResult);
     Coefficient* vtdCoeffs = new Coefficient[20];
 
     // Placeholders for centers
+    
     float xCenter = -999;
     float yCenter = -999;
 
     // TODO 7.0?
     
-    int loopPercent = int(7.0 / float(gridData->getKdim()));
+    // int loopPercent = int(7.0 / float(gridData->getKdim()));
     // int endPercent = 7 - int(gridData->getKdim() * loopPercent);
     int storageIndex = -1;
 
@@ -151,6 +151,7 @@ void VortexThread::run()
         }
         
         // compute crossbeam wind to correct GBVTD result
+	
         int gradientIndex = heightToIndex(gradientHeight);
         QDomElement radar = configData->getConfig("radar");
         float radarLat = configData->getParam(radar,"lat").toFloat();
@@ -167,10 +168,6 @@ void VortexThread::run()
         hvvp->setConfig(configData);
         hvvp->setRadarData(radarVolume, rt, cca, vortexData->getAveRMW());
 
-        /* MGBVTD mgbvtd(gridData->getCartesianRefPointI(), 
-                      gridData->getCartesianRefPointJ(),
-                      height, vortexData->getAveRMW(), *gridData);
-        float Vm = mgbvtd.computeCrossBeamWind(50.f, velField, vtd, hvvp); */
 	float Vm = 0.0;
 
         // should we be incrementing radius using ringwidth? -LM
@@ -449,21 +446,21 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
     int numErrorPoints = 4;
     float angle = 2 * acos(-1) / numErrorPoints;
 
-    // Create a GBVTD object to process the rings
+    // Create a {GB|G}VTD object to process the rings
+
+    hvvpResult = 0.0;
+    
     if(closure.contains(QString("hvvp"), Qt::CaseInsensitive)) {
-        if(calcHVVP(false)) {
-            vtd = new GBVTD(geometry, closure, maxWave, dataGaps, hvvpResult);
-            emit log(Message(QString(), 0, this->objectName(), Green));
+      if( ! calcHVVP(false)) {
+	emit log(Message(QString(), 0, this->objectName(), Yellow,
+			 QString("Could Not Retrieve HVVP Wind")));
         }
-        else{
-            emit log(Message(QString(), 0, this->objectName(), Yellow,
-                             QString("Could Not Retrieve HVVP Wind")));
-            vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
-        }
+      else
+	emit log(Message(QString(), 0, this->objectName(), Green));
     }
-    else {
-        vtd = new GBVTD(geometry, closure, maxWave, dataGaps);
-    }
+    
+    vtd = VTDFactory::createVTD(geometry, closure, maxWave, dataGaps,
+				hvvpResult);
     
     Coefficient* vtdCoeffs = new Coefficient[20];
     VortexList errorVertices;
@@ -726,8 +723,8 @@ void VortexThread::getMaxSfcWind(VortexData* data)
     float xCenter = -999;
     float yCenter = -999;
     double maxwind = 0;
-    double xmax = 0;
-    double ymax = 0;
+    // double xmax = 0;
+    // double ymax = 0;
 
     int maxIndex = (lastLevel - firstLevel) / gridData->getKGridsp() ;
 	
@@ -802,8 +799,8 @@ void VortexThread::getMaxSfcWind(VortexData* data)
 		double wspd = sqrt(u * u + v * v);
 		if (wspd > maxwind) {
 		  maxwind = wspd;
-		  xmax = xx;
-		  ymax = yy;
+		  // xmax = xx;
+		  // ymax = yy;
 		}
 	      }
 	    }

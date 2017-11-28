@@ -6,7 +6,7 @@ TEMPLATE = app
 DEPENDPATH += . Config Grids GUI IO Radar
 INCLUDEPATH += . GUI Config IO Radar $$(RADX_INCLUDE) $$(NETCDF_INCLUDE) $$(ARMADILLO_INCLUDE)
 QMAKE_LIBDIR += $$(RADX_LIB) $$(NETCDF_LIB) $$(ARMADILLO_LIB)
-
+QMAKE_LFLAGS += -Wl,-rpath,$$(NETCDF_LIB)
 QMAKE_CXXFLAGS += -std=c++0x
 # Input
 HEADERS += Threads/workThread.h \
@@ -54,8 +54,11 @@ HEADERS += Threads/workThread.h \
            Radar/RadarData.h \
            Radar/Ray.h \
            Radar/Sweep.h \
+           VTD/VTD.h \
+           VTD/GVTD.h \
            VTD/GBVTD.h \
            VTD/mgbvtd.h \
+           VTD/VTDFactory.h \
            Math/Matrix.h \
            ChooseCenter.h \
            Pressure/PressureData.h \
@@ -115,8 +118,11 @@ SOURCES += main.cpp \
            Radar/RadarData.cpp \
            Radar/Ray.cpp \
            Radar/Sweep.cpp \
+           VTD/VTD.cpp \
+           VTD/GVTD.cpp \           
            VTD/GBVTD.cpp \
            VTD/mgbvtd.cpp \
+           VTD/VTDFactory.cpp \
            Math/Matrix.cpp \
            ChooseCenter.cpp \
            Pressure/PressureData.cpp \

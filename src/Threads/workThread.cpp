@@ -242,7 +242,7 @@ void workThread::run()
 				break;
 			}
 			
-			//STEP 7: GBVTD to calculate the wind
+			//STEP 7: {GB|G}VTD to calculate the wind
 			//        if simplex algorithm successfully find the center, then perform the GBVTD
 			
 			float range = GriddedData::getCartesianDistance(radarLat, radarLon,

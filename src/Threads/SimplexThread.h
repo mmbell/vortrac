@@ -47,7 +47,7 @@ private:
     float _latGuess;
     float _lonGuess;
     float* _dataGaps;
-    GBVTD* _simplexVTD;
+    VTD* _simplexVTD;
     Coefficient* _vtdCoeffs;
     float* VT;
     float* vertexSum;
