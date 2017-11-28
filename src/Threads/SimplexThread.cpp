@@ -13,7 +13,7 @@
 #include "SimplexThread.h"
 #include "DataObjects/Coefficient.h"
 #include "DataObjects/Center.h"
-#include "VTD/GBVTD.h"
+#include "VTD/VTDFactory.h"
 #include "Math/Matrix.h"
 #include "HVVP/Hvvp.h"
 
@@ -93,9 +93,9 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
 					    QString().setNum(i)).toFloat();
     }
 
-    //SETP 2: initialize a GBVTD object for whole simplex to use
+    //SETP 2: initialize a VTD object for whole simplex to use
     
-    _simplexVTD = new GBVTD(geometry, closure, maxWave, _dataGaps);
+    _simplexVTD = VTDFactory::createVTD(geometry, closure, maxWave, _dataGaps);
     _vtdCoeffs  = new Coefficient[20];
 
     //STEP 3: perform simplex algorithm
@@ -187,7 +187,6 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
 
                 for (int v = 0; v <= 2; v++) {
 		  //Calculate mean wind at each vertex
-		  // TODO look at that GBVTD.cpp
 		  VT[v] = _getSymWind(vertex[v][0], vertex[v][1], int(RefK), radius, height, velField);
                 }
 
@@ -372,7 +371,7 @@ float SimplexThread::_simplexTest(float**& vertex,float*& VT,float*& vertexSum,
     gridData->getCylindricalAzimuthData(velField, numData, radius, height, ringData);
     gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);
 
-    // Call gbvtd
+    // Call vtd
     if (_simplexVTD->analyzeRing(vertexTest[0], vertexTest[1], radius, height, numData,
 				 ringData,ringAzimuths, _vtdCoeffs, vtdStdDev)) {
         if (_vtdCoeffs[0].getParameter() == "VTC0") {

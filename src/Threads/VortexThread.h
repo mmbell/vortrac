@@ -17,7 +17,7 @@
 #include "IO/Message.h"
 #include "Config/Configuration.h"
 #include "DataObjects/GriddedData.h"
-#include "VTD/GBVTD.h"
+#include "VTD/VTD.h"
 #include "DataObjects/Coefficient.h"
 #include "DataObjects/VortexList.h"
 #include "DataObjects/VortexData.h"
@@ -55,7 +55,7 @@ class VortexThread : public QObject
      Configuration *configData;
      
      float* dataGaps;
-     GBVTD* vtd;
+     VTD* vtd;
 
      QString vortexPath;
      QString geometry;
