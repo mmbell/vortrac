@@ -16,7 +16,7 @@
 #include "VTD/VTDFactory.h"
 #include "VTD/mgbvtd.h"
 #include "Math/Matrix.h"
-#include "HVVP/Hvvp.h"
+#include "NRL/Hvvp.h"
 
 VortexThread::VortexThread(QObject *parent) : QObject(parent)
 {
@@ -97,9 +97,9 @@ void VortexThread::run()
     // RMW is the average rmw taken over all levels of the vortexData
 
     // Create a {GB|G}VTD object to process the rings
-    
+
     hvvpResult = 0.0;
-    
+
     if (closure.contains(QString("hvvp"), Qt::CaseInsensitive)) {
       if ( ! calcHVVP(true))
 	emit log(Message(QString(),5,this->objectName(),Yellow,QString("Could Not Retrieve HVVP Wind")));
@@ -107,51 +107,51 @@ void VortexThread::run()
     else {
       emit log(Message(QString(),5,this->objectName()));
     }
-    
+
     vtd = VTDFactory::createVTD(geometry, closure, maxWave, dataGaps,
 				hvvpResult);
     Coefficient* vtdCoeffs = new Coefficient[20];
 
     // Placeholders for centers
-    
+
     float xCenter = -999;
     float yCenter = -999;
 
     // TODO 7.0?
-    
+
     // int loopPercent = int(7.0 / float(gridData->getKdim()));
     // int endPercent = 7 - int(gridData->getKdim() * loopPercent);
     int storageIndex = -1;
 
     float kGridSpacing = gridData->getKGridsp();
-    
+
     // How do I get simplexData->getNumLevels() from here?
     int maxIndex = (int) floor( (lastLevel - firstLevel) / kGridSpacing + 1.5);
-	
+
     for(storageIndex = 0; storageIndex < maxIndex; storageIndex++) {
-	
+
         float referenceLat = vortexData->getLat(storageIndex);
         float referenceLon = vortexData->getLon(storageIndex);
 	float height = firstLevel + storageIndex * kGridSpacing;
-#if 0	
+#if 0
 	std::cout << "storageIndex: " << storageIndex << ", lat: " << referenceLat
 		  << ", lon: " << referenceLon << ", height: " << height << std::endl;
 #endif
 	// This can happen due to how the SimplexThread::findCenter fills the data structure
 	// It iterates from firstLevel to lastLevel, letting the griddedData map that to a level.
 	// If the z spacing isn't 1, the last 1 or 2 levels are not filled.
-	
+
 	if ( (referenceLat == -999) || (referenceLon == -999) )
 	  continue;
-	
+
         gridData->setAbsoluteReferencePoint(referenceLat, referenceLon, height);
         if ((gridData->getRefPointI() < 0) || (gridData->getRefPointJ() < 0) ||(gridData->getRefPointK() < 0)) {
             emit log(Message(QString("Simplex center is outside CAPPI"), 0, this->objectName(), Yellow));
             continue;
         }
-        
+
         // compute crossbeam wind to correct GBVTD result
-	
+
         int gradientIndex = heightToIndex(gradientHeight);
         QDomElement radar = configData->getConfig("radar");
         float radarLat = configData->getParam(radar,"lat").toFloat();
@@ -217,12 +217,12 @@ void VortexThread::run()
 
     // Integrate the winds to get the pressure deficit at the 2nd level (presumably 2km)
     // Gradient height is in km
-    
+
     float* pressureDeficit = new float[ (int) lastRing + 1];
     getPressureDeficit(vortexData, pressureDeficit, gradientHeight);
 
     // Get the central pressure
-    calcCentralPressure(vortexData, pressureDeficit, gradientHeight); 
+    calcCentralPressure(vortexData, pressureDeficit, gradientHeight);
     if (vortexData->getPressure() != -999.0) {
         calcPressureUncertainty(1, QString());
     } else {
@@ -230,10 +230,10 @@ void VortexThread::run()
         vortexData->setDeficitUncertainty(-999.0);
         vortexData->setAveRMWUncertainty(-999.0);
     }
-	
+
     // Get the estimated surface wind
     getMaxSfcWind(vortexData);
-	
+
     delete [] vtdCoeffs;
     delete [] pressureDeficit;
 }
@@ -253,7 +253,7 @@ void VortexThread::archiveWinds(float radius, int hIndex, int maxCoeffs, Coeffic
 	// 	  << ", radius: " << current.getRadius() << ", value: " << current.getValue()
 	// 	  << ", param: " << current.getParameter().toLatin1().data()
 	// 	  << std::endl;
-	
+
 	if((current.getValue() != -999) && (current.getValue() != 0)) {
             if(current.getRadius() > vortexData->getMaxValidRadius())
                 vortexData->setMaxValidRadius(current.getRadius());
@@ -334,19 +334,19 @@ void VortexThread::calcCentralPressure(VortexData* vortex, float* pD, float heig
         vortex->setPressureDeficit(-999);
         return;
     }
-    
+
     // Sum values to hold pressure estimates
     float pressWeightSum = 0;
     float pressSum = 0;
     numEstimates = 0;
     float* pressEstimates = new float[pressureList->size()];
     float* weightEstimates = new float[pressureList->size()];
-    
+
     // Iterate through the pressure data
     //Message::toScreen("Size of searching List = "+QString().setNum(pressureList->size())+" within time "+QString().setNum(maxObTimeDiff)+" of vortex time "+vortex->getTime().toString(Qt::ISODate));
     for (int i = 0; i < pressureList->size(); i++) {
         float obPressure = pressureList->at(i).getPressure();
-	
+
         if (obPressure > 0) {
             // Check the time
             QString obTime = pressureList->at(i).getTime().toString(Qt::ISODate);
@@ -374,14 +374,14 @@ void VortexThread::calcCentralPressure(VortexData* vortex, float* pD, float heig
                     float cpEstimate = obPressure - (pPrimeOuter - pD[0]);
                     float weight = (((maxObTimeDiff - obTimeDiff) / maxObTimeDiff) +
                                     ((maxObRadius - obRadius) / maxObRadius)) / 2;
-                    
+
                     // Sum the estimate and save the value for Std Dev calculation
                     pressWeightSum += weight;
                     pressSum += (weight * cpEstimate);
                     pressEstimates[numEstimates] = cpEstimate;
                     weightEstimates[numEstimates] = weight;
                     numEstimates++;
-                    
+
                 }
             }
         }
@@ -396,7 +396,7 @@ void VortexThread::calcCentralPressure(VortexData* vortex, float* pD, float heig
         }
         float cpEstimate = envPressure - (pPrimeOuter - pD[0]);
         float weight = 1.0;
-        
+
         // Sum the estimate and save the value for Std Dev calculation
         pressWeightSum += weight;
         pressSum += (weight * cpEstimate);
@@ -449,7 +449,7 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
     // Create a {GB|G}VTD object to process the rings
 
     hvvpResult = 0.0;
-    
+
     if(closure.contains(QString("hvvp"), Qt::CaseInsensitive)) {
       if( ! calcHVVP(false)) {
 	emit log(Message(QString(), 0, this->objectName(), Yellow,
@@ -458,16 +458,16 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
       else
 	emit log(Message(QString(), 0, this->objectName(), Green));
     }
-    
+
     vtd = VTDFactory::createVTD(geometry, closure, maxWave, dataGaps,
 				hvvpResult);
-    
+
     Coefficient* vtdCoeffs = new Coefficient[20];
     VortexList errorVertices;
     float refLat = vortexData->getLat(goodLevel);
     float refLon = vortexData->getLon(goodLevel);
     float sqDeficitSum = 0;
-    
+
     for(int p = 0; p < numErrorPoints; p++) {
         VortexData* errorVertex = new VortexData(1, vortexData->getNumRadii(), vortexData->getNumWaveNum());
         errorVertex->setTime(vortexData->getTime().addDays(p).addYears(2));
@@ -494,7 +494,7 @@ void VortexThread::calcPressureUncertainty(float setLimit, QString nameAddition)
             int numData = gridData->getCylindricalAzimuthLength(radius, height);
             float* ringData = new float[numData];
             float* ringAzimuths = new float[numData];
-	    
+
             gridData->getCylindricalAzimuthData(velField, numData, radius, height, ringData);
             gridData->getCylindricalAzimuthPosition(numData, radius, height, ringAzimuths);
 
@@ -727,9 +727,9 @@ void VortexThread::getMaxSfcWind(VortexData* data)
     // double ymax = 0;
 
     int maxIndex = (lastLevel - firstLevel) / gridData->getKGridsp() ;
-	
+
     for(int storageIndex = 0; storageIndex <= maxIndex; storageIndex++) {
-      
+
         float referenceLat = vortexData->getLat(storageIndex);
         float referenceLon = vortexData->getLon(storageIndex);
 	float height = firstLevel + storageIndex * gridData->getKGridsp();
@@ -737,9 +737,9 @@ void VortexThread::getMaxSfcWind(VortexData* data)
 	// TODO Why would lat and lon be -999?
 	// if ( (referenceLat == -999) || (referenceLon == -999) )
 	// continue;
-	
+
 	// Set the reference point
-	
+
         gridData->setAbsoluteReferencePoint(referenceLat, referenceLon, height);
         if ((gridData->getRefPointI() < 0) || (gridData->getRefPointJ() < 0) || (gridData->getRefPointK() < 0)) {
             emit log(Message(QString("Simplex center is outside CAPPI"),0,this->objectName(),Yellow));
@@ -747,7 +747,7 @@ void VortexThread::getMaxSfcWind(VortexData* data)
         }
 
         for (float radius = firstRing; radius <= lastRing; radius++) {
-			
+
 	  if(fabs(radius - vortexData->getAveRMW()) > 20) continue;
             // Get the cartesian points
             xCenter = gridData->getCartesianRefPointI();
@@ -757,18 +757,18 @@ void VortexThread::getMaxSfcWind(VortexData* data)
 	    float thetaT = atan2(yCenter, xCenter);
 	    thetaT = fixAngle(thetaT);
 	    // float centerDistance = sqrt(xCenter * xCenter + yCenter * yCenter);
-			
+
             // Get the winds
 	    // if (!(data->getCoefficient(height, radius, QString("VTC0")) == Coefficient())) {
 	    if ( (data->getCoefficient(height, radius, QString("VTC0"))).isValid()) {
-	      
+
 	      float vtc0 = data->getCoefficient(height, radius, QString("VTC0")).getValue();
 	      float vrc0 = data->getCoefficient(height, radius, QString("VRC0")).getValue();
 	      float vmc0 = data->getCoefficient(height, radius, QString("VMC0")).getValue();
 	      float vtc1 = data->getCoefficient(height, radius, QString("VTC1")).getValue();
 	      float vts1 = data->getCoefficient(height, radius, QString("VTS1")).getValue();
 	      double PI = acos(-1.0);
-	      
+
 	      for (int i = 0; i < 360; i++) {
 		// Convert to Psi
 		float azimuth = PI * float(i) / 180.0;
@@ -793,7 +793,7 @@ void VortexThread::getMaxSfcWind(VortexData* data)
 		}
 		if (vmc0 != -999) {
 		  vm = vmc0;
-		}					
+		}
 		double u = -vt * sin(azimuth) + vr * cos(azimuth) + vm * cos(angle);
 		double v =  vt * cos(azimuth) + vr * sin(azimuth) + vm * sin(angle);
 		double wspd = sqrt(u * u + v * v);
@@ -806,7 +806,7 @@ void VortexThread::getMaxSfcWind(VortexData* data)
 	    }
 	}
     }
-    data->setMaxSfcWind(maxwind * 1.9438445 * 0.90); 
+    data->setMaxSfcWind(maxwind * 1.9438445 * 0.90);
     // 1.652267825 multiplier if reducing by 85%;
 }
 
@@ -820,4 +820,3 @@ float VortexThread::fixAngle(float& angle)
   if (angle < 0.) angle = angle + 2 * PI;
   return angle;
 }
-

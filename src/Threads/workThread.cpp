@@ -12,7 +12,7 @@
 #include "workThread.h"
 #include "Message.h"
 #include <math.h>
-#include "Radar/RadarQC.h"
+#include "NRL/RadarQC.h"
 #include <unistd.h>
 #include "DataObjects/SimplexList.h"
 
@@ -42,23 +42,23 @@ void workThread::stop()
 void workThread::run()
 {
 	std::cout << "Running workThread ...\n";
-	
+
 	//Initialize configuration
 	bool preGridded = "true" == configData->getParam(configData->getConfig("radar"),
 							 "pre_gridded");
 
 	bool runSimplex = "true" !=
 	  configData->getParam(configData->getConfig("center"), "skipsimplex");
-	
+
 	float bottomLevel = configData->getParam(configData->getConfig("center"), "bottomlevel").toFloat();
-	
+
 	// Load vortex centers if the config file specifies a path
 	loadCenterLocations(configData->getParam(configData->getConfig("vortex"), "centers"));
 
 	QString mode = configData->getParam(configData->getConfig("vortex"), "mode");
 	QDir workingDir(configData->getParam(configData->getConfig("vortex"),"dir"));
 	QString vortexName = configData->getParam(configData->getConfig("vortex"), "name");
-	
+
 	if (vortexName == "Unknown") {
 		// Problem with ATCF data
 		Message newMsg(QString("Vortex name is unknown, please check ATCF data feed"),-1,this->objectName(),
@@ -103,7 +103,7 @@ void workThread::run()
 	bool just_display = "true" == configData->getParam(configData->getConfig("cappi"),
 							 "just_display");
 	// Begin working loop
-	
+
 	while(!abort) {
 		//STEP 1: Check for new data
 		if (dataSource->hasUnprocessedData()) {
@@ -115,10 +115,10 @@ void workThread::run()
 			RadarData *newVolume = dataSource->getUnprocessedData();
 			if(newVolume == NULL) {
 				continue;
-			}			
-			
+			}
+
 			emit log(Message("Found file:" + newVolume->getFileName(), -1, this->objectName()));
-			
+
 			// Check to makes sure that the file still exists and is readable
 			if((!newVolume->fileIsReadable()) or (!newVolume->readVolume())) {
 			  emit log(Message(QString("The radar data file " + newVolume->getFileName() +
@@ -135,7 +135,7 @@ void workThread::run()
 			GriddedData *gridData;
 
 			if (preGridded) {
-			  
+
 			  gridData = gridFactory->fillPreGriddedData(newVolume, configData);
 			  newVolume->setPreGridded();
 
@@ -145,7 +145,7 @@ void workThread::run()
 			    float maxRange = n.text().toFloat();
 			    newVolume->setMaxRange(maxRange);
 			  }
-			  
+
 			  //STEP 3: get the first guess of center Lat,Lon for simplex
 			  _latlonFirstGuess(newVolume);
 			  QString currentCenter("Processing radar volume at "
@@ -155,7 +155,7 @@ void workThread::run()
 			  emit log(Message(currentCenter,1,this->objectName()));
 			  if(abort) break;
 			} else {
-			  
+
 			  //radar data quality control
 			  RadarQC* dealiaser=new RadarQC(newVolume);
 			  connect(dealiaser,SIGNAL(log(const Message&)),
@@ -168,7 +168,7 @@ void workThread::run()
 			    delete newVolume;
 			    break;
 			  }
-			
+
 			  //STEP 3: get the first guess of center Lat,Lon for simplex
 
 			  _latlonFirstGuess(newVolume);
@@ -196,13 +196,13 @@ void workThread::run()
 
 			if(just_display) {
 			  // sleep 3 seconds to give the user a chance to click around
-			  sleep(3);	
+			  sleep(3);
 			  continue;
 			}
 
 			VortexData *vortexData;
 			int bestLevel;
-			
+
 			if (runSimplex) {
 			  if ( ! findCenter(newVolume, gridData, bottomLevel, &vortexData, &bestLevel) ) {
 			    delete newVolume;
@@ -214,9 +214,9 @@ void workThread::run()
 			  vortexData = useBestGuessCenter(newVolume, bottomLevel, gridData->getKGridsp());
 			  updateCappiDisplayInfo(gridData, vortexData, radarLat, radarLon, _firstGuessLat, _firstGuessLon);
   			}
-			
+
 			//STEP 6: Check for new pressure data to process for the current volume
-			
+
 			if( pressureSource->hasUnprocessedData()) {
 				// Create a list of new pressure observations that have not yet been processed
 				QList<PressureData>* newObs = pressureSource->getUnprocessedData();
@@ -234,17 +234,17 @@ void workThread::run()
 				}
 				delete newObs;
 			}
-			
+
 			if(abort) {
 				delete newVolume;
 				delete gridFactory;
 				delete gridData;
 				break;
 			}
-			
+
 			//STEP 7: {GB|G}VTD to calculate the wind
 			//        if simplex algorithm successfully find the center, then perform the GBVTD
-			
+
 			float range = GriddedData::getCartesianDistance(radarLat, radarLon,
 									vortexData->getLat(bestLevel),
 									vortexData->getLon(bestLevel));
@@ -255,7 +255,7 @@ void workThread::run()
 			  emit log(Message("Estimating pressure", 1, this->objectName()));
 
 			  VortexThread* pVtd = new VortexThread();
-		    
+
 	            if (mode == "operational") {
 	                pVtd->setEnvPressure(atcf->getEnvPressure());
 	                pVtd->setOuterRadius(atcf->getOuterRadius());
@@ -263,7 +263,7 @@ void workThread::run()
 
 		    pVtd->getWinds(configData, gridData, newVolume, vortexData, &_pressureList); // Runs the VortexThread
 	            delete pVtd;
-		    
+
 		    if (vortexData->getMaxValidRadius() != -999) {
 		      _vortexList.append(*vortexData);
 		      QString values;
@@ -273,7 +273,7 @@ void workThread::run()
 	                emit log(Message(result,0,this->objectName()));
 	                // Print out summary information to log
 	                QString summary = "VORTRAC ATCF,";
-			
+
 			summary += vortexData->getTime().toString(Qt::ISODate) + ",";
 	                summary += values.setNum(vortexData->getLat(bestLevel)) + ",";
 	                summary += values.setNum(vortexData->getLon(bestLevel)) + ",";
@@ -295,18 +295,18 @@ void workThread::run()
 			  emit log(newMsg);
 			}
             checkIntensification();
-	    
+
         if(abort) break;
-	
+
             //STEP 8: finish a round of analysis, clear up
             emit vortexListUpdate(&_vortexList);
             emit log(Message(QString("Completed Analysis On Volume "+newVolume->getFileName()),100,this->objectName()));
             delete newVolume;
             delete gridFactory;
             delete gridData;
-	    
+
         if(abort) break;
-	
+
             //STEP 9: after finish process each volume,save data to XML
             _vortexList.saveXML();
             _simplexList.saveXML();
@@ -314,7 +314,7 @@ void workThread::run()
 	    vortexData->saveCoefficients(coeffFilePath);
         } else {
             //if there's no data, have a little rest
-            sleep(2);  
+            sleep(2);
             //if in batch mode, abort
             if (this->parent()){
 				std::cout<<"Finished processing all files in batch mode\n";
@@ -322,7 +322,7 @@ void workThread::run()
 	            emit finished();
             }
         }
-		
+
 	} // while ! abort
     delete dataSource;
     delete pressureSource;
@@ -503,7 +503,7 @@ void workThread::loadCenterLocations(QString fName)
     loc[1] = entries[2].toFloat();
     qint64 key = time.toMSecsSinceEpoch();
     centerLocations.insert(key, loc);
-#if 0    
+#if 0
     std::cout << time.toString("yyyy-MM-dd:hh:mm:ss").toLatin1().data()
 	      << " key: " << key << ", lat: " << loc[0] << ", lon: " << loc[1] << std::endl;
 #endif
@@ -528,12 +528,12 @@ void workThread::_latlonFirstGuess(RadarData* radarVolume)
 
   // Check if the center at this time was loaded from the <centers> file
   // Chop off msecs
-  
+
   QDateTime volDT = QDateTime::fromString(radarVolume->getDateTime().toString("yyyy-MM-dd:hh:mm"), ("yyyy-MM-dd:hh:mm"));
   qint64 key = volDT.toMSecsSinceEpoch();
   std::cout << "** " << volDT.toString("yyyy-MM-dd:hh:mm:ss").toLatin1().data()
     	    << " key: " << key << std::endl;
-  
+
   if(centerLocations.contains(key)) {
     float *loc = centerLocations.value(key);
     _firstGuessLat = loc[0];
@@ -544,16 +544,16 @@ void workThread::_latlonFirstGuess(RadarData* radarVolume)
 
   // This assumes that the storm speed and direction are somewhat correct in the config file.
   // If set to 0, this will end up being the Lat and Lon specified in the config.
-  
+
   float stormSpd = configData->getParam(configData->getConfig("vortex"),"speed").toFloat();
   float stormDir = configData->getParam(configData->getConfig("vortex"),"direction").toFloat();
   stormDir = 450.0f - stormDir;
   if(stormDir > 360.0f)
     stormDir -= 360.0f;
   stormDir *= acos(-1.0f) / 180.f;
-        
+
   //calculate the expolation from user define center
-  
+
   // Get initial lat and lon
   float initLat = configData->getParam(configData->getConfig("vortex"),"lat").toFloat();
   float initLon = configData->getParam(configData->getConfig("vortex"),"lon").toFloat();
@@ -561,14 +561,14 @@ void workThread::_latlonFirstGuess(RadarData* radarVolume)
   QTime obsTime = QTime::fromString(configData->getParam(configData->getConfig("vortex"),"obstime"),"hh:mm:ss");
   QDateTime usrDateTime = QDateTime(obsDate, obsTime, Qt::UTC);
   int elapsedSeconds = usrDateTime.secsTo(volDateTime);
-        
+
   float distanceMoved = elapsedSeconds*stormSpd / 1000.0;
   float changeInX = distanceMoved * cos(stormDir);
   float changeInY = distanceMoved * sin(stormDir);
   float *extrapLatLon = GriddedData::getAdjustedLatLon(initLat, initLon, changeInX, changeInY);
   _firstGuessLat = extrapLatLon[0];
   _firstGuessLon = extrapLatLon[1];
-        
+
   // if there is a vortex result,try to extrapolation from this record
 
   // TODO This is broken. It gives us a Lat and Lon outside of the grid.
@@ -579,21 +579,21 @@ void workThread::_latlonFirstGuess(RadarData* radarVolume)
   // It seems like only level 0 has that problem.
   // That's because _simplexResults->last().getMeanY(k,bestRadii) could be -999
   //  ChooseCenter.cpp:978
-  
+
   if (!_vortexList.isEmpty()) {
     _vortexList.timeSort();
     float vortexLat = _vortexList.last().getLat(_vortexList.last().getBestLevel());
     float vortexLon = _vortexList.last().getLon(_vortexList.last().getBestLevel());
     QDateTime obsDateTime = _vortexList.last().getTime();
-            
+
     int elapsedSeconds = obsDateTime.secsTo(volDateTime);
     float distanceMoved = elapsedSeconds*stormSpd / 1000.0;
     float changeInX = distanceMoved*cos(stormDir);
     float changeInY = distanceMoved*sin(stormDir);
-            
+
     float *newLatLon = GriddedData::getAdjustedLatLon(vortexLat, vortexLon, changeInX, changeInY);
     float relDist = GriddedData::getCartesianDistance(extrapLatLon[0], extrapLatLon[1], newLatLon[0], newLatLon[1]);
-            
+
     if (relDist < 10 || usrDateTime.secsTo(volDateTime) > 60*60) {
       _firstGuessLat = newLatLon[0];
       _firstGuessLon = newLatLon[1];
@@ -615,15 +615,15 @@ bool workThread::findCenter(RadarData *radar_data, GriddedData *grid_data, float
   VortexData *vortexData = new VortexData();
 
   vortexData->setTime(radar_data->getDateTime());
-			
+
   std::cout << "Vortex time: " << radar_data->getDateTime().toString("hh:mm").toLatin1().data() << std::endl;
-			
+
   SimplexThread* pSimplex = new SimplexThread();
   pSimplex->initParam(configData, grid_data, _firstGuessLat, _firstGuessLon);
-			
+
   // TODO this does the work.
   // We get "Center Not Found" if we pick a center bottom_level too low in the config file.
-			
+
   pSimplex->findCenter(&_simplexList);  // TODO check the return value!
   delete pSimplex;
   _simplexList.last().setTime(vortexData->getTime());
@@ -645,11 +645,11 @@ bool workThread::findCenter(RadarData *radar_data, GriddedData *grid_data, float
   int maxConverged = 0;
   int maxConvergedLevel = -1;
   int bestLevel = -1;
-			
+
   // TODO involve the simplex std deviation into this chosing of a level
 
   int *numConvRings = new int[_simplexList.last().getNumLevels()]();
-			
+
   for (int level = 0; level < _simplexList.last().getNumLevels(); level++) {
     int convergedThisLevel = 0;
     for (int ridx = 0; ridx < _simplexList.last().getNumRadii(); ridx++)
@@ -668,20 +668,20 @@ bool workThread::findCenter(RadarData *radar_data, GriddedData *grid_data, float
     ChooseCenter *centerFinder = new ChooseCenter(configData, &_simplexList, vortexData);
     centerFinder->findCenter(maxConvergedLevel);
     delete centerFinder;
-				
+
     // Find the best std dev among all the levels that have enough converged rings.
 
     float bestStdDev = 9999;
     float threashold = _simplexList.last().getNumRadii() / 3; // Go with at least a third for now
-			
+
     for (int level = 0; level < _simplexList.last().getNumLevels(); level++) {
       if (numConvRings[level] < threashold)
 	continue;
       float dev = vortexData->getCenterStdDev(level);
-#if 0				  
+#if 0
       if(dev > 0) // debug
 	std::cout << "level: " << level << ", stdDev: " << dev << std::endl;
-#endif				  
+#endif
       if( (dev > 0) && (dev < bestStdDev) ) {
 	bestLevel = level;
 	bestStdDev = dev;
@@ -689,7 +689,7 @@ bool workThread::findCenter(RadarData *radar_data, GriddedData *grid_data, float
     }
 #if 0
     std::cout << "*** Best std dev: " << bestStdDev << ", at level " << bestLevel << std::endl;
-#endif				
+#endif
     if(bestLevel == -1)
       bestLevel = maxConvergedLevel;
 
@@ -702,8 +702,8 @@ bool workThread::findCenter(RadarData *radar_data, GriddedData *grid_data, float
     float range = GriddedData::getCartesianDistance(radarLat, radarLon,
 						    vortexData->getLat(bestLevel),
 						    vortexData->getLon(bestLevel));
-    if( (userDistance > 25.0f) 
-	or (range > radar_data->getMaxUnambig_range() - 
+    if( (userDistance > 25.0f)
+	or (range > radar_data->getMaxUnambig_range() -
 	    configData->getParam(configData->getConfig("center"), "innerradius").toFloat())) {
       Message newMsg(QString(), 5, this->objectName(),
 		     Yellow, "Center Not Found");
@@ -730,7 +730,7 @@ bool workThread::findCenter(RadarData *radar_data, GriddedData *grid_data, float
     }
   } else {  // Not enough converged rings
     std::cout << "**** Center not found (not enough converged rings)" << std::endl;
-			  
+
     for(int ll = 0; ll < vortexData->getMaxLevels(); ll++){
       vortexData->setLat(ll, _firstGuessLat);
       vortexData->setLon(ll, _firstGuessLon);
@@ -742,21 +742,21 @@ bool workThread::findCenter(RadarData *radar_data, GriddedData *grid_data, float
   }
 
   delete[] numConvRings;
-			
+
   if (bestLevel < 0) {
     std::cout << "Abandoning this volume since no converged rings found." << std::endl;
     return false;
   }
   vortexData->setBestLevel(bestLevel);
-			
+
   float simplexLat = vortexData->getLat(bestLevel);
   float simplexLon = vortexData->getLon(bestLevel);
 
   updateCappiDisplayInfo(grid_data, vortexData, radarLat, radarLon, simplexLat, simplexLon);
-  
+
   *vortex_data = vortexData;
   *best_level = bestLevel;
-  
+
   return true;
 }
 
@@ -764,7 +764,7 @@ VortexData *workThread::useBestGuessCenter(RadarData *radar_data, float bottom_l
 {
   VortexData *vortexData = new VortexData();
   int numLevel = vortexData->getMaxLevels();
-  
+
   for(int level = 0; level < numLevel; level++) {
     vortexData->setLat(level, _firstGuessLat);
     vortexData->setLon(level, _firstGuessLon);
@@ -773,7 +773,7 @@ VortexData *workThread::useBestGuessCenter(RadarData *radar_data, float bottom_l
 
   // TODO. This is also done in VortexThread::readInConfig()
   //       Need to put that in a function
-  
+
   int gradientHeight = 2; // default
   QString gradientConfig = configData->getParam(configData->getConfig("pressure"), "gradient_height");
   if(gradientConfig != "")
@@ -783,14 +783,14 @@ VortexData *workThread::useBestGuessCenter(RadarData *radar_data, float bottom_l
     std::cout << "Warning: VortexThread gradientHeight adjusted to " << bottom_level << std::endl;
   }
   // end TODO
-    
+
   vortexData->setTime(radar_data->getDateTime());
   vortexData->setBestLevel( (gradientHeight - bottom_level) / k_grid_sp);
 
   Message newMsg(QString(), 5, this->objectName(),
 		 Green, "Using saved center");
   emit log(newMsg);
-  
+
   QString values;
   QString result = "Position estimate " + values.setNum(_firstGuessLat);
   result += " N " + values.setNum(_firstGuessLon) + " E";
@@ -807,7 +807,7 @@ void workThread::updateCappiDisplayInfo(GriddedData *grid_data, VortexData *vort
   QDomElement vtd   = configData->getConfig("vtd");
 
   int bestLevel = vortex_data->getBestLevel();
-  
+
   float* xyValues = grid_data->getCartesianPoint(&radar_lat, &radar_lon, &simplex_lat, &simplex_lon);
   float xPercent = float(grid_data->getIndexFromCartesianPointI(xyValues[0])+1)/grid_data->getIdim();
   float yPercent = float(grid_data->getIndexFromCartesianPointJ(xyValues[1])+1)/grid_data->getJdim();

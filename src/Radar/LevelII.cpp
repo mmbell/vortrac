@@ -9,10 +9,10 @@
  */
 
 #include "LevelII.h"
-#include "RadarQC.h"
+#include "NRL/RadarQC.h"
 #include <unistd.h>
 
-LevelII::LevelII(const QString &radarname, const float &lat, const float &lon, const QString &filename) 
+LevelII::LevelII(const QString &radarname, const float &lat, const float &lon, const QString &filename)
 	: RadarData(radarname, lat, lon, filename)
 {
 
@@ -85,7 +85,7 @@ void LevelII::addSweep(Sweep* newSweep)
 	newSweep->setVel_numgates( vel_num_gates );
 	newSweep->setVcp( volume_block->vol_coverage_pattern );
   }
-  
+
   //return *newSweep;
 }
 
@@ -96,7 +96,7 @@ void LevelII::addRay(Ray* newRay)
   //Ray *newRay = new Ray();
   numRays++;
   newRay->setSweepIndex( (numSweeps - 1) );
-  
+
   if (sweepMsgType == 1) {
 	newRay->setTime( msg1Header->milliseconds_past_midnight );
 	newRay->setDate( msg1Header->julian_date );
@@ -208,7 +208,7 @@ void LevelII::swapVolHeader()
 {
 
   swab((char *)&volHeader->julian_date, (char *)&volHeader->julian_date, 4);
-  swab((char *)&volHeader->milliseconds_past_midnight, 
+  swab((char *)&volHeader->milliseconds_past_midnight,
        (char *)&volHeader->milliseconds_past_midnight, 4);
 
 }
@@ -216,7 +216,7 @@ void LevelII::swapVolHeader()
 void LevelII::swapMsg1Header()
 {
 
-  msg1Header->milliseconds_past_midnight = 
+  msg1Header->milliseconds_past_midnight =
     swap4((char *)&msg1Header->milliseconds_past_midnight); /* (15-16) */
   swab((char *)&msg1Header->julian_date,
        (char *)&msg1Header->julian_date, 2);          /* (17) from 1/1/70 */
@@ -238,7 +238,7 @@ void LevelII::swapMsg1Header()
        (char *)&msg1Header->vel_gate1, 2);            /* (25) meters */
   swab((char *)&msg1Header->ref_gate_width,
        (char *)&msg1Header->ref_gate_width, 2);       /* (26) meters */
-  swab((char *)&msg1Header->vel_gate_width, 
+  swab((char *)&msg1Header->vel_gate_width,
        (char *)&msg1Header->vel_gate_width, 2);       /* (27) meters */
   swab((char *)&msg1Header->ref_num_gates,
        (char *)&msg1Header->ref_num_gates, 2);        /* (28) */
@@ -271,9 +271,9 @@ void LevelII::swapMsg1Header()
        (char *)&msg1Header->nyquist_vel_x100, 2);     /* (45)m/s */
   swab((char *)&msg1Header->atmos_atten_factor_x1000,
        (char *)&msg1Header->atmos_atten_factor_x1000, 2); /* (46) dB/km */
-  swab((char *)&msg1Header->threshold_parameter, 
+  swab((char *)&msg1Header->threshold_parameter,
        (char *)&msg1Header->threshold_parameter, 2);  /* (47) */
-  
+
 }
 
 void LevelII::swapMsgHeader()
@@ -292,27 +292,27 @@ void LevelII::swapMsgHeader()
 		 (char *)&msgHeader->num_message_segs, 2);
 	swab((char *)&msgHeader->message_seg_num,
 		 (char *)&msgHeader->message_seg_num, 2);
-		 
+
 }
 
 void LevelII::swapMsg31Header()
 {
 
 	msg31Header->milliseconds_past_midnight
-		= swap4((char *)&msg31Header->milliseconds_past_midnight);; 
+		= swap4((char *)&msg31Header->milliseconds_past_midnight);;
     swab((char *)&msg31Header->julian_date,
 		(char *)&msg31Header->julian_date, 2);          /* (17) from 1/1/70 */
     swab((char *)&msg31Header->azimuth_num,
 		(char *)&msg31Header->azimuth_num, 2);      /* (18) */
 	long tempint = swap4((char *)&msg31Header->azimuth);
 	msg31Header->azimuth = *(float *)&tempint;
-		
+
     swab((char *)&msg31Header->block_length,
 		(char *)&msg31Header->block_length, 2);           /* (20) */
 
 	tempint	= swap4((char *)&msg31Header->elevation);
 	msg31Header->elevation = *(float *)&tempint;
-	
+
 	swab((char *)&msg31Header->num_data_blocks,
 		(char *)&msg31Header->num_data_blocks, 2);
 	msg31Header->vol_ptr
@@ -333,14 +333,14 @@ void LevelII::swapMsg31Header()
 		= swap4((char *)&msg31Header->phi_ptr);
 	msg31Header->rho_ptr
 		= swap4((char *)&msg31Header->rho_ptr);
-		
+
 }
 
 void LevelII::swapVolumeBlock()
 {
 	swab((char *)&volume_block->block_size,
 		(char *)&volume_block->block_size, 2);
-		
+
 	long tempint = swap4((char *)&volume_block->latitude);
 	volume_block->latitude = *(float *)&tempint;
 	tempint = swap4((char *)&volume_block->longitude);
@@ -399,7 +399,7 @@ bool LevelII::machineBigEndian(){
 
     word.val = 0;
     word.byte[3] = 0x01;
-    
+
     return word.val == 1;
 }
 
@@ -419,7 +419,7 @@ int long LevelII::swap4(char *ov )		/* swap integer*4 */
      int long newval;
      char nv[4];
    }u;
- 
+
    u.nv[3] = *ov++; u.nv[2] = *ov++; u.nv[1] = *ov++; u.nv[0] = *ov++;
 
    return(u.newval);
@@ -439,4 +439,3 @@ float LevelII::swap4f(float swapme)            /* swap real*4 */
 
     return(d = u.newval);
 }
-

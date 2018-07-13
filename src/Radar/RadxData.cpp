@@ -12,7 +12,7 @@
 #include "Radx/RadxRay.hh"
 
 #include "RadxData.h"
-#include "RadarQC.h"
+//#include "RadarQC.h"
 
 RadxData::RadxData(const QString &radarname, const float &lat, const float &lon, const QString &filename)
   : RadarData(radarname, lat, lon, filename)
@@ -21,7 +21,7 @@ RadxData::RadxData(const QString &radarname, const float &lat, const float &lon,
   numRays = 0;
   radarLat = lat;
   radarLon = lon;
-  
+
 }
 
 RadxData::~RadxData()
@@ -41,16 +41,16 @@ RadxData::~RadxData()
 float *RadxData::getRayData(RadxRay *fileRay, const char *fieldName)
 {
   const RadxRay::FieldNameMap fieldMap = fileRay->getFieldNameMap();
-  
+
   // fieldMap[fielfdName] would be nicer to use. But it returns an index of 0 if fieldName doesn't exist.
   // can't differentiate it with the index of the first field, also 0
-  
+
   RadxRay::FieldNameMapConstIt name_it;
   name_it = fieldMap.find(fieldName);
-    
+
   if (name_it == fieldMap.end())
     return NULL;
-    
+
   RadxField *field = fileRay->getField(name_it->second);
   if (field == NULL)
     return NULL;
@@ -67,7 +67,7 @@ float *RadxData::getRayData(RadxRay *fileRay, const char *fieldName)
   // When homebrew picks up the fixed version, uncomment the next line, and remove the check
   // for missingFl32.
   // field->setMissingFl32(-999.0);
-  
+
   const float missing32 = field->getMissingFl32();
 
   const Radx::fl32 *fieldPtr = field->getDataFl32();
@@ -87,17 +87,17 @@ bool RadxData::readVolume()
 
   RadxFile file;
   RadxVol vol;
-  
+
   QString fileName = getFileName();
-  
+
   if ( ! file.isSupported(fileName.toLatin1().data()) ) {
     std::cerr << "ERROR - File '" << fileName.toLatin1().data()
 	      << "' is not in a Radx supported format." << std::endl;
     return false;
   }
-  
+
   file.setReadPreserveSweeps(true); // prevent Radx from tossing away long sweeps
-  
+
   if (file.readFromPath(fileName.toLatin1().data(), vol) ) {
     std::cerr << "ERROR - reading file: " << fileName.toLatin1().data() << std::endl;
     std::cerr << file.getErrStr() << std::endl;
@@ -108,9 +108,9 @@ bool RadxData::readVolume()
   numRays = vol.getNRays();
 
   int scanID = vol.getScanId();  // VCP
-  
+
   // Allocate storage for sweeps and rays
-  
+
   Sweeps = new Sweep[numSweeps];
   Rays = new Ray[numRays];
 
@@ -130,11 +130,11 @@ bool RadxData::readVolume()
 
     // Done in the sweep look
     // myRay->setRayIndex(rayCount);
-    
+
     // Ray time
     // getTimeDouble is timeSecs + nanoSecs / 1.0e9
     // TODO: Not sure what to do with it. Is it used anywhere?
-    
+
     double secs = fileRay->getTimeDouble();
     myRay->setDate((int) secs);
     double nanoSecs = fileRay->getNanoSecs();
@@ -151,7 +151,7 @@ bool RadxData::readVolume()
 
     myRay->setVelResolution(fileRay->getAngleResDeg());
     myRay->setVcp(scanID);
-    
+
     // TODO: Would ref and vel have different number of gates and gate spacing?
 
     int nGates = fileRay->getNGates();
@@ -172,7 +172,7 @@ bool RadxData::readVolume()
 
     // Lots of algorithms (QC Cappi, can't deal with missing Vel)
     // So fill in the Velocity data with -999)
-    
+
     if(myRay->getVelData() == NULL) {
       float *buffer = new float[nGates];
       for(int i = 0; i < nGates; i++)
@@ -180,13 +180,13 @@ bool RadxData::readVolume()
       myRay->setVelData(buffer);
     }
   }
-  
+
   // Iterate on the sweeps
 
   const vector<RadxSweep *>  sweeps = vol.getSweeps();
   vector<RadxSweep *>::const_iterator sweep_it;
   int sweepCount = 0;
-  
+
   for (sweep_it = sweeps.begin(); sweep_it < sweeps.end(); sweep_it++, sweepCount++) {
     RadxSweep *file_sweep = *sweep_it;
 
@@ -194,12 +194,12 @@ bool RadxData::readVolume()
     // 	      << " first: " << file_sweep->getStartRayIndex()
     // 	      << " last: " << file_sweep->getEndRayIndex()
     // 	      << std::endl;
-    
+
     Sweep *my_sweep = &Sweeps[sweepCount];
 
     int firstRayIndex = file_sweep->getStartRayIndex();
     Ray *firstRay = &Rays[firstRayIndex];
-    
+
     my_sweep->setSweepIndex(sweepCount);
     my_sweep->setFirstRay(firstRayIndex);
     my_sweep->setLastRay(file_sweep->getEndRayIndex());
@@ -220,12 +220,12 @@ bool RadxData::readVolume()
       Rays[rayCount].setRayIndex(rayIndex);
       // gateCount += Rays[rayCount].getRef_numgates();
     }
-    
+
     int gateCount = firstRay->getRef_numgates();   // TODO: Is that correct?
-    
+
     my_sweep->setRef_numgates(gateCount);
     my_sweep->setVel_numgates(gateCount);
-    
+
     my_sweep->setElevation(firstRay->getElevation());
     my_sweep->setUnambig_range(firstRay->getUnambig_range());
     my_sweep->setFirst_ref_gate(firstRay->getFirst_ref_gate());
@@ -239,13 +239,13 @@ bool RadxData::readVolume()
   // Apparently, Radx gives me a certain number of sweeps, but some of them are missing.
   // These are the long range sweeps that do not contain dopler velocity.
   // So adjust how many sweeps we really have
-  
+
   numSweeps = sweepCount;
 
   // Set the volume date to the date of the first ray
   radarDateTime.setTimeSpec(Qt::UTC);
   radarDateTime = QDateTime::fromTime_t(Rays[0].getDate());
 
-  
+
   return true;
 }

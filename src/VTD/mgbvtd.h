@@ -13,7 +13,7 @@
 
 #include <QString>
 #include "DataObjects/GriddedData.h"
-#include "HVVP/Hvvp.h"
+#include "NRL/Hvvp.h"
 #include "VTD/GBVTD.h"
 
 class MGBVTD

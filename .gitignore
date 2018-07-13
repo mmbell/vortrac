@@ -5,6 +5,7 @@ vortrac
 vortrac.xcodeproj/*
 src/build/*
 src/vortrac.xcodeproj/*
+src/.qmake.stash
 moc_*
 qrc_*
 Info.plist

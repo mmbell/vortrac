@@ -4,9 +4,10 @@
 
 TEMPLATE = app
 DEPENDPATH += . Config Grids GUI IO Radar
-INCLUDEPATH += . GUI Config IO Radar $$(RADX_INCLUDE) $$(NETCDF_INCLUDE) $$(ARMADILLO_INCLUDE)
+INCLUDEPATH += . GUI Config IO Radar
+INCLUDEPATH += $$(RADX_INCLUDE) $$(NETCDF_INCLUDE) $$(ARMADILLO_INCLUDE) /usr/local/include
 QMAKE_LIBDIR += $$(RADX_LIB) $$(NETCDF_LIB) $$(ARMADILLO_LIB)
-QMAKE_LFLAGS += -Wl,-rpath,$$(NETCDF_LIB)
+#QMAKE_LFLAGS += -Wl,-rpath,$$(NETCDF_LIB)
 QMAKE_CXXFLAGS += -std=c++0x
 # Input
 HEADERS += Threads/workThread.h \
@@ -29,15 +30,15 @@ HEADERS += Threads/workThread.h \
            GUI/AnalysisPage.h \
            GUI/GraphFace.h \
            GUI/KeyPicture.h \
-           GUI/AbstractPanel.h \ 
+           GUI/AbstractPanel.h \
            GUI/panels.h \
            GUI/DiagnosticPanel.h \
            GUI/RadarListDialog.h \
-           GUI/StopLight.h \ 
+           GUI/StopLight.h \
            GUI/CappiDisplay.h \
            GUI/StormSignal.h \
            GUI/StartDialog.h \
-           HVVP/Hvvp.h \
+           NRL/Hvvp.h \
            IO/Message.h \
            IO/Log.h \
            IO/ATCF.h \
@@ -45,12 +46,12 @@ HEADERS += Threads/workThread.h \
            Radar/RadarFactory.h \
            Radar/LevelII.h \
            Radar/NcdcLevelII.h \
-           Radar/NetCDF.h \
+           Radar/RadxGrid.h \
            Radar/LdmLevelII.h \
            Radar/RadxData.h \
            Radar/AnalyticRadar.h \
            Radar/nexh.h \
-           Radar/RadarQC.h \
+           NRL/RadarQC.h \
            Radar/RadarData.h \
            Radar/Ray.h \
            Radar/Sweep.h \
@@ -92,7 +93,7 @@ SOURCES += main.cpp \
            GUI/ConfigurationDialog.cpp \
            GUI/MainWindow.cpp \
            GUI/AnalysisPage.cpp \
-           GUI/GraphFace.cpp \ 
+           GUI/GraphFace.cpp \
            GUI/KeyPicture.cpp \
            GUI/AbstractPanel.cpp \
            GUI/panels.cpp \
@@ -102,7 +103,7 @@ SOURCES += main.cpp \
            GUI/CappiDisplay.cpp \
            GUI/StormSignal.cpp \
            GUI/StartDialog.cpp \
-           HVVP/Hvvp.cpp \
+           NRL/Hvvp.cpp \
            IO/Message.cpp \
            IO/Log.cpp \
            IO/ATCF.cpp \
@@ -110,16 +111,16 @@ SOURCES += main.cpp \
            Radar/RadarFactory.cpp \
            Radar/LevelII.cpp \
            Radar/NcdcLevelII.cpp \
-           Radar/NetCDF.cpp \
+           Radar/RadxGrid.cpp \
            Radar/LdmLevelII.cpp \
            Radar/RadxData.cpp \
            Radar/AnalyticRadar.cpp\
-           Radar/RadarQC.cpp \
+           NRL/RadarQC.cpp \
            Radar/RadarData.cpp \
            Radar/Ray.cpp \
            Radar/Sweep.cpp \
            VTD/VTD.cpp \
-           VTD/GVTD.cpp \           
+           VTD/GVTD.cpp \
            VTD/GBVTD.cpp \
            VTD/mgbvtd.cpp \
            VTD/VTDFactory.cpp \

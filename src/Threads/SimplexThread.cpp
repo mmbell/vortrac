@@ -15,7 +15,7 @@
 #include "DataObjects/Center.h"
 #include "VTD/VTDFactory.h"
 #include "Math/Matrix.h"
-#include "HVVP/Hvvp.h"
+#include "NRL/Hvvp.h"
 
 // TODO debug
 # include <iostream>
@@ -53,10 +53,10 @@ void SimplexThread::initParam(Configuration *wholeConfig,GriddedData *dataPtr,fl
 }
 
 bool SimplexThread::findCenter(SimplexList* simplexList)
-{   
+{
 
     //STEP 1: retrieve all the parameters for Simplex algorithm
-  
+
     QDomElement simplexCfg = configData->getConfig("center");
     QString geometry = configData->getParam(simplexCfg,QString("geometry"));
     QString velField = configData->getParam(simplexCfg,QString("velocity"));
@@ -75,7 +75,7 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
 		<< "(the size of the data structures in the simplex thread)" << std::endl;
       return false;
     }
-    
+
     float boxRowLength = sqrt(numPoints);
     float boxIncr = boxSize / sqrt(numPoints);
 
@@ -86,7 +86,7 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
     int   maxWave = configData->getParam(simplexCfg,QString("maxwavenumber")).toInt();
 
     // Define the maximum allowable data gaps
-    
+
     _dataGaps = new float[maxWave+1];
     for (int i = 0; i <= maxWave; i++) {
         _dataGaps[i] = configData->getParam(simplexCfg, QString("maxdatagap"), QString("wavenum"),
@@ -94,23 +94,23 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
     }
 
     //SETP 2: initialize a VTD object for whole simplex to use
-    
+
     _simplexVTD = VTDFactory::createVTD(geometry, closure, maxWave, _dataGaps);
     _vtdCoeffs  = new Coefficient[20];
 
     //STEP 3: perform simplex algorithm
 
     // Set ring width in cappi so that griddedData access function use this
-    
+
     gridData->setCylindricalAzimuthSpacing(ringWidth);
 
     QDomElement cappi = configData->getConfig("cappi");
 
     int nTotalLevels = (int) floor( (lastLevel - firstLevel) / gridData->getKGridsp() + 1.5 );
-    
+
     // We want 1 km spaced rings regardless of ring width
     int nTotalRings = (int)floor((lastRing - firstRing) + 1.5);
-    
+
     // Create a simplexData object to hold the results;
     SimplexData* simplexData = new SimplexData(nTotalLevels, nTotalRings, (int)numPoints);
 
@@ -129,7 +129,7 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
     // TODO Should this have some reference to grid spacing?
     // see GriddedData::setAbsoluteReferencePoint
     // TODO firstLevel is 1. How come not 0.5?
-    
+
     // for (float height = firstLevel; height <= lastLevel; height++) {
     for (float height = firstLevel; height <= lastLevel; height += gridData->getKGridsp()) {
         for (float radius = firstRing; radius <= lastRing; radius++) {
@@ -138,21 +138,21 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
             // Set the corner of the box
             float CornerI = gridData->getCartesianRefPointI();
             float CornerJ = gridData->getCartesianRefPointJ();
-	    
+
             // std::cout << "** ring: "<< radius <<" RefI: " << CornerI << " RefJ: "<< CornerJ << std::endl;
-	    
+
             float RefK = gridData->getCartesianRefPointK();
             float RefI = CornerI;
             float RefJ = CornerJ;
-	    
+
             if ((gridData->getRefPointI() < 0) || (gridData->getRefPointJ() < 0) || (gridData->getRefPointK() < 0))  {
                 emit log(Message(QString("Initial simplex guess is outside CAPPI"),0,this->objectName()));
                 archiveNull(simplexData, radius, height, numPoints);
                 continue;
             }
-	    
+
             // Initialize mean values
-	    
+
             int meanCount = 0;
             meanXall = meanYall = meanVTall = 0;
             meanX = meanY = meanVT = 0;
@@ -162,7 +162,7 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
 
             // Loop through the initial guesses
 	    // std::cout << "** Num of points: " << numPoints << std::endl;
-	    
+
             for (int point = 0; point < numPoints; point++) {
                 if (point < boxRowLength)
                     RefI = CornerI + float(point) * boxIncr;
@@ -215,7 +215,7 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
             } //point loop end
 
 	    // std::cout << "Mean count before: " << meanCount << std::endl;
-	    
+
             if (meanCount == 0) {
                 archiveNull(simplexData, radius, height, numPoints);
             } else {
@@ -251,7 +251,7 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
                     }
                 }
 		// std::cout << "Mean count after: " << meanCount << std::endl;
-		
+
                 if (meanCount == 0) {
                     archiveNull(simplexData, radius, height, numPoints);
                 } else {
@@ -413,7 +413,7 @@ float SimplexThread::_getSymWind(float vertex_x,float vertex_y,int RefK,float ra
 #if 0
     // TODO debug
     for(int d = 0; d < numData; d++) {
-      std::cout <<  "d: " << d << " val: " << ringData[d] 
+      std::cout <<  "d: " << d << " val: " << ringData[d]
 		<< " azimuth: " << ringAzimuths[d] << std::endl;
     }
 #endif
@@ -421,12 +421,12 @@ float SimplexThread::_getSymWind(float vertex_x,float vertex_y,int RefK,float ra
     float   vtdStdDev;
 
     // vtCoeff[0..numCoeffs].value will be set by this call
-    
+
     if (_simplexVTD->analyzeRing(vertex_x, vertex_y, radius, height, numData, ringData, ringAzimuths, vtdCoeffs, vtdStdDev)) {
         if (vtdCoeffs[0].getParameter() == "VTC0")
             VT = vtdCoeffs[0].getValue();
     }
-    
+
     delete[] ringData;
     delete[] ringAzimuths;
     delete[] vtdCoeffs;
@@ -496,4 +496,3 @@ void SimplexThread::_centerIterate(float** vertex, float* vertexSum, float* VT, 
             --numIterations;
     }
 }
-

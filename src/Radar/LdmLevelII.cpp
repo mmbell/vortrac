@@ -9,12 +9,12 @@
  */
 
 #include "LdmLevelII.h"
-#include "RadarQC.h"
+#include "NRL/RadarQC.h"
 
-LdmLevelII::LdmLevelII(const QString &radarname, const float &lat, const float &lon, const QString &filename) 
+LdmLevelII::LdmLevelII(const QString &radarname, const float &lat, const float &lon, const QString &filename)
 	: LevelII(radarname, lat, lon, filename)
 {
-  
+
 }
 
 bool LdmLevelII::readVolume()
@@ -34,7 +34,7 @@ bool LdmLevelII::readVolume()
   }
 
   QDataStream dataIn(radarFile);
-  
+
   // Get volume header
   dataIn.readRawData((char *)volHeader, sizeof(nexrad_vol_scan_title));
   if (swap_bytes) {
@@ -45,21 +45,21 @@ bool LdmLevelII::readVolume()
   char* nexBuffer = new char[2432];
   int recNum = 0;
   while (!dataIn.atEnd()) {
-	  
+
 	  // Try to read 4 bytes for size
 	  int recSize;
 	  dataIn.readRawData((char *)&recSize, 4);
 	  if (swap_bytes) {
-		  recSize = swap4((char *)&recSize); 
+		  recSize = swap4((char *)&recSize);
 	  }
-  
+
 	  // Read in the compressed record
 	  if (recSize < 0) {
 		  recSize = -recSize;
 	  }
 	  char* compressed = new char[recSize];
 	  dataIn.readRawData((char *)compressed,recSize);
-					 
+
 	  unsigned int uncompSize = 262144;
 	  char* uncompressed = new char[uncompSize];
 	  int error;
@@ -97,21 +97,21 @@ bool LdmLevelII::readVolume()
 			  */
 			  break;
 		  }
-	  }	
+	  }
 	  delete[] compressed;
 	  if (error) {
 		  // Didn't uncompress the data properly
 		  delete[] uncompressed;
 		  continue;
 	  }
-	  
+
 	  recNum++;
 	  // Skip the metadata at the beginning
 	  if ((recNum == 1) and (uncompSize == 325888)) {
           delete[] uncompressed;
           continue;
       }
-	   
+
 	  unsigned int msgIncr = 0;
 	  //for (unsigned int i = 0; i < uncompSize; i += 2432) {
 	  while (msgIncr < uncompSize) {
@@ -147,7 +147,7 @@ bool LdmLevelII::readVolume()
 				  radarDateTime.setTimeSpec(Qt::UTC);
 				  radarDateTime = radarDateTime.addDays(volumeDate - 1);
 				  radarDateTime = radarDateTime.addMSecs((qint64)volumeTime);
-	
+
 				  // First sweep and ray
 				  addSweep(Sweeps);
 				  Sweeps[0].setFirstRay(0);
@@ -163,7 +163,7 @@ bool LdmLevelII::readVolume()
 				  // Sweeps[numSweeps].setFirstRay(numRays);
 
 			  }
-			  
+
 			  // Read ray of data
 			  if (msg1Header->ref_ptr) {
 				  char* const ref_buffer = readPtr + sizeof(nexrad_message_header) + msg1Header->ref_ptr;
@@ -177,15 +177,15 @@ bool LdmLevelII::readVolume()
 				  char* const sw_buffer = readPtr + sizeof(nexrad_message_header) + msg1Header->sw_ptr;
 				  decode_sw(&Rays[numRays], sw_buffer, msg1Header->vel_num_gates);
 			  }
-			  
+
 			  // Put more rays in the volume, associated with the current Sweep;
 			  addRay(&Rays[numRays]);
-			  
+
 		  } else if (msgHeader->message_type == 31) {
-		  
+
 		      // Got some variable length data
 			  sweepMsgType = 31;
-			  
+
 			  msg31Header = (message_31_data_header *)(readPtr + sizeof(nexrad_message_header));
 			  if (swap_bytes) {
 				  swapMsg31Header();
@@ -213,7 +213,7 @@ bool LdmLevelII::readVolume()
 					swapMomentDataBlock(ref_block);
 				  }
 				  QString blockID(ref_block->block_type);
-				  if (blockID != QString("DREF")) { 
+				  if (blockID != QString("DREF")) {
 					// Skip this ray
 					//continue;
 				  }
@@ -228,14 +228,14 @@ bool LdmLevelII::readVolume()
 				  ref_gate1 = 0;
 				  ref_gate_width = 0;
 			  }
-			  
+
 			  if (msg31Header->vel_ptr) {
 				  vel_block = (moment_data_block *)(readPtr + sizeof(nexrad_message_header) + msg31Header->vel_ptr);
 				  if (swap_bytes) {
 					swapMomentDataBlock(vel_block);
 				  }
 				  QString blockID(ref_block->block_type);
-				  if (blockID != QString("DVEL")) { 
+				  if (blockID != QString("DVEL")) {
 					// Skip this ray
 					//continue;
 				  }
@@ -260,7 +260,7 @@ bool LdmLevelII::readVolume()
 				  decode_sw(&Rays[numRays], sw_buffer, sw_block->num_gates);
 			  }
 
-			  
+
 
 			  // Is this a new sweep? Check radial status
 			  if (msg31Header->radial_status == 3) {
@@ -273,7 +273,7 @@ bool LdmLevelII::readVolume()
 				  radarDateTime.setTimeSpec(Qt::UTC);
 				  radarDateTime = radarDateTime.addDays(volumeDate - 1);
 				  radarDateTime = radarDateTime.addMSecs((qint64)volumeTime);
-	
+
 				  // First sweep and ray
 				  addSweep(Sweeps);
 				  Sweeps[0].setFirstRay(0);
@@ -307,22 +307,22 @@ bool LdmLevelII::readVolume()
                       addSweep(&Sweeps[numSweeps]);
                   } */
               }
-			  			  
+
 			  // Put more rays in the volume, associated with the current Sweep;
 			  addRay(&Rays[numRays]);
-				
+
 		  } else {
 			  // Message Length is too short for binary segment
 			  msgHeader->message_len = 1210;
 		  }
-		  
+
 		  // Skip a variable # of bytes
 		  msgIncr += (msgHeader->message_len)*2 + 12;
-		  
+
 	  }
-	  
+
 	  delete[] uncompressed;
-  }  
+  }
   // Record the number of rays in the last sweep
   Sweeps[numSweeps-1].setLastRay(numRays-1);
 

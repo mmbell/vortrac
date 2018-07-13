@@ -9,7 +9,7 @@
  */
 
 #include "NcdcLevelII.h"
-#include "RadarQC.h"
+#include "NRL/RadarQC.h"
 
 NcdcLevelII::NcdcLevelII(const QString &radarname, const float &lat, const float &lon, const QString &filename) : LevelII(radarname, lat, lon, filename)
 {
