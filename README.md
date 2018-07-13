@@ -11,7 +11,7 @@ This development was funded under grants from the NOAA Joint Hurricane Testbed p
 
 ## Compilation and Use
 
-To compile, use [qmake] (http://qt.nokia.com/) from the top-level directory:
+To compile, use [qmake](http://qt.nokia.com/) from the top-level directory:
 
      $ qmake
 
@@ -63,6 +63,6 @@ Harasti, P.R., 2014: An Expanded VVP Technique to Resolve Primary and Environmen
 
 Jou, B. J.-D., W.-C. Lee, S.-P. Liu, and Y.-C. Kao, 2008: Generalized VTD retrieval of atmospheric vortex kinematic structure. Part I: Formulation and error analysis. Mon. Wea. Rev., 136 (3), 995–1012, doi: 10.1175/2007MWR2116.1.
 
-Lee, W.-C., B. J.-D. Jou, P.-L. Chang, and S.-M. Deng, 1999: Tropical cyclone kinematic structure retrieved from single-Doppler radar observations. Part I: Interpretation of doppler velocity patterns and the gbvtd technique. Mon. Wea. Rev., 127 (10), 2419–2439, doi: 10.1175/1520- 0493(1999)127<2419:TCKSRF>2.0.CO;2.
+Lee, W.-C., B. J.-D. Jou, P.-L. Chang, and S.-M. Deng, 1999: Tropical cyclone kinematic structure retrieved from single-Doppler radar observations. Part I: Interpretation of Doppler velocity patterns and the GBVTD technique. Mon. Wea. Rev., 127 (10), 2419–2439, doi: 10.1175/1520- 0493(1999)127<2419:TCKSRF>2.0.CO;2.
 
 Lee, W.-C. and F. D. Marks, 2000: Tropical cyclone kinematic structure retrieved from single-Doppler radar observations. Part II: The GBVTD-Simplex center finding algorithm. Mon. Wea. Rev., 128 (6), 1925–1936, doi: 10.1175/1520-0493(2000)128<1925:TCKSRF>2.0.CO;2.
