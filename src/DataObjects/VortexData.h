@@ -114,7 +114,7 @@ private:
     // static const int MAXLEVELS  = 15;
     static const int MAXLEVELS  = 25;
     static const int MAXRADII   = 151;
-    static const int MAXWAVENUM = 5;
+    static const int MAXWAVENUM = 7;  // was 5
 
     int _numLevels;
     int _numRadii;

@@ -7,6 +7,9 @@
  *
  */
 
+#include <cstdlib>
+#include <fstream>
+
 #include "GVTD.h"
 #include <math.h>
 #include "IO/Message.h"
@@ -48,7 +51,6 @@ bool GVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& hei
     float yy = yCenter + radius * sin(angle + thetaT);
     ringDistance[i] = sqrt(xx * xx + yy * yy);
     ringPsi[i] = angle;
-  
   }
 
   // Threshold bad values
@@ -57,7 +59,7 @@ bool GVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& hei
   for (int i = 0; i < numData; i++) {
     if (ringData[i] != -999.) {
       // Good point
-      vel[goodCount] = ringData[i]*ringDistance[i]/centerDistance;
+      vel[goodCount] = ringData[i] * ringDistance[i] / centerDistance;
       psi[goodCount] = ringPsi[i];
       goodCount++;
     }
@@ -151,12 +153,36 @@ void GVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, floa
     
     A[0] = FourierCoeffs[0];
     B[0] = 0.;
-    
-    for (int i=1; i <= (numCoeffs/2); i++) {
+
+    int max = numCoeffs / 2;
+
+    for (int i=1; i <= max; i++) {
         A[i] = FourierCoeffs[2 * i];
         B[i] = FourierCoeffs[2 * i - 1];
     }
 
+    // If environment variable is set, dump coeffs for Ting-Yu
+
+    std::ofstream ofs;
+
+    if (const char *env_v1 = std::getenv("VORTRAC_DUMP_COEFFS") ) {
+      ofs.open(env_v1, std::ofstream::out | std::ofstream::app);
+
+      if (ofs.good() ) {
+	ofs << "# radius: " << radius << ", level: " << level << ", numCoeffs: " << numCoeffs
+	    << " A[0.." << max << "], B[0.." << max << "]"
+	    << std::endl;
+	
+	for(int i = 0; i <= max; i++)
+	  ofs << A[i] << ", ";
+	for(int i = 0; i <= max; i++)
+	  ofs << B[i] << ", ";
+	ofs << std::endl;
+      } else {
+	std::cerr << "Couldn't open " << env_v1 << std::endl;
+      }
+    }
+    
     // Use the specified closure method to set VT, VR, and VM
     if (closure.contains(QString("original"), Qt::CaseInsensitive)) {
 
@@ -174,12 +200,9 @@ void GVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, floa
       value = (A[0] + A[1] + A[2] + A[3] + A[4]) / ( 1 + radius / centerDistance);
       vtdCoeffs[1].setValue(value);
 
-      vtdCoeffs[2].setLevel(level);
-      vtdCoeffs[2].setRadius(radius);
-      vtdCoeffs[2].setParameter("VMC0");
-      value = A[0] - ( radius / centerDistance * value ); // rhs value is VRC0 value computed just above
-      vtdCoeffs[2].setValue(value);
-
+      // Set a default value in case it doesn't get set in the loop
+      vtdCoeffs[4].setValue(0);
+      
       for (int i=3; i <= numCoeffs - 1; i += 2) {
 	vtdCoeffs[i].setLevel(level);
 	vtdCoeffs[i].setRadius(radius);
@@ -195,8 +218,15 @@ void GVTD::setWindCoefficients(float& radius, float& level, int& numCoeffs, floa
 	value = 2 * A[i / 2 + 1];
 	vtdCoeffs[i + 1].setValue(value);
       }
+      
+      vtdCoeffs[2].setLevel(level);
+      vtdCoeffs[2].setRadius(radius);
+      vtdCoeffs[2].setParameter("VMC0");
+      value = A[0] - ( radius / centerDistance * vtdCoeffs[1].getValue() ) + 0.5 * vtdCoeffs[4].getValue();
+      // rhs value is VRC0 value computed just above
+      vtdCoeffs[2].setValue(value);
     }
-    
+
     delete[] A;
     delete[] B;
 }
