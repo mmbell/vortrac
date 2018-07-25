@@ -655,7 +655,7 @@ void workThread::loadCenterLocations(QString fName)
     loc[1] = entries[2].toFloat();
     qint64 key = time.toMSecsSinceEpoch();
     centerLocations.insert(key, loc);
-#if 0
+#if 0    
     std::cout << time.toString("yyyy-MM-dd:hh:mm:ss").toLatin1().data()
 	      << " key: " << key << ", lat: " << loc[0] << ", lon: " << loc[1] << std::endl;
 #endif
@@ -683,10 +683,8 @@ void workThread::_latlonFirstGuess(RadarData* radarVolume)
   
   QDateTime volDT = QDateTime::fromString(radarVolume->getDateTime().toString("yyyy-MM-dd:hh:mm"), ("yyyy-MM-dd:hh:mm"));
   qint64 key = volDT.toMSecsSinceEpoch();
-#if 0
   std::cout << "** " << volDT.toString("yyyy-MM-dd:hh:mm:ss").toLatin1().data()
     	    << " key: " << key << std::endl;
-#endif
   
   if(centerLocations.contains(key)) {
     float *loc = centerLocations.value(key);

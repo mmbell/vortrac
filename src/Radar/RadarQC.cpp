@@ -2012,6 +2012,10 @@ void RadarQC::crazyCheck()
     emit log(Message("Crazy Check Done"));
 }
 
+#if 0
+
+// Not used
+
 void RadarQC::checkRay()
 {
     Ray* check = radarData->getRay(1099);
@@ -2040,6 +2044,8 @@ void RadarQC::checkRay()
     
 }
 
+#endif
+
 float RadarQC::bilinear(float value_high,float value_low,
                         float deltaH_high,float deltaH_low)
 
@@ -2067,6 +2073,10 @@ void RadarQC::catchLog(const Message& message)
 {
     emit log(message);
 }
+
+#if 0
+
+// Debug functions.
 
 void RadarQC::dumpRay(RadarData *radarPtr, int rayNum)
 {
@@ -2101,3 +2111,6 @@ void RadarQC::debugDump(RadarData *radarPtr, int sweepNum)
   ray = radarPtr->getRay(last_ray);
   ray->dump();
 }
+
+#endif
+

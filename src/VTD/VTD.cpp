@@ -93,7 +93,6 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
         if (numCoeffs == 0) {
             // Too much missing data, set everything to 0 and return
             for (int i = 0; i <= (_maxWaveNum * 2 + 2); i++) {
-
                 FourierCoeffs[i] = 0.;
             }
             vtdStdDev = -999;
@@ -149,13 +148,12 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
         // Make a Psi array
         ringPsi = new float[numData];
         vel = new float[numData];
-        psi = new float[numData];
         float *ringDistance = new float[numData];
 
         // Get thetaT
         thetaT = atan2(yCenter,xCenter);
         thetaT = fixAngle(thetaT);
-        centerDistance = sqrt(xCenter * xCenter + yCenter * yCenter);
+        centerDistance = sqrt(xCenter*xCenter + yCenter*yCenter);
 
         for (int i = 0; i < numData; i++) {
             // Convert to Psi
@@ -163,7 +161,7 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
             angle = fixAngle(angle);
             float xx = xCenter + radius * cos(angle + thetaT);
             float yy = yCenter + radius * sin(angle + thetaT);
-            ringDistance[i] = sqrt(xx * xx + yy * yy);
+            ringDistance[i] = sqrt(xx*xx+yy*yy);
             ringPsi[i] = angle;
   
        }
@@ -171,7 +169,7 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
 	// Threshold bad values
         int goodCount = 0;
 
-        for (int i = 0; i < numData; i++) {
+        for (int i = 0; i <= numData - 1; i++) {
             if (ringData[i] != -999.) {
                 // Good point
                 vel[goodCount] = ringData[i]*ringDistance[i]/centerDistance;
@@ -194,7 +192,6 @@ bool GBVTD::analyzeRing(float& xCenter, float& yCenter, float& radius, float& he
             delete[] ringPsi;
             delete[] vel;
             delete[] psi;
-	    delete[] ringDistance;
             return false;
         }
 

@@ -420,10 +420,14 @@ float SimplexThread::_getSymWind(float vertex_x,float vertex_y,int RefK,float ra
 #endif
     Coefficient*  vtdCoeffs=new Coefficient[20];
     float   vtdStdDev;
+
+    // vtCoeff[0..numCoeffs].value will be set by this call
+    
     if (_simplexVTD->analyzeRing(vertex_x, vertex_y, radius, height, numData, ringData, ringAzimuths, vtdCoeffs, vtdStdDev)) {
         if (vtdCoeffs[0].getParameter() == "VTC0")
             VT = vtdCoeffs[0].getValue();
     }
+    
     delete[] ringData;
     delete[] ringAzimuths;
     delete[] vtdCoeffs;

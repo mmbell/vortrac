@@ -32,6 +32,12 @@ RadxData::~RadxData()
   Rays = NULL;
 }
 
+// TODO
+// This essentially takes an array of float from the Radx library, and shove it into an array
+// of float in the Radar object.
+// See if we can change the RadarData interface to access the Radx data directly
+// - Maybe put a handle to the field instead of the arrays
+
 float *RadxData::getRayData(RadxRay *fileRay, const char *fieldName)
 {
   const RadxRay::FieldNameMap fieldMap = fileRay->getFieldNameMap();
