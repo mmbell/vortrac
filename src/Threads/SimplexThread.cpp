@@ -77,7 +77,7 @@ bool SimplexThread::findCenter(SimplexList* simplexList)
     }
 
     float boxRowLength = sqrt(numPoints);
-    float boxIncr = boxSize / sqrt(numPoints);
+    float boxIncr = boxSize / sqrt(numPoints) + 1;
 
     float radiusOfInfluence = configData->getParam(simplexCfg,QString("influenceradius")).toFloat();
     float convergeCriterion = configData->getParam(simplexCfg,QString("convergence")).toFloat();
