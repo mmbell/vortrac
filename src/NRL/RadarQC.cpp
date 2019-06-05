@@ -646,7 +646,7 @@ bool RadarQC::terminalVelocity()
                             terminalV = a*v1+b*v2;
                         }
                     }
-                    if(!isnan(terminalV)) {
+                    if(!std::isnan(terminalV)) {
                         vGates[j] -= terminalV;
                     }
                     else {
@@ -1559,7 +1559,7 @@ float RadarQC::getStart(Ray *currentRay)
 		  continue;
 
 	dataHeight = int(floor((aveVADHeight[sweepIndex][v]-radarHeight)*3.281 + 0.5));
-	//if(isnan(dataHeight)||isinf(dataHeight))
+	//if(std::isnan(dataHeight)||isinf(dataHeight))
 	//  Message::toScreen("RadarQC getting funky... sweep = "+QString().setNum(currentRay->getSweepIndex())+" ray# = "+QString().setNum(currentRay->getRayIndex())+" v# = "+QString().setNum(v));
 	if(dataHeight < 0) {
 	  dataHeight = 0;
@@ -1994,7 +1994,7 @@ void RadarQC::crazyCheck()
         int numBins = currentRay->getVel_numgates();
         for (int v = 0; v < numBins; v++)
         {
-            if(isnan(vbins[v])) {
+            if(std::isnan(vbins[v])) {
                 emit log(Message(QString("!!ISSUE!! ")
                                  +QString("Dealias Ray #")
                                  +QString().setNum(i)

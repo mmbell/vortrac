@@ -701,8 +701,8 @@ bool VortexThread::calcHVVP(bool printOutput)
     bool hasHVVP = envWindFinder->findHVVPWinds(true);
     hvvpResult = envWindFinder->getAvAcrossBeamWinds();
     hvvpUncertainty = envWindFinder->getAvAcrossBeamWindsStdError();
-    if(isnan(hvvpResult)||(hvvpResult == -999)||
-            isnan(hvvpUncertainty)||(hvvpUncertainty == -999)){
+    if(std::isnan(hvvpResult)||(hvvpResult == -999)||
+            std::isnan(hvvpUncertainty)||(hvvpUncertainty == -999)){
         hvvpResult = 0;
         hvvpUncertainty = 0;
         hasHVVP = false;

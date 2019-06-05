@@ -6,8 +6,10 @@ TEMPLATE = app
 DEPENDPATH += . Config Grids GUI IO Radar
 INCLUDEPATH += . GUI Config IO Radar
 INCLUDEPATH += $$(RADX_INCLUDE) $$(NETCDF_INCLUDE) $$(ARMADILLO_INCLUDE) /usr/local/include
-QMAKE_LIBDIR += $$(RADX_LIB) $$(NETCDF_LIB) $$(ARMADILLO_LIB)
-#QMAKE_LFLAGS += -Wl,-rpath,$$(NETCDF_LIB)
+               QMAKE_LIBDIR += $$(RADX_LIB) $$(NETCDF_LIB) $$(ARMADILLO_LIB)
+!macx {
+   QMAKE_LFLAGS += -Wl,-rpath,$$(NETCDF_LIB)
+}
 QMAKE_CXXFLAGS += -std=c++0x
 # Input
 HEADERS += Threads/workThread.h \
