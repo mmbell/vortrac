@@ -197,7 +197,7 @@ void AnalysisThread::run()
 
                 int elapsedSeconds =obsDateTime.secsTo(volDateTime);
                 //Message::toScreen("Seconds since start "+QString().setNum(elapsedSeconds)+" in AnalysisThread");
-                if(isnan(elapsedSeconds)) {
+                if(std::isnan(elapsedSeconds)) {
                     emit log(Message(QString("Cannot calculate time until storm is in range of radar, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Yellow,QString("Can not calculate time until storm in range")));
                 }
                 float distanceMoved = elapsedSeconds*stormSpeed/1000.0;
@@ -223,7 +223,7 @@ void AnalysisThread::run()
                 }
                 elapsedSeconds =obsDateTime.secsTo(volDateTime);
                 //Message::toScreen("Seconds since start "+QString().setNum(elapsedSeconds)+" in AnalysisThread");
-                if(isnan(elapsedSeconds)) {
+                if(std::isnan(elapsedSeconds)) {
                     emit log(Message(QString("Cannot calculate time until storm is in range of radar, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Yellow,QString("Can not calculate time until storm in range")));
                 }
                 distanceMoved = elapsedSeconds*stormSpeed/1000.0;
@@ -345,7 +345,7 @@ void AnalysisThread::run()
 
                 int elapsedSeconds =obsDateTime.secsTo(volDateTime);
                 //Message::toScreen("Seconds since start "+QString().setNum(elapsedSeconds)+" in AnalysisThread");
-                if(isnan(elapsedSeconds)) {
+                if(std::isnan(elapsedSeconds)) {
                     emit log(Message(QString("Error extrapolating user center, Please check the observation time, latitude, longitude, and storm movement parameters"),0,this->objectName(),Red,QString("Error extrapolating center")));
                 } else if (elapsedSeconds > (3600*6)) {
                     // Trying to extrapolate too far, warn

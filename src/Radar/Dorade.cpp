@@ -1526,16 +1526,16 @@ void Dorade::calcAirborneAngles(struct asib_info *asib, struct cfac_info *cfac, 
      * "Mapping of the Airborne Doppler Radar Data"
      */
     d = asib->roll;
-    R = isnanf(d) ? 0 : RADIANS(d +cfac->c_roll);
+    R = std::isnanf(d) ? 0 : RADIANS(d +cfac->c_roll);
 	
     d = asib->pitch;
-    P = isnanf(d) ? 0 : RADIANS(d +cfac->c_pitch);
+    P = std::isnanf(d) ? 0 : RADIANS(d +cfac->c_pitch);
 	
     d = asib->head;
-    H = isnanf(d) ? 0 : RADIANS(d +cfac->c_head);
+    H = std::isnanf(d) ? 0 : RADIANS(d +cfac->c_head);
 	
     d = asib->drift;
-    D = isnanf(d) ? 0 : RADIANS(d +cfac->c_drift);
+    D = std::isnanf(d) ? 0 : RADIANS(d +cfac->c_drift);
 	
     sinP = sin(P);
     cosP = cos(P);
@@ -1548,10 +1548,10 @@ void Dorade::calcAirborneAngles(struct asib_info *asib, struct cfac_info *cfac, 
     cosT = cos(T);
 	
     d = asib->rot_ang;
-    theta_a = isnanf(d) ? 0 : RADIANS(d +cfac->c_rotang);
+    theta_a = std::isnanf(d) ? 0 : RADIANS(d +cfac->c_rotang);
     
     d = asib->tilt_ang;
-    tau_a = isnanf(d) ? 0 : RADIANS(d +cfac->c_tiltang);
+    tau_a = std::isnanf(d) ? 0 : RADIANS(d +cfac->c_tiltang);
     sin_tau_a = sin(tau_a);
     cos_tau_a = cos(tau_a);
     sin_theta_rc = sin(theta_a + R); /* roll corrected rotation angle */

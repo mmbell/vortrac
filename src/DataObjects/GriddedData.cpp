@@ -15,7 +15,7 @@
 
 #include "GriddedData.h"
 #include "Message.h"
-#include <math.h>
+#include <cmath>
 
 GriddedData::GriddedData()
 {
@@ -1680,9 +1680,9 @@ int GriddedData::getSphericalRangeLengthTest(float azimuth, float elevation)
         float jDistMax = fabs(k/te1);
         float jMin = refPointJ-jDistMax;
         float jMax = jDistMax+refPointJ;
-        if((jMin < 0)||(isnan(jMin)))
+        if((jMin < 0)||(std::isnan(jMin)))
             jMin = 0;
-        if((isnan(jMax))||(jMax > jDim))
+        if((std::isnan(jMax))||(jMax > jDim))
             jMax = jDim;
         // if(jMin >= jMax)
         Message::toScreen("Terrible JLimits for k = "+QString().setNum(k)+" jMin = "+QString().setNum(jMin)+" jMax = "+QString().setNum(jMax));
