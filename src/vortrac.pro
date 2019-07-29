@@ -140,8 +140,7 @@ SOURCES += main.cpp \
            Batch/BatchWindow.cpp \
            DriverAnalysis.cpp
 RESOURCES += vortrac.qrc
-# LIBS += -ludunits2 -lRadx -lbz2 -larmadillo -lhdf5_cpp -lnetcdf_c++
-LIBS += -lbz2 -larmadillo  -L/usr/local/lib -ludunits2 -lRadx -lnetcdf_c++ -lhdf5_cpp -lNcxx
+# LIBS += -lbz2 -larmadillo  -L/usr/local/lib -ludunits2 -lRadx -lnetcdf_c++ -lhdf5_cpp -lNcxx
 LIBS += -lbz2 -larmadillo  -L/usr/local/lib -ludunits2 -lRadx -lnetcdf_c++ -lnetcdf  -lhdf5_cpp -lhdf5 -lNcxx -lz
 QT += xml network widgets
 # CONFIG += debug
