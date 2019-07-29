@@ -15,7 +15,7 @@
 
 #include "GriddedData.h"
 #include "Message.h"
-#include <math.h>
+#include <cmath>
 
 GriddedData::GriddedData()
 {
