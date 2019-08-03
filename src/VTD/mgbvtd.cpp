@@ -7,10 +7,17 @@
  *  All rights reserved.
  *
  */
+
+// This is temporarily disabled as installing the armadillo library pulls in an hdf5 library that
+// interferes with lrose-core.
+// The proposed fix is to remove the dependency on the lrose legacy netcdf interface so that we can
+// use the system libraries instead of building the lrose netcdf library
+// Bruno Melli 08/02.19
+
 #include <vector>
 #include <algorithm>
 #include <cmath>
-#include <armadillo>
+// #include <armadillo>
 #include "mgbvtd.h"
 
 MGBVTD::MGBVTD(float x0, float y0, float hgt, float rmw, GriddedData& cappi):
@@ -20,10 +27,13 @@ m_cappi(cappi)
 	m_centery = y0;
 	m_centerz = hgt;
 	m_rmw     = rmw;
+	std::cout << "MGBVTD is not supported in this cyclone release. Aborting" << std::endl;
+ 	exit(1);
 }
 
 float MGBVTD::computeCrossBeamWind(float guessMax, QString& velField, GBVTD* gbvtd, Hvvp* hvvp)
 {
+#if 0
 	const float Rt = sqrt(m_centerx*m_centerx+m_centery*m_centery);
 
 	//1. calculate Vt profile first
@@ -109,4 +119,6 @@ float MGBVTD::computeCrossBeamWind(float guessMax, QString& velField, GBVTD* gbv
 		return 0.0f;
 	else	
 		return tmpBest;
+ return 0.0;
+#endif
 }

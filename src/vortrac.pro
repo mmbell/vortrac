@@ -141,7 +141,8 @@ SOURCES += main.cpp \
            DriverAnalysis.cpp
 RESOURCES += vortrac.qrc
 # LIBS += -lbz2 -larmadillo  -L/usr/local/lib -ludunits2 -lRadx -lnetcdf_c++ -lhdf5_cpp -lNcxx
-LIBS += -lbz2 -larmadillo  -L/usr/local/lib -ludunits2 -lRadx -lnetcdf_c++ -lnetcdf  -lhdf5_cpp -lhdf5 -lNcxx -lz
+# LIBS += -lbz2 -larmadillo  -L/usr/local/lib -ludunits2 -lRadx -lnetcdf_c++ -lnetcdf  -lhdf5_cpp -lhdf5 -lNcxx -lz
+LIBS += -lbz2 -L/usr/local/lib -ludunits2 -lRadx -lnetcdf_c++ -lnetcdf  -lhdf5_cpp -lhdf5 -lNcxx -lz
 QT += xml network widgets
 # CONFIG += debug
 #CONFIG -= app_bundle
