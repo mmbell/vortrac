@@ -63,6 +63,10 @@ to create a ```Makefile``` or ```Xcode project``` for your machine.
 
 Run ```make``` or build via Xcode to create the ```vortrac``` binary.
 
+```   
+     $ make
+     $ make install
+```
 ## Using VORTRAC
 
 A Users Guide is included in the `doc` subdirectory.
