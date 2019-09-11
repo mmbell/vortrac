@@ -9,15 +9,63 @@ The primary display shows a timeline of estimated central surface pressure and t
 
 This development was funded under grants from the NOAA Joint Hurricane Testbed program from 2005 – 2007, and 2011-2012.
 
-## Compilation and Use
+## Dependencies for the build
 
-To compile, use [qmake](http://qt.nokia.com/) from the top-level directory:
+The package dependencies are:
 
+```
+   git
+   gcc
+   gcc-c++
+   libX11-devel
+   libXext-devel
+   qt5-qtbase-devel
+   zlib-devel
+   bzip2-devel
+   hdf5-devel
+   netcdf-devel 
+   armadillo-devel
+```
+
+Also, you need to install [lrose-core](https://github.com/NCAR/lrose-core).
+
+This should normally be installed in:
+
+```
+  /usr/local/lrose
+```
+
+or:
+
+```
+  $HOME/lrose
+```
+
+If the lrose-core installation directory is not one of those listed above, then
+set the LROSE_INSTALL_DIR environment variable to point to the install location.
+
+For example:
+
+```
+  setenv LROSE_INSTALL_DIR /opt/local
+```
+
+## Building
+
+To compile, use [qmake](http://qt.nokia.com/) from the src directory:
+
+```   
+     $ cd src
      $ qmake
+```
 
-to create a Makefile or Xcode project for your machine. Run `make` or build via Xcode to create the `vortrac` binary.
+to create a ```Makefile``` or ```Xcode project``` for your machine.
 
-A User's Guide is included in the `doc` subdirectory.
+Run ```make``` or build via Xcode to create the ```vortrac``` binary.
+
+## Using VORTRAC
+
+A Users Guide is included in the `doc` subdirectory.
 
 Several utility scripts for creating a deployable application or viewing the VORTRAC output offline are included in the `util` subdirectory.
 
