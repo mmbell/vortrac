@@ -1,10 +1,10 @@
 #include <iostream>
 
-#include <netcdfcpp.h>
+#include <Ncxx/Nc3xFile.hh>
 #include "RadxGrid.h"
 
 RadxGrid::RadxGrid(const QString &radarname, const float &lat, const float &lon,
-	       const QString &filename) : RadarData(radarname, lat, lon, filename)
+                   const QString &filename) : RadarData(radarname, lat, lon, filename)
 {
   numSweeps = -1;
   numRays = -1;
@@ -19,19 +19,19 @@ RadxGrid::~RadxGrid() {
 // TODO: Move RadxGrid stuff from CappiGrid.cpp to here.
 
 bool RadxGrid::readVolume() {
-
+  
   // Need to set the volume date
 
-  NcError ncError(NcError::verbose_nonfatal); // Prevent error from exiting the program
+  Nc3Error ncError(Nc3Error::verbose_nonfatal); // Prevent error from exiting the program
 
-  NcFile file(radarFileName.toLatin1().data(), NcFile::ReadOnly);
+  Nc3File file(radarFileName.toLatin1().data(), Nc3File::ReadOnly);
 
   if (! file.is_valid() ) {
     std::cerr << "ERROR - reading file: " << radarFileName.toLatin1().data() << std::endl;
     return false;
   }
 
-  NcVar *var = file.get_var("start_time");
+  Nc3Var *var = file.get_var("start_time");
   if (var == NULL) {
     std::cerr << "ERROR - Can't find 'start_time' in " << radarFileName.toLatin1().data() << std::endl;
     return false;

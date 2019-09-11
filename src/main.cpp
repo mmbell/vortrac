@@ -72,6 +72,10 @@ int main(int argc, char *argv[])
       exit(0);
     }
 
+    if (debug) {
+      std::cerr << "==>> conf_file: " << conf_file << std::endl;
+    }
+
     // A bit more complex than I'd like, but this preserves the historical usage
     // vortrac             <- GUI mode
     // vortrac file.xml    <- Batch mode

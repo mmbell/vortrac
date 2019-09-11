@@ -397,11 +397,11 @@ bool ChooseCenter::_calMeanCenters()
         meanCenX   = meanCenX/NLEVEL;
         meanCenY   = meanCenY/NLEVEL;
         if(vidx == (_simplexResults->size() -1)){
-            const float radarLat = _config->getParam(_config->getConfig("radar"), QString("lat")).toFloat();
-            const float radarLon = _config->getParam(_config->getConfig("radar"), QString("lon")).toFloat();
-            const float radarLatRadians = radarLat * acos(-1.0) / 180.0;
-            const float fac_lat = 111.13209 - 0.56605 * cos(2.0 * radarLatRadians) + 0.00012 * cos(4.0 * radarLatRadians) - 0.000002 * cos(6.0 * radarLatRadians);
-            const float fac_lon = 111.41513 * cos(radarLatRadians) - 0.09455 * cos(3.0 * radarLatRadians) + 0.00012 * cos(5.0 * radarLatRadians);
+            // const float radarLat = _config->getParam(_config->getConfig("radar"), QString("lat")).toFloat();
+            // const float radarLon = _config->getParam(_config->getConfig("radar"), QString("lon")).toFloat();
+            // const float radarLatRadians = radarLat * acos(-1.0) / 180.0;
+            // const float fac_lat = 111.13209 - 0.56605 * cos(2.0 * radarLatRadians) + 0.00012 * cos(4.0 * radarLatRadians) - 0.000002 * cos(6.0 * radarLatRadians);
+            // const float fac_lon = 111.41513 * cos(radarLatRadians) - 0.09455 * cos(3.0 * radarLatRadians) + 0.00012 * cos(5.0 * radarLatRadians);
 
             //std::cout<<"ChooseCenter found new mean center: "<<radarLat+meanCenY/fac_lat<<","<<radarLon+meanCenX/fac_lon<<","<<meanRadius<<std::endl;
         }
@@ -862,7 +862,7 @@ bool ChooseCenter::fixCenters()
     for(int hidx = 0; hidx < numHeights->count(); hidx++) {
 
         int currHeight = heights[hidx];  // in meters
-        int goodVolumes = numHeights->value(currHeight);
+        // int goodVolumes = numHeights->value(currHeight);
         int* levelIndices = indexOfHeights->value(currHeight);
 
         if(levelIndices[lastTimeIndex]==-1){
@@ -891,9 +891,9 @@ bool ChooseCenter::fixCenters()
                 float polyFity = 0;
                 float polyFitrad = 0;
                 float polyFitwind = 0;
-                float finalStd = 0;
-                float confidence = 0;
-                float stdError = 0;
+                // float finalStd = 0;
+                // float confidence = 0;
+                // float stdError = 0;
                 float min = ((float)firstTime.secsTo(_simplexResults->at(vidx).getTime())/60.0);
                 //check out use of n up to best degree of fit based on assignment
                 for(int n = 0; n <= _ppBestFitDegree[0][hidx]; n++) {
@@ -959,7 +959,7 @@ bool ChooseCenter::fixCenters()
                     // if the volume we are looking at is the last one we will want to keep all the info in vortexData
                     // We don't check to see that any of these levels are in the search zone for vortexData in vtd
 
-                    int j = _ppBestRadius[vidx][levelIndices[vidx]];
+                    // int j = _ppBestRadius[vidx][levelIndices[vidx]];
 
                     float centerLat = radarLat + bestCenter.getY()/fac_lat;
                     float centerLon = radarLon + bestCenter.getX()/fac_lon;

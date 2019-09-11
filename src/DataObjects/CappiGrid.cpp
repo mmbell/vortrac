@@ -206,7 +206,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
                 //and (currentRay->getElevation() < 0.75)) {
                 //and (fabs(currentRay->getNyquist_vel() - maxNyquist) < 0.1)) {
             float* velData = currentRay->getVelData();
-            float* swData = currentRay->getSwData();
+            // float* swData = currentRay->getSwData();
             float nyquist = currentRay->getNyquist_vel();
             for (int g = 0; g <= (currentRay->getVel_numgates()-1); g++) {
                 if (velData[g] == -999.) { continue; }
@@ -251,7 +251,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
             }
 
             velData = NULL;
-            swData = NULL;
+            // swData = NULL;
             //delete velData;
             //delete swData;
         }
@@ -297,7 +297,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
                     // Just grab the lowest elevation sweeps & try to adjust bad folds
                     //and (currentRay->getElevation() < 0.75)) {
                 float* velData = currentRay->getVelData();
-                float* swData = currentRay->getSwData();
+                // float* swData = currentRay->getSwData();
                 float nyquist = currentRay->getNyquist_vel();
                 for (int g = 0; g <= (currentRay->getVel_numgates()-1); g++) {
                     if (velData[g] == -999.) { continue; }
@@ -371,7 +371,7 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
                 }
 
                 velData = NULL;
-                swData = NULL;
+                // swData = NULL;
                 //delete velData;
                 //delete swData;
             }
@@ -537,13 +537,13 @@ void CappiGrid::CressmanInterpolation(RadarData *radarData)
 // Put it here for now. But I can see adding the ability to read different file formats
 // depending on subclassing a "reader"
 
-bool CappiGrid::getOriginLatLon(NcFile &file, float &lat, float &lon)
+bool CappiGrid::getOriginLatLon(Nc3File &file, float &lat, float &lon)
 {
-  NcVar *lat0 = file.get_var("lat0");
+  Nc3Var *lat0 = file.get_var("lat0");
   if ( lat0 == NULL )
     return false;
   
-  NcVar *lon0 = file.get_var("lon0");
+  Nc3Var *lon0 = file.get_var("lon0");
   if ( lon0 == NULL )
     return false;
   
@@ -572,26 +572,26 @@ bool CappiGrid::getOriginLatLon(NcFile &file, float &lat, float &lon)
   return true;
 }
 
-bool CappiGrid::getGridMapping(NcFile &file, float &radar_lat, float &radar_lon)
+bool CappiGrid::getGridMapping(Nc3File &file, float &radar_lat, float &radar_lon)
 {
-  NcVar *grid_mapping = file.get_var("grid_mapping_0");
+  Nc3Var *grid_mapping = file.get_var("grid_mapping_0");
   if (grid_mapping == NULL)
     return false;
-  NcAtt *olat = grid_mapping->get_att("latitude_of_projection_origin");
+  Nc3Att *olat = grid_mapping->get_att("latitude_of_projection_origin");
   if (olat == NULL)
     return false;
   radar_lat = olat->as_float(0);
   
-  NcAtt *olon = grid_mapping->get_att("longitude_of_projection_origin");
+  Nc3Att *olon = grid_mapping->get_att("longitude_of_projection_origin");
   if (olon == NULL)
     return false;
   radar_lon = olon->as_float(0);
   return true;
 }
 
-bool CappiGrid::getDimInfo(NcFile &file, int dim, const char *varName, float &spacing, float &min, float &max)
+bool CappiGrid::getDimInfo(Nc3File &file, int dim, const char *varName, float &spacing, float &min, float &max)
 {
-  NcVar *var = file.get_var(varName);
+  Nc3Var *var = file.get_var(varName);
   if (var == NULL) return false;
     
   float *vals = new float[dim];
@@ -606,9 +606,9 @@ bool CappiGrid::getDimInfo(NcFile &file, int dim, const char *varName, float &sp
   return retVal;
 }
 
-bool CappiGrid::getFillValue(NcVar *var, float &val)
+bool CappiGrid::getFillValue(Nc3Var *var, float &val)
 {
-  NcAtt *fv = var->get_att("_FillValue");
+  Nc3Att *fv = var->get_att("_FillValue");
   if (fv == NULL)
     return false;
   val = fv->as_float(0);
@@ -623,13 +623,13 @@ bool CappiGrid::getFillValue(NcVar *var, float &val)
 
 void CappiGrid::loadPreGridded(RadarData *radarData, QDomElement cappiConfig)
 {
-  NcError ncError(NcError::verbose_nonfatal); // Prevent NertCDF error from exiting the program
+  Nc3Error ncError(Nc3Error::verbose_nonfatal); // Prevent NertCDF error from exiting the program
 
   // Fill in the grid from a NetCdf file containing pre-gridded data.
   QString fname = radarData->getFileName();
 
   // Open the file
-  NcFile file(fname.toLatin1().data(), NcFile::ReadOnly);
+  Nc3File file(fname.toLatin1().data(), Nc3File::ReadOnly);
 
   if (! file.is_valid() ) {
     std::cerr << "ERROR - reading file: " << fname.toLatin1().data()
@@ -640,9 +640,9 @@ void CappiGrid::loadPreGridded(RadarData *radarData, QDomElement cappiConfig)
 
   // Read the dimentions
 
-  NcDim *x0 = file.get_dim("x0");
-  NcDim *y0 = file.get_dim("y0");
-  NcDim *z0 = file.get_dim("z0");
+  Nc3Dim *x0 = file.get_dim("x0");
+  Nc3Dim *y0 = file.get_dim("y0");
+  Nc3Dim *z0 = file.get_dim("z0");
   
   iDim = x0->size();
   jDim = y0->size();
@@ -681,7 +681,7 @@ void CappiGrid::loadPreGridded(RadarData *radarData, QDomElement cappiConfig)
   if (! r.isNull())
     refVarName = r.text();
   
-  NcVar *reflectivity = file.get_var(refVarName.toLatin1().data());	// radar_reflexivity
+  Nc3Var *reflectivity = file.get_var(refVarName.toLatin1().data());	// radar_reflexivity
   if (reflectivity == NULL) {
     std::cerr << "Can't get reflexivity '" << refVarName.toLatin1().data()
 	      << "' from " << fname.toLatin1().data() << std::endl;
@@ -695,11 +695,11 @@ void CappiGrid::loadPreGridded(RadarData *radarData, QDomElement cappiConfig)
 
   // std::cout << "Velocity Variable: " << velVarName.toLatin1().data() << std::endl;
   
-  NcVar *velocity = file.get_var(velVarName.toLatin1().data());
+  Nc3Var *velocity = file.get_var(velVarName.toLatin1().data());
   if( velocity == NULL)
     std::cerr << "Can't get velocity (" << velVarName.toLatin1().data() << ") from " << fname.toLatin1().data() << std::endl;
 
-  NcVar *spectrum = file.get_var("SW");
+  Nc3Var *spectrum = file.get_var("SW");
   if( spectrum == NULL) {
     std::cerr << "Can't get spectrum width (SW) from " << fname.toLatin1().data() << std::endl;
   }

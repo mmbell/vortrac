@@ -13,8 +13,8 @@
 
 #include <QDomElement>
 #include <QFile>
-#include <netcdfcpp.h>
 
+#include <Ncxx/Nc3xFile.hh>
 #include "Radar/RadarData.h"
 #include "DataObjects/GriddedData.h"
 
@@ -27,10 +27,10 @@ public:
     void  gridRadarData(RadarData *radarData, QDomElement cappiConfig,float *vortexLat, float *vortexLon);
     
     void  loadPreGridded(RadarData *radarData, QDomElement cappiConfig);
-    bool  getGridMapping(NcFile &file, float &radar_lat, float &radar_lon);
-    bool  getOriginLatLon(NcFile &file, float &origin_lat, float &origin_lon);
-    bool  getDimInfo(NcFile &file, int dim,  const char *varName, float &spacing, float &min, float &max);
-    bool  getFillValue(NcVar *var, float &val);
+    bool  getGridMapping(Nc3File &file, float &radar_lat, float &radar_lon);
+    bool  getOriginLatLon(Nc3File &file, float &origin_lat, float &origin_lon);
+    bool  getDimInfo(Nc3File &file, int dim,  const char *varName, float &spacing, float &min, float &max);
+    bool  getFillValue(Nc3Var *var, float &val);
 
     void  CressmanInterpolation(RadarData *radarData);
     float trilinear(const float &x, const float &y,const float &z, const int &param);

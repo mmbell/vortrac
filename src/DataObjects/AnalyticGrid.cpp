@@ -561,11 +561,12 @@ void AnalyticGrid::gridDefFieldData()
 	float vx = 0;
 	float vy = 0;
 	float ref = 0;
-	float delX, delY, r, theta, delRX, delRY, radR;
+	float delX, delY, r, delRX, delRY, radR;
+        // float theta;
 	delX = centX-(iGridsp*i);
 	delY = centY-(jGridsp*j);
 	r = sqrt(delX*delX+delY*delY);
-	theta = atan2(delX,delY);
+	// theta = atan2(delX,delY);
 	delRX = radX-(iGridsp*i);
 	delRY = radY-(jGridsp*j);
 	radR = sqrt(delRX*delRX+delRY*delRY);
