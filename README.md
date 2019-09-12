@@ -61,7 +61,7 @@ To compile, use [qmake](http://qt.nokia.com/) from the src directory:
 
 to create a ```Makefile``` or ```Xcode project``` for your machine.
 
-Run ```make``` or build via Xcode to create the ```vortrac``` binary.
+Run make or build via Xcode to create the ```vortrac``` binary.
 
 ```   
      $ make
