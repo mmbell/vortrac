@@ -27,8 +27,8 @@ TEMPLATE = app
 DEPENDPATH += . Config Grids GUI IO Radar
 
 INCLUDEPATH += . GUI Config IO Radar
-INCLUDEPATH += $$(HOME)/lrose/include /usr/local/lrose/include
-QMAKE_LIBDIR += $$(HOME)/lrose/lib /usr/local/lrose/lib
+INCLUDEPATH += /usr/local/include $$(HOME)/lrose/include /usr/local/lrose/include
+QMAKE_LIBDIR += $$(HOME)/lrose/lib /usr/local/lrose/lib /usr/local/lib
 
 lroseDir = $$(LROSE_INSTALL_DIR)
 !isEmpty(lroseDir) {
