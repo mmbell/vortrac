@@ -7,7 +7,7 @@ src/build/*
 src/vortrac.xcodeproj/*
 src/.qmake.stash
 moc_*
-qrc_*
+#qrc_*
 Info.plist
 .svn
 .DS_Store
