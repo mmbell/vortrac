@@ -29,6 +29,7 @@ DEPENDPATH += . Config Grids GUI IO Radar
 INCLUDEPATH += . GUI Config IO Radar
 INCLUDEPATH += /usr/local/include $$(HOME)/lrose/include /usr/local/lrose/include
 QMAKE_LIBDIR += $$(HOME)/lrose/lib /usr/local/lrose/lib /usr/local/lib
+QMAKE_LIBDIR += /usr/lib/x86_64-linux-gnu/hdf5/serial
 
 lroseDir = $$(LROSE_INSTALL_DIR)
 !isEmpty(lroseDir) {
