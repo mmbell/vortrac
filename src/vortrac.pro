@@ -28,6 +28,16 @@ DEPENDPATH += . Config Grids GUI IO Radar
 
 INCLUDEPATH += . GUI Config IO Radar
 INCLUDEPATH += /usr/local/include $$(HOME)/lrose/include /usr/local/lrose/include
+
+# add the following temporarily - Debian 10 and Ubuntu 19 seem to have
+# a bug in qmake which points to /usr/lib instead of /usr/include
+INCLUDEPATH += /usr/include/x86_64-linux-gnu/qt5
+INCLUDEPATH += /usr/include/x86_64-linux-gnu/qt5/QtGui
+INCLUDEPATH += /usr/include/x86_64-linux-gnu/qt5/QtXml
+INCLUDEPATH += /usr/include/x86_64-linux-gnu/qt5/QtNetwork
+INCLUDEPATH += /usr/include/x86_64-linux-gnu/qt5/QtCore
+INCLUDEPATH += /usr/include/x86_64-linux-gnu/qt5/QtWidgets
+
 QMAKE_LIBDIR += $$(HOME)/lrose/lib /usr/local/lrose/lib /usr/local/lib
 QMAKE_LIBDIR += /usr/lib/x86_64-linux-gnu/hdf5/serial
 
