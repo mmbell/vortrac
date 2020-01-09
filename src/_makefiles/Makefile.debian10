@@ -37,7 +37,7 @@ COMPRESS      = gzip -9f
 DISTNAME      = vortrac1.0.0
 DISTDIR = /root/git/vortrac/src/.tmp/vortrac1.0.0
 LINK          = x86_64-linux-gnu-g++
-LFLAGS        = -Wl,-O1,-rpath,/usr/local/lrose/lib:/usr/local/lib
+LFLAGS        = -Wl,-O1,-rpath,/usr/local/lrose/lib:/usr/local/lib:/usr/lib/x86_64-linux-gnu
 
 LIBS          = $(SUBLIBS) -L/root/lrose/lib -L/usr/local/lrose/lib -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu/hdf5/serial -lRadx -lNcxx -lnetcdf -lhdf5_cpp -lhdf5 -larmadillo -lz -lbz2 -L/usr/lib/x86_64-linux-gnu/qt5/lib -lQt5Widgets -lQt5Gui -lQt5Xml -lQt5Network -lQt5Core -lGL -lpthread 
 AR            = ar cqs
