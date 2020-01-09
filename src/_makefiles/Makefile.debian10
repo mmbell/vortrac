@@ -664,7 +664,6 @@ compiler_rcc_clean:
 	-$(DEL_FILE) qrc_vortrac.cpp
 qrc_vortrac.cpp: vortrac.qrc \
 		/usr/lib/x86_64-linux-gnu/qt5/bin/rcc
-	/usr/lib/x86_64-linux-gnu/qt5/bin/rcc -name vortrac vortrac.qrc -o qrc_vortrac.cpp
 
 compiler_moc_predefs_make_all: moc_predefs.h
 compiler_moc_predefs_clean:
@@ -2323,6 +2322,7 @@ moc_DriverAnalysis.o: moc_DriverAnalysis.cpp
 ####### Install
 
 install:  FORCE
+          /bin/cp -f vortrac /usr/local/lrose/bin
 
 uninstall:  FORCE
 
