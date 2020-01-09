@@ -48,7 +48,7 @@ lroseDir = $$(LROSE_INSTALL_DIR)
 }
 
 !macx {
-   QMAKE_LFLAGS += -Wl,-rpath,$$(NETCDF_LIB) -L/usr/local/lib
+   QMAKE_LFLAGS += -Wl,-O1,-rpath,/usr/local/lrose/lib:/usr/local/lib:/usr/lib/x86_64-linux-gnu
 }
 
 QMAKE_CXXFLAGS += -std=c++0x
