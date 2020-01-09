@@ -2322,7 +2322,7 @@ moc_DriverAnalysis.o: moc_DriverAnalysis.cpp
 ####### Install
 
 install:  FORCE
-          /bin/cp -f vortrac /usr/local/lrose/bin
+	/bin/cp -f vortrac /usr/local/lrose/bin
 
 uninstall:  FORCE
 
