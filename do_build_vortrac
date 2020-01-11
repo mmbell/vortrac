@@ -1,0 +1,98 @@
+#! /bin/bash
+
+# perform builds for vortrac
+
+#--------------------------------------------------------------------
+# usage function
+#
+
+function usage() {
+    echo
+    echo "Perform builds for specified package"
+    echo "Usage:"
+    echo "  $scriptName [options below]"
+    echo "  -h   :  help"
+    echo "  -d   :  turn debugging on"
+    echo "  -p ? :  prefix for installing vortrac"
+    echo "          default is /usr/local/lrose"
+    echo "  -l ? :  set lrose install dir"
+    echo "          default is /usr/local/lrose"
+    echo "  -i   :  perform install after build"
+    echo "  -3   :  use cmake3 instead of cmake"
+    echo
+}
+
+scriptName=$(basename $0)
+debug=false
+prefix=/usr/local/lrose
+lrose_install_dir=/usr/local/lrose
+do_install=false
+use_cmake3=false
+
+# Parse command line options.
+while getopts hdi3p:l: OPT; do
+    case "$OPT" in
+        h)
+            usage
+            exit 0
+            ;;
+        d)
+            debug=true
+            ;;
+        p)
+            prefix=$OPTARG
+            ;;
+        l)
+            lrose_install_dir=$OPTARG
+            ;;
+        i)
+            do_install=true
+            ;;
+        3)
+            use_cmake3=true
+            ;;
+        \?)
+            # getopts issues an error message
+            echo "Problems with command line usage"
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+echo "===>> Building vortrac <<==="
+echo "      prefix: $prefix"
+echo "      lrose_install_dir: $lrose_install_dir"
+echo "      do_install: $do_install"
+
+export LROSE_INSTALL_DIR=$prefix
+
+# go to src dir
+
+cd src
+
+# clean up
+
+/bin/rm -f .qmake.stash
+
+# create makefiles
+
+qmake .
+
+# do the build
+
+make -j 8
+
+# do the install
+
+if [ "$do_install" = "true" ]
+then
+    mkdir -p $prefix/bin
+    echo rsync -av vortrac $prefix/bin
+    rsync -av vortrac $prefix/bin
+fi
+
+cd ..
+
+
+
