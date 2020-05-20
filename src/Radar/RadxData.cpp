@@ -40,18 +40,19 @@ RadxData::~RadxData()
 
 float *RadxData::getRayData(RadxRay *fileRay, const char *fieldName)
 {
-  const RadxRay::FieldNameMap fieldMap = fileRay->getFieldNameMap();
+  // const RadxRay::FieldNameMap fieldMap = fileRay->getFieldNameMap();
 
   // fieldMap[fielfdName] would be nicer to use. But it returns an index of 0 if fieldName doesn't exist.
   // can't differentiate it with the index of the first field, also 0
 
-  RadxRay::FieldNameMapConstIt name_it;
-  name_it = fieldMap.find(fieldName);
+  //RadxRay::FieldNameMapConstIt name_it;
+  //name_it = fieldMap.find(fieldName);
 
-  if (name_it == fieldMap.end())
-    return NULL;
+  //if (name_it == fieldMap.end())
+  //  return NULL;
 
-  RadxField *field = fileRay->getField(name_it->second);
+  //RadxField *field = fileRay->getField(name_it->second);
+  RadxField *field = fileRay->getField(fieldName);
   if (field == NULL)
     return NULL;
 
