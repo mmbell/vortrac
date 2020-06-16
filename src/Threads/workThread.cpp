@@ -211,7 +211,9 @@ void workThread::run()
 			    continue;
 			  }
 			} else {
+                          // useBestGuessCenter sets bestLevel inside vortexData object
 			  vortexData = useBestGuessCenter(newVolume, bottomLevel, gridData->getKGridsp());
+                          bestLevel = vortexData->getBestLevel();
 			  updateCappiDisplayInfo(gridData, vortexData, radarLat, radarLon, _firstGuessLat, _firstGuessLon);
   			}
 
