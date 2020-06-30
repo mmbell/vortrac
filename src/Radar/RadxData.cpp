@@ -12,7 +12,6 @@
 #include "Radx/RadxRay.hh"
 
 #include "RadxData.h"
-//#include "RadarQC.h"
 
 RadxData::RadxData(const QString &radarname, const float &lat, const float &lon, const QString &filename)
   : RadarData(radarname, lat, lon, filename)
@@ -33,25 +32,15 @@ RadxData::~RadxData()
 }
 
 // TODO
-// This essentially takes an array of float from the Radx library, and shove it into an array
-// of float in the Radar object.
-// See if we can change the RadarData interface to access the Radx data directly
-// - Maybe put a handle to the field instead of the arrays
+// This essentially takes an array of float from the Radx library,
+// and shoves it into an array of float in the Radar object.
+// See if we can change the RadarData interface to access the
+// Radx data directly
+// Maybe put a handle to the field instead of the arrays
 
 float *RadxData::getRayData(RadxRay *fileRay, const char *fieldName)
 {
-  // const RadxRay::FieldNameMap fieldMap = fileRay->getFieldNameMap();
 
-  // fieldMap[fielfdName] would be nicer to use. But it returns an index of 0 if fieldName doesn't exist.
-  // can't differentiate it with the index of the first field, also 0
-
-  //RadxRay::FieldNameMapConstIt name_it;
-  //name_it = fieldMap.find(fieldName);
-
-  //if (name_it == fieldMap.end())
-  //  return NULL;
-
-  //RadxField *field = fileRay->getField(name_it->second);
   RadxField *field = fileRay->getField(fieldName);
   if (field == NULL)
     return NULL;
@@ -64,8 +53,9 @@ float *RadxData::getRayData(RadxRay *fileRay, const char *fieldName)
 
   // Convert field to float32
   field->convertToFl32();
-
-  // When homebrew picks up the fixed version, uncomment the next line, and remove the check
+  
+  // When homebrew picks up the fixed version,
+  // uncomment the next line, and remove the check
   // for missingFl32.
   // field->setMissingFl32(-999.0);
 
