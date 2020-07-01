@@ -55,13 +55,11 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   set ( CMAKE_EXE_LINKER_FLAGS "-Wl,--enable-new-dtags" )
 endif()
 
-# build location
+# build location - topdir/bin
 
-#set (EXECUTABLE_OUTPUT_PATH build/release/bin)
 set (EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
-# recurse into src directory
+# recurse into src directory for the build
 
 add_subdirectory (src)  
-
 
