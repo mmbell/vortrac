@@ -191,20 +191,19 @@ include_directories(${Qt5Xml_INCLUDE_DIRS})
 include_directories(${Qt5Network_INCLUDE_DIRS})
 include_directories(${Qt5Core_INCLUDE_DIRS})
 
+# set link dirs
+
 link_directories($ENV{HOME}/lrose/lib)
 link_directories(/usr/local/lrose/lib)
 link_directories(/usr/local/lib)
 link_directories(${LROSE_LIB_DIR})
 link_directories(/usr/lib/x86_64-linux-gnu/hdf5/serial)
 
-#target_include_directories (${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} /usr/local/include ${LROSE_INCLUDE_DIRS} )
-
 # we are building vortrac
 
-#add_executable (${PROJECT_NAME} ${HEADERS} ${SOURCES} ${MOC_SOURCES})
 add_executable (${PROJECT_NAME} ${HEADERS} ${SOURCES})
 
-#target_include_directories (${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} /usr/local/include ${LROSE_INCLUDE_DIRS} )
+# set libraries to link with
 
 target_link_libraries (${PROJECT_NAME} ${LROSE_LIBRARIES})
 target_link_libraries (${PROJECT_NAME} ${LIBZIP_LIBRARIES} bz2)
@@ -214,7 +213,9 @@ target_link_libraries (${PROJECT_NAME} ${Qt5Gui_LIBRARIES})
 target_link_libraries (${PROJECT_NAME} ${Qt5Xml_LIBRARIES})
 target_link_libraries (${PROJECT_NAME} ${Qt5Network_LIBRARIES})
 target_link_libraries (${PROJECT_NAME} ${Qt5Core_LIBRARIES})
-target_link_libraries (${PROJECT_NAME} -lGL -lpthread)
+target_link_libraries (${PROJECT_NAME} -larmadillo)
+
+# install
 
 install ( TARGETS ${PROJECT_NAME} DESTINATION bin )
 

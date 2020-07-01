@@ -21,6 +21,12 @@ set (EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 set (CMAKE_PREFIX_PATH ${CMAKE_MODULE_PATH})
 
+# set (CMAKE_FIND_DEBUG_MODE True)
+
+if (APPLE)
+  find_path (Qt5_DIR NAMES Qt5Config.cmake qt5-config.cmake HINTS /usr/local/Cellar/qt/*/lib/cmake/Qt5 NO_DEFAULT_PATH)
+endif (APPLE)
+
 # required packages
 
 find_package (Lrose COMPONENTS Ncxx Radx tdrp netcdf REQUIRED)	
@@ -51,7 +57,8 @@ endif()
 
 # build location
 
-set (EXECUTABLE_OUTPUT_PATH build/release/bin)
+#set (EXECUTABLE_OUTPUT_PATH build/release/bin)
+set (EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 # recurse into src directory
 
