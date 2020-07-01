@@ -13,8 +13,8 @@
 #include <QtGui>
 #include <QtNetwork>
 #include <QThread>
-#include "Message.h"
-#include "thredds_Config.h"
+#include "IO/Message.h"
+#include "Config/thredds_Config.h"
 
 DriverBatch::DriverBatch(QWidget *parent, const QString &fileName)
     : DriverAnalysis(parent)

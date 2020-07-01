@@ -9,7 +9,7 @@
 
 #include <QtGui>
 #include "PollThread.h"
-#include "Message.h"
+#include "IO/Message.h"
 #include <math.h>
 
 #include "DataObjects/SimplexList.h"

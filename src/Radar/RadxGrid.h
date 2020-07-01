@@ -1,6 +1,6 @@
 #ifndef RadxGrid_H
 #define RadxGrid_H
-#include "RadarData.h"
+#include "Radar/RadarData.h"
 
 class RadxGrid : public RadarData
 {

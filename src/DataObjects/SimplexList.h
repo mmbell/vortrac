@@ -14,7 +14,7 @@
 
 #include "SimplexData.h"
 #include <QList>
-#include "Configuration.h"
+#include "Config/Configuration.h"
 #include <QString>
 
 class SimplexList : public QList<SimplexData>

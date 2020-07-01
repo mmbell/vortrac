@@ -17,8 +17,8 @@
 #include <QDateTime>
 #include <QObject>
 #include "Config/Configuration.h"
-#include "Message.h"
-#include "thredds_Config.h"
+#include "IO/Message.h"
+#include "Config/thredds_Config.h"
 
 class FetchRemote : public QObject
 {

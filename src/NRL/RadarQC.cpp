@@ -14,8 +14,8 @@
 #include <QString>
 
 #include "RadarQC.h"
-#include "RadarData.h"
-#include "Message.h"
+#include "Radar/RadarData.h"
+#include "IO/Message.h"
 #include "Math/Matrix.h"
 
 RadarQC::RadarQC(RadarData *radarPtr, QObject *parent)

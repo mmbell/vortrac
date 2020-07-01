@@ -9,7 +9,7 @@
  */
 
 #include "SimplexData.h"
-#include "Message.h"
+#include "IO/Message.h"
 #include <QTextStream>
 
 constexpr float SimplexData::_fillv;

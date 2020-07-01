@@ -15,8 +15,8 @@
 #include <QFile>
 #include <QDateTime>
 #include <QDomElement>
-#include "Sweep.h"
-#include "Ray.h"
+#include "Radar/Sweep.h"
+#include "Radar/Ray.h"
 
 class RadarData
 {

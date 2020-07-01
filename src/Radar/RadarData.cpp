@@ -8,11 +8,11 @@
  *
  */
 
-#include "RadarData.h"
+#include "Radar/RadarData.h"
 #include <math.h>
 #include <QFile>
 #include <QTextStream>
-#include "Message.h"
+#include "IO/Message.h"
 
 RadarData::RadarData(QString radarname, float lat, float lon, QString filename)
 {

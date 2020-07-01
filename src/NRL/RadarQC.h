@@ -11,8 +11,8 @@
 #ifndef RADARQC_H
 #define RADARQC_H
 
-#include "RadarData.h"
-#include "Message.h"
+#include "Radar/RadarData.h"
+#include "IO/Message.h"
 #include <QWidget>
 #include <QDomElement>
 #include <QObject>

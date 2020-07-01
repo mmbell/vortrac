@@ -8,8 +8,8 @@
  *
  */
 
-#include "Ray.h"
-#include "Message.h"
+#include "Radar/Ray.h"
+#include "IO/Message.h"
 
 Ray::Ray()
 {

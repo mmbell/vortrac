@@ -11,9 +11,9 @@
 #define DORADE_H
 
 #include "read_dorade.h"
-#include "RadarData.h"
-#include "Sweep.h"
-#include "Ray.h"
+#include "Radar/RadarData.h"
+#include "Radar/Sweep.h"
+#include "Radar/Ray.h"
 #include "IO/Message.h"
 #include <QDir>
 #include <QDateTime>

@@ -22,7 +22,7 @@
 #include "DataObjects/VortexList.h"
 #include "DataObjects/VortexData.h"
 #include "KeyPicture.h"
-#include "Message.h"
+#include "IO/Message.h"
 
 class GraphFace:public QWidget
 {

@@ -14,7 +14,7 @@
 // Coordinate systems
 
 #include "GriddedData.h"
-#include "Message.h"
+#include "IO/Message.h"
 #include <cmath>
 
 GriddedData::GriddedData()

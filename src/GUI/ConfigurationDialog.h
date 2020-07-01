@@ -13,7 +13,7 @@
 #define CONFIGURATIONDIALOG_H
 
 #include "panels.h"
-#include "Configuration.h"
+#include "Config/Configuration.h"
 
 #include <QtGui>
 #include <QtCore>

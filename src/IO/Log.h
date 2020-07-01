@@ -18,7 +18,7 @@
 #include <QDomElement>
 #include <QDir>
 #include <QMutex>
-#include "Message.h"
+#include "IO/Message.h"
 
 class Log : public QWidget
 {

@@ -11,7 +11,7 @@
 #include "PressureData.h"
 #include <QTextStream>
 #include "math.h"
-#include "Message.h"
+#include "IO/Message.h"
 
 PressureData::PressureData()
 {

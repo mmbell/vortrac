@@ -11,7 +11,7 @@
  */
 
 #include "AbstractPanel.h"
-#include "Message.h"
+#include "IO/Message.h"
 #include "RadarListDialog.h"
 
 #include <QGridLayout>

@@ -17,7 +17,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QHash>
-#include "Message.h"
+#include "IO/Message.h"
 
 class Configuration:public QObject
 {

@@ -13,7 +13,7 @@
 #define PANELS_H
 
 #include "AbstractPanel.h"
-#include "Configuration.h"
+#include "Config/Configuration.h"
 
 #include <QWidget>
 #include <QDoubleSpinBox>

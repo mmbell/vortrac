@@ -22,7 +22,7 @@
 #include <QTimer>
 #include <QEvent>
 #include <QPaintEvent>
-#include "Message.h"
+#include "IO/Message.h"
 
 class StopLight:public QWidget
 {

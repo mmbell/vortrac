@@ -8,7 +8,7 @@
  *
  */
 
-#include "thredds_Config.h"
+#include "Config/thredds_Config.h"
 
 thredds_Config::thredds_Config(QObject *parent, const QString &filename)
 : Configuration(parent, filename)

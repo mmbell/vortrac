@@ -15,7 +15,7 @@
 #include <QThread>
 #include "ConfigTree.h"
 #include "GraphFace.h"
-#include "DiagnosticPanel.h"
+#include "GUI/DiagnosticPanel.h"
 #include "StartDialog.h"
 //#include "TestGraph.h"
 

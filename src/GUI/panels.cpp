@@ -10,7 +10,7 @@
  */
 
 #include "panels.h"
-#include "Message.h"
+#include "IO/Message.h"
 #include "DataObjects/SimplexData.h"
 #include "DataObjects/VortexData.h"
 #include "DataObjects/GriddedData.h"

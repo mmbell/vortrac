@@ -11,7 +11,7 @@
 #ifndef ANALYTICRADAR_H
 #define ANALYTICRADAR_H
 
-#include "RadarData.h"
+#include "Radar/RadarData.h"
 #include "Config/Configuration.h"
 #include "DataObjects/GriddedData.h"
 #include "DataObjects/GriddedFactory.h"

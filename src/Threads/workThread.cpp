@@ -10,7 +10,7 @@
 #include <fstream>
 #include <QtGui>
 #include "workThread.h"
-#include "Message.h"
+#include "IO/Message.h"
 #include <math.h>
 #include "NRL/RadarQC.h"
 #include <unistd.h>

@@ -12,7 +12,7 @@
 
 #include "VortexData.h"
 #include <QTextStream>
-#include "Message.h"
+#include "IO/Message.h"
 #include <math.h>
 
 constexpr float VortexData::_fillv;

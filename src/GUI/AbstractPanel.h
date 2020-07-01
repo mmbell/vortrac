@@ -25,8 +25,8 @@
 #include <QDateTime>
 #include <QComboBox>
 #include <QDir>
-#include "Message.h"
-#include "Configuration.h"
+#include "IO/Message.h"
+#include "Config/Configuration.h"
 
 /*!
  * AbstractPanel is a model for creating many panels used in the

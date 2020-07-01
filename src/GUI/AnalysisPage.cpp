@@ -20,8 +20,8 @@
 #include <QFileDialog>
 
 #include "AnalysisPage.h"
-#include "Message.h"
-#include "thredds_Config.h"
+#include "IO/Message.h"
+#include "Config/thredds_Config.h"
 
 AnalysisPage::AnalysisPage(QWidget *parent)
     : DriverAnalysis(parent)

@@ -20,8 +20,8 @@
 #include <QRadioButton>
 #include <QLineEdit>
 
-#include "Configuration.h"
-#include "Message.h"
+#include "Config/Configuration.h"
+#include "IO/Message.h"
 
 class RadarListDialog:public QDialog
 {

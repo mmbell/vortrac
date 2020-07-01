@@ -9,7 +9,7 @@
  */
 #include <iostream>
 
-#include "Sweep.h"
+#include "Radar/Sweep.h"
 
 Sweep::Sweep()
 {

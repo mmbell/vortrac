@@ -11,7 +11,7 @@
 #ifndef THREDDSCONFIG_H
 #define THREDDSCONFIG_H
 
-#include "Configuration.h"
+#include "Config/Configuration.h"
 
 #include <QDomDocument>
 

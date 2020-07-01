@@ -9,8 +9,8 @@
 */
 
 #include "Hvvp.h"
-#include "Ray.h"
-#include "Sweep.h"
+#include "Radar/Ray.h"
+#include "Radar/Sweep.h"
 #include <math.h>
 #include "Math/Matrix.h"
 #include <QFile>

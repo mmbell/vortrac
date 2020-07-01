@@ -9,7 +9,7 @@
  */
 
 #include "CappiGrid.h"
-#include "Message.h"
+#include "IO/Message.h"
 #include <math.h>
 #include <QTextStream>
 #include <QFile>

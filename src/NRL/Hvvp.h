@@ -11,9 +11,9 @@
 #ifndef HVVP_H
 #define HVVP_H
 
-#include "RadarData.h"
-#include "Message.h"
-#include "Configuration.h"
+#include "Radar/RadarData.h"
+#include "IO/Message.h"
+#include "Config/Configuration.h"
 
 
 class Hvvp : public QObject

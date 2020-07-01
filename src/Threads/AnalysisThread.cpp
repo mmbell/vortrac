@@ -15,7 +15,7 @@
 #include "Radar/RadarQC.h"
 #include "DataObjects/CappiGrid.h"
 #include "DataObjects/VortexData.h"
-#include "Message.h"
+#include "IO/Message.h"
 #include "SimplexThread.h"
 #include "HVVP/Hvvp.h"
 #include "math.h"

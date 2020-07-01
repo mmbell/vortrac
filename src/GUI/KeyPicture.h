@@ -18,7 +18,7 @@
 #include <QPen>
 #include <QBrush>
 #include <QSize>
-#include "Message.h"
+#include "IO/Message.h"
 
 class KeyPicture:public QWidget
 {

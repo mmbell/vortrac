@@ -26,8 +26,8 @@
 #include "IO/ATCF.h"
 #include "Pressure/MADISFactory.h"
 #include "Radar/FetchRemote.h"
-#include "CappiDisplay.h"
-#include "DiagnosticPanel.h"
+#include "GUI/CappiDisplay.h"
+#include "GUI/DiagnosticPanel.h"
 
 #ifndef DRIVERANALYSIS_H
 #define DRIVERANALYSIS_H

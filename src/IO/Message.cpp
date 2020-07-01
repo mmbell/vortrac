@@ -9,7 +9,7 @@
  */
 
 // Process error messages
-#include "Message.h"
+#include "IO/Message.h"
 #include <QTextStream>
 
 /*Message::Message(const char *errormsg, int newProgress, 

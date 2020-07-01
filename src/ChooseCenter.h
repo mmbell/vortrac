@@ -12,7 +12,7 @@
 #ifndef CHOOSECENTER_H
 #define CHOOSECENTER_H
 
-#include "Configuration.h"
+#include "Config/Configuration.h"
 #include "DataObjects/SimplexList.h"
 #include "DataObjects/VortexData.h"
 #include <QDateTime>

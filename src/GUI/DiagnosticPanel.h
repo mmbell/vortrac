@@ -19,10 +19,10 @@
 #include <QTextEdit>
 #include <QLineEdit>
 
-#include "Message.h"
+#include "IO/Message.h"
 #include "StopLight.h"
 #include "StormSignal.h"
-#include "CappiDisplay.h"
+#include "GUI/CappiDisplay.h"
 #include "DataObjects/GriddedData.h"
 
 class DiagnosticPanel : public QWidget

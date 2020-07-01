@@ -2,7 +2,7 @@
 #define RADXDATA_H
 
 #include "Radx/RadxRay.hh"
-#include "RadarData.h"
+#include "Radar/RadarData.h"
 
 class RadxData : public RadarData
 {
