@@ -138,6 +138,7 @@ set(
   Batch/DriverBatch.cpp 
   Batch/BatchWindow.cpp 
   DriverAnalysis.cpp
+  qrc_vortrac.cpp
 )
 
 set(
