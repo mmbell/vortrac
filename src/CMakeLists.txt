@@ -1,10 +1,10 @@
 # CMakeLists for src-level of vortrac
 
-project (vortrac)
+project(vortrac)
 
 # Specify header files
 
-set (
+set(
   HEADERS
   Threads/workThread.h 
   Threads/SimplexThread.h 
@@ -138,7 +138,6 @@ set(
   Batch/DriverBatch.cpp 
   Batch/BatchWindow.cpp 
   DriverAnalysis.cpp
-  qrc_vortrac.cpp
 )
 
 set(
@@ -172,19 +171,9 @@ set(
   moc_VortexThread.cpp
 )
 
-# Generate tdrp Params files
-# NOTE - not in use yet
-#
-#add_custom_command (
-#  OUTPUT Params.hh Params.cc
-#  COMMAND ${TDRP_EXECUTABLE} -c++ -f paramdef.vortrac
-#  DEPENDS paramdef.vortrac
-#  )
-
 # Set include dirs
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(/usr/local/include)
 include_directories(${LROSE_PREFIX}/include)
 include_directories(${Qt5Widgets_INCLUDE_DIRS})
 include_directories(${Qt5Gui_INCLUDE_DIRS})
@@ -201,21 +190,28 @@ link_directories(/usr/lib/x86_64-linux-gnu/hdf5/serial)
 
 # we are building vortrac
 
-add_executable (${PROJECT_NAME} ${HEADERS} ${SOURCES})
+add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 
 # link
 
-target_link_libraries (${PROJECT_NAME} ${LROSE_LIBRARIES})
-target_link_libraries (${PROJECT_NAME} ${LIBZIP_LIBRARIES} bz2)
-target_link_libraries (${PROJECT_NAME} ${LIBARMADILLO_LIBRARIES})
-target_link_libraries (${PROJECT_NAME} ${Qt5Widgets_LIBRARIES})
-target_link_libraries (${PROJECT_NAME} ${Qt5Gui_LIBRARIES})
-target_link_libraries (${PROJECT_NAME} ${Qt5Xml_LIBRARIES})
-target_link_libraries (${PROJECT_NAME} ${Qt5Network_LIBRARIES})
-target_link_libraries (${PROJECT_NAME} ${Qt5Core_LIBRARIES})
-target_link_libraries (${PROJECT_NAME} armadillo)
+target_link_libraries(${PROJECT_NAME} ${LROSE_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${LIBZIP_LIBRARIES} bz2)
+target_link_libraries(${PROJECT_NAME} ${LIBARMADILLO_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${Qt5Widgets_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${Qt5Gui_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${Qt5Xml_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${Qt5Network_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${Qt5Core_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} armadillo)
 
 # install
 
-install ( TARGETS ${PROJECT_NAME} DESTINATION ${LROSE_PREFIX}/bin )
+set(INSTALL_PREFIX $ENV{VORTRAC_INSTALL_DIR})
+
+# If not, use the default location
+if(NOT INSTALL_PREFIX)
+  set(INSTALL_PREFIX ${LROSE_PREFIX})
+endif(NOT INSTALL_PREFIX)
+
+install(TARGETS ${PROJECT_NAME} DESTINATION ${INSTALL_PREFIX}/bin)
 
