@@ -12,6 +12,9 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
 
+# set policy CMP0100 so that AUTOMOC finds .hh files
+cmake_policy(SET CMP0100 NEW)
+
 # Where to find *Find*.cmake and *-config.cmake
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
