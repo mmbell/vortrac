@@ -33,7 +33,7 @@ endif()
 
 # build location - topdir/bin
 
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/release/bin)
 
 # recurse into src directory for the build
 
