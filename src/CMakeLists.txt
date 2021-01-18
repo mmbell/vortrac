@@ -171,6 +171,30 @@ set(
   moc_VortexThread.cpp
 )
 
+# compile definitions
+
+add_definitions(-std=c++11)
+
+# required packages
+
+find_package(Lrose REQUIRED)	
+find_package(LibZip REQUIRED)
+find_package(BZip2 REQUIRED)
+find_package(Armadillo REQUIRED)
+find_package(Qt5 COMPONENTS Core Gui Widgets Xml Network REQUIRED PATHS /usr NO_DEFAULT_PATH)
+
+# Finding Qt on mac OSX
+
+if(APPLE)
+  find_path(Qt5_DIR NAMES Qt5Config.cmake qt5-config.cmake HINTS /usr/local/Cellar/qt/*/lib/cmake/Qt5 NO_DEFAULT_PATH)
+endif(APPLE)
+
+# set automatic creation of MOC files
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+
 # Set include dirs
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -208,7 +232,6 @@ target_link_libraries(${PROJECT_NAME} armadillo)
 
 set(INSTALL_PREFIX $ENV{VORTRAC_INSTALL_DIR})
 
-# If not, use the default location
 if(NOT INSTALL_PREFIX)
   set(INSTALL_PREFIX ${LROSE_PREFIX})
 endif(NOT INSTALL_PREFIX)
