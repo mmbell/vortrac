@@ -175,12 +175,34 @@ set(
 
 add_definitions(-std=c++11)
 
-# required packages
+# Finding pkg-config
 
-find_package(Lrose REQUIRED)	
-find_package(LibZip REQUIRED)
-find_package(BZip2 REQUIRED)
+find_package(PkgConfig REQUIRED)
+
+#  X11, hdf5 and netcdf
+
+find_package (X11)
+if (DEFINED X11_X11_LIB)
+  get_filename_component(X11_LIB_DIR ${X11_X11_LIB} DIRECTORY)
+endif()
+find_package (HDF5 COMPONENTS C CXX)
+find_package (NETCDF)
+if (DEFINED HDF5_hdf5_LIBRARY_RELEASE)
+  get_filename_component(HDF5_INSTALL_PREFIX ${HDF5_hdf5_LIBRARY_RELEASE} DIRECTORY)
+endif()
+message("X11_X11_INCLUDE_PATH: ${X11_X11_INCLUDE_PATH}")
+message("X11_LIB_DIR: ${X11_LIB_DIR}")
+message("HDF5_INSTALL_PREFIX: ${HDF5_INSTALL_PREFIX}")
+message("HDF5_CXX_INCLUDE_DIR: ${HDF5_CXX_INCLUDE_DIR}")
+message("HDF5_C_INCLUDE_DIR: ${HDF5_C_INCLUDE_DIR}")
+
+# required LROSE, ARMADILLO
+
+find_package(LROSE REQUIRED)	
 find_package(Armadillo REQUIRED)
+
+# Qt
+
 find_package(Qt5 COMPONENTS Core Gui Widgets Xml Network REQUIRED PATHS /usr NO_DEFAULT_PATH)
 
 # Finding Qt on mac OSX
@@ -204,6 +226,21 @@ include_directories(${Qt5Gui_INCLUDE_DIRS})
 include_directories(${Qt5Xml_INCLUDE_DIRS})
 include_directories(${Qt5Network_INCLUDE_DIRS})
 include_directories(${Qt5Core_INCLUDE_DIRS})
+if (DEFINED X11_X11_INCLUDE_PATH)
+  include_directories (${X11_X11_INCLUDE_PATH})
+endif()
+if (DEFINED netCDF_INSTALL_PREFIX)
+  include_directories (${netCDF_INSTALL_PREFIX}/include)
+endif()
+if (DEFINED HDF5_CXX_INCLUDE_DIR)
+  include_directories (${HDF5_CXX_INCLUDE_DIR})
+endif()
+if (DEFINED HDF5_C_INCLUDE_DIR)
+  include_directories (${HDF5_C_INCLUDE_DIR})
+endif()
+if(IS_DIRECTORY /usr/local/include)
+  include_directories (/usr/local/include)
+endif()
 
 # set link dirs
 
@@ -211,6 +248,25 @@ link_directories($ENV{HOME}/lrose/lib)
 link_directories(${LROSE_PREFIX}/lib)
 link_directories(/usr/local/lib)
 link_directories(/usr/lib/x86_64-linux-gnu/hdf5/serial)
+if (DEFINED X11_LIB_DIR)
+  link_directories (${X11_LIB_DIR})
+endif()
+if (DEFINED netCDF_INSTALL_PREFIX)
+  link_directories (${netCDF_INSTALL_PREFIX}/lib)
+endif()
+if (DEFINED HDF5_INSTALL_PREFIX)
+  link_directories (${HDF5_INSTALL_PREFIX}/lib)
+endif()
+if (DEFINED HDF5_LIBRARY_DIRS)
+  link_directories(${HDF5_LIBRARY_DIRS})
+endif()
+# add serial, for odd Debian hdf5 install
+if(IS_DIRECTORY /usr/lib/x86_64-linux-gnu/hdf5/serial)
+  link_directories(/usr/lib/x86_64-linux-gnu/hdf5/serial)
+endif()
+if(IS_DIRECTORY /usr/local/lib)
+  link_directories (/usr/local/lib)
+endif()
 
 # we are building vortrac
 
