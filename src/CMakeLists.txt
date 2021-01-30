@@ -179,6 +179,14 @@ add_definitions(-std=c++11)
 
 find_package(PkgConfig REQUIRED)
 
+# Finding Qt on mac OSX
+
+if(APPLE)
+  find_path(Qt5_DIR NAMES Qt5Config.cmake qt5-config.cmake HINTS /usr/local/Cellar/qt/*/lib/cmake/Qt5 NO_DEFAULT_PATH)
+endif(APPLE)
+
+# required packages
+
 #  X11, hdf5 and netcdf
 
 find_package (X11)
@@ -204,12 +212,6 @@ find_package(Armadillo REQUIRED)
 # Qt
 
 find_package(Qt5 COMPONENTS Core Gui Widgets Xml Network REQUIRED PATHS /usr NO_DEFAULT_PATH)
-
-# Finding Qt on mac OSX
-
-if(APPLE)
-  find_path(Qt5_DIR NAMES Qt5Config.cmake qt5-config.cmake HINTS /usr/local/Cellar/qt/*/lib/cmake/Qt5 NO_DEFAULT_PATH)
-endif(APPLE)
 
 # set automatic creation of MOC files
 
