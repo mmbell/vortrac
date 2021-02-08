@@ -184,7 +184,7 @@ SOURCES += main.cpp \
            DriverAnalysis.cpp
 
 RESOURCES += vortrac.qrc
-LIBS += -lRadx -lNcxx -lnetcdf -lhdf5_cpp -lhdf5 -larmadillo -lz -lbz2
+LIBS += -lkd -lRadx -lNcxx -ltoolsa -dataport -lnetcdf -lhdf5_cpp -lhdf5 -larmadillo -lz -lbz2
 QT += xml network widgets
 
 # CONFIG += debug
