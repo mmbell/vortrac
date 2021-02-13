@@ -7,7 +7,7 @@ if(NOT LROSE_PREFIX)
   set(LROSE_PREFIX "/usr/local/lrose")
 endif(NOT LROSE_PREFIX)
 
-set(LROSE_LIBRARIES kd tdrp Radx Ncxx toolsa dataport netcdf hdf5_cpp hdf5 z)
+set(LROSE_LIBRARIES kd tdrp Radx Ncxx toolsa dataport netcdf hdf5 z)
 
 # Add a custom generator for TDRP Params.cc and Params.hh files
 # from their associated paramdef.<app> file
