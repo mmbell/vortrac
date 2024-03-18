@@ -116,7 +116,7 @@ bool Configuration::isNull()
 QDomElement Configuration::getConfig(const QString &configName) const
 {
 
-    /*
+  /*
    * Returns a config element with the specified tagName, if one does not exist
    *   a null element is returned. Config elements are first layer elements in
    *   a configuration object, all other elements are simply elements. The names
@@ -152,7 +152,8 @@ QDomElement Configuration::getConfig(const QString &configName,
    *
    */
 
-    QList<int> checkThese = indexForTagName.values(configName);
+  // QList<int> checkThese = indexForTagName.values(configName);
+    QList<int> checkThese = indexForTagName.values();
     for(int i = 0; i < checkThese.count(); i++) {
         QDomElement child = groupList.item(checkThese[i]).toElement();
         if(!child.isNull()) {

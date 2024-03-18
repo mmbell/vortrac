@@ -14,6 +14,7 @@
 #include <QTextStream>
 #include <QFile>
 #include <QDir>
+using namespace Qt;
 
 AnalyticGrid::AnalyticGrid() 
   : GriddedData()

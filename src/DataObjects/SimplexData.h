@@ -20,7 +20,7 @@ class SimplexData
 public:
     SimplexData();
     SimplexData(int availLevels, int availRadii, int availWaveNum);
-    SimplexData(const SimplexData& other);
+  //     SimplexData(const SimplexData& other);
     ~SimplexData();
 
     static constexpr float _fillv   = -999.0f;

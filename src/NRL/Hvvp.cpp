@@ -16,6 +16,7 @@
 #include <QFile>
 #include <QDir>
 #include <QTextStream>
+using namespace Qt;
 
 /*
 * The HVVP subroutine used here was created and written by Paul Harasti for 

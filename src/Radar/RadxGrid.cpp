@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <Ncxx/Nc3xFile.hh>
+#include <Radx/RadxTime.hh>
 #include "RadxGrid.h"
 
 RadxGrid::RadxGrid(const QString &radarname, const float &lat, const float &lon,
@@ -44,7 +45,8 @@ bool RadxGrid::readVolume() {
   }
 
   radarDateTime.setTimeSpec(Qt::UTC);
-  radarDateTime.setTime_t(int(secs));
+  RadxTime rtime((time_t) secs);
+  radarDateTime.setTime(QTime(rtime.getHour(), rtime.getMin(), rtime.getSec()));
 
   return true;
 }

@@ -109,11 +109,11 @@ protected:
     QDomDocument domDoc;
 
 private:
-    QDomElement root;
-    QDomNodeList groupList;
-    QHash<QString, int> indexForTagName;
-    bool isModified;
-    bool logChanges;
+  QDomElement root;
+  QDomNodeList groupList;
+  QHash<QString, int> indexForTagName;
+  bool isModified;
+  bool logChanges;
 
 signals:
     void log(const Message& message) const;

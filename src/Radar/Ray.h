@@ -75,7 +75,7 @@ class Ray
   
  private:
   int sweepIndex;
-  int time;
+  time_t time;
   int date;
   float azimuth;
   float elevation;

@@ -116,7 +116,7 @@ bool ATCF::parseTcvitals()
     QString stormFound("Not Found");
     while (!tcvitals.atEnd()) {
         QString line = tcvitals.readLine();
-        QStringList vitals = line.split(QRegExp("\\s+"));
+        QStringList vitals = line.split(QRegularExpression("\\s+"));
         if (vitals.at(1) == stormId) {
             // Match!
             stormFound = stormName = vitals.at(2);

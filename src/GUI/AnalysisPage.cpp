@@ -432,7 +432,7 @@ bool AnalysisPage::saveFile(const QString &fileName)
 
     if (noExtensionFileName.contains('.')) {
         int dotIndex = noExtensionFileName.indexOf('.');
-        int drop = noExtensionFileName.count()-dotIndex+1;
+        int drop = noExtensionFileName.size()-dotIndex+1;
         noExtensionFileName.remove(dotIndex,drop);
     }
     if (noExtensionFileName.contains('/')){
@@ -487,20 +487,25 @@ void AnalysisPage::closeEvent(QCloseEvent *event)
 bool AnalysisPage::maybeSave()
 {
     if (configData->checkModified()) {
-        int ret = QMessageBox::warning(this, tr("VORTRAC"),
-                                       tr("'%1' has been modified.\n"
-                                          "Do you want to save your changes?")
-                                       .arg((configFileName)),
-                                       QMessageBox::Yes | QMessageBox::Default,
-                                       QMessageBox::No,
-                                       QMessageBox::Cancel | QMessageBox::Escape);
-        if (ret == QMessageBox::Yes)
-            return save();
-        else if (ret == QMessageBox::Cancel)
-            return false;
+      QMessageBox msgBox;
+      msgBox.setIcon(QMessageBox::Warning);
+      msgBox.setWindowTitle("VORTRAC");
+      msgBox.setInformativeText("Do you want to save your changes?");
+      msgBox.setText(tr("'%1' has been modified.").arg(configFileName));
+      msgBox.setStandardButtons(QMessageBox::Save | QMessageBox::Cancel);
+      msgBox.setDefaultButton(QMessageBox::Save);
+      int ret = msgBox.exec();
+      if (ret == QMessageBox::Save) {
+        return save();
+      } else if (ret == QMessageBox::Cancel) {
+        return false;
+      }
     }
+
     return true;
 }
+
+
 
 void AnalysisPage::updatePage()
 {
@@ -588,16 +593,23 @@ void AnalysisPage::runThread()
     allPossibleFiles = allPossibleFiles.filter(nameFilter, Qt::CaseInsensitive);
     bool continuePreviousRun = false;
     QString openOldMessage = QString(tr("Vortrac has found information about a previous run. Continuing will erase this data!\nPress 'Yes' to continue."));
-    if(allPossibleFiles.count()> 0){
-        if(allPossibleFiles.filter("vortexList").count()>0 && allPossibleFiles.filter("simplexList").count()>0)
-        {
-            int answer = QMessageBox::information(this,tr("VORTRAC"),openOldMessage,3,4,0);
-            if(answer==3) {
-                continuePreviousRun = false;
-            } else {
-                return;
-	    }
-        }
+    if(allPossibleFiles.count()> 0) {
+      if(allPossibleFiles.filter("vortexList").count()>0 && allPossibleFiles.filter("simplexList").count()>0)
+      {
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setWindowTitle("VORTRAC");
+        msgBox.setInformativeText("Continuing will erase this data!\nPress 'Yes' to continue.");
+        msgBox.setText(tr("Vortrac has found information about a previous run."));
+        msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        msgBox.setDefaultButton(QMessageBox::No);
+        int ret = msgBox.exec();
+        if (ret == QMessageBox::No) {
+          continuePreviousRun = false;
+        } else if (ret == QMessageBox::Cancel) {
+          return;
+        } 
+      }
     }
     //set a flag in pollThread if continue previous run or not
 	// Try to fetch new radar data every 5 minutes

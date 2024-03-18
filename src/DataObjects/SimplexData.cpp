@@ -11,6 +11,7 @@
 #include "SimplexData.h"
 #include "IO/Message.h"
 #include <QTextStream>
+#include <ostream>
 
 constexpr float SimplexData::_fillv;
 
@@ -74,35 +75,35 @@ SimplexData::SimplexData(int availLevels, int availRadii, int availCenters)
   time = QDateTime();
 }
 
-SimplexData::SimplexData(const SimplexData& other)
-{
-    this->numLevels = other.numLevels;
-    this->numRadii = other.numRadii;
-    this->numCenters = other.numCenters;
-    this->numPointsUsed = other.numPointsUsed;
+// SimplexData::SimplexData(const SimplexData& other)
+// {
+//     this->numLevels = other.numLevels;
+//     this->numRadii = other.numRadii;
+//     this->numCenters = other.numCenters;
+//     this->numPointsUsed = other.numPointsUsed;
 
-    for(int i = 0; i < this->numLevels; i++)
-    {
-        this->height[i] = other.height[i];
-        for(int j = 0; j < this->numRadii; j++)
-        {
-            this->meanX[i][j] = other.meanX[i][j];
-            this->meanY[i][j] = other.meanY[i][j];
-            this->centerStdDeviation[i][j] = other.centerStdDeviation[i][j];
-            this->meanVT[i][j] = other.meanVT[i][j];
-            this->meanVTUncertainty[i][j] = other.meanVTUncertainty[i][j];
-            this->numConvergingCenters[i][j]= other.numConvergingCenters[i][j];
-            this->radius[j] = other.radius[j];
-            for(int k = 0; k < this->numCenters; k++) {
-                this->centers[i][j][k] = other.centers[i][j][k];
-                initialX[i][j][k] = other.initialX[i][j][k];
-                initialY[i][j][k] = other.initialY[i][j][k];
-            }
-        }
-    }
+//     for(int i = 0; i < this->numLevels; i++)
+//     {
+//         this->height[i] = other.height[i];
+//         for(int j = 0; j < this->numRadii; j++)
+//         {
+//             this->meanX[i][j] = other.meanX[i][j];
+//             this->meanY[i][j] = other.meanY[i][j];
+//             this->centerStdDeviation[i][j] = other.centerStdDeviation[i][j];
+//             this->meanVT[i][j] = other.meanVT[i][j];
+//             this->meanVTUncertainty[i][j] = other.meanVTUncertainty[i][j];
+//             this->numConvergingCenters[i][j]= other.numConvergingCenters[i][j];
+//             this->radius[j] = other.radius[j];
+//             for(int k = 0; k < this->numCenters; k++) {
+//                 this->centers[i][j][k] = other.centers[i][j][k];
+//                 initialX[i][j][k] = other.initialX[i][j][k];
+//                 initialY[i][j][k] = other.initialY[i][j][k];
+//             }
+//         }
+//     }
 
-    this->time = other.time;
-}
+//     this->time = other.time;
+// }
 
 SimplexData::~SimplexData()
 {
@@ -391,28 +392,26 @@ bool SimplexData::emptyLevelRadius(const int& l, const int& r) const
 
 void SimplexData::printString()
 {
-    QTextStream out(stdout);
-    out<< endl;
-    out<< "Printing SimplexData Time = "+getTime().toString(Qt::ISODate)<< endl;
-    out<< "  time: "+getTime().toString(Qt::ISODate) << endl;
-    for(int i = 0; i < 2; i++) {
-        QString ii = QString().setNum(i);
-        out<<"  meanX @ level:"+ii+": "+QString().setNum(getMeanX(i,0)) <<endl;
-        out<<"  meanY @ level:"+ii+": "+QString().setNum(getMeanY(i,0)) << endl;
-        out<<"  height @ level:"+ii+": "+QString().setNum(getHeight(i)) << endl;
-        out<<"  first Radius: "+QString().setNum(getRadius(0)) << endl;
-        out<<"  centerStdDev @ level:"+ii+": ";
-        out<<         QString().setNum(getCenterStdDev(i,0)) << endl;
-        out<<"  maxVT @ level:"+ii+": ";
-        out<<         QString().setNum(getMaxVT(i,0)) << endl;
-        out<<"  NumConvCenters @ level:"+ii+": ";
-        out<<         QString().setNum(getNumConvergingCenters(i,0)) << endl;
-        out<<"  MaxVtStdDev @ level:"+ii+": ";
-        out<<         QString().setNum(getVTUncertainty(i,0)) << endl;
-        out<<"  centers @ level:"+ii+": ";
-        out<<         QString().setNum(getCenter(i,0,0).getMaxVT()) << endl;
-        out<<"  ----------------------------------------------------------" <<endl;
-    }
+  std::cout << std::endl;
+  std::cout << "Printing SimplexData" << std::endl;
+  std::cout << "  time: " << getTime().toString(Qt::ISODate).toStdString() << std::endl;
+  for(int ii = 0; ii < 2; ii++) {
+    std::cout << "  meanX @ level:" << ii << ": " << getMeanX(ii,0) << std::endl;
+    std::cout << "  meanY @ level:" << ii << ": " << getMeanY(ii,0) << std::endl;
+    std::cout << "  height @ level:" << ii << ": " << getHeight(ii) << std::endl;
+    std::cout << "  first Radius: " << getRadius(0) << std::endl;
+    std::cout << "  centerStdDev @ level:" << ii << ": "
+              << getCenterStdDev(ii,0) << std::endl;
+    std::cout << "  maxVT @ level:" << ii << ": "
+              << getMaxVT(ii,0) << std::endl;
+    std::cout << "  NumConvCenters @ level:" << ii << ": "
+              << getNumConvergingCenters(ii,0) << std::endl;
+    std::cout << "  MaxVtStdDev @ level:" << ii << ": "
+              << getVTUncertainty(ii,0) << std::endl;
+    std::cout << "  centers @ level:" << ii << ": "
+              << getCenter(ii, 0, 0).getMaxVT() << std::endl;
+    std::cout << "  ----------------------------------------------------------" << std::endl;
+  }
 }
 
 void SimplexData::setNumLevels(int newNumLevels)

@@ -75,40 +75,40 @@ VortexData::VortexData(int availLevels, int availRadii, int availWaveNum)
     _maxValidRadius = -999;
 }
 
-VortexData::VortexData(const VortexData &other)
-{
-    this->_numLevels = other._numLevels;
-    this->_numRadii  = other._numRadii;
-    this->_numWaveNum = other._numWaveNum;
-    this->_bestLevel = other._bestLevel;
+// VortexData::VortexData(const VortexData &other)
+// {
+//     this->_numLevels = other._numLevels;
+//     this->_numRadii  = other._numRadii;
+//     this->_numWaveNum = other._numWaveNum;
+//     this->_bestLevel = other._bestLevel;
     
-    for(int i = 0; i < _numLevels; i++)
-    {
-        this->_centerLat[i] = other._centerLat[i];
-        this->_centerLon[i] = other._centerLon[i];
-        this->_centerAlt[i] = other._centerAlt[i];
-        this->_maxVT[i] = other._maxVT[i];
-        this->_RMW[i] = other._RMW[i];
-        this->_RMWUncertainty[i] = other._RMWUncertainty[i];
-        this->_centerSD[i] = other._centerSD[i];
-        for(int j = 0; j < _numRadii; j++) {
-            for(int k = 0; k < _numWaveNum; k++) {
-                this->coefficients[i][j][k] = coefficients[i][j][k];
-            }
-        }
-    }
+//     for(int i = 0; i < _numLevels; i++)
+//     {
+//         this->_centerLat[i] = other._centerLat[i];
+//         this->_centerLon[i] = other._centerLon[i];
+//         this->_centerAlt[i] = other._centerAlt[i];
+//         this->_maxVT[i] = other._maxVT[i];
+//         this->_RMW[i] = other._RMW[i];
+//         this->_RMWUncertainty[i] = other._RMWUncertainty[i];
+//         this->_centerSD[i] = other._centerSD[i];
+//         for(int j = 0; j < _numRadii; j++) {
+//             for(int k = 0; k < _numWaveNum; k++) {
+//                 this->coefficients[i][j][k] = coefficients[i][j][k];
+//             }
+//         }
+//     }
 
-    this->_time = other._time;
+//     this->_time = other._time;
 
-    this->centralPressure = other.centralPressure;
-    this->centralPressureUncertainty = other.centralPressureUncertainty;
-    this->pressureDeficit = other.pressureDeficit;
-    this->pressureDeficitUncertainty = other.pressureDeficitUncertainty;
-	this->maxSfcWind = other.maxSfcWind;
-    this->_aveRMW = other._aveRMW;
-    this->_aveRMWUncertainty = other._aveRMWUncertainty;
-    this->_maxValidRadius = other._maxValidRadius;
-}
+//     this->centralPressure = other.centralPressure;
+//     this->centralPressureUncertainty = other.centralPressureUncertainty;
+//     this->pressureDeficit = other.pressureDeficit;
+//     this->pressureDeficitUncertainty = other.pressureDeficitUncertainty;
+// 	this->maxSfcWind = other.maxSfcWind;
+//     this->_aveRMW = other._aveRMW;
+//     this->_aveRMWUncertainty = other._aveRMWUncertainty;
+//     this->_maxValidRadius = other._maxValidRadius;
+// }
 
 VortexData::~VortexData()
 {

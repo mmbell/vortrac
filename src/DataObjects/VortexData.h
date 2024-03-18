@@ -20,7 +20,7 @@ class VortexData
 public:
     VortexData();
     VortexData(int availLevels, int availRadii, int availWaveNum);
-    VortexData(const VortexData &other);
+  // VortexData(const VortexData &other); use compiler copy constructor
     ~VortexData();
 
     static constexpr float _fillv  =-999.0f;

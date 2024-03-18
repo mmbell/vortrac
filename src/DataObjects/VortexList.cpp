@@ -55,11 +55,11 @@ bool VortexList::saveXML()
 	int bestLevel = record->getBestLevel();
 
 	xmlWriter.writeTextElement("time",record->getTime().toString("yyyy/MM/dd hh:mm:ss"));
-	tmpStr.sprintf("%6.2f,%6.2f,%6.2f", record->getLat(bestLevel),
-		       record->getLon(bestLevel), record->getHeight(bestLevel));
+	tmpStr.asprintf("%6.2f,%6.2f,%6.2f", record->getLat(bestLevel),
+                        record->getLon(bestLevel), record->getHeight(bestLevel));
         xmlWriter.writeTextElement("center", tmpStr);
-	tmpStr.sprintf("%6.2f,%6.2f,%6.2f,%6.2f", record->getMaxVT(bestLevel), record->getRMW(bestLevel),
-		       record->getPressure(), record->getPressureDeficit());
+	tmpStr.asprintf("%6.2f,%6.2f,%6.2f,%6.2f", record->getMaxVT(bestLevel), record->getRMW(bestLevel),
+                        record->getPressure(), record->getPressureDeficit());
         xmlWriter.writeTextElement("strength",tmpStr);
         xmlWriter.writeEndElement();
     }
@@ -80,8 +80,14 @@ void VortexList::setFilePath(QString newFileName)
 
 void VortexList::timeSort()
 {
-    for(int i = 0; i < this->count(); i++)
-        for(int j = i+1; j < this->count(); j++)
-            if(this->at(i).getTime()>this->at(j).getTime())
-                this->swap(j,i);
+  VortexData *vals = data();
+  for(int i = 0; i < count(); i++) {
+    for(int j = i+1; j < count(); j++) {
+      if(vals[i].getTime() > vals[j].getTime()) {
+        VortexData tmp(vals[i]);
+        vals[i] = vals[j];
+        vals[i] = tmp;
+      }
+    } // j
+  } // i
 }

@@ -51,14 +51,14 @@ bool SimplexList::saveXML()
             for(int ridx=0;ridx<record->getNumRadii();ridx++){
                 xmlWriter.writeStartElement("ring");
                 xmlWriter.writeAttribute("range",QString().setNum(record->getRadius(ridx)));
-                tmpStr.sprintf("%6.2f,%6.2f,%6.2f,%6.2f", record->getMeanX(hidx, ridx),
-			       record->getMeanY(hidx, ridx), record->getCenterStdDev(hidx, ridx),
-                               record->getMaxVT(hidx, ridx) // , record->getVTUncertainty(hidx, ridx)
-			       );
+                tmpStr.asprintf("%6.2f,%6.2f,%6.2f,%6.2f", record->getMeanX(hidx, ridx),
+                                record->getMeanY(hidx, ridx), record->getCenterStdDev(hidx, ridx),
+                                record->getMaxVT(hidx, ridx) // , record->getVTUncertainty(hidx, ridx)
+                                );
                 xmlWriter.writeTextElement("mean value",tmpStr);
                 for(int pidx=0;pidx<record->getNumPointsUsed();pidx++){
                     Center center=record->getCenter(hidx,ridx,pidx);
-                    tmpStr.sprintf("%6.2f,%6.2f,%6.2f,%6.2f,%6.2f",center.getStartX(),center.getStartY(),center.getX(),center.getY(),center.getMaxVT());
+                    tmpStr.asprintf("%6.2f,%6.2f,%6.2f,%6.2f,%6.2f",center.getStartX(),center.getStartY(),center.getX(),center.getY(),center.getMaxVT());
                     xmlWriter.writeTextElement("point value",tmpStr);
                 }
                 xmlWriter.writeEndElement();
@@ -80,10 +80,16 @@ bool SimplexList::restore()
 
 void SimplexList::timeSort()
 {
-    for(int i = 0; i < this->count(); i++)
-        for(int j = i+1; j < this->count(); j++)
-            if(this->at(i).getTime() > this->at(j).getTime())
-                this->swap(j,i);
+  SimplexData *vals = data();
+  for(int i = 0; i < count(); i++) {
+    for(int j = i+1; j < count(); j++) {
+      if(vals[i].getTime() > vals[j].getTime()) {
+        SimplexData tmp(vals[i]);
+        vals[i] = vals[j];
+        vals[i] = tmp;
+      }
+    } // j
+  } // i
 }
 
 void SimplexList::dump() const

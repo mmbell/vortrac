@@ -263,7 +263,13 @@ void GraphFace::saveImage()
   QString filter;
   QStringList fileName;
   fd->setAcceptMode(QFileDialog::AcceptSave);
+
+#if QT_VERSION >= 0x060000
+  fd->setAcceptMode(QFileDialog::AcceptSave);
+#else
   fd->setConfirmOverwrite(true);
+#endif
+
   QStringList imageTypes;
   for(int i = 0; i < byteList.count(); i++) {
     imageTypes.append(QString("Image (*."+byteList[i]+")"));
@@ -601,10 +607,14 @@ void GraphFace::makeKey()
   rmwBox->setLayout(rmwLayout);
   layout->addWidget(dropBox);
   layout->addWidget(pressureBox);
-
+  
   layout->addWidget(rmwBox);
   layout->setSpacing(rmwLayout->spacing());
-  layout->setMargin(rmwLayout->margin());
+  int marginLeft, marginTop, marginRight, marginBottom;
+  rmwLayout->getContentsMargins(&marginLeft, &marginTop,
+                                &marginRight, &marginBottom);
+  layout->setContentsMargins(marginLeft, marginTop,
+                             marginRight, marginBottom);
   key->setLayout(layout);
   
   key->window()->setWindowTitle(tr("Key"));

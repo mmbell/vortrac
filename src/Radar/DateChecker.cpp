@@ -82,10 +82,17 @@ bool DoradeChecker::fileInRange(QString filePath, QString,
     return false;
   
   int year = timepart.left(3).toInt() + 1900;
-  int month = timepart.midRef(3, 2).toInt();
-  int day = timepart.midRef(5, 2).toInt();
+  int month = timepart.mid(3, 2).toInt();
+  int day = timepart.mid(5, 2).toInt();
   QDate fileDate(year, month, day);
-  QTime fileTime = QTime::fromString(timepart.midRef(7, 6).toString(), "hhmmss");
+#if QT_VERSION >= 0x060000
+  QString timeStr(timepart.mid(7, 6));
+  QTime fileTime = QTime::fromString(timeStr, QStringView(QString("hhmmss")));
+#else
+  QTime fileTime = QTime::fromString(timepart.mid(7, 6).toStdString(),
+                                     "hhmmss");
+#endif
+
   fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
   return  (fileDateTime >= startDateTime) && (fileDateTime <= endDateTime);
 }

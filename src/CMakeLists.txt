@@ -171,10 +171,6 @@ set(
   moc_VortexThread.cpp
 )
 
-# compile definitions
-
-add_definitions(-std=c++11)
-
 # Finding pkg-config
 
 find_package(PkgConfig REQUIRED)
@@ -211,7 +207,46 @@ find_package(Armadillo REQUIRED)
 
 # Qt
 
-find_package(Qt5 COMPONENTS Core Gui Widgets Xml Network REQUIRED PATHS /usr NO_DEFAULT_PATH)
+# Finding Qt
+
+find_package (Qt6 COMPONENTS Core Gui Widgets Xml Network QUIET)
+if (NOT Qt6_FOUND)
+  find_package (Qt5 COMPONENTS Core Gui Widgets Xml Network QUIET)
+endif()
+
+if (Qt5_FOUND)
+  message(STATUS "Found Qt5: ${Qt5_VERSION}")
+elseif (Qt6_FOUND)
+    message(STATUS "Found Qt6: ${Qt6_VERSION}")
+else ()
+  message(FATAL_ERROR, "Qt not found.")
+endif(Qt5_FOUND)
+
+if(APPLE)
+  if (Qt5_FOUND)
+    find_path(Qt5_DIR NAMES Qt5Config.cmake qt5-config.cmake HINTS /usr/local/Cellar/qt/*/lib/cmake/Qt5 /opt/homebrew/Cellar/qt/*/lib/cmake/Qt5 $ENV{HOME}/homebrew/Cellar/qt/*/lib/cmake/Qt5 NO_DEFAULT_PATH)
+  elseif (Qt6_FOUND)
+    find_path(Qt6_DIR NAMES Qt6Config.cmake qt6-config.cmake HINTS /usr/local/Cellar/qt/*/lib/cmake/Qt6 /opt/homebrew/Cellar/qt/*/lib/cmake/Qt6 $ENV{HOME}/homebrew/Cellar/qt/*/lib/cmake/Qt6 NO_DEFAULT_PATH)
+  endif(Qt5_FOUND)
+endif(APPLE)
+
+if (Qt5_FOUND)
+#QT5
+  find_package (Qt5 COMPONENTS Widgets Network Qml REQUIRED PATHS /usr /usr/local/opt/qt NO_DEFAULT_PATH)
+  pkg_search_module(Qt5Core REQUIRED)
+  pkg_search_module(Qt5Gui REQUIRED)
+  pkg_search_module(Qt5Widgets REQUIRED)
+  pkg_search_module(Qt5Network REQUIRED)
+  pkg_search_module(Qt5Qml REQUIRED)
+else()
+#QT6
+  find_package (Qt6 COMPONENTS Widgets Network Qml REQUIRED PATHS /usr /usr/local/opt/qt NO_DEFAULT_PATH)
+  pkg_search_module(Qt6Core REQUIRED)
+  pkg_search_module(Qt6Gui REQUIRED)
+  pkg_search_module(Qt6Widgets REQUIRED)
+  pkg_search_module(Qt6Network REQUIRED)
+  pkg_search_module(Qt6Qml REQUIRED)
+endif(Qt5_FOUND)
 
 # set automatic creation of MOC files
 
@@ -219,16 +254,37 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+# compile definitions
+
+if (Qt5_FOUND)
+#QT5
+  add_definitions(-std=c++11)
+else()
+#QT6
+  add_definitions(-std=c++17)
+endif(Qt5_FOUND)
+
 # Set include dirs
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${LROSE_PREFIX}/include)
 include_directories(${LROSE_INSTALL_DIR}/include)
-include_directories(${Qt5Widgets_INCLUDE_DIRS})
-include_directories(${Qt5Gui_INCLUDE_DIRS})
-include_directories(${Qt5Xml_INCLUDE_DIRS})
-include_directories(${Qt5Network_INCLUDE_DIRS})
-include_directories(${Qt5Core_INCLUDE_DIRS})
+
+if (Qt5_FOUND)
+  include_directories(${Qt5Widgets_INCLUDE_DIRS})
+  include_directories(${Qt5Gui_INCLUDE_DIRS})
+  include_directories(${Qt5Xml_INCLUDE_DIRS})
+  include_directories(${Qt5Network_INCLUDE_DIRS})
+  include_directories(${Qt5Core_INCLUDE_DIRS})
+else()
+#QT6
+  include_directories(${Qt6Widgets_INCLUDE_DIRS})
+  include_directories(${Qt6Gui_INCLUDE_DIRS})
+  include_directories(${Qt6Xml_INCLUDE_DIRS})
+  include_directories(${Qt6Network_INCLUDE_DIRS})
+  include_directories(${Qt6Core_INCLUDE_DIRS})
+endif(Qt5_FOUND)
+  
 if (DEFINED X11_X11_INCLUDE_PATH)
   include_directories (${X11_X11_INCLUDE_PATH})
 endif()
@@ -281,11 +337,22 @@ add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} ${LROSE_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${LIBZIP_LIBRARIES} bz2)
 target_link_libraries(${PROJECT_NAME} ${LIBARMADILLO_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${Qt5Widgets_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${Qt5Gui_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${Qt5Xml_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${Qt5Network_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${Qt5Core_LIBRARIES})
+
+if (Qt5_FOUND)
+  target_link_libraries(${PROJECT_NAME} ${Qt5Widgets_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME} ${Qt5Gui_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME} ${Qt5Xml_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME} ${Qt5Network_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME} ${Qt5Core_LIBRARIES})
+else()
+#QT6
+  target_link_libraries(${PROJECT_NAME} ${Qt6Widgets_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME} ${Qt6Gui_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME} ${Qt6Xml_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME} ${Qt6Network_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME} ${Qt6Core_LIBRARIES})
+endif(Qt5_FOUND)
+
 target_link_libraries(${PROJECT_NAME} armadillo)
 
 # install

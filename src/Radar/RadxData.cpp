@@ -234,7 +234,12 @@ bool RadxData::readVolume()
   numSweeps = sweepCount;
 
   // Set the volume date to the date of the first ray
+
   radarDateTime.setTimeSpec(Qt::UTC);
+
+  RadxTime rtime((time_t) secs);
+  radarDateTime.setTime(QTime(rtime.getHour(), rtime.getMin(), rtime.getSec()));
+
   radarDateTime = QDateTime::fromTime_t(Rays[0].getDate());
 
 

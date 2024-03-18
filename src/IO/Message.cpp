@@ -11,6 +11,7 @@
 // Process error messages
 #include "IO/Message.h"
 #include <QTextStream>
+using namespace Qt;
 
 /*Message::Message(const char *errormsg, int newProgress, 
 		 const char *newLocation, 
