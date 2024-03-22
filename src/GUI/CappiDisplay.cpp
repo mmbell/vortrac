@@ -205,8 +205,14 @@ void CappiDisplay::mouseMoveEvent(QMouseEvent *event)
 						 currentCappi.getOriginLon(),
 						 x, y);
 
+#if QT_VERSION >= 0x060000
   QToolTip::showText(event->globalPosition().toPoint(),
 		     QString("(") + QString::number(coords[0]) + ", " + QString::number(coords[1]) + ")" );
+#else
+  QToolTip::showText(event->globalPos(),
+		     QString("(") + QString::number(coords[0]) + ", " + QString::number(coords[1]) + ")" );
+#endif
+
   delete[] coords;
 }
 

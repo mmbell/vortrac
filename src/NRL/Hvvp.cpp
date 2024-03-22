@@ -16,7 +16,9 @@
 #include <QFile>
 #include <QDir>
 #include <QTextStream>
+#if QT_VERSION >= 0x060000
 using namespace Qt;
+#endif
 
 /*
 * The HVVP subroutine used here was created and written by Paul Harasti for 

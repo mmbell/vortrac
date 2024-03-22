@@ -78,9 +78,19 @@ bool SimplexList::restore()
     return false;
 }
 
+void SimplexList::dump() const
+{
+  for(int i = 0; i < count(); i++) {
+    std::cout << "Simplex element at index " << i << std::endl;
+    SimplexData data = at(i);
+    data.printString();
+  }
+}
+
 void SimplexList::timeSort()
 {
-  SimplexData *vals = data();
+#if QT_VERSION >= 0x060000
+  VortexData *vals = data();
   for(int i = 0; i < count(); i++) {
     for(int j = i+1; j < count(); j++) {
       if(vals[i].getTime() > vals[j].getTime()) {
@@ -90,13 +100,14 @@ void SimplexList::timeSort()
       }
     } // j
   } // i
+#else
+  for(int i = 0; i < this->count(); i++) {
+    for(int j = i+1; j < this->count(); j++) {
+      if(this->at(i).getTime()>this->at(j).getTime()) {
+        this->swap(j,i);
+      }
+    }
+  }
+#endif
 }
 
-void SimplexList::dump() const
-{
-  for(int i = 0; i < count(); i++) {
-    std::cout << "Simplex element at index " << i << std::endl;
-    SimplexData data = at(i);
-    data.printString();
-  }
-}

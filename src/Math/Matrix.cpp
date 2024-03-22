@@ -14,7 +14,9 @@
 #include <QTextStream>
 #include "Matrix.h"
 #include "IO/Message.h"
+#if QT_VERSION >= 0x060000
 using namespace Qt;
+#endif
 
 Matrix::Matrix() 
 {

@@ -14,7 +14,9 @@
 #include <QTextStream>
 #include <QFile>
 #include <QDir>
+#if QT_VERSION >= 0x060000
 using namespace Qt;
+#endif
 
 CappiGrid::CappiGrid() : GriddedData()
 {

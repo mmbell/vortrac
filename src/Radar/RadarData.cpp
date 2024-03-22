@@ -14,7 +14,9 @@
 #include <QTextStream>
 #include "IO/Message.h"
 
+#if QT_VERSION >= 0x060000
 using namespace Qt;
+#endif
 
 RadarData::RadarData(QString radarname, float lat, float lon, QString filename)
 {

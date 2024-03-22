@@ -89,8 +89,7 @@ bool DoradeChecker::fileInRange(QString filePath, QString,
   QString timeStr(timepart.mid(7, 6));
   QTime fileTime = QTime::fromString(timeStr, QStringView(QString("hhmmss")));
 #else
-  QTime fileTime = QTime::fromString(timepart.mid(7, 6).toStdString(),
-                                     "hhmmss");
+  QTime fileTime = QTime::fromString(timepart.midRef(7, 6).toString(), "hhmmss");
 #endif
 
   fileDateTime = QDateTime(fileDate, fileTime, Qt::UTC);
