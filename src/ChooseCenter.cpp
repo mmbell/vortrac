@@ -585,12 +585,16 @@ bool ChooseCenter::_calPolyCenters()
     // The sorting is nessecary because QHash randomizes ordering
     for(int s = 0; s < heights.count()-1; s++) {
       for(int t = s+1; t < heights.count(); t++) {
-        if(heights[t] < heights[s]) {
+       if(heights[t] < heights[s]) {
           // swap
+#if QT_VERSION >= 0x060000
           int tmp = heights[t];
           heights[t] = heights[s];
           heights[s] = tmp;
-        }
+#else
+          heights.swap(t,s);
+#endif
+       }
       } // t
     } // s
 
