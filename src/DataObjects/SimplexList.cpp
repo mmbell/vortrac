@@ -90,7 +90,7 @@ void SimplexList::dump() const
 void SimplexList::timeSort()
 {
 #if QT_VERSION >= 0x060000
-  VortexData *vals = data();
+  SimplexData *vals = data();
   for(int i = 0; i < count(); i++) {
     for(int j = i+1; j < count(); j++) {
       if(vals[i].getTime() > vals[j].getTime()) {
