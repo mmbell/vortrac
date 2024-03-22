@@ -11,6 +11,7 @@
 
 #include "MADISFactory.h"
 #include <QtNetwork>
+#include <string>
 
 MADISFactory::MADISFactory(Configuration* config, QObject *parent) : QObject(parent)
 {
@@ -94,8 +95,9 @@ bool MADISFactory::savePressureObs(QNetworkReply *reply)
         while (!reader.atEnd()) {
             reader.readNext();
             if (reader.isStartElement()) {
-                if (reader.name() == "PRE")
-                    pressureObs = reader.readElementText();
+              std::string name = reader.name().toString().toStdString();
+              if (name == "PRE")
+                pressureObs = reader.readElementText();
             }
         }
         if (reader.hasError()) {

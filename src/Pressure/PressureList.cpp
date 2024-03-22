@@ -60,16 +60,16 @@ bool PressureList::saveXML()
 
     xmlWriter.writeTextElement("stationName", record.getStationName());
     
-    tmpStr.sprintf("%6.2f,%6.2f,%6.2f", record.getLat(), record.getLon(), record.getAltitude());
+    tmpStr.asprintf("%6.2f,%6.2f,%6.2f", record.getLat(), record.getLon(), record.getAltitude());
     xmlWriter.writeTextElement("location", tmpStr);
 
-    tmpStr.sprintf("%6.2f",record.getPressure());
+    tmpStr.asprintf("%6.2f",record.getPressure());
     xmlWriter.writeTextElement("pressure", tmpStr);
     
-    tmpStr.sprintf("%6.2f",record.getWindSpeed());
+    tmpStr.asprintf("%6.2f",record.getWindSpeed());
     xmlWriter.writeTextElement("windSpeed", tmpStr);
 	
-    tmpStr.sprintf("%6.2f",record.getWindDirection());
+    tmpStr.asprintf("%6.2f",record.getWindDirection());
     xmlWriter.writeTextElement("windDirection", tmpStr);
 	
     xmlWriter.writeEndElement();

@@ -14,6 +14,8 @@
 #include <QTextStream>
 #include "IO/Message.h"
 
+using namespace Qt;
+
 RadarData::RadarData(QString radarname, float lat, float lon, QString filename)
 {
   Pi = 3.141592653589793238462643;

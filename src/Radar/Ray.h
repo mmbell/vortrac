@@ -11,14 +11,16 @@
 #ifndef RAY_H
 #define RAY_H
 
+#include <ctime>
+
 class Ray
 {
 
  public:
   Ray();
   ~Ray();
-  void setTime(const int &value);
-  void setDate(const int &value);
+  void setTime(const time_t &value);
+  void setDate(const time_t &value);
   void setAzimuth(const float &value);
   void setElevation(const float &value);
   void setVelResolution(const int &value);
@@ -48,8 +50,8 @@ class Ray
   void setVelData(float *buffer) { velData = buffer; };
   void setSwData(float *buffer)  { swData = buffer; };
   
-  int getTime();
-  int getDate();
+  time_t getTime();
+  time_t getDate();
   float getAzimuth();
   float getElevation();
   int getVelResolution();
@@ -76,7 +78,7 @@ class Ray
  private:
   int sweepIndex;
   time_t time;
-  int date;
+  time_t date;
   float azimuth;
   float elevation;
   int velResolution;

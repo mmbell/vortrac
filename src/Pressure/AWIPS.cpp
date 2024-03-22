@@ -10,6 +10,7 @@
 
 #include "AWIPS.h"
 #include<QStringList>
+#include<QRegularExpression>
 
 AWIPS::AWIPS()
 : PressureData()
@@ -28,12 +29,12 @@ void AWIPS::readObs(const QString& ob)
 {
   uint unixTime = (int)ob.left(15).toFloat();
   time.setTimeSpec(Qt::UTC);
-  time.setTime_t(unixTime);
+  time.setSecsSinceEpoch(unixTime);
   latitude = ob.mid(17,5).toFloat();
   longitude = ob.mid(24,7).toFloat();
   pressure = ob.mid(33,6).toFloat();
   // Prepare the strings for XML
-  stationName = ob.mid(41).replace(QRegExp("\\s+"),"_");
+  stationName = ob.mid(41).replace(QRegularExpression("\\s+"),"_");
   stationName.replace(",","");
   stationName.replace(".","");
   stationName.replace("'","");

@@ -10,10 +10,11 @@
 
 #include <math.h>
 #include <QString>
-#include "Matrix.h"
-#include "IO/Message.h"
 #include <QFile>
 #include <QTextStream>
+#include "Matrix.h"
+#include "IO/Message.h"
+using namespace Qt;
 
 Matrix::Matrix() 
 {

@@ -236,12 +236,8 @@ bool RadxData::readVolume()
   // Set the volume date to the date of the first ray
 
   radarDateTime.setTimeSpec(Qt::UTC);
-
-  RadxTime rtime((time_t) secs);
+  RadxTime rtime((time_t) Rays[0].getDate());
   radarDateTime.setTime(QTime(rtime.getHour(), rtime.getMin(), rtime.getSec()));
-
-  radarDateTime = QDateTime::fromTime_t(Rays[0].getDate());
-
 
   return true;
 }

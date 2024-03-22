@@ -183,11 +183,18 @@ void CappiDisplay::mousePressEvent(QMouseEvent *event)
 
 void CappiDisplay::mouseMoveEvent(QMouseEvent *event)
 {
-  lastPoint = event->pos();
+
+#if QT_VERSION >= 0x060000
+  QPointF pos(event->position());
+#else
+  QPointF pos(event->pos());
+#endif
+
+  lastPoint = pos.toPoint();
 
   // Map the point to the grid:
   // Display origin is at the top left. Cappi origin is at the radar.
-
+  
   float click_x = lastPoint.x() * currentCappi.getIdim() / 500;
   float click_y = (500 - lastPoint.y()) * currentCappi.getJdim() / 500;
 	
@@ -198,7 +205,7 @@ void CappiDisplay::mouseMoveEvent(QMouseEvent *event)
 						 currentCappi.getOriginLon(),
 						 x, y);
 
-  QToolTip::showText(event->globalPos(),
+  QToolTip::showText(event->globalPosition().toPoint(),
 		     QString("(") + QString::number(coords[0]) + ", " + QString::number(coords[1]) + ")" );
   delete[] coords;
 }

@@ -10,6 +10,7 @@
 
 #include "MADIS.h"
 #include<QStringList>
+#include<QRegularExpression>
 
 MADIS::MADIS()
 : PressureData()
@@ -41,7 +42,7 @@ void MADIS::readObs(const QString& ob)
     latitude = obList.at(9).toFloat();
     longitude = obList.at(10).toFloat();
     // Prepare the strings for XML
-    stationName.replace(QRegExp("\\s+"),"");
+    stationName.replace(QRegularExpression("\\s+"),"");
     stationName.replace(",","");
     stationName.replace(".","");
     stationName.replace("'","");

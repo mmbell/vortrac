@@ -583,10 +583,16 @@ bool ChooseCenter::_calPolyCenters()
     // Sort heights so that k index is attached to a specific height
     // Sort smallest to largest
     // The sorting is nessecary because QHash randomizes ordering
-    for(int s = 0; s < heights.count()-1; s++)
-        for(int t = s+1; t < heights.count(); t++)
-            if(heights[t] < heights[s])
-                heights.swap(t,s);
+    for(int s = 0; s < heights.count()-1; s++) {
+      for(int t = s+1; t < heights.count(); t++) {
+        if(heights[t] < heights[s]) {
+          // swap
+          int tmp = heights[t];
+          heights[t] = heights[s];
+          heights[s] = tmp;
+        }
+      } // t
+    } // s
 
     for(int k = 0; k < numHeights->count(); k++) {
         int currHeight = heights[k];
@@ -854,10 +860,16 @@ bool ChooseCenter::fixCenters()
     // Sort heights so that k index is attached to a specific height
     // Sort smallest to largest
     // The sorting is nessecary because QHash randomizes ordering
-    for(int s = 0; s < heights.count()-1; s++)
-        for(int t = s+1; t < heights.count(); t++)
-            if(heights[t] < heights[s])
-                heights.swap(t,s);
+    for(int s = 0; s < heights.count()-1; s++) {
+      for(int t = s+1; t < heights.count(); t++) {
+        // swap
+        if(heights[t] < heights[s]) {
+          int tmp = heights[t];
+          heights[t] = heights[s];
+          heights[s] = tmp;
+        }
+      } // t
+    } // s
 
     for(int hidx = 0; hidx < numHeights->count(); hidx++) {
 

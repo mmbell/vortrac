@@ -41,12 +41,12 @@ Ray::~Ray()
   if (swData != NULL) delete [] swData;
 }
 
-void Ray::setTime(const int &value) {
+void Ray::setTime(const time_t &value) {
   //  Message::toScreen("Does This Function Get Used? - setTime");
   time = value;
 }
 
-void Ray::setDate(const int &value) {
+void Ray::setDate(const time_t &value) {
   //Message::toScreen("Does This Function Get Used? - set Date");
   date = value;
 }
@@ -121,12 +121,12 @@ void Ray::setVcp(const int &value) {
 
 // Get values
 
-int Ray::getTime() {
+time_t Ray::getTime() {
   Message::toScreen("Does this function get used? - getTime");
   return time;
 }
 
-int Ray::getDate() {
+time_t Ray::getDate() {
   return date;
 }
 
