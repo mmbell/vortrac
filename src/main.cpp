@@ -21,18 +21,20 @@
 
 void usage(const char *s) {
   std::cout << "Usage: " << std::endl
-	    << "\t" << s << " \t\t\t\t\t(GUI Mode)"
+	    << "  " << s << " [no arguments] (GUI mode, set config file from GUI)"
 	    << std::endl
-	    << "\t" << s << "[-c] <config file>.xml\t\t\t(Batch mode)"
+	    << "  " << s << " [-c] <config file>.xml (BATCH mode)"
 	    << std::endl
-    	    << "\t" << s << " -c <config file>.xml [input_files]+\t(Just run on these files)"
+    	    << "  " << s << " [-c <config file>.xml input_files ...] (just run on these files)"
+	    << std::endl
+	    << "  " << s << " [-g] <config file>.xml (GUI mode)"
     	    << std::endl
 	    << std::endl
 	    << "Optional arguments:"
     	    << std::endl
-	    << "\t\t-d\t\tTurn on debug flag"
+	    << "  -d: Turn on debug flag"
 	    << std::endl
-	    << "\t\t-h\t\tDisplay this help screen and exit"
+	    << "  -h: Display help screen and exit"
     	    << std::endl;
 }
 
@@ -55,16 +57,22 @@ int main(int argc, char *argv[])
     // Handle options
     
     int opt;
-    char *conf_file = NULL;
+    char *conf_file_path = NULL;
     bool debug = false;
+    bool gui_mode = true;
     
-    while( (opt = getopt(argc, argv, "c:hd")) != -1)
+    while( (opt = getopt(argc, argv, "c:g:hd")) != -1)
     switch(opt){
     case 'd':
       debug = true;
       break;
     case 'c':
-      conf_file = strdup(optarg);
+      conf_file_path = strdup(optarg);
+      gui_mode = false;
+      break;
+    case 'g':
+      conf_file_path = strdup(optarg);
+      gui_mode = true;
       break;
     case 'h':
     case '?':
@@ -73,26 +81,27 @@ int main(int argc, char *argv[])
     }
 
     if (debug) {
-      std::cerr << "==>> conf_file: " << conf_file << std::endl;
+      std::cerr << "==>> conf_file_path: " << conf_file_path << std::endl;
     }
 
     // A bit more complex than I'd like, but this preserves the historical usage
-    // vortrac             <- GUI mode
+    // vortrac             <- GUI mode, set config file via GUI
     // vortrac file.xml    <- Batch mode
     // vortrac -c file.xml <- Batch mode
-    
     // vortrac -c file.xml file1 [file2, ....]
+    // vortrac -g file.xml <- GUI mode with config file
     
     if (optind == argc) { // All options consumed
-      if (conf_file == NULL)
+      if (gui_mode) {
 	std::cout << "GUI mode" << std::endl;
-      else
-	std::cout << "Batch mode with config " << conf_file << std::endl;
+      } else {
+	std::cout << "Batch mode with config " << conf_file_path << std::endl;
+      }
     } else {
-      if (conf_file == NULL) {
-	conf_file = strdup(argv[optind++]);
+      if (conf_file_path == NULL) {
+	conf_file_path = strdup(argv[optind++]);
 	if (optind == argc)
-	  std::cout << "Batch mode with config " << conf_file << std::endl;
+	  std::cout << "Batch mode with config " << conf_file_path << std::endl;
 	else {
 	  std::cerr << "Unexpected arguments. Did you forget the '-c' ?" << std::endl;
 	  usage(argv[0]);
@@ -105,11 +114,11 @@ int main(int argc, char *argv[])
     }
     
     // Read the command line argument to get the XML configuration file
-    if (conf_file != NULL) {
-      // if (readConfig(conf_file) == EXIT_FAILURE
+
+    if (conf_file_path != NULL) {
 
         // Check to make sure the argument has the right suffix
-        QString xmlfile(conf_file);
+        QString xmlfile(conf_file_path);
         if (xmlfile.right(3) != "xml") {
             std::cout << xmlfile.toStdString() << " does not look like an XML file\n";
             return EXIT_FAILURE;
@@ -161,15 +170,29 @@ int main(int argc, char *argv[])
              }
          }
 
-        std::cout << "Batch Mode started for " << xmlfile.toStdString() << " ...\n";
-        QApplication app(argc,argv);
-        BatchWindow mainWin(0, xmlfile);
-	// TODO Is the batch window meant to be invisible?
-        app.exec();
+         if (gui_mode) {
 
-    //If no xml file is parsed, start GUI
+           QApplication app(argc, argv);
+           MainWindow mainWin;
+           mainWin.open(conf_file_path);
+           mainWin.show();
+           return app.exec();
+
+         } else {
+
+           // batch mode
+           
+           std::cout << "Batch Mode started for " << xmlfile.toStdString() << " ...\n";
+           QApplication app(argc,argv);
+           BatchWindow mainWin(0, xmlfile);
+           // TODO Is the batch window meant to be invisible?
+           app.exec();
+
+        }
+
     } else if (argc == 1) {
 
+        // If no xml file is parsed, start GUI
         // Q_INIT_RESOURCE(vortrac);
         QApplication app(argc, argv);
         MainWindow mainWin;

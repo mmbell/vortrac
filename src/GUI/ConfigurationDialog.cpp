@@ -402,12 +402,14 @@ bool ConfigurationDialog::checkPanels()
   bool noErrors = true;
   QList<AbstractPanel*> panelWidgets = panelForString.values();
   for(int p = 0; p < panelWidgets.count(); p++) {
-    if(!panelWidgets[p]->checkDirectory())
+    if(!panelWidgets[p]->checkDirectory()) {
       noErrors = false;
-    if(!panelWidgets[p]->checkValues())
+    }
+    if(!panelWidgets[p]->checkValues()) {
       noErrors = false;
+    }
   }
-  
+
   if(!radar->checkDates()){
     noErrors = false;
   }

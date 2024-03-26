@@ -529,7 +529,7 @@ void AnalysisPage::runThread()
     configDialog->checkConfig();
     if(!configDialog->checkPanels()) {
         QMessageBox errCfg;
-        errCfg.setText("Please check errors: Incorrect entry in the configuration");
+        errCfg.setText("runThread: Please check errors: Incorrect entry in the configuration");
         errCfg.exec();
         return;
     }
@@ -657,7 +657,7 @@ void AnalysisPage::updateTcvitals()
     configDialog->checkConfig();
     if(!configDialog->checkPanels()) {
         QMessageBox errCfg;
-        errCfg.setText("Please check errors: Incorrect entry in the configuration");
+        errCfg.setText("updateTcvitals: Please check errors: Incorrect entry in the configuration");
         errCfg.exec();
         return;
     }

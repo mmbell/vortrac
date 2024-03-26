@@ -243,7 +243,7 @@ void DriverBatch::updateTcvitals()
     configDialog->checkConfig();
     if(!configDialog->checkPanels()) {
         QMessageBox errCfg;
-        errCfg.setText("Please check errors: Incorrect entry in the configuration");
+        errCfg.setText("DriverBatch: Please check errors: Incorrect entry in the configuration");
         errCfg.exec();
         return;
     }

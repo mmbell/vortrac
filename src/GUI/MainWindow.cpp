@@ -120,6 +120,35 @@ void MainWindow::open()
     }
 }
 
+void MainWindow::open(const char *conf_file_path)
+{
+
+  QString fileName(conf_file_path);
+
+  if (!fileName.isEmpty()) {
+    AnalysisPage *existing = findAnalysisPage(fileName);
+    if (existing) {
+      tabWidget->setCurrentWidget(existing);
+      return;
+    }
+
+    AnalysisPage *child = createAnalysisPage();
+    if (child->loadFile(fileName)) {
+      statusBar()->showMessage(tr("File loaded"), 2000);
+    } else {
+      child->close();
+    }
+    tabWidget->addTab(child,child->getVortexLabel());
+    tabWidget->setCurrentIndex(tabWidget->count() - 1);
+    connect(this, SIGNAL(log(const Message&)),
+            child, SLOT(catchLog(const Message&)));
+    
+    updateMenus();
+    updateVortexMenu();
+    child->setVortexLabel();
+  }
+}
+
 void MainWindow::save()
 {
     if (activeAnalysisPage()->save())

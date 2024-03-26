@@ -27,6 +27,7 @@ class MainWindow : public QMainWindow
 
 public:
     MainWindow();
+    void open(const char *conf_file_path);
     
 public slots:
     void catchLog(const Message& message);
