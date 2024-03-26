@@ -27,7 +27,7 @@ void usage(const char *s) {
 	    << std::endl
     	    << "  " << s << " [-c <config file>.xml input_files ...] (just run on these files)"
 	    << std::endl
-	    << "  " << s << " [-g] <config file>.xml (GUI mode)"
+	    << "  " << s << " [-g] <config file>.xml (GUI mode with config file on command line)"
     	    << std::endl
 	    << std::endl
 	    << "Optional arguments:"
