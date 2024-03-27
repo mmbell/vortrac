@@ -43,7 +43,11 @@ MainWindow::MainWindow()
     qRegisterMetaType<Message>("Message");
     qRegisterMetaType<GriddedData>("GriddedData");
     qRegisterMetaType<VortexList>("VortexList");
-    setWindowTitle(tr("VORTRAC"));
+#if QT_VERSION >= 0x060000
+    setWindowTitle(tr("VORTRAC - QT6"));
+#else
+    setWindowTitle(tr("VORTRAC - QT5"));
+#endif
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
