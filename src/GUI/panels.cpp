@@ -518,12 +518,15 @@ void RadarPanel::updatePanel(const QDomElement panelElement)
         QString name = child.tagName();
         QString parameter = child.text();
         if(name == "name") {
-            int index = radarName->findText(parameter,
-                                            Qt::MatchStartsWith);
-            if (index != -1)
-                radarName->setCurrentIndex(index);
-            else
-                radarName->setCurrentIndex(0);}
+          int index = radarName->findText(parameter,
+                                          Qt::MatchStartsWith);
+          if (index != -1) {
+            radarName->setCurrentIndex(index);
+          } else {
+            radarName->setCurrentIndex(0);
+            radarName->addItem(parameter);
+          }
+        }
         if (name == "lat") {
             radarLatBox->setValue(parameter.toFloat()); }
         if (name == "lon") {
@@ -648,18 +651,23 @@ bool RadarPanel::checkValues()
     std::cout << "******* radar: " << temp.toLatin1().data() << std::endl;
     int index = radarName->findText(temp, Qt::MatchStartsWith);
     if (index <= 0) {
-        emit log(Message(QString(),0,this->objectName(),Red,
-                         QString(tr("Please select a radar"))));
-        return false;
+      Message msg(QString(),0,this->objectName(),Red,
+                  QString(tr("Please select a radar")));
+      std::cerr << "ERROR - RadarPanel::checkValues()" << std::endl;
+      std::cerr << "  no radar name specified" << std::endl;
+      emit log(msg);
+      return false;
     }
 
 
     temp = QString(radarFormat->currentText());
     std::cout << "******* format: " << temp.toLatin1().data() << std::endl;
     if(radarFormatOptions->value(temp)==QString("")) {
-        emit log(Message(QString(), 0, this->objectName(), Red,
-                         QString(tr("Please select a radar file type"))));
-        return false;
+      std::cerr << "ERROR - RadarPanel::checkValues()" << std::endl;
+      std::cerr << "  no radar file type specified" << std::endl;
+      emit log(Message(QString(), 0, this->objectName(), Red,
+                       QString(tr("Please select a radar file type"))));
+      return false;
     }
 
     emit log(Message(QString(), 0, this->objectName(), Green));
@@ -1073,9 +1081,11 @@ bool CappiPanel::checkValues()
     // Make sure that an interpolation has been selected
     QString temp(intBox->currentText());
     if(interpolationMethod->value(temp)==QString("")) {
-        emit log(Message(QString(), 0, this->objectName(), Red,
-                         QString(tr("Please select a interpolation method in the configuration"))));
-        return false;
+      std::cerr << "ERROR - CappiPanel::checkValues()" << std::endl;
+      std::cerr << "  no interpolation selected" << std::endl;
+      emit log(Message(QString(), 0, this->objectName(), Red,
+                       QString(tr("Please select a interpolation method in the configuration"))));
+      return false;
     }
 
     // Gridded Data has a maximum number of points at (last I checked)
