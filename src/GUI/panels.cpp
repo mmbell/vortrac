@@ -364,12 +364,11 @@ RadarPanel::RadarPanel():AbstractPanel()
     radars = new Configuration(this,resourceDir.filePath(QString("vortrac_radarList.xml")));
     connect(radars, SIGNAL(log(const Message&)),
             this, SLOT(catchLog(const Message&)));
-    QDomNodeList radarList =
-            radars->getRoot().childNodes();
+    QDomNodeList radarList = radars->getRoot().childNodes();
     for (int i = 0; i <= radarList.count()-1; i++)
     {
-        QDomNode curNode = radarList.item(i);
-        radarName->addItem(curNode.firstChildElement(QString("text")).text());
+      QDomNode curNode = radarList.item(i);
+      radarName->addItem(curNode.firstChildElement(QString("text")).text());
     }
     radarName->setEditable(false);
 
@@ -648,13 +647,14 @@ bool RadarPanel::checkValues()
     // Returning True means that all the values check out...
 
     QString temp(radarName->currentText().left(4));
-    std::cout << "******* radar: " << temp.toLatin1().data() << std::endl;
+    // std::cout << "******* radar: " << temp.toLatin1().data() << std::endl;
     int index = radarName->findText(temp, Qt::MatchStartsWith);
-    if (index <= 0) {
+    // if (index <= 0) {
+    if (index < 0) {
       Message msg(QString(),0,this->objectName(),Red,
                   QString(tr("Please select a radar")));
       std::cerr << "ERROR - RadarPanel::checkValues()" << std::endl;
-      std::cerr << "  no radar name specified" << std::endl;
+      std::cerr << "  no radar name specified, index: " << index << std::endl;
       emit log(msg);
       return false;
     }
@@ -1097,21 +1097,27 @@ bool CappiPanel::checkValues()
     // We should be using zgridsp here like in AnalysisThread 459
 
     if(xDimBox->value() > GriddedData::getMaxIDim()) {
-        emit log(Message(QString(),0, this->objectName(), Red,
-                         QString(tr("Cappi X dimension has exceeded ")+QString().setNum(GriddedData::getMaxIDim())+tr(" points, Please decrease the dimension of cappi in x"))));
+      std::cerr << "ERROR - CappiPanel::checkValues()" << std::endl;
+      std::cerr << "  Cappi X dimension has exceeded" << std::endl;
+      emit log(Message(QString(),0, this->objectName(), Red,
+                       QString(tr("Cappi X dimension has exceeded ")+QString().setNum(GriddedData::getMaxIDim())+tr(" points, Please decrease the dimension of cappi in x"))));
         return false;
     }
     if(yDimBox->value() > GriddedData::getMaxJDim()) {
-        emit log(Message(QString(),0, this->objectName(), Red,
-                         QString(tr("Cappi Y dimension has exceeded ")+QString().setNum(GriddedData::getMaxJDim())+tr(" points, Please decrease the dimension of cappi in y"))));
-        return false;
+      std::cerr << "ERROR - CappiPanel::checkValues()" << std::endl;
+      std::cerr << "  Cappi Y dimension has exceeded" << std::endl;
+      emit log(Message(QString(),0, this->objectName(), Red,
+                       QString(tr("Cappi Y dimension has exceeded ")+QString().setNum(GriddedData::getMaxJDim())+tr(" points, Please decrease the dimension of cappi in y"))));
+      return false;
     }
     if(zDimBox->value() > GriddedData::getMaxKDim()) {
-        emit log(Message(QString(),0, this->objectName(), Red,
-                         QString(tr("Cappi Z dimension has exceeded ")+QString().setNum(GriddedData::getMaxIDim())+tr(" points, Please decrease the dimension of cappi in z"))));
-        return false;
+      std::cerr << "ERROR - CappiPanel::checkValues()" << std::endl;
+      std::cerr << "  Cappi Z dimension has exceeded" << std::endl;
+      emit log(Message(QString(),0, this->objectName(), Red,
+                       QString(tr("Cappi Z dimension has exceeded ")+QString().setNum(GriddedData::getMaxIDim())+tr(" points, Please decrease the dimension of cappi in z"))));
+      return false;
     }
-
+    
     emit log(Message(QString(), 0, this->objectName(), Green));
     return true;
 }
@@ -1660,37 +1666,47 @@ bool CenterPanel::checkValues()
 
     QString temp(geometryBox->currentText());
     if(geometryOptions->value(temp)==QString("")) {
-        emit log(Message(QString(), 0, this->objectName(), Red,
-                         QString(tr("Please select a geometry in the configuration"))));
-        return false;
+      emit log(Message(QString(), 0, this->objectName(), Red,
+                       QString(tr("Please select a geometry in the configuration"))));
+      std::cerr << "ERROR - CenterPanel::checkValues()" << std::endl;
+      std::cerr << "  Please select a geometry in the configuration" << std::endl;
+      return false;
     }
 
     temp = closureBox->currentText();
     if(closureOptions->value(temp)==QString("")) {
-        emit log(Message(QString(), 0, this->objectName(), Red,
-                         QString(tr("Please select a closure assumption in the configuration"))));
-        return false;
+      emit log(Message(QString(), 0, this->objectName(), Red,
+                       QString(tr("Please select a closure assumption in the configuration"))));
+      std::cerr << "ERROR - CenterPanel::checkValues()" << std::endl;
+      std::cerr << "  Please select a closure assumption in the configuration" << std::endl;
+      return false;
     }
 
     temp = refBox->currentText();
     if(reflectivityOptions->value(temp)==QString("")) {
-        emit log(Message(QString(), 0, this->objectName(), Red,
-                         QString(tr("Please select a reflectivity in the configuration"))));
-        return false;
+      emit log(Message(QString(), 0, this->objectName(), Red,
+                       QString(tr("Please select a reflectivity in the configuration"))));
+      std::cerr << "ERROR - CenterPanel::checkValues()" << std::endl;
+      std::cerr << "  Please select a reflectivity in the configuration" << std::endl;
+      return false;
     }
 
     temp = velBox->currentText();
     if(velocityOptions->value(temp)==QString("")) {
-        emit log(Message(QString(), 0, this->objectName(), Red,
-                         QString(tr("Please select a velocity in the configuration"))));
-        return false;
+      emit log(Message(QString(), 0, this->objectName(), Red,
+                       QString(tr("Please select a velocity in the configuration"))));
+      std::cerr << "ERROR - CenterPanel::checkValues()" << std::endl;
+      std::cerr << "  Please select a velocity in the configuration" << std::endl;
+      return false;
     }
 
     temp = critBox->currentText();
     if(criteriaOptions->value(temp)==QString("")) {
-        emit log(Message(QString(), 0, this->objectName(), Red,
-                         QString(tr("Please select a criteria in the configuration"))));
-        return false;
+      emit log(Message(QString(), 0, this->objectName(), Red,
+                       QString(tr("Please select a criteria in the configuration"))));
+      std::cerr << "ERROR - CenterPanel::checkValues()" << std::endl;
+      std::cerr << "  Please select a criteria in the configuration" << std::endl;
+      return false;
     }
 
     // We have set minimums in the SimplexData containers that will
@@ -1702,23 +1718,29 @@ bool CenterPanel::checkValues()
     // SimplexData::maxRadii = 30
     // SimplexData::maxCenters = 25
     // We get this directly now
-
+    
     if((int)floor(tLBox->value()-bLBox->value()+1.5)>SimplexData::getMaxLevels()) {
-        emit log(Message(QString(tr("Number of search levels in simplex exceeds the maximum of ")+QString().setNum(SimplexData::getMaxLevels())+tr(", Please decrease the number of levels")),0, this->objectName(), Red,
-                         QString(tr("Too many simplex levels"))));
-        return false;
+      emit log(Message(QString(tr("Number of search levels in simplex exceeds the maximum of ")+QString().setNum(SimplexData::getMaxLevels())+tr(", Please decrease the number of levels")),0, this->objectName(), Red,
+                       QString(tr("Too many simplex levels"))));
+      std::cerr << "ERROR - CenterPanel::checkValues()" << std::endl;
+      std::cerr << "  Too many simplex levels" << std::endl;
+      return false;
     }
 
     if((int)floor(oRBox->value()-iRBox->value()+1.5)>SimplexData::getMaxRadii()) {
-        emit log(Message(QString(tr("Number of search radii in simplex exceeds the maximum of ")+QString().setNum(SimplexData::getMaxRadii())+tr(", Please decrease the difference between inner and outer radii")),0, this->objectName(), Red,
-                         QString(tr("Simplex outer-inner too large"))));
-        return false;
+      emit log(Message(QString(tr("Number of search radii in simplex exceeds the maximum of ")+QString().setNum(SimplexData::getMaxRadii())+tr(", Please decrease the difference between inner and outer radii")),0, this->objectName(), Red,
+                       QString(tr("Simplex outer-inner too large"))));
+      std::cerr << "ERROR - CenterPanel::checkValues()" << std::endl;
+      std::cerr << "  Simplex outer-inner too large" << std::endl;
+      return false;
     }
 
     if(numPointsBox->value()>SimplexData::getMaxCenters()) {
-        emit log(Message(QString(),0, this->objectName(), Red,
-                         QString(tr("Number initial centers in simplex exceeds the maximum of ")+QString().setNum(SimplexData::getMaxCenters())+tr(", Please decrease the number of initial centers"))));
-        return false;
+      emit log(Message(QString(),0, this->objectName(), Red,
+                       QString(tr("Number initial centers in simplex exceeds the maximum of ")+QString().setNum(SimplexData::getMaxCenters())+tr(", Please decrease the number of initial centers"))));
+      std::cerr << "ERROR - CenterPanel::checkValues()" << std::endl;
+      std::cerr << "  Please decrease the number of initial center" << std::endl;
+      return false;
     }
     
     emit log(Message(QString(), 0, this->objectName(), Green));
@@ -2087,8 +2109,10 @@ bool ChooseCenterPanel::checkValues()
     float weightSum = windWeightBox->value()+stdDevWeightBox->value();
     weightSum += ptsWeightBox->value();
     if(fabs(weightSum-1.00) >= 0.01) {
-        emit log(Message(QString("Values in Mean Weighting Scheme Must Add to 1.00"),0,this->objectName(),Red,QString("Mean Weight Values Incorrect")));
-        return false;
+      emit log(Message(QString("Values in Mean Weighting Scheme Must Add to 1.00"),0,this->objectName(),Red,QString("Mean Weight Values Incorrect")));
+      std::cerr << "ERROR - ChooseCenterPanel::checkValues()" << std::endl;
+      std::cerr << "  Mean Weight Values Incorrect" << std::endl;
+      return false;
     }
 
     // The values of positionWeightBox & rmwWeightBox & velWeightBox should
@@ -2097,8 +2121,10 @@ bool ChooseCenterPanel::checkValues()
     weightSum = positionWeightBox->value()+rmwWeightBox->value();
     weightSum += velWeightBox->value();
     if(fabs(weightSum-1.00) >= 0.01) {
-        emit log(Message(QString("Values in Center Weighting Scheme Must Add to 1.00"), 0, this->objectName(), Red, QString("Center Weight Values Incorrect")));
-        return false;
+      emit log(Message(QString("Values in Center Weighting Scheme Must Add to 1.00"), 0, this->objectName(), Red, QString("Center Weight Values Incorrect")));
+      std::cerr << "ERROR - ChooseCenterPanel::checkValues()" << std::endl;
+      std::cerr << "  Center Weight Values Incorrect" << std::endl;
+      return false;
     }
 
     emit log(Message(QString(), 0, this->objectName(), Green));
@@ -2526,30 +2552,38 @@ bool VTDPanel::checkValues()
 
     QString temp(geometryBox->currentText());
     if(geometryOptions->value(temp)==QString("")) {
-        emit log(Message(QString(), 0, this->objectName(), Red,
-                         QString(tr("Please select a geometry in the configuration"))));
-        return false;
+      emit log(Message(QString(), 0, this->objectName(), Red,
+                       QString(tr("Please select a geometry in the configuration"))));
+      std::cerr << "ERROR - VTDPanel::checkValues()" << std::endl;
+      std::cerr << "  Please select a geometry in the configuration" << std::endl;
+      return false;
     }
 
     temp = closureBox->currentText();
     if(closureOptions->value(temp)==QString("")) {
-        emit log(Message(QString(), 0, this->objectName(), Red,
-                         QString(tr("Please select a closure assumption in the configuration"))));
-        return false;
+      emit log(Message(QString(), 0, this->objectName(), Red,
+                       QString(tr("Please select a closure assumption in the configuration"))));
+      std::cerr << "ERROR - VTDPanel::checkValues()" << std::endl;
+      std::cerr << "  Please select a closure assumption in the configuration" << std::endl;
+      return false;
     }
 
     temp = refBox->currentText();
     if(reflectivityOptions->value(temp)==QString("")) {
-        emit log(Message(QString(), 0, this->objectName(), Red,
-                         QString(tr("Please select a reflectivity in the configuration"))));
-        return false;
+      emit log(Message(QString(), 0, this->objectName(), Red,
+                       QString(tr("Please select a reflectivity in the configuration"))));
+      std::cerr << "ERROR - VTDPanel::checkValues()" << std::endl;
+      std::cerr << "  Please select a reflectivity in the configuration" << std::endl;
+      return false;
     }
 
     temp = velBox->currentText();
     if(velocityOptions->value(temp)==QString("")) {
-        emit log(Message(QString(), 0, this->objectName(), Red,
-                         QString(tr("Please select a velocity in the configuration"))));
-        return false;
+      emit log(Message(QString(), 0, this->objectName(), Red,
+                       QString(tr("Please select a velocity in the configuration"))));
+      std::cerr << "ERROR - VTDPanel::checkValues()" << std::endl;
+      std::cerr << "  Please select a velocity in the configuration" << std::endl;
+      return false;
     }
 
     // We have set minimums in the VortexData containers that will
@@ -2565,21 +2599,27 @@ bool VTDPanel::checkValues()
     // Should be divided by gridspacing see AnalysisPage.cpp: 458ish
 
     if((int)floor((tLBox->value()-bLBox->value()) + 1.5) > VortexData::getMaxLevels()) {
-        emit log(Message(QString(),0, this->objectName(), Red,
-                         QString(tr("Number of search levels in vtd exceeds the maximum of ")+QString().setNum(VortexData::getMaxLevels())+tr(", Please decrease the number of search levels"))));
-        return false;
+      emit log(Message(QString(),0, this->objectName(), Red,
+                       QString(tr("Number of search levels in vtd exceeds the maximum of ")+QString().setNum(VortexData::getMaxLevels())+tr(", Please decrease the number of search levels"))));
+      std::cerr << "ERROR - VTDPanel::checkValues()" << std::endl;
+      std::cerr << "  Please decrease the number of search levels" << std::endl;
+      return false;
     }
 
     if((int)floor((oRBox->value()-iRBox->value()) + 1.5) > VortexData::getMaxRadii()) {
-        emit log(Message(QString(),0, this->objectName(), Red,
-                         QString(tr("Number of search rings in vtd exceeds the maximum of ")+QString().setNum(VortexData::getMaxRadii())+tr(", Please decrease the number of search rings"))));
-        return false;
+      emit log(Message(QString(),0, this->objectName(), Red,
+                       QString(tr("Number of search rings in vtd exceeds the maximum of ")+QString().setNum(VortexData::getMaxRadii())+tr(", Please decrease the number of search rings"))));
+      std::cerr << "ERROR - VTDPanel::checkValues()" << std::endl;
+      std::cerr << "  Please decrease the number of search rings" << std::endl;
+      return false;
     }
 
     if(maxWaveNumBox->value()+1 > VortexData::getMaxWaveNum()) {
-        emit log(Message(QString(),0, this->objectName(), Red,
-                         QString(tr("Maximum wave number in vtd exceeds the limit of ")+QString().setNum(VortexData::getMaxWaveNum())+tr(", Please decrease the number of wave numbers used"))));
-        return false;
+      emit log(Message(QString(),0, this->objectName(), Red,
+                       QString(tr("Maximum wave number in vtd exceeds the limit of ")+QString().setNum(VortexData::getMaxWaveNum())+tr(", Please decrease the number of wave numbers used"))));
+      std::cerr << "ERROR - VTDPanel::checkValues()" << std::endl;
+      std::cerr << "  Please decrease the number of wave numbers used" << std::endl;
+      return false;
     }
     
     emit log(Message(QString(), 0, this->objectName(), Green));
@@ -3093,9 +3133,11 @@ bool PressurePanel::checkValues()
     // Make sure that we have selected a type of pressure reading
     QString temp(pressureFormat->currentText());
     if(pressureFormatOptions->value(temp)==QString("")) {
-        emit log(Message(QString(), 0, this->objectName(), Red,
-                         QString(tr("Please select a pressure file type"))));
-        return false;
+      emit log(Message(QString(), 0, this->objectName(), Red,
+                       QString(tr("Please select a pressure file type"))));
+      std::cerr << "ERROR - PressurePanel::checkValues()" << std::endl;
+      std::cerr << "  Please select a pressure file type" << std::endl;
+      return false;
     }
 
     emit log(Message(QString(), 0, this->objectName(), Green));
