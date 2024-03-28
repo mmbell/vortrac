@@ -182,15 +182,15 @@ VortexPanel::VortexPanel():AbstractPanel()
     connect(vortexName, &QLineEdit::textChanged,
             this, &AbstractPanel::valueChanged);
     connect(latBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(longBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(directionBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(speedBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(rmwBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(dir, &QLineEdit::textChanged,
             this, &AbstractPanel::valueChanged);
     connect(obsDateTime, &QDateTimeEdit::dateTimeChanged,
@@ -486,9 +486,9 @@ RadarPanel::RadarPanel():AbstractPanel()
     connect(radarName, &QComboBox::activated,
             this, &AbstractPanel::valueChanged);
     connect(radarLatBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(radarLongBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(dir, &QLineEdit::textChanged,
             this, &AbstractPanel::valueChanged);
     connect(radarFormat, &QComboBox::activated,
@@ -863,25 +863,19 @@ CappiPanel::CappiPanel():AbstractPanel()
     connect(dir, &QLineEdit::textChanged,
             this, &AbstractPanel::valueChanged);
     connect(xDimBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(yDimBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(zDimBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(xGridBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(yGridBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(zGridBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(zMinBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
-    /*
-  connect(advUWindBox, SIGNAL(valueChanged(const QString&)),
-   this, &AbstractPanel::valueChanged);
-  connect(advVWindBox, SIGNAL(valueChanged(const QString&)),
-   this, &AbstractPanel::valueChanged);
-  */
+            this, &AbstractPanel::dblValueChanged);
     connect(intBox, &QComboBox::activated,
             this, &AbstractPanel::valueChanged);
     connect(this, &AbstractPanel::workingDirectoryChanged,
@@ -1357,13 +1351,13 @@ CenterPanel::CenterPanel()
     connect(critBox, &QComboBox::activated,
             this, &AbstractPanel::valueChanged);
     connect(bLBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(tLBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(iRBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(oRBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(maxWaveNumBox, &QSpinBox::valueChanged,
             this, &AbstractPanel::valueChanged);
     connect(numPointsBox, &QSpinBox::valueChanged,
@@ -1371,13 +1365,13 @@ CenterPanel::CenterPanel()
     connect(iterations, &QSpinBox::valueChanged,
             this, &AbstractPanel::valueChanged);
     connect(ringBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(influenceBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(convergenceBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(diameterBox, &QDoubleSpinBox::valueChanged,
-            this, &AbstractPanel::valueChanged);
+            this, &AbstractPanel::dblValueChanged);
     connect(maxWaveNumBox, &QSpinBox::valueChanged,
             this, &AbstractPanel::createDataGaps);
     connect(this, &AbstractPanel::workingDirectoryChanged,

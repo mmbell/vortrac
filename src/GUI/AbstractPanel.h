@@ -215,7 +215,8 @@ class AbstractPanel:public QWidget
     * \return
     * \sa
     */
-   void valueChanged();
+  void valueChanged();
+  void dblValueChanged(double val);
  // These slots receive signals when one of the panel's parameters has
  // been changed.
    // Slots specific to the radar panel implementation
