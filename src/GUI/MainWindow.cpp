@@ -30,8 +30,8 @@ MainWindow::MainWindow()
     connect(tabWidget, SIGNAL(currentChanged(int)),
             this, SLOT(updateMenus()));
     tabMapper = new QSignalMapper(this);
-    connect(tabMapper, SIGNAL(mapped(int)),
-            tabWidget, SLOT(setCurrentIndex(int)));
+    connect(tabMapper, &QSignalMapper::mappedInt,
+            tabWidget, &QTabWidget::setCurrentIndex);
 
     createActions();
     createMenus();

@@ -167,8 +167,8 @@ void AbstractPanel::createDataGaps()
 	  dataGapBox->setDecimals(1);
 	  dataGapBox->setMinimumSize(dataGapBox->sizeHint());
 	  dataGapBoxes.append(dataGapBox);
-	  connect(dataGapBox, SIGNAL(valueChanged(const QString&)), 
-		  this, SLOT(valueChanged()));
+	  connect(dataGapBox, &QDoubleSpinBox::valueChanged, 
+		  this, &AbstractPanel::valueChanged);
       
 	  dataGapLayout->addWidget(dataGapLabels[i], row, column);
 	  dataGapLayout->addWidget(dataGapBoxes[i], row, column+1);

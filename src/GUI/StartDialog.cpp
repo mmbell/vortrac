@@ -83,10 +83,10 @@ StartPanel::StartPanel(Configuration *initialConfig):AbstractPanel()
         radarName->addItem(curNode.firstChildElement(QString("text")).text());
     }
     radarName->setEditable(false);
-    connect(radarName, SIGNAL(activated(const QString&)),
-            this, SLOT(valueChanged()));
-//    connect(radarName, SIGNAL(activated(const QString&)),
-//            this, SLOT(radarChanged(const QString&)));
+    // connect(radarName, &QComboBox::activated,
+    //         this, &StartPanel::updateRadar);
+    connect(radarName, &QComboBox::activated,
+            this, &AbstractPanel::valueChanged); // to-do - check this
     
     QHBoxLayout *radarLayout = new QHBoxLayout;
     radarLayout->addWidget(radarNameLabel);
