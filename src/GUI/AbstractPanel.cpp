@@ -26,7 +26,7 @@
 AbstractPanel::AbstractPanel(QWidget *parent)
   :QWidget(parent)
 {
-  this->setObjectName("Abstract Panel");
+  this->setObjectName("AbstractPanel");
   //Message::toScreen("Using Abstract Panel Constructor");
   defaultDirectory = new QDir(QDir::currentPath());
   dir = new QLineEdit;
@@ -197,16 +197,25 @@ void AbstractPanel::catchLog(const Message& message)
   emit log(message);
 }
 
-void AbstractPanel::checkForAnalytic(const QString& format)
+void AbstractPanel::checkForAnalytic(int index)
 {
-  if(format ==  QString("Analytic Model"))
-    connectFileBrowse();
+
+  if (index < radarFormatOpts.count()) {
+    if(radarFormatOpts[index] == QString("Analytic Model")) {
+      connectFileBrowse();
+    }
+  }
 
 }
 
-void AbstractPanel::radarChanged(const QString& text)
+void AbstractPanel::radarChanged(int index)
 {
 
+  QString text;
+  if (index < radarNameOpts.count()) {
+    text = radarNameOpts[index];
+  }
+  
   QDomElement allRadars = radars->getRoot();
   int initialCount = allRadars.childNodes().count();
   QString getEditPanel = allRadars.firstChildElement("OTHER").firstChildElement("text").text();

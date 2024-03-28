@@ -185,8 +185,8 @@ VortexPanel::VortexPanel():AbstractPanel()
     connect(rmwBox, SIGNAL(valueChanged(const QString&)), this, SLOT(valueChanged()));
     connect(dir, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
     connect(obsDateTime, SIGNAL(dateTimeChanged(const QDateTime&)), this, SLOT(valueChanged()));
-    
-    connect(this, SIGNAL(workingDirectoryChanged()), this, SLOT(createDirectory()));
+    connect(this, &AbstractPanel::workingDirectoryChanged,
+            this, &AbstractPanel::createDirectory);
 
     setPanelChanged(false);
 }
@@ -368,7 +368,9 @@ RadarPanel::RadarPanel():AbstractPanel()
     for (int i = 0; i <= radarList.count()-1; i++)
     {
       QDomNode curNode = radarList.item(i);
-      radarName->addItem(curNode.firstChildElement(QString("text")).text());
+      QString rname(curNode.firstChildElement(QString("text")).text());
+      radarName->addItem(rname);
+      radarNameOpts.push_back(rname);
     }
     radarName->setEditable(false);
 
@@ -415,17 +417,17 @@ RadarPanel::RadarPanel():AbstractPanel()
     radarFormatOptions->insert(QString("NetCDF"), QString("NETCDF"));
     //radarFormatOptions->insert(QString("Analytic Model"), QString("MODEL"));
     radarFormat = new QComboBox();
-    QList<QString> options = radarFormatOptions->keys();
-    for(int i = 0; i < options.count(); i++)
+    radarFormatOpts = radarFormatOptions->keys();
+    for(int i = 0; i < radarFormatOpts.count(); i++)
     {
-        radarFormat->addItem(options[i]);
+      radarFormat->addItem(radarFormatOpts[i]);
     }
     radarFormat->setEditable(false);
     QHBoxLayout *radarFormatLayout = new QHBoxLayout;
     radarFormatLayout->addWidget(radarFormatLabel);
     radarFormatLayout->addWidget(radarFormat);
     // add more formats when found
-
+    
     QLabel *start = new QLabel(tr("Start Date and Time"));
     startDateTime = new QDateTimeEdit();
     startDateTime->setTimeSpec(Qt::UTC);
@@ -472,25 +474,25 @@ RadarPanel::RadarPanel():AbstractPanel()
     turnOffWhenRunning.append(radarName);
     turnOffWhenRunning.append(radarNameLabel);
 
-    connect(radarName, SIGNAL(activated(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(radarLatBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(radarLongBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(dir, SIGNAL(textChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(radarFormat, SIGNAL(activated(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(startDateTime, SIGNAL(dateTimeChanged(const QDateTime&)),
-            this, SLOT(valueChanged()));
-    connect(endDateTime, SIGNAL(dateTimeChanged(const QDateTime&)),
-            this, SLOT(valueChanged()));
-    connect(radarFormat, SIGNAL(activated(const QString&)),
-            this, SLOT(checkForAnalytic(const QString&)));
+    connect(radarName, &QComboBox::activated,
+            this, &AbstractPanel::valueChanged);
+    connect(radarLatBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(radarLongBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(dir, &QLineEdit::textChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(radarFormat, &QComboBox::activated,
+            this, &AbstractPanel::valueChanged);
+    connect(startDateTime, &QDateTimeEdit::dateTimeChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(endDateTime, &QDateTimeEdit::dateTimeChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(radarFormat, &QComboBox::activated,
+            this, &AbstractPanel::checkForAnalytic);
+    connect(radarName, &QComboBox::activated,
+            this, &AbstractPanel::radarChanged);
 
-    connect(radarName, SIGNAL(activated(const QString&)),
-            this, SLOT(radarChanged(const QString&)));
     setPanelChanged(false);
 
 }
@@ -849,32 +851,32 @@ CappiPanel::CappiPanel():AbstractPanel()
     turnOffWhenRunning.append(browse);
     turnOffWhenRunning.append(cappiDirLabel);
 
-    connect(dir, SIGNAL(textChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(xDimBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(yDimBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(zDimBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(xGridBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(yGridBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(zGridBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(zMinBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
+    connect(dir, &QLineEdit::textChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(xDimBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(yDimBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(zDimBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(xGridBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(yGridBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(zGridBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(zMinBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
     /*
   connect(advUWindBox, SIGNAL(valueChanged(const QString&)),
-   this, SLOT(valueChanged()));
+   this, &AbstractPanel::valueChanged);
   connect(advVWindBox, SIGNAL(valueChanged(const QString&)),
-   this, SLOT(valueChanged()));
+   this, &AbstractPanel::valueChanged);
   */
-    connect(intBox, SIGNAL(activated(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(this, SIGNAL(workingDirectoryChanged()),
-            this, SLOT(createDirectory()));
+    connect(intBox, &QComboBox::activated,
+            this, &AbstractPanel::valueChanged);
+    connect(this, &AbstractPanel::workingDirectoryChanged,
+            this, &AbstractPanel::createDirectory);
 
     // These connections allow individual widgets to notify the panel when
     // a parameter has changed.
@@ -1333,45 +1335,45 @@ CenterPanel::CenterPanel()
     turnOffWhenRunning.append(dirLabel);
     turnOffWhenRunning.append(browse);
 
-    connect(dir, SIGNAL(textChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(geometryBox, SIGNAL(activated(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(closureBox, SIGNAL(activated(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(refBox, SIGNAL(activated(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(velBox, SIGNAL(activated(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(critBox, SIGNAL(activated(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(bLBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(tLBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(iRBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(oRBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(maxWaveNumBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(numPointsBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(iterations, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(ringBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(influenceBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(convergenceBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(diameterBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(maxWaveNumBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(createDataGaps()));
-    connect(this, SIGNAL(workingDirectoryChanged()),
-            this, SLOT(createDirectory()));
-
+    connect(dir, &QLineEdit::textChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(geometryBox, &QComboBox::activated,
+            this, &AbstractPanel::valueChanged);
+    connect(closureBox, &QComboBox::activated,
+            this, &AbstractPanel::valueChanged);
+    connect(refBox, &QComboBox::activated,
+            this, &AbstractPanel::valueChanged);
+    connect(velBox, &QComboBox::activated,
+            this, &AbstractPanel::valueChanged);
+    connect(critBox, &QComboBox::activated,
+            this, &AbstractPanel::valueChanged);
+    connect(bLBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(tLBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(iRBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(oRBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(maxWaveNumBox, &QSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(numPointsBox, &QSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(iterations, &QSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(ringBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(influenceBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(convergenceBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(diameterBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(maxWaveNumBox, &QSpinBox::valueChanged,
+            this, &AbstractPanel::createDataGaps);
+    connect(this, &AbstractPanel::workingDirectoryChanged,
+            this, &AbstractPanel::createDirectory);
+    
     setPanelChanged(false);
 }
 
@@ -1862,32 +1864,32 @@ ChooseCenterPanel::ChooseCenterPanel():AbstractPanel()
     turnOffWhenRunning.append(dirLabel);
     turnOffWhenRunning.append(browse);
 
-    connect(dir, SIGNAL(textChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(startDateTime, SIGNAL(dateTimeChanged(const QDateTime&)),
-            this, SLOT(valueChanged()));
-    connect(endDateTime, SIGNAL(dateTimeChanged(const QDateTime&)),
-            this, SLOT(valueChanged()));
-    connect(windWeightBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(stdDevWeightBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(ptsWeightBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(positionWeightBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(rmwWeightBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(velWeightBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(fTest95Button, SIGNAL(clicked(const bool)),
-            this, SLOT(valueChanged()));
-    connect(fTest95Button, SIGNAL(clicked(const bool)),
-            this, SLOT(valueChanged()));
-    connect(minVolumes, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(this, SIGNAL(workingDirectoryChanged()),
-            this, SLOT(createDirectory()));
+    connect(dir, &QLineEdit::textChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(startDateTime, &QDateTimeEdit::dateTimeChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(endDateTime, &QDateTimeEdit::dateTimeChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(windWeightBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(stdDevWeightBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(ptsWeightBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(positionWeightBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(rmwWeightBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(velWeightBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(fTest95Button, &QRadioButton::clicked,
+            this, &AbstractPanel::valueChanged);
+    connect(fTest95Button, &QRadioButton::clicked,
+            this, &AbstractPanel::valueChanged);
+    connect(minVolumes, &QSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(this, &AbstractPanel::workingDirectoryChanged,
+            this, &AbstractPanel::createDirectory);
 
     setPanelChanged(false);
 }
@@ -2283,32 +2285,32 @@ VTDPanel::VTDPanel()
     turnOffWhenRunning.append(browse);
 
 
-    connect(dir, SIGNAL(textChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(geometryBox, SIGNAL(activated(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(closureBox, SIGNAL(activated(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(refBox, SIGNAL(activated(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(velBox, SIGNAL(activated(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(bLBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(tLBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(iRBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(oRBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(maxWaveNumBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(ringBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(maxWaveNumBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(createDataGaps()));
-    connect(this, SIGNAL(workingDirectoryChanged()),
-            this, SLOT(createDirectory()));
+    connect(dir, &QLineEdit::textChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(geometryBox, &QComboBox::activated,
+            this, &AbstractPanel::valueChanged);
+    connect(closureBox, &QComboBox::activated,
+            this, &AbstractPanel::valueChanged);
+    connect(refBox, &QComboBox::activated,
+            this, &AbstractPanel::valueChanged);
+    connect(velBox, &QComboBox::activated,
+            this, &AbstractPanel::valueChanged);
+    connect(bLBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(tLBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(iRBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(oRBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(maxWaveNumBox, &QSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(ringBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(maxWaveNumBox, &QSpinBox::valueChanged,
+            this, &AbstractPanel::createDataGaps);
+    connect(this, &AbstractPanel::workingDirectoryChanged,
+            this, &AbstractPanel::createDirectory);
 
     setPanelChanged(false);
 }
@@ -2682,14 +2684,14 @@ HVVPPanel::HVVPPanel()
     main->addStretch();
     setLayout(main);
 
-    connect(numLevels, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(hgtStart, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(hInc, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(xtBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
+    connect(numLevels, &QSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(hgtStart, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(hInc, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(xtBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
 
     setPanelChanged(false);
 }
@@ -2903,30 +2905,30 @@ PressurePanel::PressurePanel()
     turnOffWhenRunning.append(pressureFormat);
     turnOffWhenRunning.append(pressureFormatLabel);
 
-    connect(dir, SIGNAL(textChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(madisurl, SIGNAL(textChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(madisuser, SIGNAL(textChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(madispassword, SIGNAL(textChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(pressureFormat, SIGNAL(activated(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(gradientHeight, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(maxObsTime, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(maxObsDist, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(maxObsDistCenter, SIGNAL(toggled(const bool)),
-            this, SLOT(valueChanged()));
-    connect(maxObsDistRing, SIGNAL(toggled(const bool)),
-            this, SLOT(valueChanged()));
-    connect(avInterval, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(rapidLimit, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
+    connect(dir, &QLineEdit::textChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(madisurl, &QLineEdit::textChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(madisuser, &QLineEdit::textChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(madispassword, &QLineEdit::textChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(pressureFormat, &QComboBox::activated,
+            this, &AbstractPanel::valueChanged);
+    connect(gradientHeight, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(maxObsTime, &QSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(maxObsDist, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(maxObsDistCenter, &QRadioButton::toggled,
+            this, &AbstractPanel::valueChanged);
+    connect(maxObsDistRing, &QRadioButton::toggled,
+            this, &AbstractPanel::valueChanged);
+    connect(avInterval, &QSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(rapidLimit, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
 
     setPanelChanged(false);
 }
@@ -3272,29 +3274,29 @@ GraphicsPanel::GraphicsPanel()
     main->addStretch(1);
     setLayout(main);
 
-    connect(pressure, SIGNAL(toggled(bool)),
-            this, SLOT(valueChanged()));
-    connect(deficit, SIGNAL(toggled(bool)),
-            this, SLOT(valueChanged()));
-    connect(graphParameters, SIGNAL(toggled(bool)),
-            this, SLOT(valueChanged()));
-    connect(pMaxBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(pMinBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(rmwMaxBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(rmwMinBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(defMaxBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(defMinBox, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(startDateTime, SIGNAL(dateTimeChanged(const QDateTime&)),
-            this, SLOT(valueChanged()));
-    connect(endDateTime, SIGNAL(dateTimeChanged(const QDateTime&)),
-            this, SLOT(valueChanged()));
-
+    connect(pressure, &QRadioButton::toggled,
+            this, &AbstractPanel::valueChanged);
+    connect(deficit, &QRadioButton::toggled,
+            this, &AbstractPanel::valueChanged);
+    connect(graphParameters, &QGroupBox::toggled,
+            this, &AbstractPanel::valueChanged);
+    connect(pMaxBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(pMinBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(rmwMaxBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(rmwMinBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(defMaxBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(defMinBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(startDateTime, &QDateTimeEdit::dateTimeChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(endDateTime, &QDateTimeEdit::dateTimeChanged,
+            this, &AbstractPanel::valueChanged);
+    
     setPanelChanged(false);
 }
 
@@ -3612,55 +3614,46 @@ QCPanel::QCPanel()
     main->addStretch(1);
     setLayout(main);
 
-    connect(bbSegmentSize, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(maxFoldCount, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(velocityMinimum, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(velocityMaximum, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(reflectivityMinimum, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(reflectivityMaximum, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(spectralThreshold, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
+    connect(bbSegmentSize, &QSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(maxFoldCount, &QSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(velocityMinimum, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(velocityMaximum, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(reflectivityMinimum, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(reflectivityMaximum, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(spectralThreshold, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
 
-    connect(gvad, SIGNAL(toggled(const bool)),
-            this, SLOT(valueChanged()));
-    connect(gvad, SIGNAL(toggled(bool)),
-            gvadParameters, SLOT(setVisible(bool)));
-    connect(vad, SIGNAL(toggled(const bool)),
-            this, SLOT(valueChanged()));
-    connect(vad, SIGNAL(toggled(bool)),
-            vadParameters, SLOT(setVisible(bool)));
-    connect(vadLevels, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(numCoefficients, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(vadthr, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(gvadthr, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
+    connect(gvad, &QRadioButton::toggled,
+            this, &AbstractPanel::valueChanged);
+    connect(gvad, &QRadioButton::toggled,
+            gvadParameters, &QFrame::setVisible);
+    connect(vad, &QRadioButton::toggled,
+            this, &AbstractPanel::valueChanged);
+    connect(vad, &QRadioButton::toggled,
+            vadParameters, &QFrame::setVisible);
+    connect(vadLevels, &QSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(numCoefficients, &QSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(vadthr, &QSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(gvadthr, &QSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
 
-    connect(user, SIGNAL(toggled(const bool)),
-            this, SLOT(valueChanged()));
-    connect(user, SIGNAL(toggled(bool)),
-            userParameters, SLOT(setVisible(bool)));
-    connect(windSpeed, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-    connect(windDirection, SIGNAL(valueChanged(const QString&)),
-            this, SLOT(valueChanged()));
-
-    /*
-   * connect(known, SIGNAL(toggled(const bool)),
-   *	  this, SLOT(valueChanged()));
-   * connect(known, SIGNAL(toggled(bool)),
-   *	  knownParameters, SLOT(setVisible(bool)));
-   * connect(dir, SIGNAL(textChanged(const QString&)),
-   *  this, SLOT(valueChanged()));
-   */
+    connect(user, &QRadioButton::toggled,
+            this, &AbstractPanel::valueChanged);
+    connect(user, &QRadioButton::toggled,
+            userParameters, &QFrame::setVisible);
+    connect(windSpeed, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(windDirection, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
 
     setPanelChanged(false);
 

@@ -131,6 +131,12 @@ class AbstractPanel:public QWidget
    QList<QLabel*> dataGapLabels;
 
    /*
+    * radars and formats
+    */
+   QList<QString> radarNameOpts;
+   QList<QString> radarFormatOpts;
+
+   /*
     * The above list of members are used for the automatic adjustment of
     * visible data gap entry boxes which are used for VTD and Center panels
     */
@@ -203,6 +209,42 @@ class AbstractPanel:public QWidget
     * \sa
     */
    virtual void turnOffMembers(const bool& isRunning);
+   /*!
+    *
+    * \param
+    * \return
+    * \sa
+    */
+   void valueChanged();
+ // These slots receive signals when one of the panel's parameters has
+ // been changed.
+   // Slots specific to the radar panel implementation
+   /*!
+    *
+    * \param
+    * \return
+    * \sa
+    */
+   void checkForAnalytic(int index);
+     // checks to see if analytic model is the selected format
+   /*!
+    *
+    * \param
+    * \return
+    * \sa
+    */
+   void radarChanged(int index);
+     // allows for automatic updating of stored radar specs
+   /*!
+    *
+    * \param
+    * \return
+    * \sa
+    */
+   void createDirectory();
+     // creates a directory in the filesystem based on the current directory
+     // held in member dir
+
 
  protected:
    /*!
@@ -230,16 +272,7 @@ class AbstractPanel:public QWidget
      // the parameter values that fit the pages
 
  private slots:
-   /*!
-    *
-    * \param
-    * \return
-    * \sa
-    */
-   void valueChanged();
- // These slots receive signals when one of the panel's parameters has
- // been changed.
- /*!
+  /*!
     *
     * \param
     * \return
@@ -258,33 +291,6 @@ class AbstractPanel:public QWidget
      // Receives the signal emited by the browseFiles button
      // Call's the getOpenFileName QDialog static member
    
-   // Slots specific to the radar panel implementation
-   /*!
-    *
-    * \param
-    * \return
-    * \sa
-    */
-   void checkForAnalytic(const QString& format);
-     // checks to see if analytic model is the selected format
-   /*!
-    *
-    * \param
-    * \return
-    * \sa
-    */
-   void radarChanged(const QString& text);
-     // allows for automatic updating of stored radar specs
-   /*!
-    *
-    * \param
-    * \return
-    * \sa
-    */
-   void createDirectory();
-     // creates a directory in the filesystem based on the current directory
-     // held in member dir
-
  signals:
    void log(const Message& message);
    void changeDom(const QDomElement &element, const QString &name, 
