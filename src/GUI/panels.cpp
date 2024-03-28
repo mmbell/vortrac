@@ -164,27 +164,37 @@ VortexPanel::VortexPanel():AbstractPanel()
     turnOffWhenRunning.append(workingDirLabel);
     turnOffWhenRunning.append(browse);
     
-    connect(operational, SIGNAL(toggled(const bool)),
-            this, SLOT(valueChanged()));
-   // connect(operational, SIGNAL(toggled(bool)),
-   //         autoParameters, SLOT(setVisible(bool)));
-    connect(idName, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
-    connect(level2url, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
-    connect(level3url, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
-    connect(atcfurl, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
+    connect(operational, &QRadioButton::toggled,
+            this, &AbstractPanel::valueChanged);
+    connect(idName, &QLineEdit::textChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(level2url, &QLineEdit::textChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(level3url, &QLineEdit::textChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(atcfurl, &QLineEdit::textChanged,
+            this, &AbstractPanel::valueChanged);
     
     connect(manual, SIGNAL(toggled(const bool)),
             this, SLOT(valueChanged()));
    // connect(manual, SIGNAL(toggled(bool)),
    //         manualParameters, SLOT(setVisible(bool)));
-    connect(vortexName, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
-    connect(latBox, SIGNAL(valueChanged(const QString&)), this, SLOT(valueChanged()));
-    connect(longBox, SIGNAL(valueChanged(const QString&)), this, SLOT(valueChanged()));
-    connect(directionBox, SIGNAL(valueChanged(const QString&)), this, SLOT(valueChanged()));
-    connect(speedBox, SIGNAL(valueChanged(const QString&)), this, SLOT(valueChanged()));
-    connect(rmwBox, SIGNAL(valueChanged(const QString&)), this, SLOT(valueChanged()));
-    connect(dir, SIGNAL(textChanged(const QString&)), this, SLOT(valueChanged()));
-    connect(obsDateTime, SIGNAL(dateTimeChanged(const QDateTime&)), this, SLOT(valueChanged()));
+    connect(vortexName, &QLineEdit::textChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(latBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(longBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(directionBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(speedBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(rmwBox, &QDoubleSpinBox::valueChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(dir, &QLineEdit::textChanged,
+            this, &AbstractPanel::valueChanged);
+    connect(obsDateTime, &QDateTimeEdit::dateTimeChanged,
+            this, &AbstractPanel::valueChanged);
     connect(this, &AbstractPanel::workingDirectoryChanged,
             this, &AbstractPanel::createDirectory);
 
@@ -362,8 +372,7 @@ RadarPanel::RadarPanel():AbstractPanel()
     QString resources = QCoreApplication::applicationDirPath() + "/../Resources";
     QDir resourceDir = QDir(resources);
     radars = new Configuration(this,resourceDir.filePath(QString("vortrac_radarList.xml")));
-    connect(radars, SIGNAL(log(const Message&)),
-            this, SLOT(catchLog(const Message&)));
+    connect(radars, &Configuration::log, this, &AbstractPanel::catchLog);
     QDomNodeList radarList = radars->getRoot().childNodes();
     for (int i = 0; i <= radarList.count()-1; i++)
     {
