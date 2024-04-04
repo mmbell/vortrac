@@ -167,9 +167,13 @@ void AbstractPanel::createDataGaps()
 	  dataGapBox->setDecimals(1);
 	  dataGapBox->setMinimumSize(dataGapBox->sizeHint());
 	  dataGapBoxes.append(dataGapBox);
+#if QT_VERSION >= 0x060000
 	  connect(dataGapBox, &QDoubleSpinBox::valueChanged, 
-		  this, &AbstractPanel::valueChanged);
-      
+            this, &AbstractPanel::valueChanged);
+#else
+	  connect(dataGapBox, SIGNAL(valueChanged(const QString&)), 
+		  this, SLOT(valueChanged()));
+#endif      
 	  dataGapLayout->addWidget(dataGapLabels[i], row, column);
 	  dataGapLayout->addWidget(dataGapBoxes[i], row, column+1);
 	  if (column==2) {

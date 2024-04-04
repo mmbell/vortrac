@@ -83,10 +83,15 @@ StartPanel::StartPanel(Configuration *initialConfig):AbstractPanel()
         radarName->addItem(curNode.firstChildElement(QString("text")).text());
     }
     radarName->setEditable(false);
-    // connect(radarName, &QComboBox::activated,
-    //         this, &StartPanel::updateRadar);
+
+#if QT_VERSION >= 0x060000
     connect(radarName, &QComboBox::activated,
             this, &AbstractPanel::valueChanged); // to-do - check this
+#else
+    connect(radarName, SIGNAL(activated(const QString&)),
+            this, SLOT(valueChanged()));
+#endif
+    
     
     QHBoxLayout *radarLayout = new QHBoxLayout;
     radarLayout->addWidget(radarNameLabel);
@@ -101,12 +106,12 @@ StartPanel::StartPanel(Configuration *initialConfig):AbstractPanel()
             this, SLOT(catchLog(const Message&)));
     
     connect(this, SIGNAL(changeDom(const QDomElement&, 
-                                    const QString&, const QString&)), 
+                                   const QString&, const QString&)), 
             configData, SLOT(setParam(const QDomElement&, 
                                       const QString&, const QString&)));
     connect(this, SIGNAL(changeDom(const QDomElement&, const QString&, 
-                                    const QString&, const QString&, 
-                                    const QString&)), 
+                                   const QString&, const QString&, 
+                                   const QString&)), 
             configData, SLOT(setParam(const QDomElement&, const QString&, 
                                       const QString&, const QString&,
                                       const QString&)));
