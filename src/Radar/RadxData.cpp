@@ -237,6 +237,7 @@ bool RadxData::readVolume()
 
   radarDateTime.setTimeSpec(Qt::UTC);
   RadxTime rtime((time_t) Rays[0].getDate());
+  radarDateTime.setDate(QDate(rtime.getYear(), rtime.getMonth(), rtime.getDay()));
   radarDateTime.setTime(QTime(rtime.getHour(), rtime.getMin(), rtime.getSec()));
 
   return true;

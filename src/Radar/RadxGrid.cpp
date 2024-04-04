@@ -46,6 +46,7 @@ bool RadxGrid::readVolume() {
 
   radarDateTime.setTimeSpec(Qt::UTC);
   RadxTime rtime((time_t) secs);
+  radarDateTime.setDate(QDate(rtime.getYear(), rtime.getMonth(), rtime.getDay()));
   radarDateTime.setTime(QTime(rtime.getHour(), rtime.getMin(), rtime.getSec()));
 
   return true;
