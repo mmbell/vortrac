@@ -30,8 +30,13 @@ MainWindow::MainWindow()
     connect(tabWidget, SIGNAL(currentChanged(int)),
             this, SLOT(updateMenus()));
     tabMapper = new QSignalMapper(this);
+#if QT_VERSION >= 0x060000
     connect(tabMapper, &QSignalMapper::mappedInt,
             tabWidget, &QTabWidget::setCurrentIndex);
+#else
+    connect(tabMapper, SIGNAL(mapped(int)),
+            tabWidget, SLOT(setCurrentIndex(int)));
+#endif
 
     createActions();
     createMenus();
