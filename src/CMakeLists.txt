@@ -209,15 +209,15 @@ find_package(Armadillo REQUIRED)
 
 # Finding Qt
 
-find_package (Qt6 COMPONENTS Core Gui Widgets Xml Network QUIET)
-if (NOT Qt6_FOUND)
-  find_package (Qt5 COMPONENTS Core Gui Widgets Xml Network QUIET)
+find_package (Qt5 COMPONENTS Core Gui Widgets Xml Network QUIET)
+if (NOT Qt5_FOUND)
+  find_package (Qt6 COMPONENTS Core Gui Widgets Xml Network QUIET)
 endif()
 
 if (Qt5_FOUND)
   message(STATUS "Found Qt5: ${Qt5_VERSION}")
 elseif (Qt6_FOUND)
-    message(STATUS "Found Qt6: ${Qt6_VERSION}")
+  message(STATUS "Found Qt6: ${Qt6_VERSION}")
 else ()
   message(FATAL_ERROR, "Qt not found.")
 endif(Qt5_FOUND)
