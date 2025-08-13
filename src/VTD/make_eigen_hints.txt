@@ -1,0 +1,5 @@
+find_package(Eigen3 REQUIRED)
+target_link_libraries(your_target PRIVATE Eigen3::Eigen)  # header-only include dirs
+
+g++ -std=c++17 -I/usr/include/eigen3 -O2 -c mgbvtd.cpp
+
