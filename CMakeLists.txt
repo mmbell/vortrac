@@ -12,6 +12,8 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++17 ")
+
 # set policy CMP0100 so that AUTOMOC finds .hh files
 if(${CMAKE_VERSION} VERSION_GREATER "3.17.0") 
   cmake_policy(SET CMP0100 NEW)
