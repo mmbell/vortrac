@@ -258,7 +258,7 @@ set(CMAKE_AUTOUIC ON)
 
 if (Qt5_FOUND)
 #QT5
-  add_definitions(-std=c++11)
+  add_definitions(-std=c++14)
 else()
 #QT6
   add_definitions(-std=c++17)
